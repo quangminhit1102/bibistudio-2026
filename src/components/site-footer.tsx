@@ -124,7 +124,7 @@ export function SiteFooter() {
 
       <div className="border-t border-border/70">
         <p className="mx-auto max-w-[1200px] px-4 py-5 text-center text-xs text-muted-foreground">
-          Bản quyền thuộc về STHM Stationery | Co., Ltd 2017-2024
+          Bản quyền thuộc về BiBi Studio | bibistudio.vn
         </p>
       </div>
     </footer>
