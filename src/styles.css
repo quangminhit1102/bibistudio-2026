@@ -61,8 +61,9 @@
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sand: var(--sand);
   --color-sage: var(--sage);
-  --font-sans: "Be Vietnam Pro", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Playfair Display", Georgia, serif;
+  --font-sans: "Noto Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Noto Sans", ui-sans-serif, system-ui, sans-serif;
+
 }
 
 
