@@ -82,6 +82,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "author", content: "BiBi Studio" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { property: "og:title", content: "BiBi Studio" },
+      { name: "twitter:title", content: "BiBi Studio" },
+      { property: "og:description", content: "Sổ tay, scrapbook và văn phòng phẩm STHM." },
+      { name: "twitter:description", content: "Sổ tay, scrapbook và văn phòng phẩm STHM." },
+      { property: "og:image", content: "https://bizweb.dktcdn.net/100/343/063/themes/792164/assets/slider_3.jpg" },
+      { name: "twitter:image", content: "https://bizweb.dktcdn.net/100/343/063/themes/792164/assets/slider_3.jpg" },
     ],
     links: [
       {
