@@ -1,0 +1,81 @@
+const banners = [
+  {
+    img: "https://bizweb.dktcdn.net/100/343/063/themes/792164/assets/banner_b.jpg",
+    title: "Tập B5 gáy còng nhựa",
+    href: "https://sthm.vn/back-to-school",
+    wide: true,
+  },
+  {
+    img: "https://bizweb.dktcdn.net/100/343/063/themes/792164/assets/banner_1.jpg",
+    title: "Tập B5 gáy còng nhựa",
+    href: "https://sthm.vn/tap-b5-lo-xo-nhua-80-trang",
+    wide: false,
+  },
+  {
+    img: "https://bizweb.dktcdn.net/100/343/063/themes/792164/assets/banner_2.jpg",
+    title: "Tập B5 200 trang",
+    href: "https://sthm.vn/tap-may-chi-b5-giay-kem-80gsm-200-trang",
+    wide: false,
+  },
+];
+
+const collections = [
+  { img: "https://bizweb.dktcdn.net/100/343/063/themes/792164/assets/col1.jpg", title: "Notebook", href: "https://sthm.vn/notebook" },
+  { img: "https://bizweb.dktcdn.net/100/343/063/themes/792164/assets/col2.jpg", title: "Scrapbook & DIY", href: "https://sthm.vn/scrapbook-diy" },
+  { img: "https://bizweb.dktcdn.net/100/343/063/themes/792164/assets/col3.jpg", title: "Bút, phụ kiện", href: "https://sthm.vn/but-phu-kien" },
+  { img: "https://bizweb.dktcdn.net/100/343/063/themes/792164/assets/col4.jpg", title: "Collection Notebook", href: "https://sthm.vn/collection-notebook" },
+];
+
+export function BannerGrid() {
+  return (
+    <section className="mx-auto max-w-[1200px] px-4 py-10">
+      <div className="grid gap-5 md:grid-cols-2">
+        <a href={banners[0].href} className="group block overflow-hidden">
+          <img
+            src={banners[0].img}
+            alt={banners[0].title}
+            loading="lazy"
+            className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
+          />
+        </a>
+        <div className="grid gap-5">
+          {banners.slice(1).map((b) => (
+            <a key={b.img} href={b.href} className="group block overflow-hidden">
+              <img
+                src={b.img}
+                alt={b.title}
+                loading="lazy"
+                className="w-full object-cover transition duration-500 group-hover:scale-[1.03]"
+              />
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+export function CollectionTiles() {
+  return (
+    <section className="mx-auto max-w-[1200px] px-4 pb-14">
+      <div className="grid grid-cols-2 gap-5 lg:grid-cols-4">
+        {collections.map((c) => (
+          <a key={c.img} href={c.href} className="group block text-center">
+            <div className="overflow-hidden">
+              <img
+                src={c.img}
+                alt={c.title}
+                loading="lazy"
+                className="aspect-square w-full object-cover transition duration-500 group-hover:scale-105"
+              />
+            </div>
+            <h3 className="section-title mt-3 text-base">{c.title}</h3>
+            <span className="mt-1 inline-block text-xs text-muted-foreground underline-offset-4 group-hover:text-accent group-hover:underline">
+              Xem tất cả
+            </span>
+          </a>
+        ))}
+      </div>
+    </section>
+  );
+}
