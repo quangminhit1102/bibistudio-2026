@@ -13,17 +13,22 @@ export function ProductCarousel({ section }: { section: Section }) {
   };
 
   return (
-    <section className="mx-auto max-w-[1200px] px-4 py-10">
-      <div className="mb-6 text-center">
-        <h2 className="section-title text-2xl md:text-[28px]">
-          <a href={`https://sthm.vn/${section.slug}`} className="transition hover:text-accent">
+    <section className="mx-auto max-w-[1280px] px-4 py-10 lg:px-12">
+      <div className="mb-6 flex items-end justify-between gap-4">
+        <div>
+          <h2 className="text-xl font-bold tracking-tight text-foreground md:text-[22px]">
             {section.title}
-          </a>
-        </h2>
-        {section.blurb && (
-          <p className="mx-auto mt-2 max-w-2xl text-sm text-muted-foreground">{section.blurb}</p>
-        )}
-        <span className="mx-auto mt-4 block h-px w-16 bg-accent" />
+          </h2>
+          {section.blurb && (
+            <p className="mt-1 max-w-2xl text-[13px] text-muted-foreground">{section.blurb}</p>
+          )}
+        </div>
+        <a
+          href={`https://sthm.vn/${section.slug}`}
+          className="shrink-0 text-[13px] font-semibold text-accent underline-offset-4 hover:underline"
+        >
+          Xem Thêm
+        </a>
       </div>
 
       <div className="relative">
@@ -34,7 +39,7 @@ export function ProductCarousel({ section }: { section: Section }) {
           {section.products.map((p) => (
             <div
               key={`${section.slug}-${p.handle}`}
-              className="w-[calc(50%-10px)] shrink-0 snap-start sm:w-[calc(33.333%-14px)] lg:w-[calc(25%-15px)]"
+              className="w-[calc(50%-10px)] shrink-0 snap-start sm:w-[calc(33.333%-14px)] lg:w-[calc(25%-15px)] xl:w-[calc(16.666%-17px)]"
             >
               <ProductCard product={p} />
             </div>
@@ -44,16 +49,16 @@ export function ProductCarousel({ section }: { section: Section }) {
         <button
           onClick={() => scroll(-1)}
           aria-label="Sản phẩm trước"
-          className="absolute -left-3 top-[35%] hidden size-9 items-center justify-center rounded-full border border-border bg-background text-primary shadow-sm transition hover:bg-accent hover:text-accent-foreground lg:flex"
+          className="absolute -left-9 top-[32%] hidden size-9 items-center justify-center text-muted-foreground transition hover:text-primary lg:flex"
         >
-          <ChevronLeft className="size-4" />
+          <ChevronLeft className="size-7" strokeWidth={1.25} />
         </button>
         <button
           onClick={() => scroll(1)}
           aria-label="Sản phẩm sau"
-          className="absolute -right-3 top-[35%] hidden size-9 items-center justify-center rounded-full border border-border bg-background text-primary shadow-sm transition hover:bg-accent hover:text-accent-foreground lg:flex"
+          className="absolute -right-9 top-[32%] hidden size-9 items-center justify-center text-muted-foreground transition hover:text-primary lg:flex"
         >
-          <ChevronRight className="size-4" />
+          <ChevronRight className="size-7" strokeWidth={1.25} />
         </button>
       </div>
     </section>
