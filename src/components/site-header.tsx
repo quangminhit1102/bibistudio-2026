@@ -1,8 +1,8 @@
 import { Link } from "@tanstack/react-router";
 import { ChevronDown, Menu, Phone, Search, ShoppingCart, User, ClipboardList, Mail } from "lucide-react";
 import { useState } from "react";
+import { BrandLogo } from "./brand-logo";
 
-const LOGO = "https://bizweb.dktcdn.net/100/343/063/themes/792164/assets/logo.png";
 
 const shopMenu = [
   {
@@ -87,8 +87,8 @@ export function SiteHeader() {
             </button>
           </form>
 
-          <Link to="/" className="justify-self-center">
-            <img src={LOGO} alt="STHM Stationery" className="h-12 w-auto" />
+          <Link to="/" className="justify-self-center" aria-label="BiBi Studio">
+            <BrandLogo />
           </Link>
 
           <div className="flex items-center justify-end gap-5">
