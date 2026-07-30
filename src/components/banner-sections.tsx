@@ -57,25 +57,37 @@ export function BannerGrid() {
 
 export function CollectionTiles() {
   return (
-    <section className="mx-auto max-w-[1200px] px-4 pb-14">
+    <section className="mx-auto max-w-[1280px] px-4 pb-14 lg:px-12">
+      <div className="mb-6 flex items-end justify-between gap-4">
+        <h2 className="text-xl font-bold tracking-tight text-foreground md:text-[22px]">
+          Bộ Sưu Tập
+        </h2>
+        <a
+          href="https://sthm.vn/collections/all"
+          className="shrink-0 text-[13px] font-semibold text-accent underline-offset-4 hover:underline"
+        >
+          Xem Thêm
+        </a>
+      </div>
       <div className="grid grid-cols-2 gap-5 lg:grid-cols-4">
         {collections.map((c) => (
-          <a key={c.img} href={c.href} className="group block text-center">
-            <div className="overflow-hidden">
+          <a key={c.img} href={c.href} className="group block">
+            <div className="overflow-hidden bg-secondary">
               <img
                 src={c.img}
                 alt={c.title}
                 loading="lazy"
-                className="aspect-square w-full object-cover transition duration-500 group-hover:scale-105"
+                className="aspect-square w-full object-cover transition duration-500 group-hover:scale-[1.04]"
               />
             </div>
-            <h3 className="section-title mt-3 text-base">{c.title}</h3>
-            <span className="mt-1 inline-block text-xs text-muted-foreground underline-offset-4 group-hover:text-accent group-hover:underline">
-              Xem tất cả
-            </span>
+            <h3 className="mt-3 text-[13px] font-semibold text-foreground transition group-hover:text-accent">
+              {c.title}
+            </h3>
+            <span className="mt-0.5 block text-[12px] text-muted-foreground">Xem tất cả</span>
           </a>
         ))}
       </div>
     </section>
   );
 }
+
