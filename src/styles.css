@@ -162,11 +162,12 @@
 
 @utility section-title {
   font-family: var(--font-display);
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  color: var(--color-primary);
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  color: var(--color-foreground);
   text-transform: uppercase;
 }
+
 
 @utility no-scrollbar {
   scrollbar-width: none;
