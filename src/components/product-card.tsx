@@ -1,63 +1,66 @@
-import { Eye, Settings2 } from "lucide-react";
+import { Heart } from "lucide-react";
 import type { Product } from "@/data/products";
 
 export function ProductCard({ product }: { product: Product }) {
+  const isNew = product.badge?.toLowerCase() === "new";
+  const badgeLabel = product.badge ? (isNew ? "MỚI" : product.badge) : null;
+
   return (
     <article className="group flex h-full flex-col">
-      <div className="relative overflow-hidden border border-border bg-background">
+      <div className="relative overflow-hidden bg-secondary">
         <a href={`https://sthm.vn/${product.handle}`} title={product.name}>
           <img
             src={product.img}
             alt={product.name}
             loading="lazy"
-            className="aspect-square w-full object-cover transition duration-500 group-hover:scale-105"
+            className="aspect-square w-full object-cover transition duration-500 group-hover:scale-[1.04]"
           />
         </a>
 
-        {product.badge && (
+        {badgeLabel && (
           <span
-            className={`absolute left-0 top-3 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-accent-foreground ${
-              product.badge.toLowerCase() === "new" ? "bg-primary" : "bg-accent"
+            className={`absolute left-0 top-0 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-accent-foreground ${
+              isNew ? "bg-primary" : "bg-accent"
             }`}
           >
-            {product.badge}
+            {badgeLabel}
           </span>
         )}
-
-        <div className="pointer-events-none absolute inset-x-0 bottom-3 flex justify-center gap-2 opacity-0 transition duration-300 group-hover:pointer-events-auto group-hover:opacity-100">
-          <a
-            href={`https://sthm.vn/${product.handle}`}
-            title="Xem nhanh"
-            className="flex size-9 items-center justify-center rounded-full bg-background text-primary shadow-md transition hover:bg-accent hover:text-accent-foreground"
-          >
-            <Eye className="size-4" />
-          </a>
-          <a
-            href={`https://sthm.vn/${product.handle}`}
-            title="Tùy chọn"
-            className="flex size-9 items-center justify-center rounded-full bg-background text-primary shadow-md transition hover:bg-accent hover:text-accent-foreground"
-          >
-            <Settings2 className="size-4" />
-          </a>
-        </div>
       </div>
 
-      <div className="flex flex-1 flex-col gap-1.5 pt-3">
-        <h3 className="line-clamp-2 text-sm leading-snug">
+      <div className="flex flex-1 flex-col pt-3">
+        <h3 className="line-clamp-2 min-h-[2.6em] text-[13px] leading-[1.3] text-muted-foreground">
           <a
             href={`https://sthm.vn/${product.handle}`}
-            className="transition hover:text-accent"
+            className="transition hover:text-primary"
             title={product.name}
           >
             {product.name}
           </a>
         </h3>
-        <div className="mt-auto flex items-baseline gap-2 pt-1">
-          <span className="text-[15px] font-semibold text-accent">{product.price}</span>
-          {product.old && (
-            <span className="text-xs text-muted-foreground line-through">{product.old}</span>
-          )}
+
+        <div className="mt-auto flex items-center justify-between gap-2 pt-4">
+          <div className="flex flex-wrap items-baseline gap-x-2">
+            <span className="text-[15px] font-bold text-accent">{product.price}</span>
+            {product.old && (
+              <span className="text-[11px] text-muted-foreground line-through">{product.old}</span>
+            )}
+          </div>
+          <button
+            type="button"
+            aria-label="Thêm vào yêu thích"
+            className="flex size-8 shrink-0 items-center justify-center rounded-full bg-secondary text-primary transition hover:bg-accent hover:text-accent-foreground"
+          >
+            <Heart className="size-4" />
+          </button>
         </div>
+
+        <a
+          href={`https://sthm.vn/${product.handle}`}
+          className="mt-3 block border border-border py-2 text-center text-[13px] font-medium text-foreground transition hover:border-primary hover:bg-primary hover:text-primary-foreground"
+        >
+          Mua Hàng
+        </a>
       </div>
     </article>
   );
