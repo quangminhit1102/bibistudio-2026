@@ -1,24 +1,56 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { SiteHeader } from "@/components/site-header";
+import { SiteFooter } from "@/components/site-footer";
+import { HeroSlider } from "@/components/hero-slider";
+import { ProductCarousel } from "@/components/product-carousel";
+import { BannerGrid, CollectionTiles } from "@/components/banner-sections";
+import { sections } from "@/data/products";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
+const title = "STHM Stationery — Sổ tay, scrapbook & văn phòng phẩm";
+const description =
+  "STHM Stationery cung cấp sổ tay, sketchbook, scrapbook & DIY, bút và phụ kiện journaling: đẹp tinh tế, tiện dụng, thông minh và thân thiện môi trường.";
+
 export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { title },
+      { name: "description", content: description },
+      { property: "og:title", content: title },
+      { property: "og:description", content: description },
+      { property: "og:type", content: "website" },
+      {
+        property: "og:image",
+        content: "https://bizweb.dktcdn.net/100/343/063/themes/792164/assets/slider_3.jpg",
+      },
+      { name: "twitter:card", content: "summary_large_image" },
+      {
+        name: "twitter:image",
+        content: "https://bizweb.dktcdn.net/100/343/063/themes/792164/assets/slider_3.jpg",
+      },
+    ],
+  }),
   component: Index,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
 function Index() {
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
+    <div className="min-h-screen bg-background">
+      <SiteHeader />
+      <main>
+        <h1 className="sr-only">
+          STHM Stationery — sổ tay, scrapbook, bút và phụ kiện journaling
+        </h1>
+        <HeroSlider />
+        {sections.slice(0, 2).map((s) => (
+          <ProductCarousel key={s.slug} section={s} />
+        ))}
+        <BannerGrid />
+        {sections.slice(2).map((s) => (
+          <ProductCarousel key={s.slug} section={s} />
+        ))}
+        <CollectionTiles />
+      </main>
+      <SiteFooter />
     </div>
   );
 }
