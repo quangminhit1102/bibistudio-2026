@@ -1,4 +1,5 @@
 import { Heart } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import type { Product } from "@/data/products";
 
 export function ProductCard({ product }: { product: Product }) {
@@ -8,14 +9,14 @@ export function ProductCard({ product }: { product: Product }) {
   return (
     <article className="group flex h-full flex-col">
       <div className="relative overflow-hidden bg-secondary">
-        <a href={`https://sthm.vn/${product.handle}`} title={product.name}>
+        <Link to="/products/$handle" params={{ handle: product.handle }} title={product.name}>
           <img
             src={product.img}
             alt={product.name}
             loading="lazy"
             className="aspect-square w-full object-cover transition duration-500 group-hover:scale-[1.04]"
           />
-        </a>
+        </Link>
 
         {badgeLabel && (
           <span
@@ -30,13 +31,14 @@ export function ProductCard({ product }: { product: Product }) {
 
       <div className="flex flex-1 flex-col pt-3">
         <h3 className="line-clamp-2 min-h-[2.6em] text-[13px] leading-[1.3] text-muted-foreground">
-          <a
-            href={`https://sthm.vn/${product.handle}`}
+          <Link
+            to="/products/$handle"
+            params={{ handle: product.handle }}
             className="transition hover:text-primary"
             title={product.name}
           >
             {product.name}
-          </a>
+          </Link>
         </h3>
 
         <div className="mt-auto flex items-center justify-between gap-2 pt-4">
@@ -55,12 +57,13 @@ export function ProductCard({ product }: { product: Product }) {
           </button>
         </div>
 
-        <a
-          href={`https://sthm.vn/${product.handle}`}
+        <Link
+          to="/products/$handle"
+          params={{ handle: product.handle }}
           className="mt-3 block border border-border py-2 text-center text-[13px] font-medium text-foreground transition hover:border-primary hover:bg-primary hover:text-primary-foreground"
         >
           Mua Hàng
-        </a>
+        </Link>
       </div>
     </article>
   );
