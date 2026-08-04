@@ -167,10 +167,16 @@ export function SiteHeader() {
             </a>
           </li>
           <li>
-            <a href="#" className="block py-4 hover:text-accent">
+            <Link
+              to="/collections/$slug"
+              params={{ slug: "back-to-school" }}
+              className="block py-4 hover:text-accent"
+              activeProps={{ className: "block py-4 text-accent" }}
+            >
               Back to School
-            </a>
+            </Link>
           </li>
+
           <li className="group relative">
             <button className="flex items-center gap-1 py-4 hover:text-accent">
               PPS - Paper and Packaging Solution <ChevronDown className="size-3.5" />

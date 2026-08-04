@@ -1,3 +1,5 @@
+import { Link } from "@tanstack/react-router";
+
 const banners = [
   {
     img: "https://bizweb.dktcdn.net/100/343/063/themes/792164/assets/banner_b.jpg",
@@ -20,10 +22,10 @@ const banners = [
 ];
 
 const collections = [
-  { img: "https://bizweb.dktcdn.net/100/343/063/themes/792164/assets/col1.jpg", title: "Notebook", href: "https://sthm.vn/notebook" },
-  { img: "https://bizweb.dktcdn.net/100/343/063/themes/792164/assets/col2.jpg", title: "Scrapbook & DIY", href: "https://sthm.vn/scrapbook-diy" },
-  { img: "https://bizweb.dktcdn.net/100/343/063/themes/792164/assets/col3.jpg", title: "Bút, phụ kiện", href: "https://sthm.vn/but-phu-kien" },
-  { img: "https://bizweb.dktcdn.net/100/343/063/themes/792164/assets/col4.jpg", title: "Collection Notebook", href: "https://sthm.vn/collection-notebook" },
+  { img: "https://bizweb.dktcdn.net/100/343/063/themes/792164/assets/col1.jpg", title: "Notebook", slug: "collection-notebook" },
+  { img: "https://bizweb.dktcdn.net/100/343/063/themes/792164/assets/col2.jpg", title: "Scrapbook & DIY", slug: "scrapbook-diy" },
+  { img: "https://bizweb.dktcdn.net/100/343/063/themes/792164/assets/col3.jpg", title: "Bút, phụ kiện", slug: "but-phu-kien" },
+  { img: "https://bizweb.dktcdn.net/100/343/063/themes/792164/assets/col4.jpg", title: "Collection Notebook", slug: "new-arrival" },
 ];
 
 export function BannerGrid() {
@@ -62,16 +64,17 @@ export function CollectionTiles() {
         <h2 className="text-xl font-bold tracking-tight text-foreground md:text-[22px]">
           Bộ Sưu Tập
         </h2>
-        <a
-          href="https://sthm.vn/collections/all"
+        <Link
+          to="/collections/$slug"
+          params={{ slug: "back-to-school" }}
           className="shrink-0 text-[13px] font-semibold text-accent underline-offset-4 hover:underline"
         >
           Xem Thêm
-        </a>
+        </Link>
       </div>
       <div className="grid grid-cols-2 gap-5 lg:grid-cols-4">
         {collections.map((c) => (
-          <a key={c.img} href={c.href} className="group block">
+          <Link key={c.img} to="/collections/$slug" params={{ slug: c.slug }} className="group block">
             <div className="overflow-hidden bg-secondary">
               <img
                 src={c.img}
@@ -84,7 +87,7 @@ export function CollectionTiles() {
               {c.title}
             </h3>
             <span className="mt-0.5 block text-[12px] text-muted-foreground">Xem tất cả</span>
-          </a>
+          </Link>
         ))}
       </div>
     </section>
