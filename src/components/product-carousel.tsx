@@ -1,5 +1,7 @@
 import { useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+
 import { ProductCard } from "./product-card";
 import type { Section } from "@/data/products";
 
