@@ -1,0 +1,329 @@
+import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { useState } from "react";
+import { Heart, Minus, Plus, ShoppingBag, Truck, RotateCcw, ShieldCheck } from "lucide-react";
+import { SiteHeader } from "@/components/site-header";
+import { SiteFooter } from "@/components/site-footer";
+import { ProductCard } from "@/components/product-card";
+import { findProduct, getProductDetail, relatedProducts, type ProductDetail } from "@/data/catalog";
+
+const SITE = "https://bibistudio-2026.lovable.app";
+
+function buildDetail(handle: string): ProductDetail | undefined {
+  const detail = getProductDetail(handle);
+  if (detail) return detail;
+  const p = findProduct(handle);
+  if (!p) return undefined;
+  return {
+    handle: p.handle,
+    name: p.name,
+    price: p.price,
+    old: p.old,
+    discount: null,
+    stock: "Còn hàng",
+    sku: p.handle.slice(0, 12).toUpperCase(),
+    vendor: "BiBi Studio",
+    images: [p.img],
+    options: [],
+    description: ["Thông tin sản phẩm đang được cập nhật."],
+    highlights: [],
+  };
+}
+
+export const Route = createFileRoute("/products/$handle")({
+  loader: ({ params }) => {
+    const product = buildDetail(params.handle);
+    if (!product) throw notFound();
+    return { product, related: relatedProducts(params.handle) };
+  },
+  head: ({ params, loaderData }) => {
+    if (!loaderData) {
+      return {
+        meta: [
+          { title: "Không tìm thấy sản phẩm — BiBi Studio" },
+          { name: "robots", content: "noindex" },
+        ],
+      };
+    }
+    const p = loaderData.product;
+    const title = `${p.name} — BiBi Studio`;
+    const description = `${p.name} chỉ ${p.price} tại BiBi Studio. Giấy cao cấp, gia công tỉ mỉ, giao hàng toàn quốc.`;
+    const url = `${SITE}/products/${params.handle}`;
+    return {
+      meta: [
+        { title },
+        { name: "description", content: description },
+        { property: "og:title", content: title },
+        { property: "og:description", content: description },
+        { property: "og:type", content: "product" },
+        { property: "og:url", content: url },
+        { property: "og:image", content: p.images[0] },
+        { name: "twitter:card", content: "summary_large_image" },
+        { name: "twitter:image", content: p.images[0] },
+      ],
+      links: [{ rel: "canonical", href: url }],
+      scripts: [
+        {
+          type: "application/ld+json",
+          children: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Product",
+            name: p.name,
+            image: p.images,
+            brand: { "@type": "Brand", name: "BiBi Studio" },
+            sku: p.sku,
+            offers: {
+              "@type": "Offer",
+              url,
+              priceCurrency: "VND",
+              price: Number(p.price.replace(/[^\d]/g, "")),
+              availability: "https://schema.org/InStock",
+            },
+          }),
+        },
+      ],
+    };
+  },
+  notFoundComponent: ProductNotFound,
+  component: ProductPage,
+});
+
+function ProductNotFound() {
+  return (
+    <div className="min-h-screen bg-background">
+      <SiteHeader />
+      <main className="mx-auto max-w-[1280px] px-4 py-24 text-center lg:px-12">
+        <h1 className="text-2xl font-bold">Không tìm thấy sản phẩm</h1>
+        <Link to="/" className="mt-4 inline-block text-accent underline">
+          Về trang chủ
+        </Link>
+      </main>
+      <SiteFooter />
+    </div>
+  );
+}
+
+const tabs = ["Mô tả", "Đánh giá", "Hướng dẫn đặt hàng"] as const;
+
+function ProductPage() {
+  const { product, related } = Route.useLoaderData();
+  const [active, setActive] = useState(0);
+  const [qty, setQty] = useState(1);
+  const [tab, setTab] = useState<number>(0);
+  const [choices, setChoices] = useState<Record<string, string>>(() =>
+    Object.fromEntries(product.options.map((o) => [o.label, o.values[0]])),
+  );
+
+  return (
+    <div className="min-h-screen bg-background">
+      <SiteHeader />
+      <main>
+        <div className="border-b border-border bg-secondary/60">
+          <div className="mx-auto max-w-[1280px] px-4 py-4 text-[12px] text-muted-foreground lg:px-12">
+            <Link to="/" className="hover:text-accent">
+              Trang chủ
+            </Link>
+            <span className="px-2">/</span>
+            <Link to="/collections/$slug" params={{ slug: "back-to-school" }} className="hover:text-accent">
+              Back to School
+            </Link>
+            <span className="px-2">/</span>
+            <span className="text-foreground">{product.name}</span>
+          </div>
+        </div>
+
+        <section className="mx-auto max-w-[1280px] px-4 py-10 lg:px-12">
+          <div className="grid gap-10 lg:grid-cols-2">
+            <div>
+              <div className="overflow-hidden bg-secondary">
+                <img
+                  src={product.images[active]}
+                  alt={product.name}
+                  className="aspect-square w-full object-cover"
+                />
+              </div>
+              {product.images.length > 1 && (
+                <div className="mt-4 grid grid-cols-6 gap-2">
+                  {product.images.map((img, i) => (
+                    <button
+                      key={img}
+                      type="button"
+                      onClick={() => setActive(i)}
+                      aria-label={`Ảnh ${i + 1}`}
+                      className={`overflow-hidden border ${
+                        i === active ? "border-accent" : "border-border"
+                      }`}
+                    >
+                      <img src={img} alt="" loading="lazy" className="aspect-square w-full object-cover" />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div>
+              <h1 className="text-[22px] font-bold leading-snug text-foreground md:text-[26px]">
+                {product.name}
+              </h1>
+
+              <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1 text-[13px] text-muted-foreground">
+                <span>
+                  Thương hiệu: <span className="text-foreground">{product.vendor}</span>
+                </span>
+                <span>
+                  Tình trạng: <span className="text-foreground">{product.stock}</span>
+                </span>
+                <span>
+                  SKU: <span className="text-foreground">{product.sku}</span>
+                </span>
+              </div>
+
+              <div className="mt-5 flex items-baseline gap-3 border-y border-border py-4">
+                <span className="text-2xl font-bold text-accent">{product.price}</span>
+                {product.old && (
+                  <span className="text-[13px] text-muted-foreground line-through">{product.old}</span>
+                )}
+                {product.discount && (
+                  <span className="bg-primary px-2 py-0.5 text-[11px] font-semibold text-primary-foreground">
+                    {product.discount}
+                  </span>
+                )}
+              </div>
+
+              {product.options.map((opt) => (
+                <div key={opt.label} className="mt-5">
+                  <p className="mb-2 text-[13px] font-semibold text-foreground">{opt.label}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {opt.values.map((v) => (
+                      <button
+                        key={v}
+                        type="button"
+                        onClick={() => setChoices((c) => ({ ...c, [opt.label]: v }))}
+                        className={`border px-3 py-1.5 text-[13px] transition ${
+                          choices[opt.label] === v
+                            ? "border-accent bg-accent text-accent-foreground"
+                            : "border-border text-foreground hover:border-accent"
+                        }`}
+                      >
+                        {v}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+
+              <div className="mt-6 flex flex-wrap items-center gap-3">
+                <div className="flex items-center border border-border">
+                  <button
+                    type="button"
+                    aria-label="Giảm số lượng"
+                    onClick={() => setQty((q) => Math.max(1, q - 1))}
+                    className="flex size-10 items-center justify-center text-foreground hover:bg-secondary"
+                  >
+                    <Minus className="size-4" />
+                  </button>
+                  <span className="w-12 text-center text-[14px] font-semibold">{qty}</span>
+                  <button
+                    type="button"
+                    aria-label="Tăng số lượng"
+                    onClick={() => setQty((q) => q + 1)}
+                    className="flex size-10 items-center justify-center text-foreground hover:bg-secondary"
+                  >
+                    <Plus className="size-4" />
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  className="flex h-10 flex-1 items-center justify-center gap-2 bg-primary px-6 text-[13px] font-semibold uppercase tracking-wide text-primary-foreground transition hover:bg-accent hover:text-accent-foreground"
+                >
+                  <ShoppingBag className="size-4" /> Thêm vào giỏ hàng
+                </button>
+                <button
+                  type="button"
+                  aria-label="Thêm vào yêu thích"
+                  className="flex size-10 items-center justify-center border border-border text-foreground transition hover:border-accent hover:text-accent"
+                >
+                  <Heart className="size-4" />
+                </button>
+              </div>
+
+              <p className="mt-4 text-[13px] text-muted-foreground">
+                Gọi đặt mua:{" "}
+                <a href="tel:0967495867" className="font-semibold text-accent">
+                  0967 495 867
+                </a>{" "}
+                (9h–21h mỗi ngày)
+              </p>
+
+              <ul className="mt-6 space-y-2 border-t border-border pt-5 text-[13px] text-muted-foreground">
+                <li className="flex items-center gap-2">
+                  <Truck className="size-4 text-accent" /> Giao hàng toàn quốc, freeship đơn từ 350.000₫
+                </li>
+                <li className="flex items-center gap-2">
+                  <RotateCcw className="size-4 text-accent" /> Đổi trả trong 7 ngày nếu lỗi sản xuất
+                </li>
+                <li className="flex items-center gap-2">
+                  <ShieldCheck className="size-4 text-accent" /> Sản phẩm chính hãng BiBi Studio
+                </li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section className="mx-auto max-w-[1280px] px-4 pb-12 lg:px-12">
+          <div className="flex gap-6 border-b border-border">
+            {tabs.map((t, i) => (
+              <button
+                key={t}
+                type="button"
+                onClick={() => setTab(i)}
+                className={`-mb-px border-b-2 pb-3 text-[14px] font-semibold transition ${
+                  tab === i ? "border-accent text-accent" : "border-transparent text-muted-foreground"
+                }`}
+              >
+                {t}
+              </button>
+            ))}
+          </div>
+
+          <div className="pt-6 text-[14px] leading-relaxed text-muted-foreground">
+            {tab === 0 && (
+              <div className="space-y-4">
+                {product.description.map((d) => (
+                  <p key={d}>{d}</p>
+                ))}
+                {product.highlights.length > 0 && (
+                  <>
+                    <h2 className="pt-2 text-[15px] font-bold text-foreground">Đặc điểm nổi bật</h2>
+                    <ul className="list-disc space-y-2 pl-5">
+                      {product.highlights.map((h) => (
+                        <li key={h}>{h}</li>
+                      ))}
+                    </ul>
+                  </>
+                )}
+              </div>
+            )}
+            {tab === 1 && <p>Chưa có đánh giá cho sản phẩm này.</p>}
+            {tab === 2 && (
+              <ol className="list-decimal space-y-2 pl-5">
+                <li>Chọn mẫu và số lượng, thêm sản phẩm vào giỏ hàng.</li>
+                <li>Nhập thông tin nhận hàng và chọn phương thức thanh toán.</li>
+                <li>Nhận xác nhận đơn hàng qua điện thoại hoặc email trong 24 giờ.</li>
+              </ol>
+            )}
+          </div>
+        </section>
+
+        <section className="mx-auto max-w-[1280px] px-4 pb-16 lg:px-12">
+          <h2 className="mb-6 text-xl font-bold tracking-tight text-foreground">Sản phẩm liên quan</h2>
+          <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-6">
+            {related.map((p) => (
+              <ProductCard key={p.handle} product={p} />
+            ))}
+          </div>
+        </section>
+      </main>
+      <SiteFooter />
+    </div>
+  );
+}
