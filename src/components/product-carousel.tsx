@@ -23,12 +23,14 @@ export function ProductCarousel({ section }: { section: Section }) {
             <p className="mt-1 max-w-2xl text-[13px] text-muted-foreground">{section.blurb}</p>
           )}
         </div>
-        <a
-          href={`https://sthm.vn/${section.slug}`}
+        <Link
+          to="/collections/$slug"
+          params={{ slug: section.slug }}
           className="shrink-0 text-[13px] font-semibold text-accent underline-offset-4 hover:underline"
         >
           Xem Thêm
-        </a>
+        </Link>
+
       </div>
 
       <div className="relative">
