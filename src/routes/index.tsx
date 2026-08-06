@@ -6,7 +6,7 @@ import { ProductCarousel } from "@/components/product-carousel";
 import { BannerGrid, CollectionTiles } from "@/components/banner-sections";
 import { sections } from "@/data/products";
 
-const title = "STHM Stationery — Sổ tay, scrapbook & văn phòng phẩm";
+const title = "BiBi Studio - Sổ tay, thiệp, notebooks";
 const description =
   "STHM Stationery cung cấp sổ tay, sketchbook, scrapbook & DIY, bút và phụ kiện journaling: đẹp tinh tế, tiện dụng, thông minh và thân thiện môi trường.";
 
@@ -37,9 +37,7 @@ function Index() {
     <div className="min-h-screen bg-background">
       <SiteHeader />
       <main>
-        <h1 className="sr-only">
-          STHM Stationery — sổ tay, scrapbook, bút và phụ kiện journaling
-        </h1>
+        <h1 className="sr-only">STHM Stationery — sổ tay, scrapbook, bút và phụ kiện journaling</h1>
         <HeroSlider />
         {sections.slice(0, 2).map((s) => (
           <ProductCarousel key={s.slug} section={s} />
