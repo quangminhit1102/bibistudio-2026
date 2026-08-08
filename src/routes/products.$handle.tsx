@@ -1,10 +1,14 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useState } from "react";
-import { Heart, Minus, Plus, ShoppingBag, Truck, RotateCcw, ShieldCheck } from "lucide-react";
+import { Heart, ShoppingBag, Truck, RotateCcw, ShieldCheck } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { ProductCard } from "@/components/product-card";
 import { findProduct, getProductDetail, relatedProducts, type ProductDetail } from "@/data/catalog";
+import { SimpleBreadcrumb } from "@/components/ui/simple-breadcrumb";
+import { QuantityInput } from "@/components/ui/quantity-input";
+import { ProductImageGallery } from "@/components/product/product-image-gallery";
+import { ProductOptions } from "@/components/product/product-options";
 
 const SITE = "https://bibistudio-2026.lovable.app";
 
@@ -110,7 +114,6 @@ function ProductPage() {
     related: import("@/data/products").Product[];
   };
 
-  const [active, setActive] = useState(0);
   const [qty, setQty] = useState(1);
   const [tab, setTab] = useState<number>(0);
   const [choices, setChoices] = useState<Record<string, string>>(() =>
@@ -123,46 +126,19 @@ function ProductPage() {
       <main>
         <div className="border-b border-border bg-secondary/60">
           <div className="mx-auto max-w-[1280px] px-4 py-4 text-[12px] text-muted-foreground lg:px-12">
-            <Link to="/" className="hover:text-accent">
-              Trang chủ
-            </Link>
-            <span className="px-2">/</span>
-            <Link to="/collections/$slug" params={{ slug: "back-to-school" }} className="hover:text-accent">
-              Back to School
-            </Link>
-            <span className="px-2">/</span>
-            <span className="text-foreground">{product.name}</span>
+            <SimpleBreadcrumb
+              crumbs={[
+                { label: "Trang chủ", to: "/" },
+                { label: "Back to School", slug: "back-to-school" },
+                { label: product.name },
+              ]}
+            />
           </div>
         </div>
 
         <section className="mx-auto max-w-[1280px] px-4 py-10 lg:px-12">
           <div className="grid gap-10 lg:grid-cols-2">
-            <div>
-              <div className="overflow-hidden bg-secondary">
-                <img
-                  src={product.images[active]}
-                  alt={product.name}
-                  className="aspect-square w-full object-cover"
-                />
-              </div>
-              {product.images.length > 1 && (
-                <div className="mt-4 grid grid-cols-6 gap-2">
-                  {product.images.map((img, i) => (
-                    <button
-                      key={img}
-                      type="button"
-                      onClick={() => setActive(i)}
-                      aria-label={`Ảnh ${i + 1}`}
-                      className={`overflow-hidden border ${
-                        i === active ? "border-accent" : "border-border"
-                      }`}
-                    >
-                      <img src={img} alt="" loading="lazy" className="aspect-square w-full object-cover" />
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+            <ProductImageGallery images={product.images} name={product.name} />
 
             <div>
               <h1 className="text-[22px] font-bold leading-snug text-foreground md:text-[26px]">
@@ -193,48 +169,14 @@ function ProductPage() {
                 )}
               </div>
 
-              {product.options.map((opt) => (
-                <div key={opt.label} className="mt-5">
-                  <p className="mb-2 text-[13px] font-semibold text-foreground">{opt.label}</p>
-                  <div className="flex flex-wrap gap-2">
-                    {opt.values.map((v) => (
-                      <button
-                        key={v}
-                        type="button"
-                        onClick={() => setChoices((c) => ({ ...c, [opt.label]: v }))}
-                        className={`border px-3 py-1.5 text-[13px] transition ${
-                          choices[opt.label] === v
-                            ? "border-accent bg-accent text-accent-foreground"
-                            : "border-border text-foreground hover:border-accent"
-                        }`}
-                      >
-                        {v}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ))}
+              <ProductOptions
+                options={product.options}
+                choices={choices}
+                onChange={(label, value) => setChoices((c) => ({ ...c, [label]: value }))}
+              />
 
               <div className="mt-6 flex flex-wrap items-center gap-3">
-                <div className="flex items-center border border-border">
-                  <button
-                    type="button"
-                    aria-label="Giảm số lượng"
-                    onClick={() => setQty((q) => Math.max(1, q - 1))}
-                    className="flex size-10 items-center justify-center text-foreground hover:bg-secondary"
-                  >
-                    <Minus className="size-4" />
-                  </button>
-                  <span className="w-12 text-center text-[14px] font-semibold">{qty}</span>
-                  <button
-                    type="button"
-                    aria-label="Tăng số lượng"
-                    onClick={() => setQty((q) => q + 1)}
-                    className="flex size-10 items-center justify-center text-foreground hover:bg-secondary"
-                  >
-                    <Plus className="size-4" />
-                  </button>
-                </div>
+                <QuantityInput value={qty} onChange={setQty} />
                 <button
                   type="button"
                   className="flex h-10 flex-1 items-center justify-center gap-2 bg-primary px-6 text-[13px] font-semibold uppercase tracking-wide text-primary-foreground transition hover:bg-accent hover:text-accent-foreground"

@@ -4,6 +4,8 @@ import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { ProductCard } from "@/components/product-card";
 import { getCategory } from "@/data/catalog";
+import { SimpleBreadcrumb } from "@/components/ui/simple-breadcrumb";
+import { SortSelect, type SortValue } from "@/components/ui/sort-select";
 
 const SITE = "https://bibistudio-2026.lovable.app";
 
@@ -58,19 +60,11 @@ function CategoryNotFound() {
   );
 }
 
-const sortOptions = [
-  { value: "default", label: "Mặc định" },
-  { value: "az", label: "A → Z" },
-  { value: "za", label: "Z → A" },
-  { value: "asc", label: "Giá tăng dần" },
-  { value: "desc", label: "Giá giảm dần" },
-];
-
 const toNumber = (v: string) => Number(v.replace(/[^\d]/g, ""));
 
 function CategoryPage() {
   const { category } = Route.useLoaderData();
-  const [sort, setSort] = useState("default");
+  const [sort, setSort] = useState<SortValue>("default");
 
   const products = useMemo(() => {
     const list = [...category.products];
@@ -87,13 +81,7 @@ function CategoryPage() {
       <main>
         <div className="border-b border-border bg-secondary/60">
           <div className="mx-auto flex max-w-[1280px] flex-col gap-2 px-4 py-8 lg:px-12">
-            <nav aria-label="Breadcrumb" className="text-[12px] text-muted-foreground">
-              <Link to="/" className="hover:text-accent">
-                Trang chủ
-              </Link>
-              <span className="px-2">/</span>
-              <span className="text-foreground">{category.title}</span>
-            </nav>
+            <SimpleBreadcrumb crumbs={[{ label: "Trang chủ", to: "/" }, { label: category.title }]} />
             <h1 className="text-2xl font-bold tracking-tight text-foreground md:text-[28px]">
               {category.title}
             </h1>
@@ -134,20 +122,7 @@ function CategoryPage() {
         <section className="mx-auto max-w-[1280px] px-4 py-10 lg:px-12">
           <div className="mb-6 flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
             <p className="text-[13px] text-muted-foreground">{products.length} sản phẩm</p>
-            <label className="flex items-center gap-2 text-[13px] text-muted-foreground">
-              Sắp xếp theo:
-              <select
-                value={sort}
-                onChange={(e) => setSort(e.target.value)}
-                className="border border-border bg-background px-3 py-1.5 text-[13px] text-foreground"
-              >
-                {sortOptions.map((o) => (
-                  <option key={o.value} value={o.value}>
-                    {o.label}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <SortSelect value={sort} onChange={setSort} />
           </div>
 
           <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
