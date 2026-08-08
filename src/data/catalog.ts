@@ -1,13 +1,9 @@
-import type { Product } from "./products";
+// Re-export types from the centralized types module for backwards compatibility.
+// Consumers can import from either "@/data/catalog" or "@/data/types".
+export type { Category, ProductDetail } from "./types";
+import type { Category, ProductDetail, Product } from "./types";
 import { sections } from "./products";
 
-export type Category = {
-  slug: string;
-  title: string;
-  blurb?: string;
-  tiles: { title: string; slug: string; img: string }[];
-  products: Product[];
-};
 
 const cdn = "https://bizweb.dktcdn.net/thumb/large/100/343/063/products/";
 
@@ -75,20 +71,7 @@ export function getCategory(slug: string) {
   return categories.find((c) => c.slug === slug);
 }
 
-export type ProductDetail = {
-  handle: string;
-  name: string;
-  price: string;
-  old: string | null;
-  discount: string | null;
-  stock: string;
-  sku: string;
-  vendor: string;
-  images: string[];
-  options: { label: string; values: string[] }[];
-  description: string[];
-  highlights: string[];
-};
+
 
 const pcdn = "https://bizweb.dktcdn.net/thumb/1024x1024/100/343/063/products/";
 

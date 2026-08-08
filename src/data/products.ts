@@ -1,13 +1,7 @@
-export type Product = {
-  handle: string;
-  name: string;
-  img: string;
-  price: string;
-  old: string | null;
-  badge: string | null;
-};
-
-export type Section = { title: string; slug: string; blurb?: string; products: Product[] };
+// Re-export types from the centralized types module for backwards compatibility.
+// Consumers can import from either "@/data/products" or "@/data/types".
+export type { Product, Section } from "./types";
+import type { Product, Section } from "./types";
 
 export const sections: Section[] = [
   {
@@ -29,6 +23,16 @@ export const sections: Section[] = [
     title: "COLLECTION NOTEBOOK",
     slug: "collection-notebook",
     products: [
+      { handle: "vintage-asthetic-so-tay-vuong-ruot-kraft-dot", name: "Vintage Aesthetic", img: "https://bizweb.dktcdn.net/thumb/large/100/343/063/products/cover-2-1783053394132.jpg", price: "72.000₫", old: "80.000₫", badge: "Sale" },
+      { handle: "ghibli-collection", name: "Ghibli collection", img: "https://bizweb.dktcdn.net/thumb/large/100/343/063/products/1-1775745545851.jpg", price: "87.300₫", old: "97.000₫", badge: "Sale" },
+      { handle: "cloudy-collection", name: "Cloudy collection", img: "https://bizweb.dktcdn.net/thumb/large/100/343/063/products/cloudy-new-01-1735485976842.jpg", price: "94.500₫", old: "105.000₫", badge: "Sale" },
+      { handle: "so-mau-doc-quyen-a5", name: "Sổ mẫu độc quyền A5", img: "https://bizweb.dktcdn.net/thumb/large/100/343/063/products/cozy-01-1784884934764.jpg", price: "56.700₫", old: "63.000₫", badge: "Sale" },
+      { handle: "flower-collection", name: "Flora collection", img: "https://bizweb.dktcdn.net/thumb/large/100/343/063/products/cover-1783052360427.jpg", price: "94.500₫", old: "105.000₫", badge: "Sale" },
+      { handle: "vintage-asthetic-so-tay-vuong-ruot-kraft-dot", name: "Vintage Aesthetic", img: "https://bizweb.dktcdn.net/thumb/large/100/343/063/products/cover-2-1783053394132.jpg", price: "72.000₫", old: "80.000₫", badge: "Sale" },
+      { handle: "ghibli-collection", name: "Ghibli collection", img: "https://bizweb.dktcdn.net/thumb/large/100/343/063/products/1-1775745545851.jpg", price: "87.300₫", old: "97.000₫", badge: "Sale" },
+      { handle: "cloudy-collection", name: "Cloudy collection", img: "https://bizweb.dktcdn.net/thumb/large/100/343/063/products/cloudy-new-01-1735485976842.jpg", price: "94.500₫", old: "105.000₫", badge: "Sale" },
+      { handle: "so-mau-doc-quyen-a5", name: "Sổ mẫu độc quyền A5", img: "https://bizweb.dktcdn.net/thumb/large/100/343/063/products/cozy-01-1784884934764.jpg", price: "56.700₫", old: "63.000₫", badge: "Sale" },
+      { handle: "flower-collection", name: "Flora collection", img: "https://bizweb.dktcdn.net/thumb/large/100/343/063/products/cover-1783052360427.jpg", price: "94.500₫", old: "105.000₫", badge: "Sale" },
       { handle: "vintage-asthetic-so-tay-vuong-ruot-kraft-dot", name: "Vintage Aesthetic", img: "https://bizweb.dktcdn.net/thumb/large/100/343/063/products/cover-2-1783053394132.jpg", price: "72.000₫", old: "80.000₫", badge: "Sale" },
       { handle: "ghibli-collection", name: "Ghibli collection", img: "https://bizweb.dktcdn.net/thumb/large/100/343/063/products/1-1775745545851.jpg", price: "87.300₫", old: "97.000₫", badge: "Sale" },
       { handle: "cloudy-collection", name: "Cloudy collection", img: "https://bizweb.dktcdn.net/thumb/large/100/343/063/products/cloudy-new-01-1735485976842.jpg", price: "94.500₫", old: "105.000₫", badge: "Sale" },
