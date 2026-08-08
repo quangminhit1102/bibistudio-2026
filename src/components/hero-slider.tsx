@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { LazyImage } from "./ui/lazy-image";
 
 const slides = [
   { img: "https://bizweb.dktcdn.net/100/343/063/themes/792164/assets/slider_1.jpg", alt: "Back to School" },
@@ -30,14 +31,16 @@ export function HeroSlider() {
         className="flex transition-transform duration-700 ease-out"
         style={{ transform: `translateX(-${index * 100}%)` }}
       >
-        {slides.map((s) => (
-          <img
-            key={s.img}
-            src={s.img}
-            alt={s.alt}
-            className="w-full shrink-0 object-cover"
-            loading="eager"
-          />
+        {slides.map((s, i) => (
+          <div key={s.img} className="w-full shrink-0">
+            <LazyImage
+              src={s.img}
+              alt={s.alt}
+              priority={i === 2}
+              aspectRatio="auto"
+              className="w-full object-cover"
+            />
+          </div>
         ))}
       </div>
 

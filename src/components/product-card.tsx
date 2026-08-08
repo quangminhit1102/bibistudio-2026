@@ -1,6 +1,7 @@
 import { Heart } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import type { Product } from "@/data/products";
+import { LazyImage } from "@/components/ui/lazy-image";
 
 export function ProductCard({ product }: { product: Product }) {
   const isNew = product.badge?.toLowerCase() === "new";
@@ -10,11 +11,10 @@ export function ProductCard({ product }: { product: Product }) {
     <article className="group flex h-full flex-col">
       <div className="relative overflow-hidden bg-secondary">
         <Link to="/products/$handle" params={{ handle: product.handle }} title={product.name}>
-          <img
+          <LazyImage
             src={product.img}
             alt={product.name}
-            loading="lazy"
-            className="aspect-square w-full object-cover transition duration-500 group-hover:scale-[1.04]"
+            className="transition duration-500 group-hover:scale-[1.04]"
           />
         </Link>
 
