@@ -1,0 +1,162 @@
+Table ProductCategory {
+  Id bigint [pk, increment]
+  Name varchar(255) [not null]
+  Slug varchar(255) [not null, unique]
+  Description text
+  ImageUrl varchar(500)
+  DisplayOrder int [default: 0]
+  IsActive boolean [default: true]
+  CreatedAt datetime [not null]
+  UpdatedAt datetime
+
+  indexes {
+    IsActive
+    DisplayOrder
+  }
+}
+
+Table Product {
+  Id bigint [pk, increment]
+  Barcode varchar(100) [not null, unique]
+  ProductCategoryId bigint [not null]
+
+  Name varchar(255) [not null]
+  Slug varchar(255) [not null, unique]
+
+  ShortDescription text
+  Description text
+
+  Price decimal(18,2)
+
+  DisplayOrder int [default: 0]
+  IsFeatured boolean [default: false]
+  IsActive boolean [default: true]
+
+  CreatedAt datetime [not null]
+  UpdatedAt datetime
+
+  indexes {
+    ProductCategoryId
+    IsActive
+    IsFeatured
+    DisplayOrder
+  }
+}
+
+Table ProductAttribute {
+  Id bigint [pk, increment]
+  Name varchar(255) [not null]
+  Slug varchar(255) [not null, unique]
+  Description text
+  DisplayOrder int [default: 0]
+  IsActive boolean [default: true]
+
+  CreatedAt datetime [not null]
+  UpdatedAt datetime
+
+  indexes {
+    IsActive
+    DisplayOrder
+  }
+}
+
+Table ProductAttributeValue {
+  Id bigint [pk, increment]
+  ProductId bigint [not null]
+  ProductAttributeId bigint [not null]
+
+  Value varchar(500) [not null]
+
+  DisplayOrder int [default: 0]
+
+  CreatedAt datetime [not null]
+  UpdatedAt datetime
+
+  indexes {
+    ProductId
+    ProductAttributeId
+    (ProductId, ProductAttributeId)
+  }
+}
+
+Table ProductImage {
+  Id bigint [pk, increment]
+  ProductId bigint [not null]
+
+  ImageUrl varchar(500) [not null]
+  AltText varchar(255) [not null]
+  TitleText varchar(255)
+
+  IsPrimary boolean [default: false]
+  SortOrder int [default: 0]
+
+  Width int
+  Height int
+
+  CreatedAt datetime [not null]
+}
+
+Table Slider {
+  Id bigint [pk, increment]
+
+  Title varchar(255)
+  SubTitle varchar(500)
+
+  ImageUrl varchar(500) [not null]
+  LinkUrl varchar(500)
+
+  ButtonText varchar(100)
+
+  DisplayOrder int [default: 0]
+
+  StartDate datetime
+  EndDate datetime
+
+  IsActive boolean [default: true]
+
+  CreatedAt datetime [not null]
+  UpdatedAt datetime
+
+  indexes {
+    IsActive
+    DisplayOrder
+    (IsActive, DisplayOrder)
+  }
+}
+
+Table Post {
+  Id bigint [pk, increment]
+
+  Title varchar(255) [not null]
+  Slug varchar(255) [not null, unique]
+
+  Summary text
+  Content text [not null]
+
+  ThumbnailUrl varchar(500)
+
+  AuthorName varchar(255)
+
+  PublishedAt datetime
+  IsPublished boolean [default: false]
+
+  CreatedAt datetime [not null]
+  UpdatedAt datetime
+
+  indexes {
+    IsPublished
+    PublishedAt
+  }
+}
+
+// =========================
+// Relationships
+// =========================
+
+Ref: ProductCategory.Id < Product.ProductCategoryId [delete: restrict]
+
+Ref: Product.Id < ProductAttributeValue.ProductId [delete: cascade]
+
+Ref: ProductAttribute.Id < ProductAttributeValue.ProductAttributeId [delete: restrict]
+
+Ref: Product.Id < ProductImage.ProductId [delete: cascade]
