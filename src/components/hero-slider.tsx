@@ -3,11 +3,26 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { LazyImage } from "./ui/lazy-image";
 
 const slides = [
-  { img: "https://bizweb.dktcdn.net/100/343/063/themes/792164/assets/slider_1.jpg", alt: "Back to School" },
-  { img: "https://bizweb.dktcdn.net/100/343/063/themes/792164/assets/slider_2.jpg", alt: "Tập B5 gáy còng nhựa" },
-  { img: "https://bizweb.dktcdn.net/100/343/063/themes/792164/assets/slider_3.jpg", alt: "Notebook wrapping paper" },
-  { img: "https://bizweb.dktcdn.net/100/343/063/themes/792164/assets/slider_4.jpg", alt: "STHM Stationery" },
-  { img: "https://bizweb.dktcdn.net/100/343/063/themes/792164/assets/slider_5.jpg", alt: "Máy chỉ dán keo" },
+  {
+    img: "https://bizweb.dktcdn.net/100/343/063/themes/792164/assets/slider_1.jpg",
+    alt: "Back to School",
+  },
+  {
+    img: "https://bizweb.dktcdn.net/100/343/063/themes/792164/assets/slider_2.jpg",
+    alt: "Tập B5 gáy còng nhựa",
+  },
+  {
+    img: "https://bizweb.dktcdn.net/100/343/063/themes/792164/assets/slider_3.jpg",
+    alt: "Notebook wrapping paper",
+  },
+  {
+    img: "https://bizweb.dktcdn.net/100/343/063/themes/792164/assets/slider_4.jpg",
+    alt: "STHM Stationery",
+  },
+  {
+    img: "https://bizweb.dktcdn.net/100/343/063/themes/792164/assets/slider_5.jpg",
+    alt: "Máy chỉ dán keo",
+  },
 ];
 
 export function HeroSlider() {

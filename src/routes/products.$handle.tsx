@@ -76,7 +76,7 @@ export const Route = createFileRoute("/products/$handle")({
               { name: "Trang chủ", url: SITE_URL },
               { name: "Back to School", url: `${SITE_URL}/collections/back-to-school` },
               { name: p.name, url },
-            ])
+            ]),
           ),
         },
       ],
@@ -152,7 +152,9 @@ function ProductPage() {
               <div className="mt-5 flex items-baseline gap-3 border-y border-border py-4">
                 <span className="text-2xl font-bold text-accent">{product.price}</span>
                 {product.old && (
-                  <span className="text-[13px] text-muted-foreground line-through">{product.old}</span>
+                  <span className="text-[13px] text-muted-foreground line-through">
+                    {product.old}
+                  </span>
                 )}
                 {product.discount && (
                   <span className="bg-primary px-2 py-0.5 text-[11px] font-semibold text-primary-foreground">
@@ -194,7 +196,8 @@ function ProductPage() {
 
               <ul className="mt-6 space-y-2 border-t border-border pt-5 text-[13px] text-muted-foreground">
                 <li className="flex items-center gap-2">
-                  <Truck className="size-4 text-accent" /> Giao hàng toàn quốc, freeship đơn từ 350.000₫
+                  <Truck className="size-4 text-accent" /> Giao hàng toàn quốc, freeship đơn từ
+                  350.000₫
                 </li>
                 <li className="flex items-center gap-2">
                   <RotateCcw className="size-4 text-accent" /> Đổi trả trong 7 ngày nếu lỗi sản xuất
@@ -215,7 +218,9 @@ function ProductPage() {
                 type="button"
                 onClick={() => setTab(i)}
                 className={`-mb-px border-b-2 pb-3 text-[14px] font-semibold transition ${
-                  tab === i ? "border-accent text-accent" : "border-transparent text-muted-foreground"
+                  tab === i
+                    ? "border-accent text-accent"
+                    : "border-transparent text-muted-foreground"
                 }`}
               >
                 {t}
@@ -253,7 +258,9 @@ function ProductPage() {
         </section>
 
         <section className="mx-auto max-w-[1280px] px-4 pb-16 lg:px-12">
-          <h2 className="mb-6 text-xl font-bold tracking-tight text-foreground">Sản phẩm liên quan</h2>
+          <h2 className="mb-6 text-xl font-bold tracking-tight text-foreground">
+            Sản phẩm liên quan
+          </h2>
           <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-6">
             {related.map((p) => (
               <ProductCard key={p.handle} product={p} />

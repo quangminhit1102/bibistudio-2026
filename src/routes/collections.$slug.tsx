@@ -17,7 +17,10 @@ export const Route = createFileRoute("/collections/$slug")({
   head: ({ params, loaderData }) => {
     if (!loaderData) {
       return {
-        meta: [{ title: "Không tìm thấy danh mục — BiBi Studio" }, { name: "robots", content: "noindex" }],
+        meta: [
+          { title: "Không tìm thấy danh mục — BiBi Studio" },
+          { name: "robots", content: "noindex" },
+        ],
       };
     }
     const title = `${loaderData.category.title} — BiBi Studio`;
@@ -45,7 +48,7 @@ export const Route = createFileRoute("/collections/$slug")({
             buildBreadcrumbSchema([
               { name: "Trang chủ", url: SITE_URL },
               { name: loaderData.category.title, url },
-            ])
+            ]),
           ),
         },
       ],
@@ -91,7 +94,9 @@ function CategoryPage() {
       <main>
         <div className="border-b border-border bg-secondary/60">
           <div className="mx-auto flex max-w-[1280px] flex-col gap-2 px-4 py-8 lg:px-12">
-            <SimpleBreadcrumb crumbs={[{ label: "Trang chủ", to: "/" }, { label: category.title }]} />
+            <SimpleBreadcrumb
+              crumbs={[{ label: "Trang chủ", to: "/" }, { label: category.title }]}
+            />
             <h1 className="text-2xl font-bold tracking-tight text-foreground md:text-[28px]">
               {category.title}
             </h1>

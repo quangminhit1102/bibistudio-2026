@@ -1,5 +1,5 @@
 // src/components/ui/sort-select.tsx
-export const sortOptions = [
+const sortOptions = [
   { value: "default", label: "Mặc định" },
   { value: "az", label: "A → Z" },
   { value: "za", label: "Z → A" },

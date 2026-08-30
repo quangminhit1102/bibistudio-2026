@@ -32,7 +32,6 @@ export function ProductCarousel({ section }: { section: Section }) {
         >
           Xem Thêm
         </Link>
-
       </div>
 
       <div className="relative">

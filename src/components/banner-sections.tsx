@@ -22,10 +22,26 @@ const banners = [
 ];
 
 const collections = [
-  { img: "https://bizweb.dktcdn.net/100/343/063/themes/792164/assets/col1.jpg", title: "Notebook", slug: "collection-notebook" },
-  { img: "https://bizweb.dktcdn.net/100/343/063/themes/792164/assets/col2.jpg", title: "Scrapbook & DIY", slug: "scrapbook-diy" },
-  { img: "https://bizweb.dktcdn.net/100/343/063/themes/792164/assets/col3.jpg", title: "Bút, phụ kiện", slug: "but-phu-kien" },
-  { img: "https://bizweb.dktcdn.net/100/343/063/themes/792164/assets/col4.jpg", title: "Collection Notebook", slug: "new-arrival" },
+  {
+    img: "https://bizweb.dktcdn.net/100/343/063/themes/792164/assets/col1.jpg",
+    title: "Notebook",
+    slug: "collection-notebook",
+  },
+  {
+    img: "https://bizweb.dktcdn.net/100/343/063/themes/792164/assets/col2.jpg",
+    title: "Scrapbook & DIY",
+    slug: "scrapbook-diy",
+  },
+  {
+    img: "https://bizweb.dktcdn.net/100/343/063/themes/792164/assets/col3.jpg",
+    title: "Bút, phụ kiện",
+    slug: "but-phu-kien",
+  },
+  {
+    img: "https://bizweb.dktcdn.net/100/343/063/themes/792164/assets/col4.jpg",
+    title: "Collection Notebook",
+    slug: "new-arrival",
+  },
 ];
 
 export function BannerGrid() {
@@ -74,7 +90,12 @@ export function CollectionTiles() {
       </div>
       <div className="grid grid-cols-2 gap-5 lg:grid-cols-4">
         {collections.map((c) => (
-          <Link key={c.img} to="/collections/$slug" params={{ slug: c.slug }} className="group block">
+          <Link
+            key={c.img}
+            to="/collections/$slug"
+            params={{ slug: c.slug }}
+            className="group block"
+          >
             <div className="overflow-hidden bg-secondary">
               <img
                 src={c.img}
@@ -93,4 +114,3 @@ export function CollectionTiles() {
     </section>
   );
 }
-

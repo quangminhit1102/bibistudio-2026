@@ -54,7 +54,11 @@ export function SiteHeader() {
               </span>
               <span className="hidden md:inline">Tài khoản</span>
             </a>
-            <a href="#" className="relative flex items-center gap-2 text-sm hover:text-accent" aria-label="Giỏ hàng (0 sản phẩm)">
+            <a
+              href="#"
+              className="relative flex items-center gap-2 text-sm hover:text-accent"
+              aria-label="Giỏ hàng (0 sản phẩm)"
+            >
               <span className="flex size-7 items-center justify-center rounded-full bg-accent/15 text-accent">
                 <ShoppingCart className="size-4" />
               </span>

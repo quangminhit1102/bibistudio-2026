@@ -10,7 +10,11 @@ const mobileLinks = [
   { label: "Bút & Phụ kiện", type: "collection" as const, slug: "but-phu-kien" },
   { label: "New Arrival", type: "collection" as const, slug: "new-arrival" },
   { label: "Back to School", type: "collection" as const, slug: "back-to-school" },
-  { label: "The World of STHM", type: "external" as const, href: "https://www.instagram.com/sthm.stationery/" },
+  {
+    label: "The World of STHM",
+    type: "external" as const,
+    href: "https://www.instagram.com/sthm.stationery/",
+  },
 ];
 
 export function NavMobile({ onClose }: { onClose: () => void }) {

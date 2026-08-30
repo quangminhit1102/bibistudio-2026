@@ -7,11 +7,7 @@ export function ProductImageGallery({ images, name }: { images: string[]; name: 
   return (
     <div>
       <div className="overflow-hidden bg-secondary">
-        <img
-          src={images[active]}
-          alt={name}
-          className="aspect-square w-full object-cover"
-        />
+        <img src={images[active]} alt={name} className="aspect-square w-full object-cover" />
       </div>
       {images.length > 1 && (
         <div className="mt-4 grid grid-cols-6 gap-2">

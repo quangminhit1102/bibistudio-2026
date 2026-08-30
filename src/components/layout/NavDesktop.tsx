@@ -11,10 +11,7 @@ const shopCollections = [
   { label: "Back to School", slug: "back-to-school" },
 ] as const;
 
-const ppsItems = [
-  "Paper - Giấy các loại",
-  "Packaging - Giải pháp đóng gói",
-] as const;
+const ppsItems = ["Paper - Giấy các loại", "Packaging - Giải pháp đóng gói"] as const;
 
 export function NavDesktop() {
   return (
