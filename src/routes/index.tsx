@@ -5,6 +5,7 @@ import { HeroSlider } from "@/components/hero-slider";
 import { ProductCarousel } from "@/components/product-carousel";
 import { BannerGrid, CollectionTiles } from "@/components/banner-sections";
 import { sections } from "@/data/products";
+import { DEFAULT_OG_IMAGE, buildOrganizationSchema } from "@/lib/seo";
 
 const title = "BiBi Studio - Sổ tay, thiệp, notebooks";
 const description =
@@ -20,12 +21,18 @@ export const Route = createFileRoute("/")({
       { property: "og:type", content: "website" },
       {
         property: "og:image",
-        content: "https://bizweb.dktcdn.net/100/343/063/themes/792164/assets/slider_3.jpg",
+        content: DEFAULT_OG_IMAGE,
       },
       { name: "twitter:card", content: "summary_large_image" },
       {
         name: "twitter:image",
-        content: "https://bizweb.dktcdn.net/100/343/063/themes/792164/assets/slider_3.jpg",
+        content: DEFAULT_OG_IMAGE,
+      },
+    ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify(buildOrganizationSchema()),
       },
     ],
   }),

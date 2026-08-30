@@ -9,8 +9,7 @@ import { SimpleBreadcrumb } from "@/components/ui/simple-breadcrumb";
 import { QuantityInput } from "@/components/ui/quantity-input";
 import { ProductImageGallery } from "@/components/product/product-image-gallery";
 import { ProductOptions } from "@/components/product/product-options";
-
-const SITE = "https://bibistudio-2026.lovable.app";
+import { SITE_URL, buildProductSchema, buildBreadcrumbSchema } from "@/lib/seo";
 
 function buildDetail(handle: string): ProductDetail | undefined {
   const detail = getProductDetail(handle);
@@ -51,7 +50,7 @@ export const Route = createFileRoute("/products/$handle")({
     const p = loaderData.product;
     const title = `${p.name} — BiBi Studio`;
     const description = `${p.name} chỉ ${p.price} tại BiBi Studio. Giấy cao cấp, gia công tỉ mỉ, giao hàng toàn quốc.`;
-    const url = `${SITE}/products/${params.handle}`;
+    const url = `${SITE_URL}/products/${params.handle}`;
     return {
       meta: [
         { title },
@@ -68,21 +67,17 @@ export const Route = createFileRoute("/products/$handle")({
       scripts: [
         {
           type: "application/ld+json",
-          children: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "Product",
-            name: p.name,
-            image: p.images,
-            brand: { "@type": "Brand", name: "BiBi Studio" },
-            sku: p.sku,
-            offers: {
-              "@type": "Offer",
-              url,
-              priceCurrency: "VND",
-              price: Number(p.price.replace(/[^\d]/g, "")),
-              availability: "https://schema.org/InStock",
-            },
-          }),
+          children: JSON.stringify(buildProductSchema(p)),
+        },
+        {
+          type: "application/ld+json",
+          children: JSON.stringify(
+            buildBreadcrumbSchema([
+              { name: "Trang chủ", url: SITE_URL },
+              { name: "Back to School", url: `${SITE_URL}/collections/back-to-school` },
+              { name: p.name, url },
+            ])
+          ),
         },
       ],
     };

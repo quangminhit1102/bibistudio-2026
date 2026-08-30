@@ -6,8 +6,7 @@ import { ProductCard } from "@/components/product-card";
 import { getCategory } from "@/data/catalog";
 import { SimpleBreadcrumb } from "@/components/ui/simple-breadcrumb";
 import { SortSelect, type SortValue } from "@/components/ui/sort-select";
-
-const SITE = "https://bibistudio-2026.lovable.app";
+import { SITE_URL, buildBreadcrumbSchema } from "@/lib/seo";
 
 export const Route = createFileRoute("/collections/$slug")({
   loader: ({ params }) => {
@@ -25,7 +24,7 @@ export const Route = createFileRoute("/collections/$slug")({
     const description =
       loaderData.category.blurb ??
       `Khám phá ${loaderData.category.title.toLowerCase()} tại BiBi Studio: sổ tay, scrapbook, bút và phụ kiện journaling.`;
-    const url = `${SITE}/collections/${params.slug}`;
+    const url = `${SITE_URL}/collections/${params.slug}`;
     return {
       meta: [
         { title },
@@ -39,6 +38,17 @@ export const Route = createFileRoute("/collections/$slug")({
         { name: "twitter:image", content: loaderData.category.products[0]?.img ?? "" },
       ],
       links: [{ rel: "canonical", href: url }],
+      scripts: [
+        {
+          type: "application/ld+json",
+          children: JSON.stringify(
+            buildBreadcrumbSchema([
+              { name: "Trang chủ", url: SITE_URL },
+              { name: loaderData.category.title, url },
+            ])
+          ),
+        },
+      ],
     };
   },
   notFoundComponent: CategoryNotFound,
