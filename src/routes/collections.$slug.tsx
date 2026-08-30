@@ -104,7 +104,7 @@ function CategoryPage() {
         {category.tiles.length > 0 && (
           <section className="mx-auto max-w-[1280px] px-4 pt-10 lg:px-12">
             <div className="grid grid-cols-2 gap-5 lg:grid-cols-4">
-              {category.tiles.map((t: { title: string; slug: string; img: string }) => (
+              {category.tiles.map((t) => (
                 <Link
                   key={`${t.slug}-${t.title}`}
                   to="/collections/$slug"

@@ -104,10 +104,7 @@ function ProductNotFound() {
 const tabs = ["Mô tả", "Đánh giá", "Hướng dẫn đặt hàng"] as const;
 
 function ProductPage() {
-  const { product, related } = Route.useLoaderData() as {
-    product: ProductDetail;
-    related: import("@/data/products").Product[];
-  };
+  const { product, related } = Route.useLoaderData();
 
   const [qty, setQty] = useState(1);
   const [tab, setTab] = useState<number>(0);

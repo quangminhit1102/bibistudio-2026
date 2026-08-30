@@ -58,7 +58,7 @@ export const categories: Category[] = [
       { handle: "but-gel-zebra-sarasa-clip-ngoi-0-5mm", name: "Bút gel ZEBRA SARASA CLIP ngòi 0.5mm", img: `${cdn}1-1753543441797.jpg`, price: "33.300₫", old: "37.000₫", badge: "Sale" },
     ],
   },
-  ...sections.map((s) => ({
+  ...sections.map((s): Category => ({
     slug: s.slug,
     title: s.title.toUpperCase(),
     blurb: s.blurb,
