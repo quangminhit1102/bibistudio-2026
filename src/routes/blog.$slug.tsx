@@ -80,6 +80,8 @@ function PostPage() {
             <LazyImage
               src={post.coverImage}
               alt={post.title}
+              aspectRatio="auto"
+              priority
               className="aspect-[21/9] w-full object-cover md:aspect-[21/8]"
             />
           </div>
