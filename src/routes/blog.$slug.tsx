@@ -67,6 +67,18 @@ function formatDate(iso: string) {
   });
 }
 
+function slugifyHeading(text: string, index: number) {
+  const base = text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/gi, "d")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  return `${base || "muc"}-${index}`;
+}
+
+
 function PostPage() {
   const { post, related } = Route.useLoaderData();
 
