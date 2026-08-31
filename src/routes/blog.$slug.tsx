@@ -67,8 +67,30 @@ function formatDate(iso: string) {
   });
 }
 
+function slugifyHeading(text: string, index: number) {
+  const base = text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/gi, "d")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  return `${base || "muc"}-${index}`;
+}
+
+
 function PostPage() {
   const { post, related } = Route.useLoaderData();
+
+  const toc = post.content
+    .map((block, index) =>
+      block.type === "heading"
+        ? { id: slugifyHeading(block.text, index), text: block.text, level: block.level ?? 2 }
+        : null,
+    )
+    .filter((item): item is { id: string; text: string; level: 2 | 3 } => item !== null);
+
+
 
   return (
     <div className="min-h-screen bg-background">
@@ -116,6 +138,33 @@ function PostPage() {
 
         {/* Content body */}
         <article className="mx-auto max-w-[720px] px-4 py-10 md:py-14">
+          {toc.length > 2 && (
+            <nav
+              aria-label="Mục lục"
+              className="mb-10 rounded-sm border border-border bg-secondary/40 px-5 py-5"
+            >
+              <h2 className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Mục lục
+              </h2>
+              <ol className="mt-3 space-y-1.5">
+                {toc.map((item) => (
+                  <li
+                    key={item.id}
+                    className={item.level === 3 ? "pl-4" : ""}
+                  >
+                    <a
+                      href={`#${item.id}`}
+                      className={`text-[14px] leading-snug text-foreground hover:text-accent hover:underline ${
+                        item.level === 3 ? "text-muted-foreground" : "font-medium"
+                      }`}
+                    >
+                      {item.text}
+                    </a>
+                  </li>
+                ))}
+              </ol>
+            </nav>
+          )}
           <div className="prose prose-stone max-w-none prose-headings:font-semibold prose-headings:text-foreground prose-p:text-[15px] prose-p:leading-[1.8] prose-p:text-foreground prose-a:text-accent prose-a:no-underline hover:prose-a:underline prose-blockquote:border-l-accent prose-blockquote:bg-secondary/40 prose-blockquote:py-2 prose-blockquote:pl-5 prose-blockquote:pr-4 prose-blockquote:italic prose-blockquote:text-foreground prose-img:rounded-sm prose-figcaption:text-[13px] prose-figcaption:text-muted-foreground">
             {post.content.map((block, index) => {
               switch (block.type) {
@@ -125,16 +174,23 @@ function PostPage() {
                       {block.text}
                     </p>
                   );
-                case "heading":
+                case "heading": {
                   const HeadingTag = block.level === 3 ? "h3" : "h2";
                   return (
                     <HeadingTag
                       key={index}
-                      className="mb-3 mt-8 text-[20px] font-semibold tracking-tight text-foreground md:text-[22px]"
+                      id={slugifyHeading(block.text, index)}
+                      className={
+                        block.level === 3
+                          ? "mb-2 mt-6 scroll-mt-28 text-[17px] font-semibold tracking-tight text-foreground md:text-[18px]"
+                          : "mb-3 mt-8 scroll-mt-28 text-[20px] font-semibold tracking-tight text-foreground md:text-[22px]"
+                      }
                     >
                       {block.text}
                     </HeadingTag>
                   );
+                }
+
                 case "quote":
                   return (
                     <blockquote
