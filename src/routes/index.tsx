@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { SiteHeader } from "@/components/site-header";
+import { BlogHighlights } from "@/components/blog-highlights";
 import { SiteFooter } from "@/components/site-footer";
 import { HeroSlider } from "@/components/hero-slider";
 import { ProductCarousel } from "@/components/product-carousel";
@@ -47,6 +48,7 @@ function Index() {
           <ProductCarousel key={s.slug} section={s} />
         ))}
         <CollectionTiles />
+        <BlogHighlights />
       </main>
       <SiteFooter />
     </div>

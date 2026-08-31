@@ -77,6 +77,16 @@ export function NavDesktop() {
         </Link>
       </li>
 
+      <li>
+        <Link
+          to="/blog"
+          className="block py-4 hover:text-accent"
+          activeProps={{ className: "block py-4 text-accent" }}
+        >
+          Nhật ký
+        </Link>
+      </li>
+
       {/* PPS dropdown */}
       <li className="group relative">
         <button className="flex items-center gap-1 py-4 hover:text-accent">
