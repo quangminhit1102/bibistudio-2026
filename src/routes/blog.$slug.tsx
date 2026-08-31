@@ -82,6 +82,16 @@ function slugifyHeading(text: string, index: number) {
 function PostPage() {
   const { post, related } = Route.useLoaderData();
 
+  const toc = post.content
+    .map((block, index) =>
+      block.type === "heading"
+        ? { id: slugifyHeading(block.text, index), text: block.text, level: block.level ?? 2 }
+        : null,
+    )
+    .filter((item): item is { id: string; text: string; level: 2 | 3 } => item !== null);
+
+
+
   return (
     <div className="min-h-screen bg-background">
       <SiteHeader />
