@@ -13,7 +13,7 @@ export function SiteHeader() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <header className="w-full bg-background">
+    <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
       {/* Top utility bar: phone, email, order tracking */}
       <UtilityBar />
 
@@ -71,7 +71,7 @@ export function SiteHeader() {
       </div>
 
       {/* Navigation */}
-      <nav className="border-b border-border" aria-label="Điều hướng chính">
+      <nav aria-label="Điều hướng chính">
         <NavDesktop />
         {mobileOpen && <NavMobile onClose={() => setMobileOpen(false)} />}
       </nav>
