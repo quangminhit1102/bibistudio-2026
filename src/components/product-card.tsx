@@ -3,9 +3,34 @@ import { Link } from "@tanstack/react-router";
 import type { Product } from "@/data/products";
 import { LazyImage } from "@/components/ui/lazy-image";
 
+function parsePrice(value: string): number | null {
+  const normalized = value.replace(/\./g, "").replace(/[^0-9]/g, "");
+  const n = Number(normalized);
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
+function discountPercent(price: string, old: string | null): string | null {
+  if (!old) return null;
+  const current = parsePrice(price);
+  const original = parsePrice(old);
+  if (!current || !original || current >= original) return null;
+  return `-${Math.round((1 - current / original) * 100)}%`;
+}
+
 export function ProductCard({ product }: { product: Product }) {
   const isNew = product.badge?.toLowerCase() === "new";
-  const badgeLabel = product.badge ? (isNew ? "MỚI" : product.badge) : null;
+  const isSale = product.badge?.toLowerCase() === "sale" || (!isNew && product.old && product.old !== product.price);
+
+  let badgeLabel: string | null = null;
+  let badgeClass = "";
+
+  if (isNew) {
+    badgeLabel = "MỚI";
+    badgeClass = "bg-sage text-primary-foreground";
+  } else if (isSale) {
+    badgeLabel = discountPercent(product.price, product.old) ?? product.badge?.toUpperCase() ?? "SALE";
+    badgeClass = "bg-accent text-accent-foreground";
+  }
 
   return (
     <article className="group flex h-full flex-col">
@@ -20,9 +45,7 @@ export function ProductCard({ product }: { product: Product }) {
 
         {badgeLabel && (
           <span
-            className={`absolute left-0 top-0 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-accent-foreground ${
-              isNew ? "bg-primary" : "bg-accent"
-            }`}
+            className={`absolute left-3 top-3 rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-wide ${badgeClass}`}
           >
             {badgeLabel}
           </span>
@@ -30,11 +53,11 @@ export function ProductCard({ product }: { product: Product }) {
       </div>
 
       <div className="flex flex-1 flex-col pt-3">
-        <h3 className="line-clamp-2 min-h-[2.6em] text-[13px] leading-[1.3] text-muted-foreground">
+        <h3 className="line-clamp-2 min-h-[2.6em] text-[13px] leading-[1.3] text-foreground">
           <Link
             to="/products/$handle"
             params={{ handle: product.handle }}
-            className="transition hover:text-primary"
+            className="transition hover:text-accent"
             title={product.name}
           >
             {product.name}
