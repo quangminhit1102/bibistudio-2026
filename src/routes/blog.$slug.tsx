@@ -110,7 +110,7 @@ function PostPage() {
         </div>
 
         {/* Article header */}
-        <section className="mx-auto max-w-[720px] px-4 pt-10 pb-2 md:pt-14">
+        <section className="mx-auto max-w-[880px] px-4 pt-10 pb-2 md:pt-14">
           <SimpleBreadcrumb
             crumbs={[
               { label: "Trang chủ", to: "/" },
@@ -137,7 +137,7 @@ function PostPage() {
         </section>
 
         {/* Content body */}
-        <article className="mx-auto max-w-[720px] px-4 py-10 md:py-14">
+        <article className="mx-auto max-w-[880px] px-4 py-10 md:py-14">
           {toc.length > 2 && (
             <nav
               aria-label="Mục lục"
