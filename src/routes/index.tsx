@@ -10,7 +10,7 @@ import { DEFAULT_OG_IMAGE, buildOrganizationSchema } from "@/lib/seo";
 
 const title = "BiBi Studio - Sổ tay, thiệp, notebooks";
 const description =
-  "STHM Stationery cung cấp sổ tay, sketchbook, scrapbook & DIY, bút và phụ kiện journaling: đẹp tinh tế, tiện dụng, thông minh và thân thiện môi trường.";
+  "BiBi Studio cung cấp sổ tay, sketchbook, scrapbook & DIY, bút và phụ kiện journaling: đẹp tinh tế, tiện dụng, thông minh và thân thiện môi trường.";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -45,7 +45,7 @@ function Index() {
     <div className="min-h-screen bg-background">
       <SiteHeader />
       <main>
-        <h1 className="sr-only">STHM Stationery — sổ tay, scrapbook, bút và phụ kiện journaling</h1>
+        <h1 className="sr-only">BiBi Studio — sổ tay, scrapbook, bút và phụ kiện journaling</h1>
         <HeroSlider />
         {sections.slice(0, 2).map((s) => (
           <ProductCarousel key={s.slug} section={s} />

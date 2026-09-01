@@ -188,7 +188,7 @@ function ProductPage() {
 
               <p className="mt-4 text-[13px] text-muted-foreground">
                 Gọi đặt mua:{" "}
-                <a href="tel:0967495867" className="font-semibold text-accent">
+                <a href="tel:0986788698" className="font-semibold text-accent">
                   0967 495 867
                 </a>{" "}
                 (9h–21h mỗi ngày)
@@ -217,11 +217,10 @@ function ProductPage() {
                 key={t}
                 type="button"
                 onClick={() => setTab(i)}
-                className={`-mb-px border-b-2 pb-3 text-[14px] font-semibold transition ${
-                  tab === i
-                    ? "border-accent text-accent"
-                    : "border-transparent text-muted-foreground"
-                }`}
+                className={`-mb-px border-b-2 pb-3 text-[14px] font-semibold transition ${tab === i
+                  ? "border-accent text-accent"
+                  : "border-transparent text-muted-foreground"
+                  }`}
               >
                 {t}
               </button>

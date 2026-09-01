@@ -1,18 +1,18 @@
 const stores = [
   {
-    name: "STHM stationery & STHM PPS",
+    name: "BiBi stationery & BiBi PPS",
     address: "8C, 352/8 Lê Hồng Phong, Phường 1, Quận 10",
-    phone: "0967495867",
+    phone: "0986788698",
   },
   {
-    name: "STHM Hà Nội",
+    name: "BiBi Hà Nội",
     address: "170 Hoàng Văn Thái, Phương Liệt, Thanh Xuân, Hà Nội",
-    phone: "0559856437",
+    phone: "0986788698",
   },
   {
-    name: "STHM Cần Thơ",
+    name: "BiBi Cần Thơ",
     address: "66 Nguyễn Tri Phương, An Khánh, Ninh Kiều, Cần Thơ",
-    phone: "0349435832",
+    phone: "0986788698",
   },
 ];
 
@@ -21,7 +21,7 @@ const community = [
   "Instagram",
   "Youtube",
   "Tiktok",
-  "Group STHM Stationery",
+  "Group BiBi Stationery",
   "Shopee",
   "Lazada",
 ];
@@ -115,8 +115,8 @@ export function SiteFooter() {
           />
           <p className="mt-4 text-sm text-muted-foreground">
             Hotline:{" "}
-            <a href="tel:0967495867" className="font-semibold text-accent">
-              0967495867
+            <a href="tel:0986788698" className="font-semibold text-accent">
+              0986788698
             </a>
           </p>
         </div>

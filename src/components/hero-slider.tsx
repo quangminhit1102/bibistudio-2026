@@ -17,7 +17,7 @@ const slides = [
   },
   {
     img: "https://bizweb.dktcdn.net/100/343/063/themes/792164/assets/slider_4.jpg",
-    alt: "STHM Stationery",
+    alt: "BiBi Stationery",
   },
   {
     img: "https://bizweb.dktcdn.net/100/343/063/themes/792164/assets/slider_5.jpg",
@@ -74,15 +74,14 @@ export function HeroSlider() {
         <ChevronRight className="size-5" />
       </button>
 
-      <div className="absolute left-4 top-1/2 flex -translate-y-1/2 flex-col gap-2.5 md:left-6">
+      <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 items-center gap-2 z-10 md:bottom-5 md:gap-2.5">
         {slides.map((s, i) => (
           <button
             key={s.img}
             onClick={() => go(i)}
             aria-label={`Slide ${i + 1}`}
-            className={`size-2 rounded-full transition ${
-              i === index ? "bg-accent" : "bg-primary/25"
-            }`}
+            className={`h-2 rounded-full transition-all duration-300 ${i === index ? "w-6 bg-accent" : "w-2 bg-primary/30 hover:bg-primary/50"
+              }`}
           />
         ))}
       </div>

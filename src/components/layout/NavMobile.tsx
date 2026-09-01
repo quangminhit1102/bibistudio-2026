@@ -11,7 +11,7 @@ const mobileLinks = [
   { label: "New Arrival", type: "collection" as const, slug: "new-arrival" },
   { label: "Back to School", type: "collection" as const, slug: "back-to-school" },
   { label: "Nhật ký", type: "blog" as const },
-  { label: "The World of STHM", type: "external" as const, href: "https://www.instagram.com/sthm.stationery/" }
+  { label: "The World of BiBi", type: "external" as const, href: "" }
 ];
 
 export function NavMobile({ onClose }: { onClose: () => void }) {

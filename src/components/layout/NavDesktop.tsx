@@ -48,12 +48,12 @@ export function NavDesktop() {
 
       <li>
         <a
-          href="https://www.instagram.com/sthm.stationery/"
+          href=""
           className="block py-4 hover:text-accent"
           target="_blank"
           rel="noopener noreferrer"
         >
-          The World of STHM
+          The World of BiBi
         </a>
       </li>
 
