@@ -8,7 +8,7 @@ import { BannerGrid, CollectionTiles } from "@/components/banner-sections";
 import { sections } from "@/data/products";
 import { DEFAULT_OG_IMAGE, buildOrganizationSchema } from "@/lib/seo";
 
-const title = "BiBi Studio - Sổ tay, thiệp, notebooks";
+const title = "BiBi Studio - Sổ tay, thiệp, notebooks, postcards, stickers";
 const description =
   "BiBi Studio cung cấp sổ tay, sketchbook, scrapbook & DIY, bút và phụ kiện journaling: đẹp tinh tế, tiện dụng, thông minh và thân thiện môi trường.";
 

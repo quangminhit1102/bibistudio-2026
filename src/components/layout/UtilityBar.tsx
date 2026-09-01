@@ -27,7 +27,7 @@ export function UtilityBar() {
           <span className="flex size-6 items-center justify-center rounded-full bg-accent/15 text-accent">
             <ClipboardList className="size-3.5" />
           </span>
-          <span className="hidden sm:inline">Kiểm tra đơn hàng</span>
+          <span className="hidden sm:inline">Liên hệ ngay</span>
         </a>
       </div>
     </div>
