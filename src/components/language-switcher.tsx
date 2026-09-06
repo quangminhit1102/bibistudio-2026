@@ -1,18 +1,38 @@
 // src/components/language-switcher.tsx
-// Vietnamese / English language control. English is shown as "coming soon".
-// Provides a compact pill for desktop and a vertical list for the mobile drawer.
-
-import { useState } from "react";
+// Simple language selector dropdown. Vietnamese is active; English is shown as "coming soon".
+import { useState, useRef, useEffect } from "react";
+import { ChevronDown, Check } from "lucide-react";
 
 export type Language = "vi" | "en";
 
 interface LanguageSwitcherProps {
-  variant?: "pill" | "drawer";
+  variant?: "header" | "drawer";
 }
 
-export function LanguageSwitcher({ variant = "pill" }: LanguageSwitcherProps) {
-  const [lang] = useState<Language>("vi");
+const languages = [
+  { code: "vi" as Language, label: "Tiếng Việt", short: "VN" },
+  { code: "en" as Language, label: "English", short: "EN", soon: true },
+];
 
+export function LanguageSwitcher({ variant = "header" }: LanguageSwitcherProps) {
+  const [open, setOpen] = useState(false);
+  const [lang] = useState<Language>("vi");
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onClick = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("click", onClick);
+    return () => document.removeEventListener("click", onClick);
+  }, [open]);
+
+  const active = languages.find((l) => l.code === lang) ?? languages[0];
+
+  // Drawer: simple vertical list without a popup
   if (variant === "drawer") {
     return (
       <div className="flex flex-col gap-4">
@@ -23,59 +43,76 @@ export function LanguageSwitcher({ variant = "pill" }: LanguageSwitcherProps) {
           <div className="ml-4 h-px flex-1 bg-border" />
         </div>
 
-        <div className="flex flex-col gap-4 px-2">
-          {/* Vietnamese — active */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="size-2 rounded-full bg-foreground" />
-              <span className="text-base font-medium text-foreground">Tiếng Việt</span>
-            </div>
-            <span className="text-xs font-medium text-muted-foreground">Mặc định</span>
-          </div>
-
-          {/* English — coming soon */}
-          <div className="flex items-center justify-between opacity-40">
-            <div className="flex items-center gap-3">
-              <div className="size-2 rounded-full border border-muted-foreground bg-transparent" />
-              <span className="text-base font-medium text-foreground">English</span>
-            </div>
-            <span className="rounded-md bg-secondary px-2 py-0.5 text-[10px] font-bold uppercase text-muted-foreground">
-              Sắp ra mắt
-            </span>
-          </div>
+        <div className="flex flex-col gap-1 px-2">
+          {languages.map((l) => {
+            const isActive = l.code === lang;
+            return (
+              <div
+                key={l.code}
+                className={`flex items-center justify-between rounded-md px-3 py-2.5 ${
+                  isActive ? "bg-secondary text-foreground" : "text-muted-foreground opacity-60"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  {isActive && <Check className="size-4" />}
+                  <span className="text-sm font-medium">{l.label}</span>
+                </div>
+                {l.soon && (
+                  <span className="rounded-md bg-secondary px-2 py-0.5 text-[10px] font-bold uppercase text-muted-foreground">
+                    Sắp ra mắt
+                  </span>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
     );
   }
 
-  // Compact pill — desktop header
+  // Header: compact dropdown
   return (
-    <div
-      className="relative inline-flex w-36 shrink-0 items-center rounded-2xl bg-secondary p-1.5 shadow-inner"
-      role="group"
-      aria-label="Ngôn ngữ / Language"
-    >
-      {/* Active sliding indicator */}
-      <div className="absolute left-1.5 top-1.5 h-[calc(100%-12px)] w-[calc(50%-6px)] rounded-xl bg-background shadow-sm" />
-
-      {/* Vietnamese (active) */}
+    <div className="relative" ref={containerRef}>
       <button
         type="button"
-        aria-pressed={lang === "vi"}
-        className="relative z-10 flex-1 py-2 text-center text-sm font-semibold text-foreground transition-colors"
+        onClick={() => setOpen((v) => !v)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        className="flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-sm font-medium text-foreground transition hover:border-accent hover:text-accent"
       >
-        VN
+        <span>{active.short}</span>
+        <ChevronDown className={`size-3.5 transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
 
-      {/* English (coming soon) */}
-      <div className="relative z-10 flex flex-1 flex-col items-center justify-center py-2 opacity-50">
-        <span className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-          EN
-        </span>
-        <span className="absolute -top-3 -right-1 rounded-full bg-accent px-2 py-0.5 text-[9px] font-bold uppercase tracking-tighter text-accent-foreground shadow-lg">
-          Soon
-        </span>
-      </div>
+      {open && (
+        <div className="absolute right-0 top-full z-50 mt-2 w-44 rounded-lg border border-border bg-background p-1 shadow-lg">
+          {languages.map((l) => {
+            const isActive = l.code === lang;
+            return (
+              <div
+                key={l.code}
+                role="option"
+                aria-selected={isActive}
+                className={`flex items-center justify-between rounded-md px-3 py-2 text-sm ${
+                  isActive
+                    ? "bg-secondary font-medium text-foreground"
+                    : "text-muted-foreground opacity-60"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  {isActive && <Check className="size-3.5" />}
+                  <span>{l.label}</span>
+                </div>
+                {l.soon && (
+                  <span className="rounded-full bg-accent px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-tighter text-accent-foreground">
+                    Soon
+                  </span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
