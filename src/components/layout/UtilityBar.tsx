@@ -1,6 +1,7 @@
 // src/components/layout/UtilityBar.tsx
-// Top utility bar: phone, email, and order tracking links.
+// Top utility bar: phone, email, language switcher, and order tracking links.
 import { Phone, Mail, ClipboardList } from "lucide-react";
+import { LanguageSwitcher } from "@/components/language-switcher";
 
 export function UtilityBar() {
   return (
@@ -23,12 +24,15 @@ export function UtilityBar() {
             bibistudio@gmail.com
           </a>
         </div>
-        <a href="#" className="flex items-center gap-2 hover:text-accent">
-          <span className="flex size-6 items-center justify-center rounded-full bg-accent/15 text-accent">
-            <ClipboardList className="size-3.5" />
-          </span>
-          <span className="hidden sm:inline">Liên hệ ngay</span>
-        </a>
+        <div className="flex items-center gap-4">
+          <LanguageSwitcher variant="pill" />
+          <a href="#" className="hidden items-center gap-2 hover:text-accent sm:flex">
+            <span className="flex size-6 items-center justify-center rounded-full bg-accent/15 text-accent">
+              <ClipboardList className="size-3.5" />
+            </span>
+            <span className="hidden md:inline">Liên hệ ngay</span>
+          </a>
+        </div>
       </div>
     </div>
   );
