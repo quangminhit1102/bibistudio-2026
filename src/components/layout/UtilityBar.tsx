@@ -25,7 +25,7 @@ export function UtilityBar() {
           </a>
         </div>
         <div className="flex items-center gap-4">
-          <LanguageSwitcher variant="pill" />
+          <LanguageSwitcher variant="header" />
           <a href="#" className="hidden items-center gap-2 whitespace-nowrap hover:text-accent sm:flex">
             <span className="flex size-6 items-center justify-center rounded-full bg-accent/15 text-accent">
               <ClipboardList className="size-3.5" />
