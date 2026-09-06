@@ -26,12 +26,12 @@ export function UtilityBar() {
         </div>
         <div className="flex items-center gap-4">
           <LanguageSwitcher variant="header" />
-          <a href="#" className="hidden items-center gap-2 whitespace-nowrap hover:text-accent sm:flex">
+          {/* <a href="#" className="hidden items-center gap-2 whitespace-nowrap hover:text-accent sm:flex">
             <span className="flex size-6 items-center justify-center rounded-full bg-accent/15 text-accent">
               <ClipboardList className="size-3.5" />
             </span>
             <span className="hidden md:inline">Liên hệ ngay</span>
-          </a>
+          </a> */}
         </div>
       </div>
     </div>

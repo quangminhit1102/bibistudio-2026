@@ -22,14 +22,14 @@ export function NavDesktop() {
           className="block py-4 font-medium hover:text-accent"
           activeProps={{ className: "block py-4 font-medium text-accent" }}
         >
-          Home
+          Trang Chủ
         </Link>
       </li>
 
       {/* Shop dropdown with real collection links */}
       <li className="group relative">
         <button className="flex items-center gap-1 py-4 hover:text-accent">
-          Shop <ChevronDown className="size-3.5" />
+          Bộ Sưu Tập <ChevronDown className="size-3.5" />
         </button>
         <div className="invisible absolute left-0 top-full z-30 w-56 border border-border bg-background opacity-0 shadow-lg transition group-hover:visible group-hover:opacity-100">
           {shopCollections.map((col) => (
@@ -53,24 +53,29 @@ export function NavDesktop() {
           target="_blank"
           rel="noopener noreferrer"
         >
-          The World of BiBi
-        </a>
-      </li>
-
-      <li>
-        <a href="#" className="block py-4 hover:text-accent">
-          Personalized Notebook &amp; More
+          Thế Giới Của BiBi
         </a>
       </li>
 
       <li>
         <Link
           to="/collections/$slug"
-          params={{ slug: "back-to-school" }}
+          params={{ slug: "am-thuc-viet-nam" }}
           className="block py-4 hover:text-accent"
           activeProps={{ className: "block py-4 text-accent" }}
         >
-          Back to School
+          Ẩm thực Việt Nam
+        </Link>
+      </li>
+
+      <li>
+        <Link
+          to="/collections/$slug"
+          params={{ slug: "dia-danh-viet-nam" }}
+          className="block py-4 hover:text-accent"
+          activeProps={{ className: "block py-4 text-accent" }}
+        >
+          Địa danh Việt Nam
         </Link>
       </li>
 
@@ -84,8 +89,18 @@ export function NavDesktop() {
         </Link>
       </li>
 
+      <li>
+        <Link
+          to="/"
+          className="block py-4 hover:text-accent"
+          activeProps={{ className: "block py-4 text-accent" }}
+        >
+          Liên Hệ
+        </Link>
+      </li>
+
       {/* PPS dropdown */}
-      <li className="group relative">
+      {/* <li className="group relative">
         <button className="flex items-center gap-1 py-4 hover:text-accent">
           PPS <ChevronDown className="size-3.5" />
         </button>
@@ -100,7 +115,7 @@ export function NavDesktop() {
             </a>
           ))}
         </div>
-      </li>
+      </li> */}
     </ul>
   );
 }
