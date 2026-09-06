@@ -1,5 +1,7 @@
 import { sections } from "./products";
 import type { Product } from "./products";
+import { paginate, POSTS_PER_PAGE } from "./pagination";
+import type { Paged } from "./pagination";
 
 export type ContentBlock =
   | { type: "paragraph"; text: string }
@@ -30,6 +32,13 @@ export function getAllBlogPosts(): BlogPost[] {
   return blogPosts;
 }
 
+export function getBlogPostsPage(page: number, pageSize = POSTS_PER_PAGE): Paged<BlogPost> {
+  const sorted = [...blogPosts].sort(
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+  );
+  return paginate(sorted, page, pageSize);
+}
+
 export function getRelatedProducts(handles: string[]): Product[] {
   const map = new Map<string, Product>();
   for (const product of allProducts) {
@@ -50,8 +59,7 @@ const blogPosts: BlogPost[] = [
     author: "BiBi Studio",
     date: "2026-08-25",
     readTime: "5 phút đọc",
-    coverImage:
-      "https://bizweb.dktcdn.net/100/343/063/themes/792164/assets/slider_3.jpg",
+    coverImage: "https://bizweb.dktcdn.net/100/343/063/themes/792164/assets/slider_3.jpg",
     content: [
       {
         type: "paragraph",
@@ -575,5 +583,135 @@ const blogPosts: BlogPost[] = [
       "sticker-dang-to-a6-nhieu-mau-set-3-to",
     ],
   },
+  {
+    slug: "chon-so-tay-theo-muc-dich-su-dung",
+    title: "Chọn sổ tay theo mục đích sử dụng: học tập, làm việc hay journaling",
+    excerpt:
+      "Sổ ruled cho ghi chép công việc, sổ chấm bi cho bullet journal, sổ ô vuông cho vẽ kỹ thuật — cách chọn đúng ruột sổ cho từng nhu cầu.",
+    category: "Cẩm nang",
+    author: "BiBi Studio",
+    date: "2026-09-02",
+    readTime: "4 phút đọc",
+    coverImage:
+      "https://bizweb.dktcdn.net/thumb/large/100/343/063/products/tap-b5-200tr-01-1783566246708.jpg",
+    content: [
+      {
+        type: "paragraph",
+        text: "Trước khi mua một cuốn sổ mới, hãy tự hỏi cuốn sổ ấy sẽ làm gì trong đời bạn. Cùng một kích cỡ B5 nhưng ruột kẻ dòng, ô vuông hay chấm bi lại phục vụ những thói quen rất khác nhau.",
+      },
+      { type: "heading", text: "Sổ kẻ dòng (ruled)", level: 2 },
+      {
+        type: "paragraph",
+        text: "Phù hợp cho ghi chú cuộc họp, ghi bài giảng và viết thư. Khoảng cách dòng 8mm là chuẩn thoải mái nhất với chữ viết tay Việt Nam.",
+      },
+      { type: "heading", text: "Sổ chấm bi (dot grid)", level: 2 },
+      {
+        type: "paragraph",
+        text: "Lựa chọn của người làm bullet journal: dòng chấm mờ hướng dẫn bố cục mà không cạnh tranh với chữ viết hay hình vẽ.",
+      },
+      {
+        type: "paragraph",
+        text: "Mẹo nhỏ: nếu bạn chưa chắc mình thuộc nhóm nào, hãy bắt đầu bằng một cuốn B5 kẻ dòng 80gsm — an toàn, bền và dễ dùng cho mọi nhu cầu.",
+      },
+    ],
+    relatedHandles: ["tap-may-chi-b5-giay-kem-80gsm-200-trang", "tap-b5-lo-xo-nhua-80-trang"],
+  },
+  {
+    slug: "cach-bao-quan-va-luu-tru-but-muc-lau-dai",
+    title: "Cách bảo quản bút mực để dùng được lâu dài",
+    excerpt:
+      "Bút gel để ngang hay ngửa? Bút máy bao lâu phải rửa một lần? Những mẹo nhỏ giúp cây bút yêu thích của bạn luôn ra mực đều.",
+    category: "Cẩm nang",
+    author: "BiBi Studio",
+    date: "2026-09-03",
+    readTime: "3 phút đọc",
+    coverImage: "https://bizweb.dktcdn.net/thumb/large/100/343/063/products/1-1753543441797.jpg",
+    content: [
+      {
+        type: "paragraph",
+        text: "Một cây bút tốt có thể theo bạn nhiều năm nếu được bảo quản đúng cách. Nguyên tắc đầu tiên: luôn đậy nắp khi không dùng và cất bút nằm ngang.",
+      },
+      { type: "heading", text: "Bút gel và bút bi", level: 2 },
+      {
+        type: "paragraph",
+        text: "Tránh để bút ở nơi quá nóng như cốp xe hay cạnh cửa sổ nắng gắt — nhiệt độ cao làm khô mực và khiến hạt bi bị kẹt. Cất ngang để mực luôn ở đầu bi.",
+      },
+      { type: "heading", text: "Bút máy", level: 2 },
+      {
+        type: "paragraph",
+        text: "Nếu dùng hằng ngày, chỉ cần rửa ngòi bằng nước sạch mỗi 2–3 tuần khi thay màu mực. Nếu cất lâu, hãy rửa sạch, để khô rồi mới cất để tránh mực đóng cặn.",
+      },
+      {
+        type: "paragraph",
+        text: "Và một lưu ý cuối: đừng dùng chung một cây bút máy cho mực pigment và mực dye — cặn pigment rất khó làm sạch ngòi.",
+      },
+    ],
+    relatedHandles: ["but-gel-zebra-sarasa-clip-ngoi-0-5mm", "but-muji-chinh-hang"],
+  },
+  {
+    slug: "y-tuong-trang-tri-bullet-journal-thang-9",
+    title: "5 ý tưởng trang trí bullet journal cho tháng 9",
+    excerpt:
+      "Từ bảng theo dõi thói quen hình ô dù đến trang mục tiêu màu đất — gợi ý bố cục nhẹ nhàng cho mùa thu với washi tape và bút highlight.",
+    category: "Cảm hứng",
+    author: "BiBi Studio",
+    date: "2026-09-04",
+    readTime: "5 phút đọc",
+    coverImage:
+      "https://bizweb.dktcdn.net/thumb/large/100/343/063/products/mildliner-11-1784262931578.jpg",
+    content: [
+      {
+        type: "paragraph",
+        text: "Tháng 9 gợi nhắc về những buổi sáng se lạnh, chiếc áo khoác mỏng và mùa tựu trường. Hãy để cảm hứng đó đi vào từng trang bullet journal của bạn.",
+      },
+      { type: "heading", text: "1. Trang tổng quan với tông màu đất", level: 2 },
+      {
+        type: "paragraph",
+        text: "Chọn một bảng màu 3 tông như nâu, be và xanh rêu. Dùng bút highlight pastel để tô các ô ngày, washi tape họa tiết lá làm đường viền trang.",
+      },
+      { type: "heading", text: "2. Bảng theo dõi thói quen hình ô dù", level: 2 },
+      {
+        type: "paragraph",
+        text: "Vẽ 30 chiếc ô dù nhỏ, mỗi ô dù là một ngày trong tháng. Mỗi lần hoàn thành thói quen, tô màu một ô — đến cuối tháng bạn sẽ có một khu vườn ô dù đầy màu.",
+      },
+      {
+        type: "paragraph",
+        text: "Đừng quên dành một góc trang cho danh sách nhạc và sách đang nghe, đang đọc trong tháng — tháng nào ghi lại được, cuối năm xem lại rất vui.",
+      },
+    ],
+    relatedHandles: ["zebra-midliner-2-dau", "sthm-stationery-set-32-nhan-vo-basic-7-2x3-6cm"],
+  },
+  {
+    slug: "goi-qua-handmade-y-nghia-ngay-khai-giang",
+    title: "Gợi ý gói quà handmade ý nghĩa cho ngày khai giảng",
+    excerpt:
+      "Một bộ vở xinh, chiếc bút máy đầu tiên và tấm thiệp tự viết — cách gói quà tự làm khiến món quà tựu trường trở nên đặc biệt hơn.",
+    category: "Cảm hứng",
+    author: "BiBi Studio",
+    date: "2026-09-05",
+    readTime: "6 phút đọc",
+    coverImage:
+      "https://bizweb.dktcdn.net/thumb/large/100/343/063/products/box-rose0-1784028538291.jpg",
+    content: [
+      {
+        type: "paragraph",
+        text: "Ngày khai giảng không cần món quà đắt tiền. Một gói quà được chọn và tự tay gói lại sẽ đi cùng kỷ niệm lâu hơn nhiều so với giá trị của nó.",
+      },
+      { type: "heading", text: "Chuẩn bị bên trong", level: 2 },
+      {
+        type: "paragraph",
+        text: "Chọn 2–3 cuốn vở giấy kem, một cây bút máy ngòi F phù hợp với người mới tập viết, và một bộ sticker nhãn vở để các em tự trang trí sách vở.",
+      },
+      { type: "heading", text: "Gói và viết thiệp", level: 2 },
+      {
+        type: "paragraph",
+        text: "Dùng giấy gói màu trơn, điểm thêm một đoạn washi tape và một tấm thiệp nhỏ viết tay vài lời chúc năm học mới. Nét chữ của người tặng chính là phần quý nhất của món quà.",
+      },
+      {
+        type: "paragraph",
+        text: "Mẹo: ghim một cuốn sổ A5 nhỏ vào gói quà như một lời mời gọi viết — món quà sẽ còn tiếp tục lớn lên cùng năm học.",
+      },
+    ],
+    relatedHandles: ["tap-vo-a5", "but-chi-bam-marvy-uchida-fl200"],
+  },
 ];
-
