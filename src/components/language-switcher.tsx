@@ -51,7 +51,7 @@ export function LanguageSwitcher({ variant = "pill" }: LanguageSwitcherProps) {
   // Compact pill — desktop header
   return (
     <div
-      className="relative inline-flex w-full max-w-[9rem] items-center rounded-2xl bg-secondary p-1.5 shadow-inner"
+      className="relative inline-flex w-36 shrink-0 items-center rounded-2xl bg-secondary p-1.5 shadow-inner"
       role="group"
       aria-label="Ngôn ngữ / Language"
     >
