@@ -1,5 +1,5 @@
 // src/components/language-switcher.tsx
-// Simple language selector dropdown. Vietnamese is active; English is shown as "coming soon".
+// Simple language selector dropdown with flag icons. Vietnamese is active; English is shown as "coming soon".
 import { useState, useRef, useEffect } from "react";
 import { ChevronDown, Check } from "lucide-react";
 
@@ -9,9 +9,43 @@ interface LanguageSwitcherProps {
   variant?: "header" | "drawer";
 }
 
+function VietnamFlag({ className = "size-4" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 60 40" className={className} aria-hidden="true">
+      <rect width="60" height="40" fill="#DA251D" />
+      <polygon
+        points="30,8 33.2,18.4 44,18.4 35.4,25.2 38.6,35.6 30,28.8 21.4,35.6 24.6,25.2 16,18.4 26.8,18.4"
+        fill="#FFCD00"
+      />
+    </svg>
+  );
+}
+
+function UkFlag({ className = "size-4" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 60 40" className={className} aria-hidden="true">
+      <rect width="60" height="40" fill="#012169" />
+      <path
+        d="M0 0 L60 40 M60 0 L0 40"
+        stroke="white"
+        strokeWidth="8"
+        fill="none"
+      />
+      <path
+        d="M0 0 L60 40 M60 0 L0 40"
+        stroke="#C8102E"
+        strokeWidth="5"
+        fill="none"
+      />
+      <path d="M30 0 V40 M0 20 H60" stroke="white" strokeWidth="13" fill="none" />
+      <path d="M30 0 V40 M0 20 H60" stroke="#C8102E" strokeWidth="8" fill="none" />
+    </svg>
+  );
+}
+
 const languages = [
-  { code: "vi" as Language, label: "Tiếng Việt", short: "VN" },
-  { code: "en" as Language, label: "English", short: "EN", soon: true },
+  { code: "vi" as Language, label: "Tiếng Việt", short: "VN", Flag: VietnamFlag },
+  { code: "en" as Language, label: "English", short: "EN", soon: true, Flag: UkFlag },
 ];
 
 export function LanguageSwitcher({ variant = "header" }: LanguageSwitcherProps) {
@@ -31,6 +65,7 @@ export function LanguageSwitcher({ variant = "header" }: LanguageSwitcherProps) 
   }, [open]);
 
   const active = languages.find((l) => l.code === lang) ?? languages[0];
+  const ActiveFlag = active.Flag;
 
   // Drawer: simple vertical list without a popup
   if (variant === "drawer") {
@@ -46,6 +81,7 @@ export function LanguageSwitcher({ variant = "header" }: LanguageSwitcherProps) 
         <div className="flex flex-col gap-1 px-2">
           {languages.map((l) => {
             const isActive = l.code === lang;
+            const Flag = l.Flag;
             return (
               <div
                 key={l.code}
@@ -54,6 +90,7 @@ export function LanguageSwitcher({ variant = "header" }: LanguageSwitcherProps) 
                 }`}
               >
                 <div className="flex items-center gap-3">
+                  <Flag className="size-5 shrink-0 rounded-sm shadow-sm" />
                   {isActive && <Check className="size-4" />}
                   <span className="text-sm font-medium">{l.label}</span>
                 </div>
@@ -78,16 +115,18 @@ export function LanguageSwitcher({ variant = "header" }: LanguageSwitcherProps) 
         onClick={() => setOpen((v) => !v)}
         aria-haspopup="listbox"
         aria-expanded={open}
-        className="flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-sm font-medium text-foreground transition hover:border-accent hover:text-accent"
+        className="flex items-center gap-2 rounded-md border border-border bg-background px-2.5 py-1.5 text-sm font-medium text-foreground transition hover:border-accent hover:text-accent"
       >
+        <ActiveFlag className="size-5 shrink-0 rounded-sm shadow-sm" />
         <span>{active.short}</span>
         <ChevronDown className={`size-3.5 transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full z-50 mt-2 w-44 rounded-lg border border-border bg-background p-1 shadow-lg">
+        <div className="absolute right-0 top-full z-50 mt-2 w-48 rounded-lg border border-border bg-background p-1 shadow-lg">
           {languages.map((l) => {
             const isActive = l.code === lang;
+            const Flag = l.Flag;
             return (
               <div
                 key={l.code}
@@ -99,7 +138,8 @@ export function LanguageSwitcher({ variant = "header" }: LanguageSwitcherProps) 
                     : "text-muted-foreground opacity-60"
                 }`}
               >
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2.5">
+                  <Flag className="size-5 shrink-0 rounded-sm shadow-sm" />
                   {isActive && <Check className="size-3.5" />}
                   <span>{l.label}</span>
                 </div>
