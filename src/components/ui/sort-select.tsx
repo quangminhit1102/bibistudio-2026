@@ -1,30 +1,22 @@
 // src/components/ui/sort-select.tsx
-const sortOptions = [
-  { value: "default", label: "Mặc định" },
-  { value: "az", label: "A → Z" },
-  { value: "za", label: "Z → A" },
-  { value: "asc", label: "Giá tăng dần" },
-  { value: "desc", label: "Giá giảm dần" },
-] as const;
-
-export type SortValue = (typeof sortOptions)[number]["value"];
+import { PRODUCT_SORT_OPTIONS, type ProductSortKey } from "@/data/pagination";
 
 export function SortSelect({
   value,
   onChange,
 }: {
-  value: SortValue;
-  onChange: (v: SortValue) => void;
+  value: ProductSortKey;
+  onChange: (v: ProductSortKey) => void;
 }) {
   return (
     <label className="flex items-center gap-2 text-[13px] text-muted-foreground">
       Sắp xếp theo:
       <select
         value={value}
-        onChange={(e) => onChange(e.target.value as SortValue)}
+        onChange={(e) => onChange(e.target.value as ProductSortKey)}
         className="border border-border bg-background px-3 py-1.5 text-[13px] text-foreground outline-none focus:border-accent"
       >
-        {sortOptions.map((o) => (
+        {PRODUCT_SORT_OPTIONS.map((o) => (
           <option key={o.value} value={o.value}>
             {o.label}
           </option>
