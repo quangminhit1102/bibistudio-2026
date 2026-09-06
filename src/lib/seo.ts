@@ -6,6 +6,10 @@ export const SITE_NAME = "BiBi Studio";
 export const DEFAULT_OG_IMAGE =
   "https://bizweb.dktcdn.net/100/343/063/themes/792164/assets/slider_3.jpg";
 
+export function appendPageParam(url: string, page: number): string {
+  return page > 1 ? `${url}?page=${page}` : url;
+}
+
 export function buildProductSchema(p: {
   name: string;
   images: string[];

@@ -3,6 +3,8 @@
 export type { Category, ProductDetail } from "./types";
 import type { Category, ProductDetail, Product } from "./types";
 import { sections } from "./products";
+import { paginate, sortProducts, PRODUCTS_PER_PAGE } from "./pagination";
+import type { Paged, ProductSortKey } from "./pagination";
 
 const cdn = "https://bizweb.dktcdn.net/thumb/large/100/343/063/products/";
 
@@ -208,6 +210,15 @@ export const categories: Category[] = [
 
 export function getCategory(slug: string) {
   return categories.find((c) => c.slug === slug);
+}
+
+export function getCategoryProductsPage(
+  category: Category,
+  page: number,
+  pageSize = PRODUCTS_PER_PAGE,
+  sort: ProductSortKey = "default",
+): Paged<Product> {
+  return paginate(sortProducts(category.products, sort), page, pageSize);
 }
 
 const pcdn = "https://bizweb.dktcdn.net/thumb/1024x1024/100/343/063/products/";
