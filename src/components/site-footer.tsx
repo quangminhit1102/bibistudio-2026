@@ -2,17 +2,17 @@ const stores = [
   {
     name: "BiBi stationery & BiBi PPS",
     address: "8C, 352/8 Lê Hồng Phong, Phường 1, Quận 10",
-    phone: "0986788698",
+    phone: "0392969000",
   },
   {
     name: "BiBi Hà Nội",
     address: "170 Hoàng Văn Thái, Phương Liệt, Thanh Xuân, Hà Nội",
-    phone: "0986788698",
+    phone: "0392969000",
   },
   {
     name: "BiBi Cần Thơ",
     address: "66 Nguyễn Tri Phương, An Khánh, Ninh Kiều, Cần Thơ",
-    phone: "0986788698",
+    phone: "0392969000",
   },
 ];
 
@@ -115,8 +115,8 @@ export function SiteFooter() {
           />
           <p className="mt-4 text-sm text-muted-foreground">
             Hotline:{" "}
-            <a href="tel:0986788698" className="font-semibold text-accent">
-              0986788698
+            <a href="tel:0392969000" className="font-semibold text-accent">
+              0392969000
             </a>
           </p>
         </div>

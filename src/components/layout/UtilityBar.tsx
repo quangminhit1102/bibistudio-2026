@@ -8,11 +8,11 @@ export function UtilityBar() {
     <div className="border-b border-border">
       <div className="mx-auto flex max-w-[1200px] items-center justify-between gap-4 px-4 py-2 text-sm">
         <div className="flex items-center gap-6">
-          <a href="tel:0986788698" className="flex items-center gap-2 hover:text-accent">
+          <a href="tel:0392969000" className="flex items-center gap-2 hover:text-accent">
             <span className="flex size-6 items-center justify-center rounded-full bg-sage/60 text-primary">
               <Phone className="size-3.5" />
             </span>
-            0986788698
+            0392969000
           </a>
           <a
             href="mailto:bibistudio@gmail.com"

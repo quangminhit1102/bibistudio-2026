@@ -39,23 +39,23 @@ function MessengerIcon({ className = "size-5" }: { className?: string }) {
 const contacts: ContactItem[] = [
   {
     id: "phone",
-    href: "tel:0986788698",
+    href: "tel:0392969000",
     label: "Gọi ngay",
-    title: "Hotline: 0986 788 698",
+    title: "Hotline: 0392 969 000",
     bg: "bg-[#25d366] hover:bg-[#1ebe5a]",
     icon: <Phone className="size-5" />,
   },
   {
     id: "zalo",
-    href: "https://zalo.me/0986788698",
+    href: "https://zalo.me/0392969000",
     label: "Zalo",
-    title: "Chat Zalo: 0986 788 698",
+    title: "Chat Zalo: 0392 969 000",
     bg: "bg-[#0068ff] hover:bg-[#0056d6]",
     icon: <ZaloIcon className="size-5" />,
   },
   {
     id: "facebook",
-    href: "https://www.facebook.com/bibistudio.vn",
+    href: "https://www.facebook.com/sharetosmile12",
     label: "Facebook",
     title: "Fanpage BiBi Studio",
     bg: "bg-[#1877f2] hover:bg-[#1466d2]",
@@ -63,7 +63,7 @@ const contacts: ContactItem[] = [
   },
   {
     id: "messenger",
-    href: "https://m.me/bibistudio.vn",
+    href: "https://m.me/sharetosmile12",
     label: "Messenger",
     title: "Nhắn tin Messenger",
     bg: "bg-[#0084ff] hover:bg-[#0070d9]",
@@ -74,7 +74,7 @@ const contacts: ContactItem[] = [
 export function FloatingContact() {
   return (
     <div
-      className="fixed right-3 top-1/2 z-40 flex -translate-y-1/2 flex-col gap-2"
+      className="fixed right-3 top-1/2 z-40 flex -translate-y-1/2 flex-col gap-3"
       aria-label="Liên hệ mua hàng"
     >
       {contacts.map((c) => (

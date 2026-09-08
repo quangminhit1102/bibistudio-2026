@@ -188,8 +188,8 @@ function ProductPage() {
 
               <p className="mt-4 text-[13px] text-muted-foreground">
                 Gọi đặt mua:{" "}
-                <a href="tel:0986788698" className="font-semibold text-accent">
-                  0986 788 698
+                <a href="tel:0392969000" className="font-semibold text-accent">
+                  0392 969 000
                 </a>{" "}
                 (9h–21h mỗi ngày)
               </p>
