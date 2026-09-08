@@ -85,13 +85,22 @@ export function FloatingContact() {
           rel={c.href.startsWith("http") ? "noopener noreferrer" : undefined}
           title={c.title}
           aria-label={c.title}
-          className={`group relative flex h-11 w-11 items-center justify-center overflow-hidden rounded-full text-white shadow-md transition-all duration-300 ${c.bg}`}
+          className="group relative flex items-center justify-center"
         >
-          <span className="shrink-0 transition-transform duration-300 group-hover:-translate-x-0.5">
-            {c.icon}
-          </span>
-          <span className="pointer-events-none absolute right-full mr-2 whitespace-nowrap rounded-md bg-foreground px-2.5 py-1.5 text-xs font-medium text-background opacity-0 shadow-sm transition-opacity duration-200 group-hover:opacity-100">
+          {/* Tooltip label */}
+          <span className="pointer-events-none absolute right-full mr-3 flex items-center whitespace-nowrap rounded-md bg-slate-900/90 px-3 py-1.5 text-xs font-semibold text-white opacity-0 shadow-lg backdrop-blur-sm transition-all duration-300 ease-out translate-x-3 scale-95 group-hover:translate-x-0 group-hover:opacity-100 group-hover:scale-100">
             {c.label}
+            {/* Arrow */}
+            <span className="absolute -right-1 top-1/2 size-2 -translate-y-1/2 rotate-45 bg-slate-900/90" />
+          </span>
+
+          {/* Contact button circle */}
+          <span
+            className={`relative flex size-11 items-center justify-center rounded-full text-white shadow-md transition-all duration-300 ease-out group-hover:scale-110 group-hover:shadow-xl active:scale-95 ${c.bg}`}
+          >
+            <span className="shrink-0 transition-transform duration-300 ease-out group-hover:scale-110 group-hover:-rotate-6">
+              {c.icon}
+            </span>
           </span>
         </a>
       ))}
