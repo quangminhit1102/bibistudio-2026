@@ -26,10 +26,10 @@ export function BrandLogo({ compact = false }: { compact?: boolean }) {
   return (
     <span className="flex items-center gap-3 text-foreground">
       <BrandMark className="h-11 w-auto" />
-      <span className="flex flex-col leading-none">
+      <span className="flex flex-col items-center text-center leading-none">
         <span className="text-[22px] font-medium tracking-tight">BiBi Studio</span>
         {!compact && (
-          <span className="mt-1 text-[9px] font-light uppercase tracking-[0.28em] text-muted-foreground">
+          <span className="mt-1 text-[9px] font-light uppercase tracking-[0.28em] text-muted-foreground pl-[0.28em]">
             Touch your heart
           </span>
         )}
