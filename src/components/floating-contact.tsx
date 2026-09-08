@@ -84,6 +84,7 @@ export function FloatingContact() {
           target={c.href.startsWith("http") ? "_blank" : undefined}
           rel={c.href.startsWith("http") ? "noopener noreferrer" : undefined}
           title={c.title}
+          aria-label={c.title}
           className={`group relative flex h-11 w-11 items-center justify-center overflow-hidden rounded-full text-white shadow-md transition-all duration-300 ${c.bg}`}
         >
           <span className="shrink-0 transition-transform duration-300 group-hover:-translate-x-0.5">
