@@ -2,19 +2,19 @@ import { Link } from "@tanstack/react-router";
 
 const banners = [
   {
-    img: "https://bizweb.dktcdn.net/100/343/063/themes/792164/assets/banner_b.jpg",
+    img: "https://placehold.co/600x600?text=600x600",
     title: "Tập B5 gáy còng nhựa",
     href: "https://sthm.vn/back-to-school",
     wide: true,
   },
   {
-    img: "https://bizweb.dktcdn.net/100/343/063/themes/792164/assets/banner_1.jpg",
+    img: "https://placehold.co/600x290?text=600x290",
     title: "Tập B5 gáy còng nhựa",
     href: "https://sthm.vn/tap-b5-lo-xo-nhua-80-trang",
     wide: false,
   },
   {
-    img: "https://bizweb.dktcdn.net/100/343/063/themes/792164/assets/banner_2.jpg",
+    img: "https://placehold.co/600x290?text=600x290",
     title: "Tập B5 200 trang",
     href: "https://sthm.vn/tap-may-chi-b5-giay-kem-80gsm-200-trang",
     wide: false,
@@ -23,22 +23,22 @@ const banners = [
 
 const collections = [
   {
-    img: "https://bizweb.dktcdn.net/100/343/063/themes/792164/assets/col1.jpg",
+    img: "https://placehold.co/400x400?text=400x400",
     title: "Notebook",
     slug: "collection-notebook",
   },
   {
-    img: "https://bizweb.dktcdn.net/100/343/063/themes/792164/assets/col2.jpg",
+    img: "https://placehold.co/400x400?text=400x400",
     title: "Scrapbook & DIY",
     slug: "scrapbook-diy",
   },
   {
-    img: "https://bizweb.dktcdn.net/100/343/063/themes/792164/assets/col3.jpg",
+    img: "https://placehold.co/400x400?text=400x400",
     title: "Bút, phụ kiện",
     slug: "but-phu-kien",
   },
   {
-    img: "https://bizweb.dktcdn.net/100/343/063/themes/792164/assets/col4.jpg",
+    img: "https://placehold.co/400x400?text=400x400",
     title: "Collection Notebook",
     slug: "new-arrival",
   },

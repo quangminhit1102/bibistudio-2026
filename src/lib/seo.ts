@@ -4,7 +4,7 @@
 export const SITE_URL = "https://bibistudio-2026.lovable.app";
 export const SITE_NAME = "BiBi Studio";
 export const DEFAULT_OG_IMAGE =
-  "https://bizweb.dktcdn.net/100/343/063/themes/792164/assets/slider_3.jpg";
+  "https://placehold.co/1200x630?text=1200x630";
 
 export function appendPageParam(url: string, page: number): string {
   return page > 1 ? `${url}?page=${page}` : url;

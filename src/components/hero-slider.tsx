@@ -4,23 +4,23 @@ import { LazyImage } from "./ui/lazy-image";
 
 const slides = [
   {
-    img: "https://bizweb.dktcdn.net/100/343/063/themes/792164/assets/slider_1.jpg",
+    img: "https://placehold.co/1200x500?text=1200x500",
     alt: "Back to School",
   },
   {
-    img: "https://bizweb.dktcdn.net/100/343/063/themes/792164/assets/slider_2.jpg",
+    img: "https://placehold.co/1200x500?text=1200x500",
     alt: "Tập B5 gáy còng nhựa",
   },
   {
-    img: "https://bizweb.dktcdn.net/100/343/063/themes/792164/assets/slider_3.jpg",
+    img: "https://placehold.co/1200x500?text=1200x500",
     alt: "Notebook wrapping paper",
   },
   {
-    img: "https://bizweb.dktcdn.net/100/343/063/themes/792164/assets/slider_4.jpg",
+    img: "https://placehold.co/1200x500?text=1200x500",
     alt: "BiBi Stationery",
   },
   {
-    img: "https://bizweb.dktcdn.net/100/343/063/themes/792164/assets/slider_5.jpg",
+    img: "https://placehold.co/1200x500?text=1200x500",
     alt: "Máy chỉ dán keo",
   },
 ];

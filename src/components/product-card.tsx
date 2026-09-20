@@ -14,6 +14,7 @@ export function ProductCard({ product }: { product: Product }) {
           <LazyImage
             src={product.img}
             alt={product.name}
+            aspectRatio="square"
             className="transition duration-500 group-hover:scale-[1.04]"
           />
         </Link>

@@ -108,7 +108,7 @@ export function SiteFooter() {
         <div>
           <h3 className="section-title mb-4 text-sm">Chấp nhận thanh toán</h3>
           <img
-            src="https://bizweb.dktcdn.net/100/343/063/themes/792164/assets/i_payment.png"
+            src="https://placehold.co/220x40?text=220x40"
             alt="Các phương thức thanh toán được chấp nhận"
             loading="lazy"
             className="max-w-[220px]"

@@ -14,7 +14,7 @@ export function LazyImage({
   alt,
   className = "",
   priority = false,
-  aspectRatio = "square",
+  aspectRatio = "auto",
 }: LazyImageProps) {
   const [loaded, setLoaded] = useState(false);
 
