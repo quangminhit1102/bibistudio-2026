@@ -35,6 +35,7 @@ export function LazyImage({
         <div className="absolute inset-0 animate-pulse bg-secondary/80" aria-hidden="true" />
       )}
       <img
+        ref={imgRef}
         src={src}
         alt={alt}
         loading={priority ? "eager" : "lazy"}
