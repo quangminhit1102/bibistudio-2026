@@ -41,7 +41,7 @@ export function BlogHighlights() {
                 <LazyImage
                   src={post.coverImage}
                   alt={post.title}
-                  className="aspect-[16/10] w-full object-cover transition duration-500 group-hover:scale-[1.03]"
+                  className="aspect-square w-full object-cover transition duration-500 group-hover:scale-[1.03]"
                 />
               </Link>
               <span className="mt-4 text-[11px] font-semibold uppercase tracking-wider text-accent">
