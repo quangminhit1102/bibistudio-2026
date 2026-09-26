@@ -59,7 +59,7 @@ const blogPosts: BlogPost[] = [
     author: "BiBi Studio",
     date: "2026-08-25",
     readTime: "5 phút đọc",
-    coverImage: "https://placehold.co/800x800?text=800x500",
+    coverImage: "https://placehold.co/800x800?text=800x800",
     content: [
       {
         type: "paragraph",
@@ -127,7 +127,7 @@ const blogPosts: BlogPost[] = [
     date: "2026-08-20",
     readTime: "4 phút đọc",
     coverImage:
-      "https://placehold.co/800x800?text=800x500",
+      "https://placehold.co/800x800?text=800x800",
     content: [
       {
         type: "paragraph",
@@ -174,7 +174,7 @@ const blogPosts: BlogPost[] = [
     date: "2026-08-15",
     readTime: "6 phút đọc",
     coverImage:
-      "https://placehold.co/800x800?text=800x500",
+      "https://placehold.co/800x800?text=800x800",
     content: [
       {
         type: "paragraph",
@@ -221,7 +221,7 @@ const blogPosts: BlogPost[] = [
     date: "2026-08-28",
     readTime: "12 phút đọc",
     coverImage:
-      "https://placehold.co/800x800?text=800x500",
+      "https://placehold.co/800x800?text=800x800",
     content: [
       {
         type: "paragraph",
@@ -375,7 +375,7 @@ const blogPosts: BlogPost[] = [
     date: "2026-08-27",
     readTime: "10 phút đọc",
     coverImage:
-      "https://placehold.co/800x800?text=800x500",
+      "https://placehold.co/800x800?text=800x800",
     content: [
       {
         type: "paragraph",
@@ -500,7 +500,7 @@ const blogPosts: BlogPost[] = [
     date: "2026-08-26",
     readTime: "9 phút đọc",
     coverImage:
-      "https://placehold.co/800x800?text=800x500",
+      "https://placehold.co/800x800?text=800x800",
     content: [
       {
         type: "paragraph",
@@ -593,7 +593,7 @@ const blogPosts: BlogPost[] = [
     date: "2026-09-02",
     readTime: "4 phút đọc",
     coverImage:
-      "https://placehold.co/800x800?text=800x500",
+      "https://placehold.co/800x800?text=800x800",
     content: [
       {
         type: "paragraph",
@@ -625,7 +625,7 @@ const blogPosts: BlogPost[] = [
     author: "BiBi Studio",
     date: "2026-09-03",
     readTime: "3 phút đọc",
-    coverImage: "https://placehold.co/800x800?text=800x500",
+    coverImage: "https://placehold.co/800x800?text=800x800",
     content: [
       {
         type: "paragraph",
@@ -658,7 +658,7 @@ const blogPosts: BlogPost[] = [
     date: "2026-09-04",
     readTime: "5 phút đọc",
     coverImage:
-      "https://placehold.co/800x800?text=800x500",
+      "https://placehold.co/800x800?text=800x800",
     content: [
       {
         type: "paragraph",
@@ -691,7 +691,7 @@ const blogPosts: BlogPost[] = [
     date: "2026-09-05",
     readTime: "6 phút đọc",
     coverImage:
-      "https://placehold.co/800x800?text=800x500",
+      "https://placehold.co/800x800?text=800x800",
     content: [
       {
         type: "paragraph",
