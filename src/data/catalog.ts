@@ -6,7 +6,7 @@ import { sections } from "./products";
 import { paginate, sortProducts, PRODUCTS_PER_PAGE } from "./pagination";
 import type { Paged, ProductSortKey } from "./pagination";
 
-const cdn = "https://bizweb.dktcdn.net/thumb/large/100/343/063/products/";
+const cdn = "https://placehold.co/600x600?text=600x600#";
 
 export const categories: Category[] = [
   {
@@ -17,22 +17,22 @@ export const categories: Category[] = [
       {
         title: "Notebook",
         slug: "collection-notebook",
-        img: "https://bizweb.dktcdn.net/100/343/063/themes/792164/assets/col1.jpg",
+        img: "https://placehold.co/400x400?text=400x400",
       },
       {
         title: "Scrapbook & DIY",
         slug: "scrapbook-diy",
-        img: "https://bizweb.dktcdn.net/100/343/063/themes/792164/assets/col2.jpg",
+        img: "https://placehold.co/400x400?text=400x400",
       },
       {
         title: "BÚT, PHỤ KIỆN",
         slug: "but-phu-kien",
-        img: "https://bizweb.dktcdn.net/100/343/063/themes/792164/assets/col3.jpg",
+        img: "https://placehold.co/400x400?text=400x400",
       },
       {
         title: "Collection Notebook",
         slug: "collection-notebook",
-        img: "https://bizweb.dktcdn.net/100/343/063/themes/792164/assets/col4.jpg",
+        img: "https://placehold.co/400x400?text=400x400",
       },
     ],
     products: [
@@ -221,7 +221,7 @@ export function getCategoryProductsPage(
   return paginate(sortProducts(category.products, sort), page, pageSize);
 }
 
-const pcdn = "https://bizweb.dktcdn.net/thumb/1024x1024/100/343/063/products/";
+const pcdn = "https://placehold.co/800x800?text=800x800#";
 
 export const productDetails: ProductDetail[] = [
   {

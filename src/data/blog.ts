@@ -59,7 +59,7 @@ const blogPosts: BlogPost[] = [
     author: "BiBi Studio",
     date: "2026-08-25",
     readTime: "5 phút đọc",
-    coverImage: "https://bizweb.dktcdn.net/100/343/063/themes/792164/assets/slider_3.jpg",
+    coverImage: "https://placehold.co/800x800?text=800x800",
     content: [
       {
         type: "paragraph",
@@ -72,7 +72,7 @@ const blogPosts: BlogPost[] = [
       },
       {
         type: "image",
-        src: "https://bizweb.dktcdn.net/thumb/large/100/343/063/products/1-1775745545851.jpg",
+        src: "https://placehold.co/600x400?text=600x400",
         alt: "Sổ tay Ghibli collection",
         caption: "Sổ tay Ghibli collection — mềm mại và đầy cảm hứng.",
       },
@@ -92,7 +92,7 @@ const blogPosts: BlogPost[] = [
       },
       {
         type: "image",
-        src: "https://bizweb.dktcdn.net/thumb/large/100/343/063/products/cloudy-new-01-1735485976842.jpg",
+        src: "https://placehold.co/600x400?text=600x400",
         alt: "Sổ tay Cloudy collection",
         caption: "Cloudy collection — nhẹ nhàng như một ngày nhiều mây.",
       },
@@ -127,7 +127,7 @@ const blogPosts: BlogPost[] = [
     date: "2026-08-20",
     readTime: "4 phút đọc",
     coverImage:
-      "https://bizweb.dktcdn.net/thumb/large/100/343/063/products/cover-2-1783053394132.jpg",
+      "https://placehold.co/800x800?text=800x800",
     content: [
       {
         type: "paragraph",
@@ -140,7 +140,7 @@ const blogPosts: BlogPost[] = [
       },
       {
         type: "image",
-        src: "https://bizweb.dktcdn.net/thumb/large/100/343/063/products/cozy-01-1784884934764.jpg",
+        src: "https://placehold.co/600x400?text=600x400",
         alt: "Sổ mẫu độc quyền A5",
         caption: "Sổ mẫu độc quyền A5 — nhỏ gọn và đa năng.",
       },
@@ -174,7 +174,7 @@ const blogPosts: BlogPost[] = [
     date: "2026-08-15",
     readTime: "6 phút đọc",
     coverImage:
-      "https://bizweb.dktcdn.net/thumb/large/100/343/063/products/freshday-ke-ngang-1783676913337.jpg",
+      "https://placehold.co/800x800?text=800x800",
     content: [
       {
         type: "paragraph",
@@ -187,7 +187,7 @@ const blogPosts: BlogPost[] = [
       },
       {
         type: "image",
-        src: "https://bizweb.dktcdn.net/thumb/large/100/343/063/products/botanical-ke-ngang-1783676844886.jpg",
+        src: "https://placehold.co/600x400?text=600x400",
         alt: "Sổ tay Botanical Ruled",
         caption: "Sổ tay Botanical Ruled — nền tảng hoàn hảo cho BuJo.",
       },
@@ -221,7 +221,7 @@ const blogPosts: BlogPost[] = [
     date: "2026-08-28",
     readTime: "12 phút đọc",
     coverImage:
-      "https://bizweb.dktcdn.net/thumb/large/100/343/063/products/sda-2024-1740129923219.jpg",
+      "https://placehold.co/800x800?text=800x800",
     content: [
       {
         type: "paragraph",
@@ -254,7 +254,7 @@ const blogPosts: BlogPost[] = [
       },
       {
         type: "image",
-        src: "https://bizweb.dktcdn.net/thumb/large/100/343/063/products/sda-basic-a5-1-1741154320992.jpg",
+        src: "https://placehold.co/600x400?text=600x400",
         alt: "Sổ dán ảnh A5 giấy mỹ thuật",
         caption: "Sổ dán ảnh A5 — giấy mỹ thuật 250gsm, phù hợp cho người mới.",
       },
@@ -289,7 +289,7 @@ const blogPosts: BlogPost[] = [
       },
       {
         type: "image",
-        src: "https://bizweb.dktcdn.net/thumb/large/100/343/063/products/polaroid-2-1700490050398.jpg",
+        src: "https://placehold.co/600x400?text=600x400",
         alt: "Set hình polaroid in theo yêu cầu",
         caption: "Ảnh polaroid nhỏ rất linh hoạt khi xếp bố cục nhiều hình.",
       },
@@ -375,7 +375,7 @@ const blogPosts: BlogPost[] = [
     date: "2026-08-27",
     readTime: "10 phút đọc",
     coverImage:
-      "https://bizweb.dktcdn.net/thumb/large/100/343/063/products/cover-1783052360427.jpg",
+      "https://placehold.co/800x800?text=800x800",
     content: [
       {
         type: "paragraph",
@@ -398,7 +398,7 @@ const blogPosts: BlogPost[] = [
       },
       {
         type: "image",
-        src: "https://bizweb.dktcdn.net/thumb/large/100/343/063/products/1-b3d1b2ec-9a3c-44aa-a287-4da8cc4b29f7.jpg",
+        src: "https://placehold.co/600x400?text=600x400",
         alt: "Combo phụ kiện trang trí sổ tay",
         caption: "Bút gel nhiều màu là công cụ cơ bản của mọi cuốn journal.",
       },
@@ -459,7 +459,7 @@ const blogPosts: BlogPost[] = [
       },
       {
         type: "image",
-        src: "https://bizweb.dktcdn.net/thumb/large/100/343/063/products/tap-b5-200tr-01-1783566246708.jpg",
+        src: "https://placehold.co/600x400?text=600x400",
         alt: "Tập may chỉ B5 giấy kem 80gsm",
         caption: "Giấy kem 80gsm — mức cân bằng tốt cho bút gel và bút bi.",
       },
@@ -500,7 +500,7 @@ const blogPosts: BlogPost[] = [
     date: "2026-08-26",
     readTime: "9 phút đọc",
     coverImage:
-      "https://bizweb.dktcdn.net/thumb/large/100/343/063/products/cozy-01-1784884934764.jpg",
+      "https://placehold.co/800x800?text=800x800",
     content: [
       {
         type: "paragraph",
@@ -543,7 +543,7 @@ const blogPosts: BlogPost[] = [
       },
       {
         type: "image",
-        src: "https://bizweb.dktcdn.net/thumb/large/100/343/063/products/box-rose0-1784028538291.jpg",
+        src: "https://placehold.co/600x400?text=600x400",
         alt: "Hộp quà handmade vintage",
         caption: "Hộp giấy nhỏ giúp gom phụ kiện rời gọn gàng trong ngăn kéo.",
       },
@@ -593,7 +593,7 @@ const blogPosts: BlogPost[] = [
     date: "2026-09-02",
     readTime: "4 phút đọc",
     coverImage:
-      "https://bizweb.dktcdn.net/thumb/large/100/343/063/products/tap-b5-200tr-01-1783566246708.jpg",
+      "https://placehold.co/800x800?text=800x800",
     content: [
       {
         type: "paragraph",
@@ -625,7 +625,7 @@ const blogPosts: BlogPost[] = [
     author: "BiBi Studio",
     date: "2026-09-03",
     readTime: "3 phút đọc",
-    coverImage: "https://bizweb.dktcdn.net/thumb/large/100/343/063/products/1-1753543441797.jpg",
+    coverImage: "https://placehold.co/800x800?text=800x800",
     content: [
       {
         type: "paragraph",
@@ -658,7 +658,7 @@ const blogPosts: BlogPost[] = [
     date: "2026-09-04",
     readTime: "5 phút đọc",
     coverImage:
-      "https://bizweb.dktcdn.net/thumb/large/100/343/063/products/mildliner-11-1784262931578.jpg",
+      "https://placehold.co/800x800?text=800x800",
     content: [
       {
         type: "paragraph",
@@ -691,7 +691,7 @@ const blogPosts: BlogPost[] = [
     date: "2026-09-05",
     readTime: "6 phút đọc",
     coverImage:
-      "https://bizweb.dktcdn.net/thumb/large/100/343/063/products/box-rose0-1784028538291.jpg",
+      "https://placehold.co/800x800?text=800x800",
     content: [
       {
         type: "paragraph",
