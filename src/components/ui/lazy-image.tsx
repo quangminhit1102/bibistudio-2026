@@ -1,5 +1,5 @@
 // src/components/ui/lazy-image.tsx
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type LazyImageProps = {
   src: string;
@@ -17,6 +17,13 @@ export function LazyImage({
   aspectRatio = "auto",
 }: LazyImageProps) {
   const [loaded, setLoaded] = useState(false);
+  const imgRef = useRef<HTMLImageElement>(null);
+
+  // If the image finished loading before React hydrated, the load event
+  // has already fired — show it immediately instead of staying faded out.
+  useEffect(() => {
+    if (imgRef.current?.complete) setLoaded(true);
+  }, []);
 
   return (
     <div
