@@ -12,8 +12,6 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as BlogIndexRouteImport } from './routes/blog.index'
 import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
-import { Route as CollectionsSlugRouteImport } from './routes/collections.$slug'
-import { Route as ProductsHandleRouteImport } from './routes/products.$handle'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -30,59 +28,34 @@ const BlogSlugRoute = BlogSlugRouteImport.update({
   path: '/blog/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CollectionsSlugRoute = CollectionsSlugRouteImport.update({
-  id: '/collections/$slug',
-  path: '/collections/$slug',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ProductsHandleRoute = ProductsHandleRouteImport.update({
-  id: '/products/$handle',
-  path: '/products/$handle',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/blog/$slug': typeof BlogSlugRoute
-  '/collections/$slug': typeof CollectionsSlugRoute
-  '/products/$handle': typeof ProductsHandleRoute
   '/blog/': typeof BlogIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/blog/$slug': typeof BlogSlugRoute
-  '/collections/$slug': typeof CollectionsSlugRoute
-  '/products/$handle': typeof ProductsHandleRoute
   '/blog': typeof BlogIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/blog/$slug': typeof BlogSlugRoute
-  '/collections/$slug': typeof CollectionsSlugRoute
-  '/products/$handle': typeof ProductsHandleRoute
   '/blog/': typeof BlogIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    '/' | '/blog/$slug' | '/collections/$slug' | '/products/$handle' | '/blog/'
+  fullPaths: '/' | '/blog/$slug' | '/blog/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/blog/$slug' | '/collections/$slug' | '/products/$handle' | '/blog'
-  id:
-    | '__root__'
-    | '/'
-    | '/blog/$slug'
-    | '/collections/$slug'
-    | '/products/$handle'
-    | '/blog/'
+  to: '/' | '/blog/$slug' | '/blog'
+  id: '__root__' | '/' | '/blog/$slug' | '/blog/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   BlogSlugRoute: typeof BlogSlugRoute
-  CollectionsSlugRoute: typeof CollectionsSlugRoute
-  ProductsHandleRoute: typeof ProductsHandleRoute
   BlogIndexRoute: typeof BlogIndexRoute
 }
 
@@ -109,28 +82,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BlogSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/collections/$slug': {
-      id: '/collections/$slug'
-      path: '/collections/$slug'
-      fullPath: '/collections/$slug'
-      preLoaderRoute: typeof CollectionsSlugRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/products/$handle': {
-      id: '/products/$handle'
-      path: '/products/$handle'
-      fullPath: '/products/$handle'
-      preLoaderRoute: typeof ProductsHandleRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BlogSlugRoute: BlogSlugRoute,
-  CollectionsSlugRoute: CollectionsSlugRoute,
-  ProductsHandleRoute: ProductsHandleRoute,
   BlogIndexRoute: BlogIndexRoute,
 }
 export const routeTree = rootRouteImport

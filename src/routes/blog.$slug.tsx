@@ -2,8 +2,7 @@ import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { SimpleBreadcrumb } from "@/components/ui/simple-breadcrumb";
-import { ProductCard } from "@/components/product-card";
-import { getBlogPost, getRelatedProducts } from "@/data/blog";
+import { getBlogPost } from "@/data/blog";
 import { LazyImage } from "@/components/ui/lazy-image";
 
 const SITE = "https://bibistudio-2026.lovable.app";
@@ -12,7 +11,7 @@ export const Route = createFileRoute("/blog/$slug")({
   loader: ({ params }) => {
     const post = getBlogPost(params.slug);
     if (!post) throw notFound();
-    return { post, related: getRelatedProducts(post.relatedHandles) };
+    return { post, related: [] as never[] };
   },
   head: ({ params, loaderData }) => {
     if (!loaderData) {
@@ -238,21 +237,6 @@ function PostPage() {
           </div>
         </article>
 
-        {/* Related products */}
-        {related.length > 0 && (
-          <section className="border-t border-border bg-secondary/30 py-12 md:py-16">
-            <div className="mx-auto max-w-[1280px] px-4 lg:px-12">
-              <h2 className="section-title mb-8 text-center text-[13px]">
-                Sản phẩm liên quan
-              </h2>
-              <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4">
-                {related.map((product) => (
-                  <ProductCard key={product.handle} product={product} />
-                ))}
-              </div>
-            </div>
-          </section>
-        )}
       </main>
       <SiteFooter />
     </div>
