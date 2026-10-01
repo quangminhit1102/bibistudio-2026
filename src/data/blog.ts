@@ -1,5 +1,3 @@
-import { sections } from "./products";
-import type { Product } from "./products";
 import { paginate, POSTS_PER_PAGE } from "./pagination";
 import type { Paged } from "./pagination";
 
@@ -22,7 +20,6 @@ export type BlogPost = {
   relatedHandles: string[];
 };
 
-const allProducts = sections.flatMap((s) => s.products);
 
 export function getBlogPost(slug: string): BlogPost | undefined {
   return blogPosts.find((p) => p.slug === slug);
@@ -39,15 +36,6 @@ export function getBlogPostsPage(page: number, pageSize = POSTS_PER_PAGE): Paged
   return paginate(sorted, page, pageSize);
 }
 
-export function getRelatedProducts(handles: string[]): Product[] {
-  const map = new Map<string, Product>();
-  for (const product of allProducts) {
-    if (handles.includes(product.handle) && !map.has(product.handle)) {
-      map.set(product.handle, product);
-    }
-  }
-  return Array.from(map.values());
-}
 
 const blogPosts: BlogPost[] = [
   {
