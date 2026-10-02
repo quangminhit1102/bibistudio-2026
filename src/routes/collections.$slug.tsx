@@ -1,0 +1,108 @@
+import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { PageShell } from "@/components/page-shell";
+import { CatalogueGrid } from "@/components/catalogue-card";
+import { ContactBand } from "@/components/contact-cta";
+import { PaperPlaceholder } from "@/components/brand/paper-placeholder";
+import { Reveal } from "@/components/brand/reveal";
+import { collections, getCollectionBySlug, productsByCollection, tx } from "@/data/catalogue";
+
+const chapters: Record<string, { quote?: string; themes?: string[] }> = {
+  "explore-vietnam": { themes: ["Nơi chốn", "Phố phường", "Kiến trúc", "Ẩm thực", "Văn hoá", "Đời thường"] },
+  motivation: { quote: "Mỗi ngày một trang, mỗi trang một bước nhỏ." },
+  "vietnamese-food": { themes: ["Phở", "Bánh mì", "Cà phê"] },
+};
+
+export const Route = createFileRoute("/collections/$slug")({
+  loader: ({ params }) => {
+    const c = getCollectionBySlug(params.slug);
+    if (!c) throw notFound();
+    return { id: c.id };
+  },
+  head: ({ loaderData }) => {
+    const c = loaderData && collections.find((x) => x.id === loaderData.id);
+    if (!c) return { meta: [{ title: "Không tìm thấy — BiBi Studio" }, { name: "robots", content: "noindex" }] };
+    const title = `${tx(c.name)} — Bộ sưu tập BiBi Studio`;
+    return {
+      meta: [
+        { title },
+        { name: "description", content: tx(c.intro) },
+        { property: "og:title", content: title },
+        { property: "og:description", content: tx(c.intro) },
+        { property: "og:type", content: "website" },
+        { name: "twitter:card", content: "summary_large_image" },
+      ],
+    };
+  },
+  notFoundComponent: () => (
+    <PageShell>
+      <div className="mx-auto max-w-[1280px] px-6 py-28 lg:px-12">
+        <h1 className="font-display text-5xl">Không tìm thấy bộ sưu tập</h1>
+        <Link to="/collections" className="mt-8 inline-block underline underline-offset-8">Xem tất cả bộ sưu tập</Link>
+      </div>
+    </PageShell>
+  ),
+  component: CollectionPage,
+});
+
+function CollectionPage() {
+  const { id } = Route.useLoaderData();
+  const c = collections.find((x) => x.id === id)!;
+  const ch = chapters[c.slug] ?? {};
+  const signature = c.id === "explore-vietnam";
+  const idx = collections.indexOf(c);
+  const next = collections[(idx + 1) % collections.length];
+
+  return (
+    <PageShell>
+      <section className={signature ? "relative" : "mx-auto max-w-[1280px] px-6 pt-16 lg:px-12"}>
+        <div className={signature ? "grid lg:grid-cols-[5fr_7fr]" : "grid gap-12 md:grid-cols-2 md:items-end"}>
+          <div className={signature ? "flex flex-col justify-center px-6 py-16 lg:px-12" : ""}>
+            <p className="eyebrow animate-rise">Bộ sưu tập · {c.name.en}</p>
+            <h1 className="mt-5 font-display text-6xl leading-[0.98] animate-rise md:text-7xl">{tx(c.name)}</h1>
+            <p className="mt-6 max-w-md font-display text-2xl italic leading-snug text-kraft animate-rise">{tx(c.tagline)}</p>
+            <p className="mt-6 max-w-md text-[15px] leading-relaxed text-muted-foreground animate-rise">{tx(c.intro)}</p>
+          </div>
+          <div className="overflow-hidden">
+            {c.image ? (
+              <img src={c.image} alt={tx(c.name)} className={`w-full object-cover animate-settle ${signature ? "h-full min-h-[60vh]" : "aspect-[4/5]"}`} />
+            ) : (
+              <PaperPlaceholder label={tx(c.name)} />
+            )}
+          </div>
+        </div>
+      </section>
+
+      {ch.themes && (
+        <section className="mx-auto max-w-[1280px] px-6 py-20 lg:px-12">
+          <Reveal className="flex flex-wrap gap-x-10 gap-y-4 border-y border-border py-8">
+            {ch.themes.map((t, i) => (
+              <span key={t} className="font-display text-2xl md:text-3xl">
+                <span className="mr-2 text-sm text-kraft">{String(i + 1).padStart(2, "0")}</span>
+                {t}
+              </span>
+            ))}
+          </Reveal>
+        </section>
+      )}
+
+      {ch.quote && (
+        <Reveal as="section" className="mx-auto max-w-4xl px-6 py-24 text-center">
+          <blockquote className="font-display text-4xl italic leading-tight md:text-6xl">“{ch.quote}”</blockquote>
+        </Reveal>
+      )}
+
+      <section className="mx-auto max-w-[1280px] px-6 py-20 lg:px-12">
+        <h2 className="eyebrow mb-10 border-b border-border pb-6 text-foreground">Sản phẩm trong bộ sưu tập</h2>
+        <CatalogueGrid items={productsByCollection(c.id)} />
+      </section>
+
+      <section className="mx-auto max-w-[1280px] px-6 pb-24 lg:px-12">
+        <Link to="/collections/$slug" params={{ slug: next.slug }} className="group flex items-end justify-between border-t border-border pt-10">
+          <span className="eyebrow">Chương tiếp theo</span>
+          <span className="font-display text-4xl transition group-hover:-translate-x-2 md:text-5xl">{tx(next.name)} →</span>
+        </Link>
+      </section>
+      <ContactBand />
+    </PageShell>
+  );
+}
