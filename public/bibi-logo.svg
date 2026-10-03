@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 150" role="img" aria-labelledby="title desc">
+  <title id="title">bibistudio.vn</title><desc id="desc">Touch your heart</desc>
+  <g fill="#202020">
+    <text x="6" y="91" font-family="Arial Rounded MT Bold,Arial,sans-serif" font-size="91" font-weight="700" letter-spacing="-5">bibi</text>
+    <rect x="175" y="18" width="452" height="84" rx="2"/>
+    <text x="188" y="89" fill="#F7F5EF" font-family="Arial,Helvetica,sans-serif" font-size="78" font-weight="700" letter-spacing="-3">studi</text>
+    <circle cx="382" cy="65" r="25" fill="#F7F5EF"/>
+    <text x="407" y="89" fill="#F7F5EF" font-family="Arial,Helvetica,sans-serif" font-size="78" font-weight="700" letter-spacing="-3">.vn</text>
+    <text x="236" y="139" font-family="Courier New,monospace" font-size="33" font-weight="700" letter-spacing="1">touch your heart</text>
+  </g>
+</svg>
