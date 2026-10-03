@@ -65,7 +65,7 @@ function Home() {
           <div className="flex flex-col justify-center px-6 py-16 lg:px-12">
             <BrandMark className="h-12 w-auto self-start text-kraft animate-rise" />
             <p className="eyebrow mt-8 animate-rise [animation-delay:150ms]">BiBi Studio · Touch your heart</p>
-            <h1 className="mt-6 font-display text-6xl font-normal leading-[0.98] text-foreground animate-rise [animation-delay:300ms] md:text-7xl xl:text-8xl">
+            <h1 className="mt-6 font-display text-6xl font-normal leading-[0.98] text-foreground animate-rise [animation-delay:300ms] md:text-7xl">
               Little things,
               <br />
               <em className="text-kraft">made to touch</em>
