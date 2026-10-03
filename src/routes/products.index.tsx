@@ -28,7 +28,7 @@ function Pill({ active, onClick, children }: { active: boolean; onClick: () => v
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={`whitespace-nowrap border-b py-1 text-[13px] transition ${active ? "border-foreground text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+      className={`min-h-9 whitespace-nowrap border-b px-0.5 py-2 text-[13px] transition ${active ? "border-foreground text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}
     >
       {children}
     </button>
@@ -52,17 +52,17 @@ function ProductsPage() {
   return (
     <PageShell>
       <PageIntro eyebrow="Catalogue" title="Sản phẩm" lead="Khám phá các sản phẩm giấy của BiBi Studio theo loại sản phẩm hoặc theo bộ sưu tập." />
-      <section className="mx-auto max-w-[1280px] px-6 lg:px-12">
+      <section className="mx-auto max-w-[1280px] px-5 sm:px-6 lg:px-12">
         <div className="space-y-5 border-y border-border py-6">
-          <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
-            <span className="eyebrow w-28">Loại</span>
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
+            <span className="eyebrow w-full pb-1 sm:w-28">Loại</span>
             <Pill active={type === "all"} onClick={() => setType("all")}>Tất cả</Pill>
             {productTypes.map((t) => (
               <Pill key={t.id} active={type === t.id} onClick={() => setType(t.id)}>{tx(t.name)}</Pill>
             ))}
           </div>
-          <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
-            <span className="eyebrow w-28">Bộ sưu tập</span>
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
+            <span className="eyebrow w-full pb-1 sm:w-28">Bộ sưu tập</span>
             <Pill active={col === "all"} onClick={() => setCol("all")}>Tất cả</Pill>
             {collections.map((c) => (
               <Pill key={c.id} active={col === c.id} onClick={() => setCol(c.id)}>{tx(c.name)}</Pill>

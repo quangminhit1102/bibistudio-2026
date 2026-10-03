@@ -72,7 +72,7 @@ const contacts: ContactItem[] = [
 export function FloatingContact() {
   return (
     <div
-      className="fixed right-3 top-1/2 z-40 flex -translate-y-1/2 flex-col gap-3"
+      className="fixed inset-x-0 bottom-3 z-40 mx-auto flex w-fit items-center gap-2 rounded-full border border-border bg-background/95 p-1.5 shadow-lg backdrop-blur md:inset-x-auto md:bottom-auto md:right-3 md:top-1/2 md:mx-0 md:-translate-y-1/2 md:flex-col md:gap-3 md:rounded-none md:border-0 md:bg-transparent md:p-0 md:shadow-none md:backdrop-blur-none"
       aria-label="Liên hệ mua hàng"
     >
       {contacts.map((c) => (
@@ -86,15 +86,15 @@ export function FloatingContact() {
           className="group relative flex items-center justify-center"
         >
           {/* Tooltip label */}
-          <span className="pointer-events-none absolute right-full mr-3 flex items-center whitespace-nowrap rounded-md bg-slate-900/90 px-3 py-1.5 text-xs font-semibold text-white opacity-0 shadow-lg backdrop-blur-sm transition-all duration-300 ease-out translate-x-3 scale-95 group-hover:translate-x-0 group-hover:opacity-100 group-hover:scale-100">
+          <span className="pointer-events-none absolute right-full mr-3 hidden items-center whitespace-nowrap rounded-md bg-foreground/90 px-3 py-1.5 text-xs font-semibold text-background opacity-0 shadow-lg backdrop-blur-sm transition-all duration-300 ease-out translate-x-3 scale-95 group-hover:translate-x-0 group-hover:opacity-100 group-hover:scale-100 md:flex">
             {c.label}
             {/* Arrow */}
-            <span className="absolute -right-1 top-1/2 size-2 -translate-y-1/2 rotate-45 bg-slate-900/90" />
+            <span className="absolute -right-1 top-1/2 size-2 -translate-y-1/2 rotate-45 bg-foreground/90" />
           </span>
 
           {/* Contact button circle */}
           <span
-            className={`relative flex size-11 items-center justify-center rounded-full text-white shadow-md transition-all duration-300 ease-out group-hover:scale-110 group-hover:shadow-xl active:scale-95 ${c.bg}`}
+            className={`relative flex size-10 items-center justify-center rounded-full text-white shadow-sm transition-all duration-300 ease-out group-hover:scale-110 group-hover:shadow-xl active:scale-95 md:size-11 ${c.bg}`}
           >
             <span className="shrink-0 transition-transform duration-300 ease-out group-hover:scale-110 group-hover:-rotate-6">
               {c.icon}

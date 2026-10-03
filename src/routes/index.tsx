@@ -62,10 +62,10 @@ function Home() {
       {/* Hero */}
       <section className="relative overflow-hidden">
         <div className="grid min-h-[calc(100svh-77px)] lg:grid-cols-[5fr_7fr]">
-          <div className="flex flex-col justify-center px-6 py-16 lg:px-12">
+          <div className="flex flex-col justify-center px-5 py-14 sm:px-6 sm:py-16 lg:px-12">
             <BrandMark className="h-12 w-auto self-start text-kraft animate-rise" />
             <p className="eyebrow mt-8 animate-rise [animation-delay:150ms]">BiBi Studio · Touch your heart</p>
-            <h1 className="mt-6 font-display text-6xl font-normal leading-[0.98] text-foreground animate-rise [animation-delay:300ms] md:text-7xl">
+            <h1 className="mt-6 font-display text-[3.35rem] font-normal leading-[0.98] text-foreground animate-rise [animation-delay:300ms] sm:text-6xl md:text-7xl">
               Little things,
               <br />
               <em className="text-kraft">made to touch</em>
@@ -75,7 +75,7 @@ function Home() {
             <p className="mt-8 max-w-sm text-[15px] leading-relaxed text-muted-foreground animate-rise [animation-delay:500ms]">
               Sổ tay, thiệp và giấy viết thư — những món đồ giấy nhỏ, lấy cảm hứng từ Việt Nam.
             </p>
-            <div className="mt-10 flex flex-wrap items-center gap-6 animate-rise [animation-delay:700ms]">
+            <div className="mt-10 flex flex-col items-start gap-6 animate-rise [animation-delay:700ms] sm:flex-row sm:flex-wrap sm:items-center">
               <Link to="/collections" className="bg-foreground px-7 py-3.5 text-[12px] font-medium uppercase tracking-[0.22em] text-background transition hover:bg-accent">
                 Khám phá bộ sưu tập
               </Link>
@@ -153,7 +153,7 @@ function Home() {
             <p className="eyebrow">Câu chuyện nổi bật</p>
             <h2 className="mt-5 font-display text-5xl leading-[1.02] md:text-6xl">Việt Nam,<br /><em className="text-kraft">qua từng trang giấy.</em></h2>
             <p className="mt-6 max-w-md text-[15px] leading-relaxed text-muted-foreground">{tx(ev.intro)}</p>
-            <div className="mt-10 grid grid-cols-3 gap-4">
+            <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3">
               {evProducts.map((p) => <CatalogueCard key={p.slug} product={p} />)}
             </div>
             <Link to="/collections/$slug" params={{ slug: ev.slug }} className="mt-10 inline-flex items-center gap-2 text-[12px] font-medium uppercase tracking-[0.22em] underline underline-offset-8">

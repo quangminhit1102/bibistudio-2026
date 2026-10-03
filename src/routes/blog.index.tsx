@@ -85,7 +85,7 @@ function BlogIndexPage() {
 
         <section
           id="blog-listing"
-          className="mx-auto max-w-[1280px] scroll-mt-24 px-4 py-12 lg:px-12"
+          className="mx-auto max-w-[1280px] scroll-mt-24 px-4 pb-24 pt-12 lg:px-12"
         >
           <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
             {postPage.items.map((post) => (

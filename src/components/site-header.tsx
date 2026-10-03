@@ -17,9 +17,9 @@ export function SiteHeader() {
   const [open, setOpen] = useState(false);
   return (
     <header className="relative z-40 w-full border-b border-border bg-background">
-      <div className="mx-auto flex max-w-[1280px] items-center justify-between gap-6 px-6 py-4 lg:px-12">
+      <div className="mx-auto grid max-w-[1280px] grid-cols-[2.75rem_minmax(0,1fr)_2.75rem] items-center gap-2 px-4 py-3 sm:px-6 lg:flex lg:justify-between lg:gap-6 lg:px-12 lg:py-4">
         <button
-          className="lg:hidden"
+          className="grid size-11 place-items-center lg:hidden"
           onClick={() => setOpen((v) => !v)}
           aria-label={open ? "Đóng menu" : "Mở menu"}
           aria-expanded={open}
@@ -27,7 +27,7 @@ export function SiteHeader() {
           {open ? <X className="size-5" /> : <Menu className="size-5" />}
         </button>
 
-        <Link to="/" aria-label="BiBi Studio — Trang chủ">
+        <Link to="/" aria-label="BiBi Studio — Trang chủ" className="min-w-0 justify-self-center">
           <BrandLogo />
         </Link>
 
@@ -50,13 +50,13 @@ export function SiteHeader() {
           </ul>
         </nav>
 
-        <a href={`tel:${contact.phone}`} className="lg:hidden" aria-label="Gọi BiBi Studio">
+        <a href={`tel:${contact.phone}`} className="grid size-11 place-items-center justify-self-end lg:hidden" aria-label="Gọi BiBi Studio">
           <Phone className="size-5" />
         </a>
       </div>
 
       {open && (
-        <nav aria-label="Menu di động" className="border-t border-border px-6 pb-8 lg:hidden">
+        <nav aria-label="Menu di động" className="border-t border-border px-4 pb-8 sm:px-6 lg:hidden">
           <ul>
             {nav.map((n) => (
               <li key={n.to}>
