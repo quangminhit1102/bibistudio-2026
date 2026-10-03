@@ -12,3 +12,4 @@
 <!-- LOVABLE:END -->
 
 - Catalogue data lives in `src/data/catalogue.ts` with product type and collection as separate dimensions; `/products/$slug` resolves type slugs to listings, otherwise product detail. Why: brand catalogue, not a shop — no prices/cart.
+- Product imagery is normalized into `public/catalogue` with ASCII filenames; polished images lead and matching photographs follow in detail galleries. Why: predictable URLs, lighter pages, and consistent presentation.
