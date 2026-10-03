@@ -14,9 +14,9 @@ export function PageShell({ children }: { children: ReactNode }) {
 
 export function PageIntro({ eyebrow, title, lead }: { eyebrow: string; title: string; lead?: string }) {
   return (
-    <section className="mx-auto max-w-[1280px] px-6 pb-12 pt-16 md:pb-16 md:pt-24 lg:px-12">
+    <section className="mx-auto max-w-[1280px] px-5 pb-10 pt-12 sm:px-6 md:pb-16 md:pt-24 lg:px-12">
       <p className="eyebrow animate-rise">{eyebrow}</p>
-      <h1 className="mt-5 max-w-4xl font-display text-5xl leading-[1.02] text-foreground animate-rise md:text-7xl">
+      <h1 className="mt-5 max-w-4xl font-display text-4xl leading-[1.02] text-foreground animate-rise sm:text-5xl md:text-7xl">
         {title}
       </h1>
       {lead && (

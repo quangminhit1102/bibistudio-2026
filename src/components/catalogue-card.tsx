@@ -27,10 +27,10 @@ export function CatalogueCard({ product }: { product: Product }) {
           )}
         </div>
       </div>
-      <div className="flex items-start justify-between gap-3 pt-4">
-        <div>
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2 pt-3 sm:gap-3 sm:pt-4">
+        <div className="min-w-0">
           <p className="eyebrow">{tx(type.name)}</p>
-          <h3 className="mt-1.5 font-display text-xl leading-tight text-foreground">
+          <h3 className="mt-1.5 font-display text-lg leading-tight text-foreground sm:text-xl">
             {tx(product.name)}
           </h3>
           <p className="mt-1 text-[13px] text-muted-foreground">{tx(col.name)}</p>
@@ -49,7 +49,7 @@ export function CatalogueGrid({ items }: { items: Product[] }) {
       </p>
     );
   return (
-    <div className="grid grid-cols-2 gap-x-5 gap-y-12 md:gap-x-8 lg:grid-cols-3">
+    <div className="grid grid-cols-2 gap-x-4 gap-y-10 sm:gap-x-5 sm:gap-y-12 md:gap-x-8 lg:grid-cols-3">
       {items.map((p) => (
         <CatalogueCard key={p.slug} product={p} />
       ))}

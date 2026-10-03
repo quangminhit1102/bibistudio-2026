@@ -56,9 +56,9 @@ function CollectionPage() {
     <PageShell>
       <section className={signature ? "relative" : "mx-auto max-w-[1280px] px-6 pt-16 lg:px-12"}>
         <div className={signature ? "grid lg:grid-cols-[5fr_7fr]" : "grid gap-12 md:grid-cols-2 md:items-end"}>
-          <div className={signature ? "flex flex-col justify-center px-6 py-16 lg:px-12" : ""}>
+          <div className={signature ? "flex flex-col justify-center px-5 py-14 sm:px-6 sm:py-16 lg:px-12" : ""}>
             <p className="eyebrow animate-rise">Bộ sưu tập · {c.name.en}</p>
-            <h1 className="mt-5 font-display text-6xl leading-[0.98] animate-rise md:text-7xl">{tx(c.name)}</h1>
+            <h1 className="mt-5 font-display text-[3.25rem] leading-[0.98] animate-rise sm:text-6xl md:text-7xl">{tx(c.name)}</h1>
             <p className="mt-6 max-w-md font-display text-2xl italic leading-snug text-kraft animate-rise">{tx(c.tagline)}</p>
             <p className="mt-6 max-w-md text-[15px] leading-relaxed text-muted-foreground animate-rise">{tx(c.intro)}</p>
           </div>
@@ -97,9 +97,9 @@ function CollectionPage() {
       </section>
 
       <section className="mx-auto max-w-[1280px] px-6 pb-24 lg:px-12">
-        <Link to="/collections/$slug" params={{ slug: next.slug }} className="group flex items-end justify-between border-t border-border pt-10">
+        <Link to="/collections/$slug" params={{ slug: next.slug }} className="group grid grid-cols-[minmax(0,1fr)_auto] items-end gap-4 border-t border-border pt-10">
           <span className="eyebrow">Chương tiếp theo</span>
-          <span className="font-display text-4xl transition group-hover:-translate-x-2 md:text-5xl">{tx(next.name)} →</span>
+          <span className="max-w-[12rem] text-right font-display text-3xl leading-tight transition group-hover:-translate-x-2 sm:max-w-none md:text-5xl">{tx(next.name)} →</span>
         </Link>
       </section>
       <ContactBand />

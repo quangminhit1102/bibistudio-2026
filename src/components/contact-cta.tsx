@@ -18,10 +18,10 @@ export function ContactLinks({ className = "" }: { className?: string }) {
             href={i.href}
             target={i.href.startsWith("http") ? "_blank" : undefined}
             rel={i.href.startsWith("http") ? "noopener noreferrer" : undefined}
-            className="flex items-center justify-between gap-4 py-3.5 text-sm transition hover:text-accent"
+            className="grid min-h-12 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 py-3 text-sm transition hover:text-accent"
           >
             <span className="eyebrow">{i.label}</span>
-            <span>{i.value}</span>
+            <span className="min-w-0 break-all text-right">{i.value}</span>
           </a>
         </li>
       ))}
@@ -32,10 +32,10 @@ export function ContactLinks({ className = "" }: { className?: string }) {
 export function ContactBand() {
   return (
     <section className="paper-texture">
-      <div className="mx-auto grid max-w-[1280px] gap-10 px-6 py-24 md:grid-cols-[1.2fr_1fr] md:items-end md:py-32 lg:px-12">
+      <div className="mx-auto grid max-w-[1280px] gap-10 px-5 py-20 sm:px-6 md:grid-cols-[1.2fr_1fr] md:items-end md:py-32 lg:px-12">
         <div>
           <p className="eyebrow">Liên hệ</p>
-          <h2 className="mt-5 font-display text-4xl leading-[1.05] text-foreground md:text-6xl">
+          <h2 className="mt-5 font-display text-[2.35rem] leading-[1.05] text-foreground sm:text-4xl md:text-6xl">
             Bạn thích một sản phẩm?
             <br />
             <em className="text-kraft">Hãy trò chuyện cùng BiBi.</em>

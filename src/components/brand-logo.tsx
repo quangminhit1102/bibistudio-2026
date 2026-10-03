@@ -24,12 +24,12 @@ export function BrandMark({ className = "" }: { className?: string }) {
 
 export function BrandLogo({ compact = false }: { compact?: boolean }) {
   return (
-    <span className="flex items-center gap-3 text-foreground">
-      <BrandMark className="h-11 w-auto" />
+    <span className="flex min-w-0 items-center gap-2.5 text-foreground sm:gap-3">
+      <BrandMark className="h-10 w-auto shrink-0 sm:h-11" />
       <span className="flex flex-col items-center text-center leading-none">
-        <span className="text-[22px] font-medium tracking-tight">BiBi Studio</span>
+        <span className="whitespace-nowrap text-[19px] font-medium sm:text-[22px]">BiBi Studio</span>
         {!compact && (
-          <span className="mt-1 text-[9px] font-light uppercase tracking-[0.28em] text-muted-foreground pl-[0.28em]">
+          <span className="mt-1 whitespace-nowrap pl-[0.28em] text-[8px] font-light uppercase tracking-[0.28em] text-muted-foreground sm:text-[9px]">
             Touch your heart
           </span>
         )}
