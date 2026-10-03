@@ -56,7 +56,7 @@ export function SiteFooter() {
         </div>
       </div>
       <div className="border-t border-border">
-        <p className="mx-auto max-w-[1280px] px-6 py-5 text-[11px] tracking-wider text-muted-foreground lg:px-12">
+        <p className="mx-auto max-w-[1280px] px-6 pt-5 pb-24 text-[11px] tracking-wider text-muted-foreground md:pb-5 lg:px-12">
           © {new Date().getFullYear()} BiBi Studio · Touch your heart
         </p>
       </div>
