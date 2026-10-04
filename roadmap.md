@@ -7,4 +7,4 @@
 - [x] Thêm “Trang chủ” và “Nhật ký” vào menu chính
 - [x] Thiết kế favicon BiBi Studio mới từ dấu B của thương hiệu
 - [x] Thay toàn bộ ảnh placeholder trong Nhật ký bằng bộ ảnh biên tập phù hợp nội dung
-- [ ] Kiểm tra menu, favicon và Nhật ký trên desktop/mobile
+- [x] Kiểm tra menu, favicon và Nhật ký trên desktop/mobile — không ảnh lỗi, không placeholder, build sạch
