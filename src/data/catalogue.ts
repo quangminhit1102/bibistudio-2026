@@ -15,6 +15,19 @@ import motivationLoveYourselfAsset from "@/assets/catalogue/motivation-love-your
 import motivationLifeIsTooShortAsset from "@/assets/catalogue/motivation-life-is-too-short.jpeg.asset.json";
 import motivationCaPheNguoiThuongAsset from "@/assets/catalogue/motivation-ca-phe-nguoi-thuong.jpeg.asset.json";
 import pressedFlowerMainAsset from "@/assets/catalogue/pressed-flower-cards-main.jpg.asset.json";
+import greetingCardsMainAsset from "@/assets/catalogue/greeting-cards-main.jpg.asset.json";
+import womensDayFloralBorderAsset from "@/assets/catalogue/womens-day-floral-border.jpg.asset.json";
+import womensDayMoonBouquetAsset from "@/assets/catalogue/womens-day-moon-bouquet.jpg.asset.json";
+import womensDayWreathRibbonAsset from "@/assets/catalogue/womens-day-wreath-ribbon.jpg.asset.json";
+import womensDayBlueFloralAsset from "@/assets/catalogue/womens-day-blue-floral.jpg.asset.json";
+import womensDayDaisyFrameAsset from "@/assets/catalogue/womens-day-daisy-frame.jpg.asset.json";
+import womensDayHeartsAsset from "@/assets/catalogue/womens-day-hearts.jpg.asset.json";
+import womensDayVaseSunsetAsset from "@/assets/catalogue/womens-day-vase-sunset.jpg.asset.json";
+import womensDayPinkGardenAsset from "@/assets/catalogue/womens-day-pink-garden.jpg.asset.json";
+import womensDayApronBouquetAsset from "@/assets/catalogue/womens-day-apron-bouquet.jpg.asset.json";
+import womensDayStripedVaseAsset from "@/assets/catalogue/womens-day-striped-vase.jpg.asset.json";
+import womensDayTulipEnvelopeAsset from "@/assets/catalogue/womens-day-tulip-envelope.jpg.asset.json";
+import womensDayFlowerEnvelopeAsset from "@/assets/catalogue/womens-day-flower-envelope.jpg.asset.json";
 
 // BiBi Studio catalogue: product TYPES (what it is) and COLLECTIONS (what story it belongs to)
 // are separate dimensions. Products reference one of each.
@@ -58,12 +71,37 @@ export type Collection = {
   image?: string;
 };
 
+// Occasions (dịp lễ) group greeting cards inside the "greeting-cards" collection.
+export type OccasionId =
+  | "womens-day-83"
+  | "birthday"
+  | "womens-day-2010"
+  | "teachers-day-2011"
+  | "christmas"
+  | "tet"
+  | "valentine"
+  | "thank-you";
+
+export type Occasion = { id: OccasionId; name: Localized; note: Localized };
+
+export const occasions: Occasion[] = [
+  { id: "womens-day-83", name: { vi: "8/3 — Quốc tế Phụ nữ", en: "Mar 8 — International Women's Day" }, note: { vi: "Những tấm thiệp hoa tươi sắc màu dành tặng mẹ, chị, bạn gái và đồng nghiệp.", en: "Bright floral cards for mothers, sisters, partners and colleagues." } },
+  { id: "birthday", name: { vi: "Sinh nhật", en: "Birthday" }, note: { vi: "Lời chúc tuổi mới gửi trong một tấm thiệp nhỏ.", en: "Birthday wishes folded into a little card." } },
+  { id: "womens-day-2010", name: { vi: "20/10 — Phụ nữ Việt Nam", en: "Oct 20 — Vietnamese Women's Day" }, note: { vi: "Ngày riêng của phụ nữ Việt, dịp để nói lời trân trọng.", en: "Vietnam's own day to honour the women around you." } },
+  { id: "teachers-day-2011", name: { vi: "20/11 — Nhà giáo Việt Nam", en: "Nov 20 — Vietnamese Teachers' Day" }, note: { vi: "Gửi thầy cô một lời cảm ơn viết tay.", en: "A handwritten thank-you for teachers." } },
+  { id: "christmas", name: { vi: "Giáng sinh", en: "Christmas" }, note: { vi: "Ấm áp cuối năm, thiệp xanh đỏ và những lời chúc mùa lễ.", en: "Warm year-end greetings for the festive season." } },
+  { id: "tet", name: { vi: "Lì xì Tết", en: "Tet & Lucky Money" }, note: { vi: "Bao lì xì và thiệp chúc Tết cho năm mới sum vầy.", en: "Lucky-money envelopes and New Year cards." } },
+  { id: "valentine", name: { vi: "Valentine 14/2", en: "Valentine's Day" }, note: { vi: "Cho những lời yêu khó nói thành lời.", en: "For feelings that are hard to say out loud." } },
+  { id: "thank-you", name: { vi: "Cảm ơn & chúc mừng", en: "Thank You & Congrats" }, note: { vi: "Khai trương, tốt nghiệp, năm mới — mọi dịp đáng mừng.", en: "Openings, graduations, new year — every happy occasion." } },
+];
+
 export type Product = {
   id: string;
   slug: string;
   name: Localized;
   productType: ProductTypeId;
   collection: CollectionId;
+  occasion?: OccasionId;
   description: Localized;
   dimensions?: string;
   material?: Localized;
@@ -90,7 +128,7 @@ export const collections: Collection[] = [
   { id: "vietnamese-food", slug: "vietnamese-food", name: { vi: "Món ăn Việt Nam", en: "Vietnamese Food" }, tagline: { vi: "Hương vị quen thuộc, được nhớ lại trên giấy.", en: "Familiar flavours, remembered in paper." }, intro: { vi: "Những món ăn gắn với ký ức, được vẽ lại thành sổ tay và postcard.", en: "Dishes tied to memory, illustrated as notebooks and postcards." }, image: "/catalogue/collection-vietnamese-food.webp" },
   { id: "motivation", slug: "motivation", name: { vi: "Sổ tay tạo động lực", en: "Motivation" }, tagline: { vi: "Những lời nhắc nhỏ cho ngày bình thường.", en: "Small reminders for ordinary days." }, intro: { vi: "Từ một nụ cười, một giấc mơ đến niềm tin rằng mọi điều đều có thể — mỗi cuốn sổ là một lời nhắc dịu dàng để bạn tiếp tục viết, tiếp tục làm và tiếp tục vui sống.", en: "From a smile and a dream to the belief that anything is possible, each notebook is a gentle reminder to keep writing, doing and living with joy." }, image: motivationMainAsset.url },
   { id: "ao-dai", slug: "ao-dai", name: { vi: "Áo dài", en: "Ao Dai" }, tagline: { vi: "Nét thanh lịch Việt, tái hiện trên giấy.", en: "Vietnamese elegance, reimagined in paper." }, intro: { vi: "Tà áo dài qua nét vẽ mềm mại trên thiệp và postcard.", en: "The ao dai in soft illustration, on cards and postcards." }, image: "/catalogue/collection-ao-dai.webp" },
-  { id: "greeting-cards", slug: "greeting-cards", name: { vi: "Thiệp chúc mừng", en: "Greeting Cards" }, tagline: { vi: "Lời chúc cho những khoảnh khắc ý nghĩa.", en: "Words for the moments that matter." }, intro: { vi: "Sinh nhật, cảm ơn, chúc mừng — những dịp để nói điều mình nghĩ.", en: "Birthdays, thank-yous and celebrations — moments to say what you mean." } },
+  { id: "greeting-cards", slug: "greeting-cards", name: { vi: "Thiệp chúc mừng", en: "Greeting Cards" }, tagline: { vi: "Lời chúc cho những khoảnh khắc ý nghĩa.", en: "Words for the moments that matter." }, intro: { vi: "Mỗi dịp trong năm là một lý do để viết vài dòng: 8/3, sinh nhật, 20/10, 20/11, Giáng sinh, lì xì Tết… Thiệp BiBi được chia theo từng dịp, để bạn luôn tìm được đúng tấm thiệp cho đúng người, đúng ngày.", en: "Every occasion in the year is a reason to write a few lines: Mar 8, birthdays, Oct 20, Nov 20, Christmas, Tet… BiBi cards are grouped by occasion, so you always find the right card for the right person on the right day." }, image: greetingCardsMainAsset.url },
   { id: "pressed-flower-cards", slug: "pressed-flower-cards", name: { vi: "Thiệp ép hoa khô", en: "Pressed Flower Cards" }, tagline: { vi: "Hoa thật được ép khô, dán từng cánh tay.", en: "Real dried flowers, pressed petal by petal." }, intro: { vi: "Hoa, lá khô được ép và dán lên nền giấy thủ công nhuộm màu, hoàn thiện bằng viền răng cưa kiểu thiệp xưa. Mỗi tấm thiệp là một cành hoa thật giữ được dáng đẹp theo năm tháng.", en: "Dried flowers and leaves are pressed and laid on hand-dyed craft paper, finished with a vintage scalloped edge. Each card keeps a real flower, beautiful for years." }, image: pressedFlowerMainAsset.url },
   { id: "spiral-cards", slug: "spiral-cards", name: { vi: "Thiệp xoắn", en: "Spiral Cards" }, tagline: { vi: "Tấm thiệp mở ra một bất ngờ nhỏ.", en: "Paper that unfolds into a little surprise." }, intro: { vi: "Thiệp xoắn mở ra thành một hình ảnh bất ngờ.", en: "Cards that unfold into a little surprise." } },
 ];
@@ -106,6 +144,7 @@ function p(
   descriptionEn: string,
   images: string[],
   featured = false,
+  occasion?: OccasionId,
 ): Product {
   order += 1;
   return {
@@ -114,6 +153,7 @@ function p(
     name: { vi, en },
     productType,
     collection,
+    occasion,
     description: { vi: descriptionVi, en: descriptionEn },
     images,
     imageAlt: { vi: `${vi} — sản phẩm BiBi Studio`, en: `${en} — a BiBi Studio paper good` },
@@ -164,6 +204,19 @@ export const products: Product[] = [
   p("ao-dai-hue-card", "Áo dài Huế", "Hue Ao Dai Card", "greeting-card", "ao-dai", "Nét trầm mặc của Huế được làm dịu bởi tà áo dài tím và những đóa sen. Một tấm thiệp thanh nhã cho người yêu vẻ đẹp truyền thống.", "Hue's quiet grace is softened by a purple ao dai and lotus flowers. An elegant card for admirers of traditional Vietnamese beauty.", ["/catalogue/card-hue.webp"]),
   p("ao-dai-ha-noi-card", "Áo dài Hà Nội", "Hanoi Ao Dai Card", "greeting-card", "ao-dai", "Phố Hà Nội, sắc hoa và tà áo dài xanh tạo nên một khung hình trong trẻo. Tấm thiệp gợi cảm giác bình yên của những ngày dạo phố.", "Hanoi streets, flowers and a blue ao dai create a clear, peaceful scene. A card recalling gentle days spent wandering the city.", ["/catalogue/card-ha-noi.webp"]),
   p("ao-dai-da-nang-card", "Áo dài Đà Nẵng", "Da Nang Ao Dai Card", "greeting-card", "ao-dai", "Tà áo dài bên sông Hàn và những cây cầu của Đà Nẵng tạo nên một lời chào hiện đại từ miền Trung. Thiết kế sáng và đầy sức sống.", "An ao dai beside the Han River and Da Nang bridges becomes a modern greeting from central Vietnam. Bright, graceful and full of life.", ["/catalogue/card-da-nang.webp"]),
+  p("womens-day-floral-border-card", "8/3 Viền Hoa Rực Rỡ", "Women's Day Floral Border", "greeting-card", "greeting-cards", "Những đóa hoa đỏ hồng và lá xanh ôm quanh lời chúc “Happy Women's Day” trên nền giấy kem. Một tấm thiệp tươi sáng để gửi đến mẹ, chị, bạn gái hay đồng nghiệp trong ngày 8/3.", "Red and pink blooms with green leaves frame the words “Happy Women's Day” on cream paper. A bright card for mothers, sisters, partners and colleagues on March 8.", [womensDayFloralBorderAsset.url], true, "womens-day-83"),
+  p("womens-day-moon-bouquet-card", "8/3 Bó Hoa Dưới Trăng", "Women's Day Moon Bouquet", "greeting-card", "greeting-cards", "Một bó hoa nhiều sắc nở dưới vòng trăng hồng dịu, kèm dòng “8th March” nhỏ nhắn. Tấm thiệp dịu dàng và lãng mạn cho ngày Quốc tế Phụ nữ.", "A colourful bouquet blooms beneath a soft pink moon, with a small “8th March” note. A gentle, romantic card for International Women's Day.", [womensDayMoonBouquetAsset.url], true, "womens-day-83"),
+  p("womens-day-wreath-ribbon-card", "8/3 Vòng Hoa Ruy Băng", "Women's Day Wreath & Ribbon", "greeting-card", "greeting-cards", "Vòng hoa đỏ ôm lấy lời chúc “Happy Women's Day” trên nền hồng san hô, điểm thêm dải ruy băng ghi ngày 8 tháng 3. Một thiết kế cổ điển, ấm áp và đầy trân trọng.", "A red floral wreath wraps around “Happy Women's Day” on a coral pink cover, finished with a ribbon marking March 8. A classic, warm and heartfelt design.", [womensDayWreathRibbonAsset.url], false, "womens-day-83"),
+  p("womens-day-blue-floral-card", "8/3 Hoa Xanh Cobalt", "Women's Day Cobalt Blue", "greeting-card", "greeting-cards", "Những đường hoa vẽ tay tinh tế trên nền xanh cobalt trầm lắng. Một tấm thiệp thanh lịch dành cho người yêu nét đẹp giản dị mà sâu sắc.", "Delicate hand-drawn florals on a deep cobalt blue cover. An elegant card for those who love simple yet profound beauty.", [womensDayBlueFloralAsset.url], false, "womens-day-83"),
+  p("womens-day-daisy-frame-card", "8/3 Khung Cúc Hồng", "Women's Day Daisy Frame", "greeting-card", "greeting-cards", "Những bông cúc hồng nhung nhí xếp thành khung quanh nét chữ thư pháp mềm mại. Tấm thiệp ngọt ngào như một bó hoa nhỏ gửi đến người thương.", "Velvety pink daisies frame soft calligraphy lettering. A card as sweet as a little bouquet for someone dear.", [womensDayDaisyFrameAsset.url], false, "womens-day-83"),
+  p("womens-day-hearts-card", "8/3 Trăm Trái Tim", "Women's Day A Hundred Hearts", "greeting-card", "greeting-cards", "Hàng trăm trái tim đỏ hồng bay quanh lời chúc “Happy Women Day”. Một thiết kế rực rỡ cho ngày 8/3 đầy yêu thương.", "A hundred red-pink hearts flutter around the “Happy Women Day” greeting. A vivid design for a March 8 full of love.", [womensDayHeartsAsset.url], false, "womens-day-83"),
+  p("womens-day-vase-sunset-card", "8/3 Bình Hoa Hoàng Hôn", "Women's Day Sunset Vase", "greeting-card", "greeting-cards", "Bình hoa lavender và lá xanh nổi bật trên nền cam vàng như nắng chiều. Một tấm thiệp ấm áp, tươi vui cho ngày Quốc tế Phụ nữ.", "A vase of lavender and green leaves stands out against an orange-gold sunset wash. A warm, cheerful card for International Women's Day.", [womensDayVaseSunsetAsset.url], false, "womens-day-83"),
+  p("womens-day-pink-garden-card", "8/3 Vườn Hồng", "Women's Day Pink Garden", "greeting-card", "greeting-cards", "Cả một khu vườn hoa hồng, lá xanh và cành khô bao quanh dòng chữ “Happy Women's Day”. Tấm thiệp như một bó hoa không bao giờ tàn.", "A whole garden of pink blooms, green leaves and dry twigs surrounds the words “Happy Women's Day”. A card like a bouquet that never fades.", [womensDayPinkGardenAsset.url], false, "womens-day-83"),
+  p("womens-day-apron-bouquet-card", "8/3 Tạp Dề Cắm Hoa", "Women's Day Apron Bouquet", "greeting-card", "greeting-cards", "Chiếc tạp dề xanh cài bó hoa hồng phấn và con số 8, trên nền cam cháy nghệ thuật. Một thiết kế vui tươi, gần gũi và đầy tính Việt Nam.", "A blue apron pocket holding pink blossoms and the number 8, over a bold orange canvas. A playful, familiar and very Vietnamese design.", [womensDayApronBouquetAsset.url], false, "womens-day-83"),
+  p("womens-day-striped-vase-card", "8/3 Bình Hoa Kẻ Sọc", "Women's Day Striped Vase", "greeting-card", "greeting-cards", "Bình hoa cúc vàng và lavender trên nền sọc mực đen trắng mạnh mẽ. Một tấm thiệp cá tính cho người phụ nữ hiện đại.", "A vase of yellow chrysanthemums and lavender on bold black-and-white ink stripes. A confident card for the modern woman.", [womensDayStripedVaseAsset.url], false, "womens-day-83"),
+  p("womens-day-tulip-envelope-card", "8/3 Phong Bì Tuilip", "Women's Day Tulip Envelope", "greeting-card", "greeting-cards", "Chiếc phong bì hồng mở ra những bông tuilip và trái tim bay lên, viền xanh navy trang nhã. Lời chúc 8/3 như một lá thư tình nhỏ.", "A pink envelope opens into tulips and floating hearts, framed by a neat navy border. A March 8 greeting like a little love letter.", [womensDayTulipEnvelopeAsset.url], false, "womens-day-83"),
+  p("womens-day-flower-envelope-card", "8/3 Thư Hoa Đỏ", "Women's Day Red Flower Letter", "greeting-card", "greeting-cards", "Bông hoa đỏ nhô ra từ phong thư hồng trên nền đỏ tươi, điểm một trái tim nhỏ. Tấm thiệp rực rỡ để nói lời yêu thương ngày 8/3.", "Red blooms peek out of a pink envelope on a bright red cover, finished with a tiny heart. A vivid card to say you care on March 8.", [womensDayFlowerEnvelopeAsset.url], false, "womens-day-83"),
+
   p("canh-hoa-be-be-card", "Cành Hoa Bé Bé", "Baby's Breath Branch", "greeting-card", "pressed-flower-cards", "Từng bông hoa bé bé được ép khô, dán thành một cành hoa duyên dáng trên nền giấy trắng kem có vân. Viền răng cưa kiểu xưa làm tấm thiệp thêm dịu dàng và mộc mạc.", "Baby's breath, pressed and laid petal by petal into a graceful branch on textured cream paper. A vintage scalloped edge keeps the card soft and homespun.", [], true),
   p("hang-rao-la-nho-card", "Hàng Rào Lá Nhỏ", "Little Leaf Fence", "greeting-card", "pressed-flower-cards", "Cỏ và lá nhỏ khô được sắp thành một hàng rào xanh chạy dọc thiệp, nền giấy tái chế nhuộm hồng dịu. Một tấm thiệp gợi cảm giác buổi chiều vườn cũ yên ả.", "Dried grasses and little leaves arranged into a green fence line on softly pink-dyed recycled paper. A card that recalls a quiet afternoon in the old garden.", [], true),
   p("thank-you-foil-card", "Thank You Ép Nhũ Vàng", "Thank You in Gold Foil", "greeting-card", "pressed-flower-cards", "Hai chữ “Thank You” ép nhũ vàng lấp lánh giữa những cành hoa khô và một trái tim nhỏ. Nền giấy thủ công nhuộm tông ấm, viền răng cưa hoàn thiện nét vintage.", "“Thank You” in shimmering gold foil sits between pressed blooms and a little heart. Hand-dyed craft paper and a scalloped edge complete the vintage charm.", []),
@@ -194,6 +247,7 @@ export const getProduct = (slug: string) => live().find((x) => x.slug === slug);
 export const getAllProducts = live;
 export const productsByType = (id: ProductTypeId) => live().filter((x) => x.productType === id);
 export const productsByCollection = (id: CollectionId) => live().filter((x) => x.collection === id);
+export const productsByOccasion = (id: OccasionId) => live().filter((x) => x.occasion === id);
 export const relatedProducts = (prod: Product, n = 4) =>
   live().filter((x) => x.slug !== prod.slug && x.collection === prod.collection).concat(
     live().filter((x) => x.slug !== prod.slug && x.collection !== prod.collection && x.productType === prod.productType),

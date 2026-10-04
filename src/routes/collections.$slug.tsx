@@ -4,7 +4,7 @@ import { CatalogueGrid } from "@/components/catalogue-card";
 import { ContactBand } from "@/components/contact-cta";
 import { PaperPlaceholder } from "@/components/brand/paper-placeholder";
 import { Reveal } from "@/components/brand/reveal";
-import { collections, getCollectionBySlug, productsByCollection, tx } from "@/data/catalogue";
+import { collections, getCollectionBySlug, occasions, productsByCollection, productsByOccasion, tx } from "@/data/catalogue";
 
 const chapters: Record<string, { quote?: string; themes?: string[] }> = {
   "explore-vietnam": { themes: ["Nơi chốn", "Phố phường", "Kiến trúc", "Ẩm thực", "Văn hoá", "Đời thường"] },
@@ -91,10 +91,40 @@ function CollectionPage() {
         </Reveal>
       )}
 
-      <section className="mx-auto max-w-[1280px] px-6 py-20 lg:px-12">
-        <h2 className="eyebrow mb-10 border-b border-border pb-6 text-foreground">Sản phẩm trong bộ sưu tập</h2>
-        <CatalogueGrid items={productsByCollection(c.id)} />
-      </section>
+      {c.id === "greeting-cards" ? (
+        <section className="mx-auto max-w-[1280px] px-6 py-20 lg:px-12">
+          <h2 className="eyebrow mb-10 border-b border-border pb-6 text-foreground">Thiệp theo dịp</h2>
+          <div className="space-y-16">
+            {occasions.map((o, i) => {
+              const items = productsByOccasion(o.id);
+              return (
+                <Reveal key={o.id} delay={Math.min(i, 3) * 80}>
+                  <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+                    <h3 className="font-display text-3xl md:text-4xl">
+                      <span className="mr-3 text-sm text-kraft">{String(i + 1).padStart(2, "0")}</span>
+                      {tx(o.name)}
+                    </h3>
+                    {items.length === 0 && (
+                      <span className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Sắp ra mắt</span>
+                    )}
+                  </div>
+                  <p className="mt-2 max-w-lg text-[15px] leading-relaxed text-muted-foreground">{tx(o.note)}</p>
+                  {items.length > 0 && (
+                    <div className="mt-8">
+                      <CatalogueGrid items={items} />
+                    </div>
+                  )}
+                </Reveal>
+              );
+            })}
+          </div>
+        </section>
+      ) : (
+        <section className="mx-auto max-w-[1280px] px-6 py-20 lg:px-12">
+          <h2 className="eyebrow mb-10 border-b border-border pb-6 text-foreground">Sản phẩm trong bộ sưu tập</h2>
+          <CatalogueGrid items={productsByCollection(c.id)} />
+        </section>
+      )}
 
       <section className="mx-auto max-w-[1280px] px-6 pb-24 lg:px-12">
         <Link to="/collections/$slug" params={{ slug: next.slug }} className="group grid grid-cols-[minmax(0,1fr)_auto] items-end gap-4 border-t border-border pt-10">
