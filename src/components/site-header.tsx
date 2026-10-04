@@ -1,4 +1,4 @@
-// Brand-catalogue header: logo · Products · Collections · About · Contact · language.
+// Brand-catalogue header: home · products · collections · journal · about · contact · language.
 import { Menu, Phone, X } from "lucide-react";
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
@@ -7,8 +7,10 @@ import { LanguageSwitcher } from "./language-switcher";
 import { contact } from "@/data/contact";
 
 const nav = [
+  { to: "/", label: "Trang chủ" },
   { to: "/products", label: "Sản phẩm" },
   { to: "/collections", label: "Bộ sưu tập" },
+  { to: "/blog", label: "Nhật ký" },
   { to: "/about", label: "Về BiBi" },
   { to: "/contact", label: "Liên hệ" },
 ] as const;
@@ -32,7 +34,7 @@ export function SiteHeader() {
         </Link>
 
         <nav aria-label="Điều hướng chính" className="hidden lg:block">
-          <ul className="flex items-center gap-10">
+          <ul className="flex items-center gap-7 xl:gap-9">
             {nav.map((n) => (
               <li key={n.to}>
                 <Link
@@ -69,11 +71,6 @@ export function SiteHeader() {
                 </Link>
               </li>
             ))}
-            <li>
-              <Link to="/blog" onClick={() => setOpen(false)} className="block border-b border-border py-4 font-display text-2xl text-muted-foreground">
-                Nhật ký
-              </Link>
-            </li>
           </ul>
           <div className="mt-6">
             <LanguageSwitcher variant="drawer" />

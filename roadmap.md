@@ -4,3 +4,7 @@
 - [x] Thêm 10 sản phẩm thiệp 8/3 mới (IMG_3302–3311)
 - [x] Kiểm tra hiển thị (tsgo + Playwright desktop/mobile) — sạch, không ảnh lỗi
 - [ ] Người dùng gửi lại 4 ảnh lỗi (IMG_3286–3289) — chờ file
+- [x] Thêm “Trang chủ” và “Nhật ký” vào menu chính
+- [x] Thiết kế favicon BiBi Studio mới từ dấu B của thương hiệu
+- [x] Thay toàn bộ ảnh placeholder trong Nhật ký bằng bộ ảnh biên tập phù hợp nội dung
+- [x] Kiểm tra menu, favicon và Nhật ký trên desktop/mobile — không ảnh lỗi, không placeholder, build sạch

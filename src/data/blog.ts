@@ -1,5 +1,15 @@
 import { paginate, POSTS_PER_PAGE } from "./pagination";
 import type { Paged } from "./pagination";
+import slowWritingImage from "@/assets/blog/slow-writing.jpg";
+import choosingNotebookImage from "@/assets/blog/choosing-notebook.jpg";
+import bulletJournalImage from "@/assets/blog/bullet-journal.jpg";
+import scrapbookImage from "@/assets/blog/scrapbook.jpg";
+import penGuideImage from "@/assets/blog/pen-guide.jpg";
+import studyDeskImage from "@/assets/blog/study-desk.jpg";
+import notebookPurposeImage from "@/assets/blog/notebook-purpose.jpg";
+import penCareImage from "@/assets/blog/pen-care.jpg";
+import septemberJournalImage from "@/assets/blog/september-journal.jpg";
+import handmadeGiftImage from "@/assets/blog/handmade-gift.jpg";
 
 export type ContentBlock =
   | { type: "paragraph"; text: string }
@@ -47,7 +57,7 @@ const blogPosts: BlogPost[] = [
     author: "BiBi Studio",
     date: "2026-08-25",
     readTime: "5 phút đọc",
-    coverImage: "https://placehold.co/800x800?text=800x800",
+    coverImage: slowWritingImage,
     content: [
       {
         type: "paragraph",
@@ -60,7 +70,7 @@ const blogPosts: BlogPost[] = [
       },
       {
         type: "image",
-        src: "https://placehold.co/600x400?text=600x400",
+        src: notebookPurposeImage,
         alt: "Sổ tay Ghibli collection",
         caption: "Sổ tay Ghibli collection — mềm mại và đầy cảm hứng.",
       },
@@ -80,7 +90,7 @@ const blogPosts: BlogPost[] = [
       },
       {
         type: "image",
-        src: "https://placehold.co/600x400?text=600x400",
+        src: studyDeskImage,
         alt: "Sổ tay Cloudy collection",
         caption: "Cloudy collection — nhẹ nhàng như một ngày nhiều mây.",
       },
@@ -114,8 +124,7 @@ const blogPosts: BlogPost[] = [
     author: "BiBi Studio",
     date: "2026-08-20",
     readTime: "4 phút đọc",
-    coverImage:
-      "https://placehold.co/800x800?text=800x800",
+    coverImage: choosingNotebookImage,
     content: [
       {
         type: "paragraph",
@@ -128,7 +137,7 @@ const blogPosts: BlogPost[] = [
       },
       {
         type: "image",
-        src: "https://placehold.co/600x400?text=600x400",
+        src: notebookPurposeImage,
         alt: "Sổ mẫu độc quyền A5",
         caption: "Sổ mẫu độc quyền A5 — nhỏ gọn và đa năng.",
       },
@@ -161,8 +170,7 @@ const blogPosts: BlogPost[] = [
     author: "BiBi Studio",
     date: "2026-08-15",
     readTime: "6 phút đọc",
-    coverImage:
-      "https://placehold.co/800x800?text=800x800",
+    coverImage: bulletJournalImage,
     content: [
       {
         type: "paragraph",
@@ -175,7 +183,7 @@ const blogPosts: BlogPost[] = [
       },
       {
         type: "image",
-        src: "https://placehold.co/600x400?text=600x400",
+        src: septemberJournalImage,
         alt: "Sổ tay Botanical Ruled",
         caption: "Sổ tay Botanical Ruled — nền tảng hoàn hảo cho BuJo.",
       },
@@ -208,8 +216,7 @@ const blogPosts: BlogPost[] = [
     author: "BiBi Studio",
     date: "2026-08-28",
     readTime: "12 phút đọc",
-    coverImage:
-      "https://placehold.co/800x800?text=800x800",
+    coverImage: scrapbookImage,
     content: [
       {
         type: "paragraph",
@@ -242,7 +249,7 @@ const blogPosts: BlogPost[] = [
       },
       {
         type: "image",
-        src: "https://placehold.co/600x400?text=600x400",
+        src: scrapbookImage,
         alt: "Sổ dán ảnh A5 giấy mỹ thuật",
         caption: "Sổ dán ảnh A5 — giấy mỹ thuật 250gsm, phù hợp cho người mới.",
       },
@@ -277,7 +284,7 @@ const blogPosts: BlogPost[] = [
       },
       {
         type: "image",
-        src: "https://placehold.co/600x400?text=600x400",
+        src: slowWritingImage,
         alt: "Set hình polaroid in theo yêu cầu",
         caption: "Ảnh polaroid nhỏ rất linh hoạt khi xếp bố cục nhiều hình.",
       },
@@ -362,8 +369,7 @@ const blogPosts: BlogPost[] = [
     author: "BiBi Studio",
     date: "2026-08-27",
     readTime: "10 phút đọc",
-    coverImage:
-      "https://placehold.co/800x800?text=800x800",
+    coverImage: penGuideImage,
     content: [
       {
         type: "paragraph",
@@ -386,7 +392,7 @@ const blogPosts: BlogPost[] = [
       },
       {
         type: "image",
-        src: "https://placehold.co/600x400?text=600x400",
+        src: penGuideImage,
         alt: "Combo phụ kiện trang trí sổ tay",
         caption: "Bút gel nhiều màu là công cụ cơ bản của mọi cuốn journal.",
       },
@@ -447,7 +453,7 @@ const blogPosts: BlogPost[] = [
       },
       {
         type: "image",
-        src: "https://placehold.co/600x400?text=600x400",
+        src: choosingNotebookImage,
         alt: "Tập may chỉ B5 giấy kem 80gsm",
         caption: "Giấy kem 80gsm — mức cân bằng tốt cho bút gel và bút bi.",
       },
@@ -487,8 +493,7 @@ const blogPosts: BlogPost[] = [
     author: "BiBi Studio",
     date: "2026-08-26",
     readTime: "9 phút đọc",
-    coverImage:
-      "https://placehold.co/800x800?text=800x800",
+    coverImage: studyDeskImage,
     content: [
       {
         type: "paragraph",
@@ -531,7 +536,7 @@ const blogPosts: BlogPost[] = [
       },
       {
         type: "image",
-        src: "https://placehold.co/600x400?text=600x400",
+        src: handmadeGiftImage,
         alt: "Hộp quà handmade vintage",
         caption: "Hộp giấy nhỏ giúp gom phụ kiện rời gọn gàng trong ngăn kéo.",
       },
@@ -580,8 +585,7 @@ const blogPosts: BlogPost[] = [
     author: "BiBi Studio",
     date: "2026-09-02",
     readTime: "4 phút đọc",
-    coverImage:
-      "https://placehold.co/800x800?text=800x800",
+    coverImage: notebookPurposeImage,
     content: [
       {
         type: "paragraph",
@@ -613,7 +617,7 @@ const blogPosts: BlogPost[] = [
     author: "BiBi Studio",
     date: "2026-09-03",
     readTime: "3 phút đọc",
-    coverImage: "https://placehold.co/800x800?text=800x800",
+    coverImage: penCareImage,
     content: [
       {
         type: "paragraph",
@@ -645,8 +649,7 @@ const blogPosts: BlogPost[] = [
     author: "BiBi Studio",
     date: "2026-09-04",
     readTime: "5 phút đọc",
-    coverImage:
-      "https://placehold.co/800x800?text=800x800",
+    coverImage: septemberJournalImage,
     content: [
       {
         type: "paragraph",
@@ -678,8 +681,7 @@ const blogPosts: BlogPost[] = [
     author: "BiBi Studio",
     date: "2026-09-05",
     readTime: "6 phút đọc",
-    coverImage:
-      "https://placehold.co/800x800?text=800x800",
+    coverImage: handmadeGiftImage,
     content: [
       {
         type: "paragraph",

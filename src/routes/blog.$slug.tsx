@@ -30,9 +30,7 @@ export const Route = createFileRoute("/blog/$slug")({
         { property: "og:description", content: post.excerpt },
         { property: "og:type", content: "article" },
         { property: "og:url", content: url },
-        { property: "og:image", content: post.coverImage },
         { name: "twitter:card", content: "summary_large_image" },
-        { name: "twitter:image", content: post.coverImage },
         { name: "article:published_time", content: post.date },
         { name: "author", content: post.author },
       ],
@@ -205,7 +203,7 @@ function PostPage() {
                       <LazyImage
                         src={block.src}
                         alt={block.alt}
-                        className="w-full rounded-sm object-cover"
+                        className="aspect-[3/2] w-full rounded-sm object-cover"
                       />
                       {block.caption && (
                         <figcaption className="mt-2 text-center text-[13px] text-muted-foreground">
