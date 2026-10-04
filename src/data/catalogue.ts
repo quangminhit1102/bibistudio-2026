@@ -118,7 +118,7 @@ export const collections: Collection[] = [
   { id: "vietnamese-food", slug: "vietnamese-food", name: { vi: "Món ăn Việt Nam", en: "Vietnamese Food" }, tagline: { vi: "Hương vị quen thuộc, được nhớ lại trên giấy.", en: "Familiar flavours, remembered in paper." }, intro: { vi: "Những món ăn gắn với ký ức, được vẽ lại thành sổ tay và postcard.", en: "Dishes tied to memory, illustrated as notebooks and postcards." }, image: "/catalogue/collection-vietnamese-food.webp" },
   { id: "motivation", slug: "motivation", name: { vi: "Sổ tay tạo động lực", en: "Motivation" }, tagline: { vi: "Những lời nhắc nhỏ cho ngày bình thường.", en: "Small reminders for ordinary days." }, intro: { vi: "Từ một nụ cười, một giấc mơ đến niềm tin rằng mọi điều đều có thể — mỗi cuốn sổ là một lời nhắc dịu dàng để bạn tiếp tục viết, tiếp tục làm và tiếp tục vui sống.", en: "From a smile and a dream to the belief that anything is possible, each notebook is a gentle reminder to keep writing, doing and living with joy." }, image: motivationMainAsset.url },
   { id: "ao-dai", slug: "ao-dai", name: { vi: "Áo dài", en: "Ao Dai" }, tagline: { vi: "Nét thanh lịch Việt, tái hiện trên giấy.", en: "Vietnamese elegance, reimagined in paper." }, intro: { vi: "Tà áo dài qua nét vẽ mềm mại trên thiệp và postcard.", en: "The ao dai in soft illustration, on cards and postcards." }, image: "/catalogue/collection-ao-dai.webp" },
-  { id: "greeting-cards", slug: "greeting-cards", name: { vi: "Thiệp chúc mừng", en: "Greeting Cards" }, tagline: { vi: "Lời chúc cho những khoảnh khắc ý nghĩa.", en: "Words for the moments that matter." }, intro: { vi: "Sinh nhật, cảm ơn, chúc mừng — những dịp để nói điều mình nghĩ.", en: "Birthdays, thank-yous and celebrations — moments to say what you mean." } },
+  { id: "greeting-cards", slug: "greeting-cards", name: { vi: "Thiệp chúc mừng", en: "Greeting Cards" }, tagline: { vi: "Lời chúc cho những khoảnh khắc ý nghĩa.", en: "Words for the moments that matter." }, intro: { vi: "Mỗi dịp trong năm là một lý do để viết vài dòng: 8/3, sinh nhật, 20/10, 20/11, Giáng sinh, lì xì Tết… Thiệp BiBi được chia theo từng dịp, để bạn luôn tìm được đúng tấm thiệp cho đúng người, đúng ngày.", en: "Every occasion in the year is a reason to write a few lines: Mar 8, birthdays, Oct 20, Nov 20, Christmas, Tet… BiBi cards are grouped by occasion, so you always find the right card for the right person on the right day." }, image: greetingCardsMainAsset.url },
   { id: "pressed-flower-cards", slug: "pressed-flower-cards", name: { vi: "Thiệp ép hoa khô", en: "Pressed Flower Cards" }, tagline: { vi: "Hoa thật được ép khô, dán từng cánh tay.", en: "Real dried flowers, pressed petal by petal." }, intro: { vi: "Hoa, lá khô được ép và dán lên nền giấy thủ công nhuộm màu, hoàn thiện bằng viền răng cưa kiểu thiệp xưa. Mỗi tấm thiệp là một cành hoa thật giữ được dáng đẹp theo năm tháng.", en: "Dried flowers and leaves are pressed and laid on hand-dyed craft paper, finished with a vintage scalloped edge. Each card keeps a real flower, beautiful for years." }, image: pressedFlowerMainAsset.url },
   { id: "spiral-cards", slug: "spiral-cards", name: { vi: "Thiệp xoắn", en: "Spiral Cards" }, tagline: { vi: "Tấm thiệp mở ra một bất ngờ nhỏ.", en: "Paper that unfolds into a little surprise." }, intro: { vi: "Thiệp xoắn mở ra thành một hình ảnh bất ngờ.", en: "Cards that unfold into a little surprise." } },
 ];
@@ -134,6 +134,7 @@ function p(
   descriptionEn: string,
   images: string[],
   featured = false,
+  occasion?: OccasionId,
 ): Product {
   order += 1;
   return {
@@ -142,6 +143,7 @@ function p(
     name: { vi, en },
     productType,
     collection,
+    occasion,
     description: { vi: descriptionVi, en: descriptionEn },
     images,
     imageAlt: { vi: `${vi} — sản phẩm BiBi Studio`, en: `${en} — a BiBi Studio paper good` },
