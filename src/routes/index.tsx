@@ -55,7 +55,7 @@ function CollectionTile({ c, className = "", ratio = "4/5", big = false }: { c: 
 }
 
 function Home() {
-  const [ev, food, motivation, aoDai, cards, animals, spiral] = collections;
+  const [ev, food, motivation, aoDai, cards, flowers, spiral] = collections;
   const evProducts = productsByCollection("explore-vietnam").slice(0, 3);
   return (
     <PageShell>
@@ -117,7 +117,7 @@ function Home() {
           <Reveal className="md:col-span-7"><CollectionTile c={food} ratio="5/4" /></Reveal>
           <Reveal className="md:col-span-5 md:mt-24" delay={120}><CollectionTile c={aoDai} ratio="4/5" /></Reveal>
           <Reveal className="md:col-span-5"><CollectionTile c={motivation} ratio="4/5" /></Reveal>
-          <Reveal className="md:col-span-7 md:mt-16" delay={120}><CollectionTile c={animals} ratio="5/4" /></Reveal>
+          <Reveal className="md:col-span-7 md:mt-16" delay={120}><CollectionTile c={flowers} ratio="5/4" /></Reveal>
           <Reveal className="md:col-span-6"><CollectionTile c={cards} ratio="3/2" /></Reveal>
           <Reveal className="md:col-span-6" delay={120}><CollectionTile c={spiral} ratio="3/2" /></Reveal>
         </div>
