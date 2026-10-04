@@ -15,6 +15,9 @@ import motivationLoveYourselfAsset from "@/assets/catalogue/motivation-love-your
 import motivationLifeIsTooShortAsset from "@/assets/catalogue/motivation-life-is-too-short.jpeg.asset.json";
 import motivationCaPheNguoiThuongAsset from "@/assets/catalogue/motivation-ca-phe-nguoi-thuong.jpeg.asset.json";
 import pressedFlowerMainAsset from "@/assets/catalogue/pressed-flower-cards-main.jpg.asset.json";
+import greetingCardsMainAsset from "@/assets/catalogue/greeting-cards-main.jpg.asset.json";
+import womensDayFloralBorderAsset from "@/assets/catalogue/womens-day-floral-border.jpg.asset.json";
+import womensDayMoonBouquetAsset from "@/assets/catalogue/womens-day-moon-bouquet.jpg.asset.json";
 
 // BiBi Studio catalogue: product TYPES (what it is) and COLLECTIONS (what story it belongs to)
 // are separate dimensions. Products reference one of each.
@@ -58,12 +61,37 @@ export type Collection = {
   image?: string;
 };
 
+// Occasions (dịp lễ) group greeting cards inside the "greeting-cards" collection.
+export type OccasionId =
+  | "womens-day-83"
+  | "birthday"
+  | "womens-day-2010"
+  | "teachers-day-2011"
+  | "christmas"
+  | "tet"
+  | "valentine"
+  | "thank-you";
+
+export type Occasion = { id: OccasionId; name: Localized; note: Localized };
+
+export const occasions: Occasion[] = [
+  { id: "womens-day-83", name: { vi: "8/3 — Quốc tế Phụ nữ", en: "Mar 8 — International Women's Day" }, note: { vi: "Những tấm thiệp hoa tươi sắc màu dành tặng mẹ, chị, bạn gái và đồng nghiệp.", en: "Bright floral cards for mothers, sisters, partners and colleagues." } },
+  { id: "birthday", name: { vi: "Sinh nhật", en: "Birthday" }, note: { vi: "Lời chúc tuổi mới gửi trong một tấm thiệp nhỏ.", en: "Birthday wishes folded into a little card." } },
+  { id: "womens-day-2010", name: { vi: "20/10 — Phụ nữ Việt Nam", en: "Oct 20 — Vietnamese Women's Day" }, note: { vi: "Ngày riêng của phụ nữ Việt, dịp để nói lời trân trọng.", en: "Vietnam's own day to honour the women around you." } },
+  { id: "teachers-day-2011", name: { vi: "20/11 — Nhà giáo Việt Nam", en: "Nov 20 — Vietnamese Teachers' Day" }, note: { vi: "Gửi thầy cô một lời cảm ơn viết tay.", en: "A handwritten thank-you for teachers." } },
+  { id: "christmas", name: { vi: "Giáng sinh", en: "Christmas" }, note: { vi: "Ấm áp cuối năm, thiệp xanh đỏ và những lời chúc mùa lễ.", en: "Warm year-end greetings for the festive season." } },
+  { id: "tet", name: { vi: "Lì xì Tết", en: "Tet & Lucky Money" }, note: { vi: "Bao lì xì và thiệp chúc Tết cho năm mới sum vầy.", en: "Lucky-money envelopes and New Year cards." } },
+  { id: "valentine", name: { vi: "Valentine 14/2", en: "Valentine's Day" }, note: { vi: "Cho những lời yêu khó nói thành lời.", en: "For feelings that are hard to say out loud." } },
+  { id: "thank-you", name: { vi: "Cảm ơn & chúc mừng", en: "Thank You & Congrats" }, note: { vi: "Khai trương, tốt nghiệp, năm mới — mọi dịp đáng mừng.", en: "Openings, graduations, new year — every happy occasion." } },
+];
+
 export type Product = {
   id: string;
   slug: string;
   name: Localized;
   productType: ProductTypeId;
   collection: CollectionId;
+  occasion?: OccasionId;
   description: Localized;
   dimensions?: string;
   material?: Localized;
