@@ -1,0 +1,6 @@
+---
+deployment:
+  tasks:
+    - export DEPLOYPATH=/home/vhplasti/bibistudio.vn/
+    - /bin/cp -R assets catalogue Images "$DEPLOYPATH"
+    - /bin/cp .htaccess index.html favicon.svg robots.txt zalo.png bibi-logo.svg bibi-mark.svg "$DEPLOYPATH"

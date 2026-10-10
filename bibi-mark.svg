@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="bibi">
+  <rect width="256" height="256" rx="42" fill="#202020"/>
+  <text x="25" y="116" fill="#F7F5EF" font-family="Arial Rounded MT Bold,Arial,sans-serif" font-size="86" font-weight="700" letter-spacing="-6">bibi</text>
+  <circle cx="128" cy="184" r="31" fill="#F7F5EF"/>
+</svg>
