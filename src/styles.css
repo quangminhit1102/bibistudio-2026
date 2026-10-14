@@ -263,3 +263,4 @@
 body:has([aria-modal="true"]) .floating-contact, body:has([aria-modal="true"]) .back-to-top, body:has([aria-modal="true"]) [data-product-bar] { display: none; }
 img.img-loading { opacity: 0 !important; }
 @layer base { img { transition: opacity 0.7s var(--ease-paper); } }
+.footer-wordmark { font-size: clamp(4rem, 17vw, 15rem); letter-spacing: -0.02em; -webkit-text-stroke: 1px var(--color-border); }
