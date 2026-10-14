@@ -72,7 +72,7 @@ const contacts: ContactItem[] = [
 export function FloatingContact() {
   return (
     <div
-      className="fixed inset-x-0 bottom-3 z-40 mx-auto flex w-fit items-center gap-2 rounded-full border border-border bg-background/95 p-1.5 shadow-lg backdrop-blur md:inset-x-auto md:bottom-auto md:right-3 md:top-1/2 md:mx-0 md:-translate-y-1/2 md:flex-col md:gap-3 md:rounded-none md:border-0 md:bg-transparent md:p-0 md:shadow-none md:backdrop-blur-none"
+      className="floating-contact fixed inset-x-0 bottom-3 z-40 mx-auto flex w-fit items-center gap-2 rounded-full border border-border bg-background/95 p-1.5 shadow-lg backdrop-blur md:inset-x-auto md:bottom-auto md:right-3 md:top-1/2 md:mx-0 md:-translate-y-1/2 md:flex-col md:gap-3 md:rounded-none md:border-0 md:bg-transparent md:p-0 md:shadow-none md:backdrop-blur-none"
       aria-label="Liên hệ mua hàng"
     >
       {contacts.map((c) => (

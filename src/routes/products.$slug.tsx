@@ -1,8 +1,8 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { useState } from "react";
 import { PageShell, PageIntro } from "@/components/page-shell";
 import { CatalogueCard, CatalogueGrid, productTransitionName } from "@/components/catalogue-card";
-import { Magnifier } from "@/components/brand/motion";
+import { ProductGallery, Slider } from "@/components/product-gallery";
+import { ProductContactBar } from "@/components/product-contact-bar";
 import { ContactBand, ContactLinks } from "@/components/contact-cta";
 import { PaperPlaceholder } from "@/components/brand/paper-placeholder";
 import {
@@ -98,14 +98,13 @@ function ProductDetail({ slug }: { slug: string }) {
   const p = getProduct(slug)!;
   const t = getProductType(p.productType);
   const c = getCollection(p.collection);
-  const [active, setActive] = useState(0);
   const details = [
     ["Kích thước", p.dimensions],
     ["Chất liệu", p.material && tx(p.material)],
     ["Số trang", p.pages],
     ["Định dạng", p.format && tx(p.format)],
   ].filter(([, v]) => v) as [string, string][];
-  const related = relatedProducts(p, 3);
+  const related = relatedProducts(p, 8);
 
   return (
     <PageShell>
@@ -118,18 +117,7 @@ function ProductDetail({ slug }: { slug: string }) {
       <section className="mx-auto grid max-w-[1280px] gap-12 px-6 py-10 lg:grid-cols-[7fr_5fr] lg:gap-16 lg:px-12">
         <div>
           {p.images.length ? (
-            <>
-              <Magnifier src={p.images[active]} alt={tx(p.name)} className="aspect-[4/5] w-full bg-secondary" style={active === 0 ? { viewTransitionName: productTransitionName(p.slug) } : undefined} />
-              {p.images.length > 1 && (
-                <div className="mt-4 grid grid-cols-5 gap-3">
-                  {p.images.map((src, i) => (
-                    <button key={src} onClick={() => setActive(i)} aria-label={`Ảnh ${i + 1}`} className={`overflow-hidden border transition ${i === active ? "border-foreground" : "border-transparent opacity-70 hover:opacity-100"}`}>
-                      <img src={src} alt="" className="aspect-square w-full object-cover" />
-                    </button>
-                  ))}
-                </div>
-              )}
-            </>
+            <ProductGallery images={p.images} alt={tx(p.name)} transitionName={productTransitionName(p.slug)} />
           ) : (
             <PaperPlaceholder label={tx(t.name)} size="1200 × 1500" />
           )}
@@ -166,13 +154,18 @@ function ProductDetail({ slug }: { slug: string }) {
       </section>
 
       {related.length > 0 && (
-        <section className="mx-auto max-w-[1280px] px-6 py-20 lg:px-12">
-          <h2 className="eyebrow mb-10 border-b border-border pb-6 text-foreground">Có thể bạn cũng thích</h2>
-          <div className="grid grid-cols-2 gap-x-5 gap-y-12 md:gap-x-8 lg:grid-cols-3">
-            {related.map((r, i) => <CatalogueCard key={r.slug} product={r} index={i} />)}
-          </div>
+        <section className="mx-auto max-w-[1280px] px-5 py-20 sm:px-6 lg:px-12">
+          <Slider label={`Cùng bộ sưu tập ${tx(c.name)}`}>
+            {related.map((r, i) => (
+              <div key={r.slug} className="w-[62vw] shrink-0 snap-start sm:w-[40vw] md:w-[calc((100%-4rem)/3)]">
+                <CatalogueCard product={r} index={i} />
+              </div>
+            ))}
+          </Slider>
         </section>
       )}
+      <div className="h-24 md:hidden" />
+      <ProductContactBar name={tx(p.name)} />
     </PageShell>
   );
 }

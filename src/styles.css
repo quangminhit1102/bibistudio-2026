@@ -258,3 +258,4 @@
 }
 @utility animate-unveil { animation: unveil 1.6s var(--ease-paper) both; }
 @media (prefers-reduced-motion: reduce) { .animate-unveil { animation: none; } }
+@media (max-width: 767px) { body:has([data-product-bar]) .floating-contact { display: none; } }
