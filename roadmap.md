@@ -15,4 +15,5 @@
 - [x] Phần 4 — Trang bộ sưu tập
 - [x] Phần 5 — Điều hướng và tìm kiếm
 - [x] Phần 6 — Cảm giác và tốc độ
-- [ ] Phần 7 — FAQ / đặt làm theo yêu cầu: chờ người dùng cung cấp thông tin thật
+- [~] Phần 7 — bỏ qua theo yêu cầu
+- [ ] Thiết kế lại footer — chờ người dùng chọn kiểu
