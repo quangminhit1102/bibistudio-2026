@@ -16,4 +16,4 @@
 - [x] Phần 5 — Điều hướng và tìm kiếm
 - [x] Phần 6 — Cảm giác và tốc độ
 - [~] Phần 7 — bỏ qua theo yêu cầu
-- [ ] Thiết kế lại footer — chờ người dùng chọn kiểu
+- [x] Thiết kế lại footer — kiểu tạp chí 4 cột, nền ngà
