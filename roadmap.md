@@ -13,4 +13,5 @@
 - [x] Phần 2 — Thẻ sản phẩm và trang danh sách
 - [x] Phần 3 — Trang chủ
 - [x] Phần 4 — Trang bộ sưu tập
-- [ ] Phần 5–7 — chờ người dùng duyệt
+- [x] Phần 5 — Điều hướng và tìm kiếm
+- [ ] Phần 6–7 — chờ người dùng duyệt (Phần 7 cần thông tin thật)
