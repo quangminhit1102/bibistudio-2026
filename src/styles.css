@@ -252,3 +252,9 @@
   .tilt { transition: none; }
   ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
 }
+@keyframes unveil {
+  from { clip-path: inset(10% 14% 10% 14%); }
+  to { clip-path: inset(0); }
+}
+@utility animate-unveil { animation: unveil 1.6s var(--ease-paper) both; }
+@media (prefers-reduced-motion: reduce) { .animate-unveil { animation: none; } }
