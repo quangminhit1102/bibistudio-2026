@@ -10,6 +10,49 @@ import { collections, getAllProducts, productTypes, productsByCollection, tx, ty
 import { FilmStrip, Parallax, ScrollExpand, SplitWords } from "@/components/brand/motion";
 import { buildOrganizationSchema } from "@/lib/seo";
 import heroImg from "@/assets/hero-desk.jpg";
+import { useEffect, useState } from "react";
+import { occasions, productsByOccasion } from "@/data/catalogue";
+import { prefersReducedMotion } from "@/components/brand/motion";
+
+type Slide = { src: string; alt: string; label?: string; slug?: string };
+
+function HeroSlides({ slides }: { slides: Slide[] }) {
+  const [i, setI] = useState(0);
+  useEffect(() => {
+    if (prefersReducedMotion() || slides.length < 2) return;
+    const t = setInterval(() => setI((v) => (v + 1) % slides.length), 5500);
+    return () => clearInterval(t);
+  }, [slides.length]);
+  const cur = slides[i];
+  return (
+    <div className="absolute inset-0 animate-unveil">
+      {slides.map((s, k) => (
+        <img
+          key={s.src}
+          src={s.src}
+          alt={k === i ? s.alt : ""}
+          aria-hidden={k !== i}
+          loading={k === 0 ? "eager" : "lazy"}
+          className={`absolute inset-0 h-full w-full object-cover transition-[opacity,transform] duration-[1800ms] ease-out ${k === i ? "scale-100 opacity-100" : "scale-[1.05] opacity-0"}`}
+        />
+      ))}
+      <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-4 bg-gradient-to-t from-foreground/45 to-transparent p-5 pt-16 sm:p-6">
+        {cur.slug ? (
+          <Link to="/collections/$slug" params={{ slug: cur.slug }} className="font-display text-xl italic text-background underline-offset-4 hover:underline sm:text-2xl">
+            {cur.label} →
+          </Link>
+        ) : <span className="font-display text-xl italic text-background sm:text-2xl">{cur.label}</span>}
+        <div className="flex gap-2">
+          {slides.map((s, k) => (
+            <button key={s.src} onClick={() => setI(k)} aria-label={`Ảnh ${k + 1}`} className="grid h-6 place-items-center">
+              <span className={`block h-0.5 transition-all duration-500 ${k === i ? "w-8 bg-background" : "w-4 bg-background/50"}`} />
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 const title = "BiBi Studio — Little things, made to touch your heart";
 const description =
@@ -58,6 +101,11 @@ function CollectionTile({ c, className = "", ratio = "4/5", big = false }: { c: 
 function Home() {
   const [ev, food, motivation, aoDai, cards, flowers, spiral] = collections;
   const evProducts = productsByCollection("explore-vietnam").slice(0, 3);
+  const heroSlides: Slide[] = [
+    { src: heroImg, alt: "Sổ tay, postcard, bao thư và giấy viết thư BiBi Studio trên bàn gỗ", label: "Bàn giấy của BiBi" },
+    ...[motivation, cards, flowers, ev].filter((c) => c.image).map((c) => ({ src: c.image!, alt: tx(c.name), label: tx(c.name), slug: c.slug })),
+  ];
+  const realLife = getAllProducts().filter((p) => p.images.length > 1).slice(0, 8);
   const featured = getAllProducts().filter((p) => p.featured && p.images.length).slice(0, 10);
   return (
     <PageShell>
@@ -87,7 +135,7 @@ function Home() {
             </div>
           </div>
           <Parallax strength={90} className="relative min-h-[50vh]">
-            <img src={heroImg} alt="Sổ tay, postcard, bao thư và giấy viết thư BiBi Studio trên bàn gỗ" width={1920} height={1152} className="absolute inset-0 h-full w-full object-cover animate-settle animate-unveil" />
+            <HeroSlides slides={heroSlides} />
           </Parallax>
         </div>
       </section>
@@ -185,6 +233,58 @@ function Home() {
           </div>
         </Reveal>
       </section>
+
+      {/* Gifts by occasion */}
+      <section className="mx-auto max-w-[1280px] px-5 py-24 sm:px-6 lg:px-12">
+        <Reveal className="mb-10 grid gap-4 md:grid-cols-2 md:items-end">
+          <div>
+            <p className="eyebrow">Gợi ý quà</p>
+            <h2 className="mt-3 font-display text-4xl leading-none md:text-6xl">Một tấm thiệp cho mỗi dịp</h2>
+          </div>
+          <p className="max-w-md text-[15px] text-muted-foreground md:justify-self-end">Chọn dịp bạn đang chuẩn bị — BiBi gợi ý những mẫu thiệp hợp nhất.</p>
+        </Reveal>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {occasions.map((o, i) => {
+            const n = productsByOccasion(o.id).length;
+            return (
+              <Reveal key={o.id} variant="paper" delay={(i % 4) * 80}>
+                <Link
+                  to="/collections/$slug"
+                  params={{ slug: "greeting-cards" }}
+                  hash={o.id}
+                  className={`group flex h-full min-h-32 flex-col justify-between border border-border p-4 transition duration-500 hover:-translate-y-1 hover:shadow-paper sm:p-5 ${n ? "bg-card" : "bg-transparent"}`}
+                >
+                  <span className="font-display text-sm text-kraft">{String(i + 1).padStart(2, "0")}</span>
+                  <span>
+                    <span className="block font-display text-2xl leading-tight">{tx(o.name)}</span>
+                    <span className="mt-1 block text-[11px] uppercase tracking-[0.18em] text-muted-foreground">{n ? `${n} mẫu` : "Sắp ra mắt"}</span>
+                  </span>
+                </Link>
+              </Reveal>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* Real life photos */}
+      {realLife.length > 0 && (
+        <section className="bg-foreground py-24 text-background">
+          <Reveal className="mx-auto mb-10 max-w-[1280px] px-5 sm:px-6 lg:px-12">
+            <p className="text-[11px] font-medium uppercase tracking-[0.24em] text-background/60">Ngoài đời thật</p>
+            <h2 className="mt-3 font-display text-4xl leading-none md:text-6xl">Chụp tay, trên bàn của BiBi.</h2>
+          </Reveal>
+          <div className="no-scrollbar flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 sm:px-6 lg:px-12">
+            {realLife.map((p, i) => (
+              <Reveal key={p.slug} variant="paper" delay={(i % 4) * 90} className="w-[70vw] shrink-0 snap-start sm:w-[38vw] lg:w-[22vw]">
+                <Link to="/products/$slug" params={{ slug: p.slug }} className="group block overflow-hidden">
+                  <img src={p.images[1]} alt={`${tx(p.name)} — ảnh chụp thật`} loading="lazy" className="aspect-[4/5] w-full object-cover transition duration-1000 ease-out group-hover:scale-[1.05]" />
+                  <span className="mt-3 block font-display text-xl">{tx(p.name)}</span>
+                </Link>
+              </Reveal>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* About */}
       <section className="border-t border-border">

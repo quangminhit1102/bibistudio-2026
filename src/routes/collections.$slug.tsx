@@ -99,7 +99,8 @@ function CollectionPage() {
             {occasions.map((o, i) => {
               const items = productsByOccasion(o.id);
               return (
-                <Reveal key={o.id} delay={Math.min(i, 3) * 80}>
+                <Reveal key={o.id} delay={Math.min(i, 3) * 80} className="scroll-mt-24">
+                  <span id={o.id} className="block scroll-mt-24" />
                   <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
                     <h3 className="font-display text-3xl md:text-4xl">
                       <span className="mr-3 text-sm text-kraft">{String(i + 1).padStart(2, "0")}</span>
