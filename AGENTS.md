@@ -14,3 +14,4 @@
 - Catalogue data lives in `src/data/catalogue.ts` with product type and collection as separate dimensions; `/products/$slug` resolves type slugs to listings, otherwise product detail. Why: brand catalogue, not a shop — no prices/cart.
 - Product imagery is normalized into `public/catalogue` with ASCII filenames; polished images lead and matching photographs follow in detail galleries. Why: predictable URLs, lighter pages, and consistent presentation.
 - Journal imagery is bundled from `src/assets/blog` and assigned in `src/data/blog.ts`; listing cards stay square while article images render in a 3:2 frame. Why: reliable editorial imagery with consistent crops and no remote placeholders.
+- Showcase motion primitives (Parallax, ScrollExpand, SplitWords, Tilt, FilmStrip, Magnifier) live in `src/components/brand/motion.tsx`; transform/opacity only and disabled under reduced motion. Why: one place for consistent, cheap, accessible effects.
