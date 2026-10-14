@@ -120,6 +120,29 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
+// Images fade in from the paper background once loaded (skips cached/already-complete ones).
+function ImageFade() {
+  useEffect(() => {
+    const mark = (img: HTMLImageElement) => {
+      if (img.dataset.fade) return;
+      img.dataset.fade = "1";
+      if (img.complete && img.naturalWidth) return;
+      img.classList.add("img-loading");
+      const done = () => img.classList.remove("img-loading");
+      img.addEventListener("load", done, { once: true });
+      img.addEventListener("error", done, { once: true });
+    };
+    document.querySelectorAll("img").forEach(mark);
+    const mo = new MutationObserver((ms) => ms.forEach((m) => m.addedNodes.forEach((n) => {
+      if (n instanceof HTMLImageElement) mark(n);
+      else if (n instanceof HTMLElement) n.querySelectorAll("img").forEach(mark);
+    })));
+    mo.observe(document.body, { childList: true, subtree: true });
+    return () => mo.disconnect();
+  }, []);
+  return null;
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
@@ -128,6 +151,7 @@ function RootComponent() {
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
       <FloatingContact />
+      <ImageFade />
     </QueryClientProvider>
   );
 }

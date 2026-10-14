@@ -261,3 +261,4 @@
 @media (max-width: 767px) { body:has([data-product-bar]) .floating-contact { display: none; } }
 @media (max-width: 767px) { body:has([data-product-bar]) .back-to-top { bottom: 7.5rem; } }
 body:has([aria-modal="true"]) .floating-contact, body:has([aria-modal="true"]) .back-to-top, body:has([aria-modal="true"]) [data-product-bar] { display: none; }
+img.img-loading { opacity: 0 !important; } img { transition-property: opacity, transform; } @media (prefers-reduced-motion: no-preference) { img:not(.img-loading) { animation: none; } }

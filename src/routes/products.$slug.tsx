@@ -28,6 +28,7 @@ export const Route = createFileRoute("/products/$slug")({
   head: ({ loaderData, params }) => {
     if (!loaderData) return { meta: [{ title: "Không tìm thấy — BiBi Studio" }, { name: "robots", content: "noindex" }] };
     let title: string, description: string;
+    let image: string | undefined;
     const scripts: { type: string; children: string }[] = [];
     if (loaderData.kind === "type") {
       const t = getProductType(loaderData.typeId);
@@ -37,6 +38,7 @@ export const Route = createFileRoute("/products/$slug")({
       const p = getProduct(loaderData.slug)!;
       const t = getProductType(p.productType);
       title = `${tx(p.name)} · ${tx(t.name)} — BiBi Studio`;
+      if (p.images[0]) image = p.images[0].startsWith("http") ? p.images[0] : `${SITE_URL}${p.images[0]}`;
       description = `${tx(t.name)} ${tx(p.name)} thuộc bộ sưu tập ${tx(getCollection(p.collection).name)} của BiBi Studio.`;
       scripts.push({
         type: "application/ld+json",
@@ -57,6 +59,7 @@ export const Route = createFileRoute("/products/$slug")({
         { property: "og:description", content: description },
         { property: "og:type", content: "website" },
         { name: "twitter:card", content: "summary_large_image" },
+        ...(image ? [{ property: "og:image", content: image }, { name: "twitter:image", content: image }] : []),
       ],
       scripts,
     };
