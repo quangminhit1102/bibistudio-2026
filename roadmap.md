@@ -11,4 +11,5 @@
 - [x] Phần 0 — Hiệu ứng trình diễn sản phẩm
 - [x] Phần 1 — Trang chi tiết sản phẩm
 - [x] Phần 2 — Thẻ sản phẩm và trang danh sách
-- [ ] Phần 3–7 — chờ người dùng duyệt
+- [x] Phần 3 — Trang chủ
+- [ ] Phần 4–7 — chờ người dùng duyệt
