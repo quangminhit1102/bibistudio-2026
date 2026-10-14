@@ -160,7 +160,7 @@ export function Slider({ children, label }: { children: ReactNode; label: string
     <div>
       <div className="mb-8 flex items-end justify-between gap-4 border-b border-border pb-6">
         <h2 className="eyebrow text-foreground">{label}</h2>
-        <div className="flex gap-2">
+        <div className="flex gap-2 md:mr-14">
           <button onClick={() => by(-1)} aria-label="Trước" className="grid size-10 place-items-center border border-border transition hover:bg-secondary"><ChevronLeft className="size-4" /></button>
           <button onClick={() => by(1)} aria-label="Sau" className="grid size-10 place-items-center border border-border transition hover:bg-secondary"><ChevronRight className="size-4" /></button>
         </div>
