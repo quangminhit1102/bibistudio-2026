@@ -12,4 +12,5 @@
 - [x] Phần 1 — Trang chi tiết sản phẩm
 - [x] Phần 2 — Thẻ sản phẩm và trang danh sách
 - [x] Phần 3 — Trang chủ
-- [ ] Phần 4–7 — chờ người dùng duyệt
+- [x] Phần 4 — Trang bộ sưu tập
+- [ ] Phần 5–7 — chờ người dùng duyệt

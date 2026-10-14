@@ -52,6 +52,9 @@ function CollectionPage() {
   const signature = c.id === "explore-vietnam";
   const idx = collections.indexOf(c);
   const next = collections[(idx + 1) % collections.length];
+  const count = productsByCollection(c.id).length;
+  const live = occasions.filter((o) => productsByOccasion(o.id).length > 0);
+  const soon = occasions.filter((o) => productsByOccasion(o.id).length === 0);
 
   return (
     <PageShell>
@@ -62,6 +65,7 @@ function CollectionPage() {
             <h1 className="mt-5 font-display text-[3.25rem] leading-[0.98] sm:text-6xl md:text-7xl"><SplitWords text={tx(c.name)} delay={150} /></h1>
             <p className="mt-6 max-w-md font-display text-2xl italic leading-snug text-kraft animate-rise">{tx(c.tagline)}</p>
             <p className="mt-6 max-w-md text-[15px] leading-relaxed text-muted-foreground animate-rise">{tx(c.intro)}</p>
+            <p className="eyebrow mt-8 animate-rise text-foreground">{count ? `${count} mẫu trong bộ sưu tập` : "Sắp ra mắt"}</p>
           </div>
           <div className="overflow-hidden">
             {c.image ? (
@@ -93,33 +97,50 @@ function CollectionPage() {
       )}
 
       {c.id === "greeting-cards" ? (
-        <section className="mx-auto max-w-[1280px] px-6 py-20 lg:px-12">
-          <h2 className="eyebrow mb-10 border-b border-border pb-6 text-foreground">Thiệp theo dịp</h2>
-          <div className="space-y-16">
-            {occasions.map((o, i) => {
+        <section className="mx-auto max-w-[1280px] px-5 py-16 sm:px-6 lg:px-12">
+          <nav aria-label="Chọn dịp" className="sticky top-0 z-30 -mx-5 mb-12 border-y border-border bg-background/95 px-5 backdrop-blur sm:-mx-6 sm:px-6 lg:mx-0 lg:px-0">
+            <ul className="no-scrollbar flex gap-6 overflow-x-auto py-4">
+              {occasions.map((o) => {
+                const n = productsByOccasion(o.id).length;
+                return (
+                  <li key={o.id} className="shrink-0">
+                    <a href={`#${o.id}`} className={`text-[13px] transition hover:text-foreground ${n ? "text-foreground" : "text-muted-foreground/70"}`}>
+                      {tx(o.name)}{n ? <sup className="ml-1 text-[10px] text-kraft">{n}</sup> : null}
+                    </a>
+                  </li>
+                );
+              })}
+            </ul>
+          </nav>
+          <div className="space-y-20">
+            {live.map((o) => {
               const items = productsByOccasion(o.id);
               return (
-                <Reveal key={o.id} delay={Math.min(i, 3) * 80} className="scroll-mt-24">
-                  <span id={o.id} className="block scroll-mt-24" />
-                  <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-                    <h3 className="font-display text-3xl md:text-4xl">
-                      <span className="mr-3 text-sm text-kraft">{String(i + 1).padStart(2, "0")}</span>
-                      {tx(o.name)}
-                    </h3>
-                    {items.length === 0 && (
-                      <span className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Sắp ra mắt</span>
-                    )}
-                  </div>
-                  <p className="mt-2 max-w-lg text-[15px] leading-relaxed text-muted-foreground">{tx(o.note)}</p>
-                  {items.length > 0 && (
-                    <div className="mt-8">
-                      <CatalogueGrid items={items} />
+                <div key={o.id} id={o.id} className="scroll-mt-24">
+                  <Reveal>
+                    <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+                      <h2 className="font-display text-4xl md:text-5xl">{tx(o.name)}</h2>
+                      <span className="eyebrow">{items.length} mẫu</span>
                     </div>
-                  )}
-                </Reveal>
+                    <p className="mt-2 max-w-lg text-[15px] leading-relaxed text-muted-foreground">{tx(o.note)}</p>
+                  </Reveal>
+                  <div className="mt-8"><CatalogueGrid items={items} /></div>
+                </div>
               );
             })}
           </div>
+          {soon.length > 0 && (
+            <Reveal className="mt-20 border-t border-border pt-10">
+              <p className="eyebrow">Sắp ra mắt</p>
+              <ul className="mt-5 flex flex-wrap gap-x-8 gap-y-4">
+                {soon.map((o) => (
+                  <li key={o.id} id={o.id} className="scroll-mt-24">
+                    <span className="font-display text-2xl text-muted-foreground" title={tx(o.note)}>{tx(o.name)}</span>
+                  </li>
+                ))}
+              </ul>
+            </Reveal>
+          )}
         </section>
       ) : (
         <section className="mx-auto max-w-[1280px] px-6 py-20 lg:px-12">
@@ -128,10 +149,20 @@ function CollectionPage() {
         </section>
       )}
 
-      <section className="mx-auto max-w-[1280px] px-6 pb-24 lg:px-12">
-        <Link to="/collections/$slug" params={{ slug: next.slug }} className="group grid grid-cols-[minmax(0,1fr)_auto] items-end gap-4 border-t border-border pt-10">
-          <span className="eyebrow">Chương tiếp theo</span>
-          <span className="max-w-[12rem] text-right font-display text-3xl leading-tight transition group-hover:-translate-x-2 sm:max-w-none md:text-5xl">{tx(next.name)} →</span>
+      <section className="mx-auto max-w-[1280px] px-5 pb-24 sm:px-6 lg:px-12">
+        <Link to="/collections/$slug" params={{ slug: next.slug }} className="group grid items-center gap-6 border-t border-border pt-10 md:grid-cols-[1fr_1.2fr] md:gap-12">
+          <div>
+            <span className="eyebrow">Chương tiếp theo</span>
+            <span className="mt-4 block font-display text-4xl leading-tight transition group-hover:translate-x-2 md:text-6xl">{tx(next.name)} →</span>
+            <span className="mt-3 block max-w-sm text-[14px] text-muted-foreground">{tx(next.tagline)}</span>
+          </div>
+          <div className="overflow-hidden">
+            {next.image ? (
+              <img src={next.image} alt={tx(next.name)} loading="lazy" className="aspect-[16/9] w-full object-cover transition duration-1000 ease-out group-hover:scale-[1.05]" />
+            ) : (
+              <PaperPlaceholder label={tx(next.name)} ratio="16/9" />
+            )}
+          </div>
         </Link>
       </section>
       <ContactBand />
