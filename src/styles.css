@@ -260,3 +260,4 @@
 @media (prefers-reduced-motion: reduce) { .animate-unveil { animation: none; } }
 @media (max-width: 767px) { body:has([data-product-bar]) .floating-contact { display: none; } }
 @media (max-width: 767px) { body:has([data-product-bar]) .back-to-top { bottom: 7.5rem; } }
+body:has([aria-modal="true"]) .floating-contact, body:has([aria-modal="true"]) .back-to-top, body:has([aria-modal="true"]) [data-product-bar] { display: none; }
