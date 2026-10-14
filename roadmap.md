@@ -10,4 +10,5 @@
 - [x] Kiểm tra menu, favicon và Nhật ký trên desktop/mobile — không ảnh lỗi, không placeholder, build sạch
 - [x] Phần 0 — Hiệu ứng trình diễn sản phẩm
 - [x] Phần 1 — Trang chi tiết sản phẩm
-- [ ] Phần 2–7 — chờ người dùng duyệt
+- [x] Phần 2 — Thẻ sản phẩm và trang danh sách
+- [ ] Phần 3–7 — chờ người dùng duyệt
