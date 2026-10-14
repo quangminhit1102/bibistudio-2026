@@ -2,6 +2,17 @@
 
 Mỗi phần dưới đây là một gói riêng. Bạn duyệt phần nào thì mình làm phần đó. Mình sẽ không thay đổi gì khi bạn chưa đồng ý.
 
+## Phần 0 — Hiệu ứng trình diễn sản phẩm (trọng tâm)
+Mục tiêu: mỗi sản phẩm xuất hiện như được đặt lên bàn trưng bày, nhẹ nhàng nhưng ấn tượng.
+- Ảnh sản phẩm hiện dần kèm chuyển động "đặt giấy xuống": trượt lên nhẹ, hơi xoay rồi nằm phẳng, lần lượt từng thẻ khi cuộn tới.
+- Rê chuột vào thẻ: ảnh nghiêng nhẹ theo con trỏ (cảm giác cầm tấm thiệp trên tay), bóng đổ mềm, chuyển sang ảnh chụp thật.
+- Trang chủ: ảnh đầu trang di chuyển chậm khi cuộn (chiều sâu), dòng chữ tiêu đề hiện từng chữ.
+- Dải "Mẫu nổi bật" trượt ngang theo cuộn trang, các sản phẩm lướt qua như một cuộn phim.
+- Bộ sưu tập: ảnh lớn mở ra từ khung hẹp thành toàn khung khi cuộn tới.
+- Chuyển từ thẻ sang trang chi tiết: ảnh sản phẩm "bay" mượt từ vị trí thẻ thành ảnh lớn.
+- Trang chi tiết: kính lúp xem cận nét giấy khi rê chuột; trên điện thoại chạm hai lần để phóng to.
+- Tất cả hiệu ứng chậm, êm, tự tắt với người bật chế độ giảm chuyển động; không làm chậm trang.
+
 ## Phần 1 — Trang chi tiết sản phẩm (ưu tiên cao)
 - Ảnh lớn: bấm vào ảnh để xem toàn màn hình, vuốt qua lại trên điện thoại, phóng to để xem chi tiết giấy và nét vẽ.
 - Ảnh nhỏ bên dưới hiện rõ ảnh nào đang được chọn; trên điện thoại ảnh trượt ngang, có chấm báo vị trí.
