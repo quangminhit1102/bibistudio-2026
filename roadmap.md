@@ -14,4 +14,5 @@
 - [x] Phần 3 — Trang chủ
 - [x] Phần 4 — Trang bộ sưu tập
 - [x] Phần 5 — Điều hướng và tìm kiếm
-- [ ] Phần 6–7 — chờ người dùng duyệt (Phần 7 cần thông tin thật)
+- [x] Phần 6 — Cảm giác và tốc độ
+- [ ] Phần 7 — FAQ / đặt làm theo yêu cầu: chờ người dùng cung cấp thông tin thật
