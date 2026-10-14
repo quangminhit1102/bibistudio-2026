@@ -109,7 +109,8 @@ function ProductDetail({ slug }: { slug: string }) {
   return (
     <PageShell>
       <nav aria-label="Breadcrumb" className="mx-auto max-w-[1280px] px-6 pt-8 text-[12px] text-muted-foreground lg:px-12">
-        <Link to="/products" className="hover:text-foreground">Sản phẩm</Link> /{" "}
+        <Link to="/" className="hover:text-foreground">Trang chủ</Link> /{" "}
+        <Link to="/collections/$slug" params={{ slug: c.slug }} className="hover:text-foreground">{tx(c.name)}</Link> /{" "}
         <Link to="/products/$slug" params={{ slug: t.slug }} className="hover:text-foreground">{tx(t.plural)}</Link> /{" "}
         <span className="text-foreground">{tx(p.name)}</span>
       </nav>
