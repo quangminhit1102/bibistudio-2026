@@ -5,6 +5,7 @@ import { ContactBand } from "@/components/contact-cta";
 import { PaperPlaceholder } from "@/components/brand/paper-placeholder";
 import { Reveal } from "@/components/brand/reveal";
 import { SplitWords } from "@/components/brand/motion";
+import { SITE_URL } from "@/lib/seo";
 import { collections, getCollectionBySlug, occasions, productsByCollection, productsByOccasion, tx } from "@/data/catalogue";
 
 const chapters: Record<string, { quote?: string; themes?: string[] }> = {
@@ -23,6 +24,7 @@ export const Route = createFileRoute("/collections/$slug")({
     const c = loaderData && collections.find((x) => x.id === loaderData.id);
     if (!c) return { meta: [{ title: "Không tìm thấy — BiBi Studio" }, { name: "robots", content: "noindex" }] };
     const title = `${tx(c.name)} — Bộ sưu tập BiBi Studio`;
+    const image = c.image ? (c.image.startsWith("http") ? c.image : `${SITE_URL}${c.image}`) : undefined;
     return {
       meta: [
         { title },
@@ -31,6 +33,7 @@ export const Route = createFileRoute("/collections/$slug")({
         { property: "og:description", content: tx(c.intro) },
         { property: "og:type", content: "website" },
         { name: "twitter:card", content: "summary_large_image" },
+        ...(image ? [{ property: "og:image", content: image }, { name: "twitter:image", content: image }] : []),
       ],
     };
   },
