@@ -44,6 +44,11 @@ export function CatalogueCard({ product, index = 0 }: { product: Product; index?
             ) : (
               <PaperPlaceholder label={tx(type.name)} />
             )}
+            {product.featured && (
+              <span className="absolute left-2.5 top-2.5 bg-background/90 px-2 py-1 text-[9px] font-medium uppercase tracking-[0.2em] text-foreground backdrop-blur sm:left-3 sm:top-3">
+                Nổi bật
+              </span>
+            )}
             <span aria-hidden className="tilt-glare pointer-events-none absolute inset-0" />
           </div>
         </Tilt>
