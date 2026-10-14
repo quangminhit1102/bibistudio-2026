@@ -8,4 +8,5 @@
 - [x] Thiết kế favicon BiBi Studio mới từ dấu B của thương hiệu
 - [x] Thay toàn bộ ảnh placeholder trong Nhật ký bằng bộ ảnh biên tập phù hợp nội dung
 - [x] Kiểm tra menu, favicon và Nhật ký trên desktop/mobile — không ảnh lỗi, không placeholder, build sạch
-- [ ] Kế hoạch cải thiện UI/UX + hiệu ứng trình diễn sản phẩm — chờ người dùng duyệt từng phần
+- [x] Phần 0 — Hiệu ứng trình diễn sản phẩm
+- [ ] Phần 1–7 — chờ người dùng duyệt từng phần

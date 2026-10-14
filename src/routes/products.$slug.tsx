@@ -1,7 +1,8 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useState } from "react";
 import { PageShell, PageIntro } from "@/components/page-shell";
-import { CatalogueCard, CatalogueGrid } from "@/components/catalogue-card";
+import { CatalogueCard, CatalogueGrid, productTransitionName } from "@/components/catalogue-card";
+import { Magnifier } from "@/components/brand/motion";
 import { ContactBand, ContactLinks } from "@/components/contact-cta";
 import { PaperPlaceholder } from "@/components/brand/paper-placeholder";
 import {
@@ -118,11 +119,11 @@ function ProductDetail({ slug }: { slug: string }) {
         <div>
           {p.images.length ? (
             <>
-              <img src={p.images[active]} alt={tx(p.name)} className="aspect-[4/5] w-full bg-secondary object-contain" />
+              <Magnifier src={p.images[active]} alt={tx(p.name)} className="aspect-[4/5] w-full bg-secondary" style={active === 0 ? { viewTransitionName: productTransitionName(p.slug) } : undefined} />
               {p.images.length > 1 && (
                 <div className="mt-4 grid grid-cols-5 gap-3">
                   {p.images.map((src, i) => (
-                    <button key={src} onClick={() => setActive(i)} aria-label={`Ảnh ${i + 1}`} className={`border ${i === active ? "border-foreground" : "border-transparent"}`}>
+                    <button key={src} onClick={() => setActive(i)} aria-label={`Ảnh ${i + 1}`} className={`overflow-hidden border transition ${i === active ? "border-foreground" : "border-transparent opacity-70 hover:opacity-100"}`}>
                       <img src={src} alt="" className="aspect-square w-full object-cover" />
                     </button>
                   ))}
@@ -168,7 +169,7 @@ function ProductDetail({ slug }: { slug: string }) {
         <section className="mx-auto max-w-[1280px] px-6 py-20 lg:px-12">
           <h2 className="eyebrow mb-10 border-b border-border pb-6 text-foreground">Có thể bạn cũng thích</h2>
           <div className="grid grid-cols-2 gap-x-5 gap-y-12 md:gap-x-8 lg:grid-cols-3">
-            {related.map((r) => <CatalogueCard key={r.slug} product={r} />)}
+            {related.map((r, i) => <CatalogueCard key={r.slug} product={r} index={i} />)}
           </div>
         </section>
       )}

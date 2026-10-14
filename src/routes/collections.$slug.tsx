@@ -4,6 +4,7 @@ import { CatalogueGrid } from "@/components/catalogue-card";
 import { ContactBand } from "@/components/contact-cta";
 import { PaperPlaceholder } from "@/components/brand/paper-placeholder";
 import { Reveal } from "@/components/brand/reveal";
+import { SplitWords } from "@/components/brand/motion";
 import { collections, getCollectionBySlug, occasions, productsByCollection, productsByOccasion, tx } from "@/data/catalogue";
 
 const chapters: Record<string, { quote?: string; themes?: string[] }> = {
@@ -58,13 +59,13 @@ function CollectionPage() {
         <div className={signature ? "grid lg:grid-cols-[5fr_7fr]" : "grid gap-12 md:grid-cols-2 md:items-end"}>
           <div className={signature ? "flex flex-col justify-center px-5 py-14 sm:px-6 sm:py-16 lg:px-12" : ""}>
             <p className="eyebrow animate-rise">Bộ sưu tập · {c.name.en}</p>
-            <h1 className="mt-5 font-display text-[3.25rem] leading-[0.98] animate-rise sm:text-6xl md:text-7xl">{tx(c.name)}</h1>
+            <h1 className="mt-5 font-display text-[3.25rem] leading-[0.98] sm:text-6xl md:text-7xl"><SplitWords text={tx(c.name)} delay={150} /></h1>
             <p className="mt-6 max-w-md font-display text-2xl italic leading-snug text-kraft animate-rise">{tx(c.tagline)}</p>
             <p className="mt-6 max-w-md text-[15px] leading-relaxed text-muted-foreground animate-rise">{tx(c.intro)}</p>
           </div>
           <div className="overflow-hidden">
             {c.image ? (
-              <img src={c.image} alt={tx(c.name)} className={`w-full object-cover animate-settle ${signature ? "h-full min-h-[60vh]" : "aspect-[4/5]"}`} />
+              <img src={c.image} alt={tx(c.name)} className={`w-full object-cover animate-settle animate-unveil ${signature ? "h-full min-h-[60vh]" : "aspect-[4/5]"}`} />
             ) : (
               <PaperPlaceholder label={tx(c.name)} />
             )}

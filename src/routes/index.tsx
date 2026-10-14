@@ -6,7 +6,8 @@ import { PaperPlaceholder } from "@/components/brand/paper-placeholder";
 import { ContactBand } from "@/components/contact-cta";
 import { CatalogueCard } from "@/components/catalogue-card";
 import { BrandMark } from "@/components/brand-logo";
-import { collections, productTypes, productsByCollection, tx, type Collection } from "@/data/catalogue";
+import { collections, getAllProducts, productTypes, productsByCollection, tx, type Collection } from "@/data/catalogue";
+import { FilmStrip, Parallax, ScrollExpand, SplitWords } from "@/components/brand/motion";
 import { buildOrganizationSchema } from "@/lib/seo";
 import heroImg from "@/assets/hero-desk.jpg";
 
@@ -57,6 +58,7 @@ function CollectionTile({ c, className = "", ratio = "4/5", big = false }: { c: 
 function Home() {
   const [ev, food, motivation, aoDai, cards, flowers, spiral] = collections;
   const evProducts = productsByCollection("explore-vietnam").slice(0, 3);
+  const featured = getAllProducts().filter((p) => p.featured && p.images.length).slice(0, 10);
   return (
     <PageShell>
       {/* Hero */}
@@ -65,12 +67,12 @@ function Home() {
           <div className="flex flex-col justify-center px-5 py-14 sm:px-6 sm:py-16 lg:px-12">
             <BrandMark className="h-12 w-auto self-start text-kraft animate-rise" />
             <p className="eyebrow mt-8 animate-rise [animation-delay:150ms]">BiBi Studio · Touch your heart</p>
-            <h1 className="mt-6 font-display text-[3.35rem] font-normal leading-[0.98] text-foreground animate-rise [animation-delay:300ms] sm:text-6xl md:text-7xl">
-              Little things,
+            <h1 className="mt-6 font-display text-[3.35rem] font-normal leading-[0.98] text-foreground sm:text-6xl md:text-7xl">
+              <SplitWords text="Little things," delay={300} />
               <br />
-              <em className="text-kraft">made to touch</em>
+              <em className="text-kraft"><SplitWords text="made to touch" delay={460} /></em>
               <br />
-              your heart.
+              <SplitWords text="your heart." delay={680} />
             </h1>
             <p className="mt-8 max-w-sm text-[15px] leading-relaxed text-muted-foreground animate-rise [animation-delay:500ms]">
               Sổ tay, thiệp và giấy viết thư — những món đồ giấy nhỏ, lấy cảm hứng từ Việt Nam.
@@ -84,9 +86,9 @@ function Home() {
               </Link>
             </div>
           </div>
-          <div className="relative min-h-[50vh] overflow-hidden">
-            <img src={heroImg} alt="Sổ tay, postcard, bao thư và giấy viết thư BiBi Studio trên bàn gỗ" width={1920} height={1152} className="absolute inset-0 h-full w-full object-cover animate-settle" />
-          </div>
+          <Parallax strength={90} className="relative min-h-[50vh]">
+            <img src={heroImg} alt="Sổ tay, postcard, bao thư và giấy viết thư BiBi Studio trên bàn gỗ" width={1920} height={1152} className="absolute inset-0 h-full w-full object-cover animate-settle animate-unveil" />
+          </Parallax>
         </div>
       </section>
 
@@ -112,7 +114,7 @@ function Home() {
           <h2 className="eyebrow text-foreground">Explore Collections</h2>
           <Link to="/collections" className="eyebrow flex items-center gap-2 hover:text-foreground">Tất cả <ArrowRight className="size-3.5" /></Link>
         </Reveal>
-        <Reveal><CollectionTile c={ev} ratio="16/9" big /></Reveal>
+        <ScrollExpand><CollectionTile c={ev} ratio="16/9" big /></ScrollExpand>
         <div className="mt-16 grid gap-x-8 gap-y-16 md:grid-cols-12">
           <Reveal className="md:col-span-7"><CollectionTile c={food} ratio="5/4" /></Reveal>
           <Reveal className="md:col-span-5 md:mt-24" delay={120}><CollectionTile c={aoDai} ratio="4/5" /></Reveal>
@@ -121,6 +123,27 @@ function Home() {
           <Reveal className="md:col-span-6"><CollectionTile c={cards} ratio="3/2" /></Reveal>
           <Reveal className="md:col-span-6" delay={120}><CollectionTile c={spiral} ratio="3/2" /></Reveal>
         </div>
+      </section>
+
+      {/* Featured film strip */}
+      <section className="border-y border-border bg-secondary/40 py-20 lg:py-0">
+        <FilmStrip
+          header={
+            <div className="mx-auto mb-10 flex w-full max-w-[1280px] items-end justify-between gap-6 px-5 sm:px-6 lg:px-12">
+              <div>
+                <p className="eyebrow">Mẫu nổi bật</p>
+                <h2 className="mt-3 font-display text-4xl leading-none md:text-6xl">Trên bàn của BiBi</h2>
+              </div>
+              <Link to="/products" className="eyebrow flex shrink-0 items-center gap-2 hover:text-foreground">Tất cả <ArrowRight className="size-3.5" /></Link>
+            </div>
+          }
+        >
+          {featured.map((p, i) => (
+            <div key={p.slug} className="w-[68vw] shrink-0 snap-start sm:w-[42vw] lg:w-[24vw]">
+              <CatalogueCard product={p} index={i} />
+            </div>
+          ))}
+        </FilmStrip>
       </section>
 
       {/* What we make */}
@@ -148,13 +171,13 @@ function Home() {
       {/* Featured story */}
       <section className="mx-auto max-w-[1280px] px-6 py-28 lg:px-12">
         <Reveal className="grid gap-12 md:grid-cols-2 md:items-center">
-          <img src={ev.image} alt={tx(ev.name)} loading="lazy" className="aspect-[4/5] w-full object-cover" />
+          <Parallax strength={60} className="aspect-[4/5] w-full"><img src={ev.image} alt={tx(ev.name)} loading="lazy" className="h-full w-full object-cover" /></Parallax>
           <div>
             <p className="eyebrow">Câu chuyện nổi bật</p>
             <h2 className="mt-5 font-display text-5xl leading-[1.02] md:text-6xl">Việt Nam,<br /><em className="text-kraft">qua từng trang giấy.</em></h2>
             <p className="mt-6 max-w-md text-[15px] leading-relaxed text-muted-foreground">{tx(ev.intro)}</p>
             <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3">
-              {evProducts.map((p) => <CatalogueCard key={p.slug} product={p} />)}
+              {evProducts.map((p, i) => <CatalogueCard key={p.slug} product={p} index={i} />)}
             </div>
             <Link to="/collections/$slug" params={{ slug: ev.slug }} className="mt-10 inline-flex items-center gap-2 text-[12px] font-medium uppercase tracking-[0.22em] underline underline-offset-8">
               Khám phá Việt Nam <ArrowRight className="size-3.5" />
