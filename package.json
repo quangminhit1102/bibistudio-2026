@@ -4,12 +4,26 @@
   "sideEffects": false,
   "type": "module",
   "scripts": {
+    "validate:catalogue": "node scripts/catalogue-images.mjs",
+    "localize:catalogue": "node scripts/catalogue-images.mjs --localize",
+    "test:catalogue": "node --test scripts/catalogue-images.test.mjs scripts/catalogue-image-url.test.mjs",
+    "prebuild": "npm run validate:catalogue",
+    "prebuild:dev": "npm run validate:catalogue",
+    "prebuild:cpanel": "npm run validate:catalogue",
+    "prebuild:cpanel:temp": "npm run validate:catalogue",
     "dev": "vite dev",
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "build:cpanel": "vite build --config vite.cpanel.config.ts",
+    "build:cpanel:temp": "vite build --config vite.cpanel.config.ts --mode cpanel-temp",
+    "deploy:cpanel:temp": "node scripts/cpanel-deploy-artifacts.mjs --mode temp",
+    "deploy:cpanel:temp:push": "node scripts/cpanel-deploy-artifacts.mjs --mode temp --push",
+    "deploy:cpanel:prod": "node scripts/cpanel-deploy-artifacts.mjs --mode prod",
+    "deploy:cpanel:prod:push": "node scripts/cpanel-deploy-artifacts.mjs --mode prod --push",
+    "test:deploy": "node --test scripts/cpanel-deploy-artifacts.test.mjs"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.2.4",
