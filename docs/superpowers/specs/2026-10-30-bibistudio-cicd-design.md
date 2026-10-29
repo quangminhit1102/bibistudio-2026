@@ -31,11 +31,35 @@ Cách vận chuyển đề xuất của người triển khai: GitHub Actions d�
 
 - Giữ frontend ở root repository để tránh phá workflow Lovable. Thêm `backend/` có package.json, lockfile và tsconfig riêng. Không chuyển toàn bộ frontend sang monorepo framework.
 - Backend dùng Express và TypeScript, build ra CommonJS JavaScript; launcher Passenger là CommonJS. Dùng Node major 24 cho dev, CI và runtime hosting; khóa dependencies bằng lockfile.
-- Lệnh root dự kiến: `npm run dev:full`, `npm run check`, `npm run test:all`, `npm run build:release`. Tên chính xác và thư viện test do kế hoạch triển khai xác định.
+- Người dùng yêu cầu ít lệnh: ba lệnh chính là `npm run dev`, `npm run check`, `npm run build`. Cài dependencies bằng lệnh chuẩn `npm ci`; root setup hook cài backend theo lockfile riêng để không cần thêm một lệnh setup. Không đưa các lệnh nội bộ vào quy trình dùng hằng ngày.
 - Local: Vite proxy `/api` sang Express. Staging và production đều dùng `/api` cùng origin, không cần đổi API URL trong bundle FE.
 - API: GET `/api/health` trả trạng thái sống; GET `/api/version` trả release ID và source SHA; GET `/api/demo` trả dữ liệu mẫu cố định. Đường dẫn không tồn tại trả JSON 404; phương thức không hỗ trợ trả 405 cho các endpoint này. Không trả env, đường dẫn máy chủ, token hoặc dữ liệu riêng.
 - FE thêm trang thử `/api-test` có liên kết công khai rõ là trang kiểm tra kỹ thuật, hiển thị phiên bản frontend, phiên bản backend và phản hồi demo; có trạng thái đang tải và lỗi kết nối. Không thêm thông tin kỹ thuật vào các trang catalogue.
 - Release ID gồm SHA đầy đủ và CI run ID để lần build khác nhau không ghi đè nhau. Thông tin FE được tạo lúc build, BE đọc manifest của release. Không dùng timestamp động làm nhận dạng phiên bản.
+
+## 4a. Local development và debug là yêu cầu chính
+
+Người dùng yêu cầu local thuận tiện: chạy cả FE/BE để develop, debug và kiểm tra mà không cần deploy. Không yêu cầu cPanel, SSH, GitHub secrets, Docker hoặc MySQL cho vòng lặp local hiện tại.
+
+| Lệnh đề xuất | Hành vi bắt buộc |
+|---|---|
+| `npm ci` | Cài FE và BE theo hai lockfile, kiểm tra Node major 24; chỉ cần khi mới lấy source hoặc dependencies thay đổi |
+| `npm run dev` | Một terminal chạy FE và BE; đợi API sẵn sàng rồi báo URL; hot reload hai phía; backend inspector chỉ trên loopback, không chờ debugger attach |
+| `npm run check` | TypeScript, lint thuộc phạm vi quy định, kiểm tra ảnh và toàn bộ test FE/BE/script; trả exit code khác 0 nếu bất kỳ bước nào lỗi; không tự sửa file |
+| `npm run build` | Build gói FE/BE bằng cùng đường thực thi mà CI sử dụng, manifest local rõ ràng; kiểm tra ảnh trước build |
+
+`npm run build -- --preview` là tùy chọn của cùng lệnh build để build rồi chạy FE/BE từ đầu ra local trong production mode. Không tạo thêm lệnh preview/debug/setup bắt buộc cho người dùng. Cổng inspector chỉ mở khi chạy dev, không bật trong preview hoặc production.
+
+- Cổng mặc định của full-dev: FE `http://localhost:5173`, BE `http://127.0.0.1:3001`; truy cập qua FE tại `/api-test`, request `/api` được proxy về BE. Cổng tùy chỉnh dùng cấu hình local, proxy luôn khớp. Nếu cổng bận, báo rõ và dừng thay vì tự đổi cổng làm sai proxy/debugger.
+- Dev dùng cùng entry CSR `src/main.tsx` và route tree như bản cPanel, hỗ trợ refresh đường dẫn sâu; không phụ thuộc SSR của TanStack Start để coi bản CSR đã được thử. Việc đổi root scripts phải kiểm tra tương thích Lovable (cài dependencies, cổng/host, preview và build output `.output` hiện có khi Lovable cần), giữ các script build cPanel cũ ở mức nội bộ trong quá trình chuyển đổi. Gói production cPanel vẫn là frontend CSR + backend riêng; không thay đổi đích hosting Lovable như một hệ quả ngầm của việc gộp lệnh.
+- Sửa FE thì HMR; sửa BE thì restart tự động. Hiển thị log có tiền tố `[FE]`, `[BE]`, request method/path/status và thời gian xử lý; không ghi secret. Nếu một tiến trình crash, báo rõ và dừng tiến trình còn lại để không giả vờ môi trường vẫn đủ thành phần.
+- Ctrl+C dừng cả cây tiến trình trên Windows PowerShell và Git Bash, giải phóng cổng; không để backend/debugger chạy ngầm. Không yêu cầu người dùng mở ba terminal hoặc dùng lệnh Bash thủ công.
+- Debug backend bằng breakpoint TypeScript qua Node inspector, mặc định `127.0.0.1:9230`; FE qua browser DevTools và source maps. Debugger phải gắn lại được sau BE restart. Các tùy chọn debug không được bật trong runtime production.
+- Cấu hình VS Code là tiện ích tùy chọn, không điều kiện để chạy project; chỉ thêm launch/task phù hợp editor người dùng xác nhận. Hướng dẫn attach DevTools hoạt động khi không dùng VS Code.
+- Có `.env.example` ghi rõ biến, mặc định local chạy được ngay với API demo không secret. Không lấy env staging/production về máy; `.env` thật bị gitignore. API URL FE dùng `/api`, không nhúng địa chỉ production khi chạy local.
+- Hướng dẫn local một trang: cài đặt, chạy, debug FE/BE, kiểm tra `/api/health`, dừng, xử lý cổng bận và chạy preview bản build. Trang `/api-test` có loading/error/retry, cho phép thấy FE còn chạy khi API mất kết nối trong kiểm tra giao diện độc lập.
+- Tài liệu vận hành cho người và agent nằm tại `docs/build-and-deploy.md`: phân biệt rõ hiện trạng và quy trình dự kiến, bao phủ local, CI, staging, production, rollback, thiết lập một lần và điều kiện xác nhận thành công. Mọi tên workflow/command dự kiến phải được cập nhật theo source khi triển khai.
+- Nghiệm thu local gồm: khởi động từ checkout mới, hot reload hai phía, breakpoint FE/BE, attach lại sau restart, lỗi cổng bận, Ctrl+C rồi chạy lại ngay, FE hiển thị lỗi nếu API không kết nối và preview release. Các kiểm tra vòng đời tiến trình phải được xác minh trên Windows thực tế.
 
 ## 5. Môi trường và hạ tầng
 
@@ -100,7 +124,7 @@ File JS/CSS có hash được giữ trong kho assets công khai dùng chung tron
 
 ## 11. Điều kiện nghiệm thu
 
-1. Một lệnh chạy FE/BE local; trang /api-test thể hiện lỗi khi backend dừng.
+1. Local đạt toàn bộ mục 4a: một lệnh chạy FE/BE, reload/debug hai phía, cleanup tiến trình Windows, kiểm tra và preview release; trang /api-test thể hiện lỗi khi backend không kết nối.
 2. PR lỗi bị CI phát hiện; tất cả kiểm tra liên quan chạy được mà không cần secret production.
 3. Main thành công tạo artifact nhận dạng duy nhất; staging tự deploy và version FE/BE khớp release.
 4. Routing API trả JSON, kể cả 404; đường dẫn React sâu và ảnh catalogue hoạt động sau refresh.
