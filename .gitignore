@@ -12,6 +12,12 @@ dist
 dist-ssr
 dist-cpanel
 .deploy-artifacts/
+.releases/
+.superpowers/
+backend/dist/
+.env
+.env.*
+!.env.example
 *.zip
 .output
 .vinxi
