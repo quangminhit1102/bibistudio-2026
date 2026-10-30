@@ -28,6 +28,10 @@ test("compiled release preview serves FE, real BE, images and deep routes", asyn
     join(dir, "frontend/catalogue/image.webp"),
   );
   app = await previewRelease(dir, { port: 0 });
+  assert.equal((await fetch(app.url + "/")).status, 200);
+  const head = await fetch(app.url + "/", { method: "HEAD" });
+  assert.equal(head.status, 200);
+  assert.equal(await head.text(), "");
   assert.match(await (await fetch(app.url + "/products/example")).text(), /BiBi preview/);
   assert.deepEqual(await (await fetch(app.url + "/api/version")).json(), {
     releaseId: m.releaseId,

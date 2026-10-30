@@ -37,9 +37,9 @@ async function point(config, dir) {
     });
   await fs.rename(next, current);
 }
-async function atomicWrite(file, bytes) {
+async function atomicWrite(file, bytes, mode = 0o600) {
   const next = file + ".new-" + randomUUID();
-  await fs.writeFile(next, bytes, { mode: 0o600 });
+  await fs.writeFile(next, bytes, { mode });
   await fs.rename(next, file);
 }
 async function mergeAssets(config, dir) {
@@ -128,6 +128,7 @@ async function applyRouting(config, m) {
     await atomicWrite(
       path.join(config.site, ".htaccess"),
       await fs.readFile(path.join(config.root, "baseline.htaccess")),
+      0o644,
     );
     return;
   }
@@ -145,7 +146,7 @@ async function applyRouting(config, m) {
   if (config.environment === "staging")
     rules +=
       '\n<IfModule mod_headers.c>\nHeader set X-Robots-Tag "noindex, nofollow"\n</IfModule>\n';
-  await atomicWrite(path.join(config.site, ".htaccess"), rules);
+  await atomicWrite(path.join(config.site, ".htaccess"), rules, 0o644);
 }
 async function currentTarget(config) {
   try {
@@ -159,6 +160,15 @@ async function activateRelease(config, id, hooks = {}) {
   const { dir, manifest } = await inspectRelease(config, id);
   if (manifest.isBaseline) throw new Error("Use rollback for baseline");
   const old = await currentTarget(config);
+  if (config.environment === "production") {
+    if (!old)
+      throw new Error(
+        "A verified baseline or previous release is required before production activation",
+      );
+    const prior = await inspectRelease(config, path.basename(old));
+    await fs.access(path.join(prior.dir, ".successful"));
+    if (prior.manifest.isBaseline) await fs.access(path.join(config.root, "baseline.htaccess"));
+  }
   const originalRules = await fs.readFile(path.join(config.site, ".htaccess")).catch((e) => {
     if (e.code !== "ENOENT") throw e;
     return null;
@@ -206,7 +216,8 @@ async function activateRelease(config, id, hooks = {}) {
       await fs.unlink(path.join(config.root, "current")).catch((e) => {
         if (e.code !== "ENOENT") throw e;
       });
-      if (originalRules) await atomicWrite(path.join(config.site, ".htaccess"), originalRules);
+      if (originalRules)
+        await atomicWrite(path.join(config.site, ".htaccess"), originalRules, 0o644);
       else await fs.rm(path.join(config.site, ".htaccess"), { force: true });
       await (hooks.restart ?? restart)(config);
     }
@@ -234,6 +245,32 @@ async function managedBytes(dir) {
     total += e.isDirectory() ? await managedBytes(p) : (await fs.stat(p)).size;
   }
   return total;
+}
+async function managedUsage(config) {
+  let total = await managedBytes(config.root);
+  const assets = path.join(config.site, "assets");
+  const relation = path.relative(path.resolve(config.root), path.resolve(assets));
+  if (relation.startsWith("..") || path.isAbsolute(relation)) {
+    try {
+      total += await managedBytes(assets);
+    } catch (e) {
+      if (e.code !== "ENOENT") throw e;
+    }
+  }
+  return total;
+}
+async function assertStorage(config, expandedBytes, { availableBytes } = {}) {
+  const used = await managedUsage(config);
+  // Space for extraction, a worst-case second asset copy, and runtime packages.
+  const required = expandedBytes * 2 + (config.runtimeReserveBytes ?? 64 * 1024 ** 2);
+  if (used + required > (config.maxManagedBytes ?? 4 * 1024 ** 3))
+    throw new Error("Expanded release and retained assets exceed quota budget");
+  if (availableBytes === undefined) {
+    const disk = await fs.statfs(config.root);
+    availableBytes = disk.bavail * disk.bsize;
+  }
+  if (availableBytes < required)
+    throw new Error("Insufficient disk space for expanded release and runtime dependencies");
 }
 async function pruneReleases(config, { activeId }) {
   const base = path.join(config.root, "releases");
@@ -274,4 +311,6 @@ module.exports = {
   rollbackRelease,
   managedBytes,
   pruneReleases,
+  managedUsage,
+  assertStorage,
 };

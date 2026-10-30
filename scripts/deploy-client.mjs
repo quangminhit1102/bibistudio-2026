@@ -7,7 +7,7 @@ import { createReadStream } from "node:fs";
 import { pipeline } from "node:stream/promises";
 import { github } from "./github-release.mjs";
 import { smoke } from "./smoke.mjs";
-import { browserSmoke } from "./browser-smoke.mjs";
+import { browserSmoke, captureOpenClient } from "./browser-smoke.mjs";
 import { isMain } from "./runtime.mjs";
 export async function deployClient() {
   const { RELEASE_ID: id, DEPLOY_ENV: environment, BASE_URL: baseUrl } = process.env;
@@ -17,6 +17,7 @@ export async function deployClient() {
   )
     throw new Error("Invalid deploy request");
   const directory = await mkdtemp(join(tmpdir(), "bibi-ssh-"));
+  let oldClient;
   try {
     const key = join(directory, "key"),
       known = join(directory, "known_hosts");
@@ -83,6 +84,7 @@ export async function deployClient() {
     )
       throw new Error("Artifact checksum mismatch");
     await ssh(`upload ${id} ${checksum}`, archive);
+    oldClient = await captureOpenClient(baseUrl);
     const output = await ssh(`deploy ${id}`);
     const result = output
       .trim()
@@ -99,6 +101,7 @@ export async function deployClient() {
     try {
       await smoke({ baseUrl, expectedRelease: id, expectedSha: id.split("-")[0] });
       await browserSmoke(baseUrl);
+      await oldClient.verify();
     } catch (error) {
       if (!result.previousReleaseId)
         throw new Error(`Smoke failed: ${error.message}; no previous release available`);
@@ -135,6 +138,7 @@ export async function deployClient() {
       log_url: `https://github.com/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`,
     });
   } finally {
+    await oldClient?.close();
     await rm(directory, { recursive: true, force: true });
   }
 }

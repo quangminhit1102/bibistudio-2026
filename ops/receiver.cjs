@@ -78,11 +78,6 @@ async function acceptArchive(config, id, checksum, file) {
   if (bytes.length > (config.maxArchiveBytes ?? 256 * 1024 ** 2))
     throw new Error("Archive too large");
   const { expandedBytes } = await inspectArchive(file, config);
-  if (
-    (await deploy.managedBytes(config.root)) + expandedBytes + bytes.length >
-    (config.maxManagedBytes ?? 2 * 1024 ** 3)
-  )
-    throw new Error("Expanded release exceeds quota budget");
   const base = path.join(config.root, "releases");
   await fs.mkdir(base, { recursive: true });
   const dest = deploy.inside(base, path.join(base, id));
@@ -93,6 +88,7 @@ async function acceptArchive(config, id, checksum, file) {
   } catch (e) {
     if (e.code !== "ENOENT") throw e;
   }
+  await deploy.assertStorage(config, expandedBytes);
   const staging = deploy.inside(config.root, path.join(config.root, ".unpack-" + randomUUID()));
   await fs.mkdir(staging);
   try {
@@ -151,8 +147,8 @@ async function main() {
   if (command.action === "upload") {
     const archive = path.join(config.root, ".upload-" + randomUUID() + ".tgz");
     let size = 0;
-    const used = await deploy.managedBytes(config.root);
-    const max = config.maxManagedBytes ?? 2 * 1024 ** 3;
+    const used = await deploy.managedUsage(config);
+    const max = config.maxManagedBytes ?? 4 * 1024 ** 3;
     const disk = await fs.statfs(config.root);
     if (disk.bavail * disk.bsize < 2 * (config.maxArchiveBytes ?? 256 * 1024 ** 2))
       throw new Error("Insufficient disk space");

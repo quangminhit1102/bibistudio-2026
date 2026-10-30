@@ -29,3 +29,21 @@
 - Actual cPanel created staging.bibistudio.vn with /home/vhplasti/staging.bibistudio.vn. Zone Editor confirms A 103.130.217.103; local public lookup still NXDOMAIN and direct ns1 lookup timed out. HTTPS not proven; production unchanged.
 - Task 7: pending real provisioning and runner tests.
 - Task 8: pending real production release and verification.
+
+## Review and continuation evidence
+
+- Independent read-only review of 6346525..be3e50d: no Critical, six Important findings, no deferred Minor findings. One fix pass follows; no second review planned.
+- Final: fixed public routing permissions — `.htaccess` now explicitly 0644, private state stays 0600. Regression is POSIX-only, skipped on Windows; Linux CI must verify it before live activation. Windows tests cannot certify Apache permission bits.
+- Final: fixed production activation without prior recovery target — regression rejected the old implementation (RED); guard now requires a valid successful prior release/baseline before mutation (GREEN).
+- Final: fixed preview homepage GET/HEAD — HTTP regression observed 404 (RED), now serves index and empty HEAD (GREEN).
+- Final: fixed dev watcher readiness — actual orchestrator regression failed missing unavailable state (RED); temporary source crash now reports UNAVAILABLE, restored source reports READY, close frees all three ports (GREEN). Regression also caught `/api-test` matching the API proxy when no HTML Accept; tightened API prefix matching.
+- Final: fixed storage accounting — counts retained assets outside release root and reserves expansion/copy/runtime headroom; quota/free-space regressions RED→GREEN.
+- Final: fixed old-client acceptance — new two-release HTTP regression checks an uncached old script after promotion, missing asset is rejected. Deploy client now keeps a real browser open across activation, verifies old assets and navigation, then fresh browser smoke. Real hosting observation still pending.
+- Fresh suite after fix pass: npm run check on Node24 → 47 tests, 46 pass, 0 fail, 1 POSIX permission skip on Windows; both typechecks/scoped lint/catalogue pass.
+- Ruling: increase per-environment quota example to 4 GiB because real site is 431 MB and five retained releases plus extraction need more than 2 GiB. Account is 5.46/15 GB; hard disk checks still apply. Cost: more disk may be allocated, operator must watch account-level quota.
+- Final: Ruling: SSH/DNS/HTTPS/Passenger/symlink/Linux lock behavior set aside by reviewer remains live acceptance work, not inferred from fixture tests. Cost if unverified: CD cannot be declared complete.
+- Final: Ruling: production baseline creation remains a provisioning step; code guard prevents cutover without it. Cost if baseline verification fails: production promotion must wait.
+- Final: Ruling: GitHub protections/hosted workflows/promotion/rollback require actual run evidence. Cost if unavailable: corresponding CD deliverables remain pending.
+- Final: Ruling: indefinite asset retention stands with repaired quota accounting. Cost: later operator storage review may be needed.
+- Final: Ruling: database/authentication/tenant isolation stay outside this API demo iteration. Cost: future features need their own design.
+- Actual hosting: staging Passenger created at `/api`, Node24.22.1 production; app root `/home/vhplasti/bibi-deploy/staging/app`, nodevenv matches that nested path. Existing /node-test unchanged. AutoSSL explicitly failed DNS DCV/HTTP DCV because staging does not resolve publicly; only self-signed certificate currently. Tino account login is required to inspect public DNS outside cPanel.

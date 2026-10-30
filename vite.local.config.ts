@@ -12,6 +12,7 @@ export default defineConfig(async (env) =>
             if (
               req.method === "GET" &&
               req.headers.accept?.includes("text/html") &&
+              path !== "/api" &&
               !path.startsWith("/api/") &&
               !path.includes(".")
             )
@@ -25,7 +26,7 @@ export default defineConfig(async (env) =>
       strictPort: true,
       host: "127.0.0.1",
       port: 5173,
-      proxy: { "/api": `http://127.0.0.1:${process.env.BACKEND_PORT ?? 3001}` },
+      proxy: { "^/api(?:/|$)": `http://127.0.0.1:${process.env.BACKEND_PORT ?? 3001}` },
     },
   }),
 );

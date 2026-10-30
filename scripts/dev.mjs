@@ -9,6 +9,8 @@ export async function startDevelopment({
   inspectorPort = 9230,
   host = "127.0.0.1",
   signal,
+  backendEntry = "src/server.ts",
+  onBackendState = () => {},
 } = {}) {
   await assertPortsFree([frontendPort, backendPort, inspectorPort]);
   process.env.BACKEND_PORT = String(backendPort);
@@ -25,7 +27,7 @@ export async function startDevelopment({
       join(root, "backend/node_modules/tsx/dist/cli.mjs"),
       "watch",
       `--inspect=127.0.0.1:${inspectorPort}`,
-      "src/server.ts",
+      backendEntry,
     ],
     {
       cwd: join(root, "backend"),
@@ -39,9 +41,11 @@ export async function startDevelopment({
     },
   );
   let closePromise;
+  let healthTimer;
   const close = () =>
     (closePromise ??= (async () => {
       closed = true;
+      clearTimeout(healthTimer);
       await stopOwned([child]);
       await vite?.close();
     })());
@@ -97,6 +101,41 @@ export async function startDevelopment({
     console.log(
       `[FE] READY http://localhost:${frontendPort}/api-test\n[BE] READY http://127.0.0.1:${backendPort}/api/health\n[BE] Debug: 127.0.0.1:${inspectorPort} (attach, no pause)`,
     );
+    onBackendState("ready");
+    let state = "ready",
+      failedSince = null;
+    const monitor = async () => {
+      if (closed) return;
+      let healthy = false;
+      try {
+        const response = await fetch(`http://127.0.0.1:${backendPort}/api/health`, {
+          signal: AbortSignal.timeout(1000),
+        });
+        healthy = response.ok && (await response.json()).ok === true;
+      } catch {
+        /* a restart may briefly interrupt HTTP */
+      }
+      if (closed) return;
+      if (healthy) {
+        failedSince = null;
+        if (state !== "ready") {
+          state = "ready";
+          console.log("[BE] READY — API recovered");
+          onBackendState(state);
+        }
+      } else {
+        failedSince ??= Date.now();
+        if (Date.now() - failedSince >= 1500 && state !== "unavailable") {
+          state = "unavailable";
+          console.error(
+            "[BE] UNAVAILABLE — watcher is alive but API is not responding; fix the source to recover",
+          );
+          onBackendState(state);
+        }
+      }
+      healthTimer = setTimeout(monitor, 500);
+    };
+    healthTimer = setTimeout(monitor, 500);
     return { close };
   } catch (error) {
     await close();

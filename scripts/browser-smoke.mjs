@@ -1,6 +1,53 @@
 import { chromium } from "playwright";
 import { mkdir } from "node:fs/promises";
 import { isMain } from "./runtime.mjs";
+export async function verifyRetainedAssets(assets, request = fetch) {
+  for (const asset of assets) {
+    const url = new URL(asset.url);
+    url.searchParams.set("_bibi_probe", String(Date.now()));
+    const response = await request(url, {
+      cache: "no-store",
+      headers: { "cache-control": "no-cache" },
+      signal: AbortSignal.timeout(15000),
+    });
+    if (!response.ok || !Buffer.from(await response.arrayBuffer()).equals(asset.bytes))
+      throw new Error(`Retained old asset unavailable or changed: ${url.pathname}`);
+  }
+}
+export async function captureOpenClient(baseUrl) {
+  const browser = await chromium.launch();
+  try {
+    const page = await browser.newPage();
+    const response = await page.goto(baseUrl);
+    if (!response?.ok()) throw new Error("Previous site must serve HTTP before activation");
+    const urls = await page
+      .locator('script[src],link[rel="stylesheet"][href]')
+      .evaluateAll((elements) => elements.map((e) => e.src || e.href));
+    const assets = [];
+    for (const url of urls.filter((url) => new URL(url).origin === new URL(baseUrl).origin)) {
+      const result = await fetch(url, { cache: "no-store", signal: AbortSignal.timeout(15000) });
+      if (!result.ok) throw new Error("Old client asset unavailable before deployment");
+      assets.push({ url, bytes: Buffer.from(await result.arrayBuffer()) });
+    }
+    return {
+      verify: async () => {
+        await verifyRetainedAssets(assets);
+        const about = page.getByRole("link", { name: "Về BiBi", exact: true }).first();
+        if (await about.count()) {
+          await about.click();
+          await page.getByRole("heading", { level: 1 }).waitFor();
+        }
+        console.log(
+          `Already-open client verified; ${assets.length} retained assets fetched without cache`,
+        );
+      },
+      close: () => browser.close(),
+    };
+  } catch (error) {
+    await browser.close();
+    throw error;
+  }
+}
 export async function browserSmoke(baseUrl) {
   const browser = await chromium.launch();
   try {

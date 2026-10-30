@@ -3,9 +3,10 @@
   "root": "/home/vhplasti/bibi-deploy/staging",
   "site": "/home/vhplasti/staging.bibistudio.vn",
   "baseUrl": "https://staging.bibistudio.vn",
-  "npmBin": "/home/vhplasti/nodevenv/bibi-api-staging/24/bin/npm",
-  "runtimeBin": "/home/vhplasti/nodevenv/bibi-api-staging/24/bin",
+  "npmBin": "/home/vhplasti/nodevenv/bibi-deploy/staging/app/24/bin/npm",
+  "runtimeBin": "/home/vhplasti/nodevenv/bibi-deploy/staging/app/24/bin",
   "maxArchiveBytes": 268435456,
   "maxExpandedBytes": 1073741824,
-  "maxManagedBytes": 2147483648
+  "maxManagedBytes": 4294967296,
+  "runtimeReserveBytes": 67108864
 }

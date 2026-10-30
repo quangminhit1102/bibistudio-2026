@@ -1,12 +1,38 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { mkdtemp, mkdir, writeFile, readFile, rm, readlink, readdir } from "node:fs/promises";
+import { mkdtemp, mkdir, writeFile, readFile, rm, readlink, readdir, stat } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import deploy from "../ops/deploy.cjs";
 const sha = "a".repeat(40),
   first = sha + "-1",
   second = sha + "-2";
+test("production refuses first activation without a verified rollback target", async (t) => {
+  const config = await fixture(t);
+  config.environment = "production";
+  await assert.rejects(
+    deploy.activateRelease(config, first, {
+      install: async () => {},
+      restart: async () => {},
+      verify: async () => {},
+    }),
+    /baseline|previous/i,
+  );
+  assert.equal(await readFile(join(config.site, ".htaccess"), "utf8"), "old-routing");
+});
+test(
+  "public routing has Apache-readable permissions",
+  { skip: process.platform === "win32" ? "POSIX permission bits verified on Linux CI" : false },
+  async (t) => {
+    const config = await fixture(t);
+    await deploy.activateRelease(config, first, {
+      install: async () => {},
+      restart: async () => {},
+      verify: async () => {},
+    });
+    assert.equal((await stat(join(config.site, ".htaccess"))).mode & 0o777, 0o644);
+  },
+);
 async function fixture(t) {
   const root = await mkdtemp(join(tmpdir(), "bibi-deploy-"));
   t.after(() => rm(root, { recursive: true, force: true }));

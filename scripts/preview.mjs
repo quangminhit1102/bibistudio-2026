@@ -41,7 +41,7 @@ export async function previewRelease(bundleDir, { port = 4173, host = "127.0.0.1
       }
       let file = resolve(publicRoot, "." + pathname);
       if (
-        !file.startsWith(publicRoot + sep) ||
+        (file !== publicRoot && !file.startsWith(publicRoot + sep)) ||
         pathname.split("/").some((p) => p.startsWith("."))
       ) {
         res.writeHead(404);
