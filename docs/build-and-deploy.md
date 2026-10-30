@@ -1,6 +1,8 @@
 # BiBi Studio — hướng dẫn develop, build và deploy
 
-**Trạng thái ngày 30/10/2026:** local FE + Express API, check, build artifact và preview đã triển khai và kiểm thử trên Node 24/Windows. Workflow CI/CD và receiver đã có trong source nhưng chưa chạy trên GitHub/hosting. cPanel đã tạo `staging.bibistudio.vn` với document root riêng; DNS/HTTPS công khai còn đang xác minh. Chưa cấp deploy key, chưa cutover production. `/node-test` vẫn là app riêng hiện có. Không coi các bước CD bên dưới là đã nghiệm thu cho tới khi có run ID và kết quả HTTP thực tế.
+**Trạng thái ngày 30/10/2026:** local FE + Express API, check, build artifact và preview đã triển khai. [CI thật 41086747811](https://github.com/quangminhit1102/bibistudio-2026/actions/runs/41086747811) thành công trên Linux cho commit `70d7283` thuộc nhánh `codex/fullstack-cicd-continue`; main chưa nhận implementation nên chưa có artifact phát hành main. cPanel staging đã có domain riêng, Passenger Node24, receiver và baseline static; SSH key riêng đã được người dùng duyệt/cấp/lưu vào GitHub staging. DNS public chưa có staging, AutoSSL chưa cấp chứng chỉ hợp lệ nên chưa deploy release API qua pipeline, chưa cutover production. `/node-test` giữ nguyên app riêng hiện có.
+
+Bằng chứng hiện có: Windows check 47 tests (46 đạt, 1 test quyền POSIX bỏ qua); check/build GitHub Linux thành công; actionlint 1.7.12 đạt; SSH receiver `check` trả đúng staging/Node24, chờ lock thật 19 giây, từ chối `id`, `check; id`, `rollback ../../production`. HTTP nội bộ hosting với Host staging chứng minh symlink/current, SPA deep link và ảnh; API trả JSON 503 đúng baseline chưa kích hoạt backend. HTTP này **không chứng minh HTTPS/DNS công khai hoặc deploy FE/BE release đã hoàn tất**.
 
 Tài liệu này dành cho người phát triển và agent khi cần chạy local, kiểm tra thay đổi, phát hành, rollback hoặc điều tra deploy. Quyết định kiến trúc và điều kiện triển khai được ghi tại [thiết kế CI/CD](superpowers/specs/2026-10-30-bibistudio-cicd-design.md).
 
@@ -23,7 +25,7 @@ Muốn thử bản build trên máy: `npm run build -- --preview`. Đây là tù
 | Môi trường | Frontend | API | Mục đích |
 |---|---|---|---|
 | Local | http://localhost:5173 | /api qua proxy tới 127.0.0.1:3001 | Code và debug |
-| Staging — dự kiến tạo | https://staging.bibistudio.vn | /api cùng tên miền | Thử bản phát hành trên cPanel |
+| Staging — đã tạo runtime, chờ DNS/SSL | https://staging.bibistudio.vn | /api cùng tên miền | Thử bản phát hành trên cPanel |
 | Production | https://bibistudio.vn | /api cùng tên miền — dự kiến tạo | Website công khai |
 
 Backend ban đầu có ba API GET: `/api/health`, `/api/version`, `/api/demo`. Chưa có database hoặc tài khoản đăng nhập. `/api-test` là trang riêng để xem trạng thái, phiên bản FE/BE, dữ liệu demo và lỗi kết nối.
@@ -108,7 +110,7 @@ Lần đầu chuyển production phải có baseline của website static đang 
 | CI và staging | Commit main hợp lệ tạo artifact và tự deploy staging |
 | Production baseline | Có bản cũ để phục hồi, diễn tập rollback staging đạt |
 
-Host SSH đã kiểm tra bắt tay: `h217103.tino.org:22`, tài khoản cPanel `vhplasti`. Fingerprint ED25519 đã đối chiếu qua phiên cPanel nằm trong tài liệu thiết kế. Chưa kiểm tra đăng nhập SSH bằng deploy key hoặc GitHub runner; tạo key và cấp quyền phải được xác nhận tại thời điểm thực hiện.
+Host SSH: `h217103.tino.org:22`, tài khoản cPanel `vhplasti`. Fingerprint ED25519 đã đối chiếu qua phiên cPanel nằm trong tài liệu thiết kế và được pin trong deploy client. SSH staging bằng deploy key đã đăng nhập/check thực tế; GitHub runner authentication vẫn cần kiểm chứng trong lượt deploy đầu. Public key staging có `restrict` và forced-command receiver cố định cấu hình staging; private key không nằm trong Git/log/chat. GitHub environment staging chỉ cho nhánh main. Production key và cutover vẫn chưa cấp/thực hiện.
 
 Secret được source sử dụng là `DEPLOY_SSH_KEY`, riêng trong mỗi GitHub environment `staging` và `production`. Host, user và ED25519 known-host key được pin trong `scripts/deploy-client.mjs`. Không dùng `StrictHostKeyChecking=no`. Đường dẫn deploy nằm trong cấu hình receiver ngoài Git trên server, không nhận đường dẫn từ workflow input.
 
