@@ -4,6 +4,8 @@
 
 Bằng chứng hiện có: Windows check 47 tests (46 đạt, 1 test quyền POSIX bỏ qua); check/build GitHub Linux thành công; actionlint 1.7.12 đạt; SSH receiver `check` trả đúng staging/Node24, chờ lock thật 19 giây, từ chối `id`, `check; id`, `rollback ../../production`. HTTP nội bộ hosting với Host staging chứng minh symlink/current, SPA deep link và ảnh; API trả JSON 503 đúng baseline chưa kích hoạt backend. HTTP này **không chứng minh HTTPS/DNS công khai hoặc deploy FE/BE release đã hoàn tất**.
 
+**Phương án khi không đăng nhập được Tino:** đã tạo hostname thử nghiệm `bibi-staging.103-130-217-103.sslip.io` trỏ cùng document root staging. DNS công khai đúng IP và HTTP đã tới Passenger (JSON503 baseline đúng thiết kế). HTTPS hiện chưa có chứng chỉ khớp hostname; workflow vẫn giữ URL cũ cho tới khi HTTPS được kiểm chứng. Domain tạm do cPanel cấp `inventive-tan-mole.103-130-216-108.cpanel.site` trỏ IP khác với IP tài khoản nên không dùng cho pipeline. Production vẫn giữ nguyên `bibistudio.vn`.
+
 Tài liệu này dành cho người phát triển và agent khi cần chạy local, kiểm tra thay đổi, phát hành, rollback hoặc điều tra deploy. Quyết định kiến trúc và điều kiện triển khai được ghi tại [thiết kế CI/CD](superpowers/specs/2026-10-30-bibistudio-cicd-design.md).
 
 ## 1. Đọc nhanh
