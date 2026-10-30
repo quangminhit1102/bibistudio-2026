@@ -59,7 +59,7 @@ function formatDate(iso: string) {
 }
 
 function BlogIndexPage() {
-  const { postPage } = Route.useLoaderData();
+  const { postPage }: { postPage: ReturnType<typeof getBlogPostsPage> } = Route.useLoaderData();
   const search = Route.useSearch();
 
   useScrollToOnPage(search.page, "blog-listing");

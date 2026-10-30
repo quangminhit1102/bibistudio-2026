@@ -4,6 +4,7 @@ import { existsSync, renameSync } from "node:fs";
 import { join } from "node:path";
 import { defineConfig, type ConfigEnv, type Plugin } from "vite";
 import tsConfigPaths from "vite-tsconfig-paths";
+import { tanstackRouterGenerator } from "@tanstack/router-plugin/vite";
 
 const emitCpanelIndex = (): Plugin => ({
   name: "emit-cpanel-index",
@@ -25,9 +26,16 @@ export default defineConfig(({ mode }: ConfigEnv) => {
   return {
     base: isTempUrl ? `${basepath}/` : "/",
     define: {
+      "import.meta.env.VITE_BIBI_CSR": JSON.stringify("true"),
       "import.meta.env.VITE_ROUTER_BASEPATH": JSON.stringify(basepath),
     },
-    plugins: [react(), tailwindcss(), tsConfigPaths(), emitCpanelIndex()],
+    plugins: [
+      tanstackRouterGenerator({ target: "react" }),
+      react(),
+      tailwindcss(),
+      tsConfigPaths(),
+      emitCpanelIndex(),
+    ],
     build: {
       outDir: "dist-cpanel",
       emptyOutDir: true,

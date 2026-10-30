@@ -1,0 +1,39 @@
+name: Rollback
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Environment to restore
+        required: true
+        type: choice
+        options: [staging, production]
+      release_id:
+        description: Successful host release ID or baseline
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: deploy-${{ inputs.environment }}
+  cancel-in-progress: false
+jobs:
+  rollback:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: ${{ inputs.environment }}
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          ref: main
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: "24"
+      - run: npm ci --ignore-scripts
+      - run: node scripts/deploy-client.mjs
+        env:
+          RELEASE_ID: ${{ inputs.release_id }}
+          DEPLOY_ENV: ${{ inputs.environment }}
+          DEPLOY_ACTION: rollback
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}

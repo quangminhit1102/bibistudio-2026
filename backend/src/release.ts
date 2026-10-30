@@ -1,6 +1,9 @@
 import { readFileSync } from "node:fs";
 
-export interface ReleaseInfo { releaseId: string; sourceSha: string }
+export interface ReleaseInfo {
+  releaseId: string;
+  sourceSha: string;
+}
 export function readRelease(): ReleaseInfo {
   const file = process.env.BIBI_RELEASE_MANIFEST;
   if (!file) return { releaseId: "local", sourceSha: "local" };

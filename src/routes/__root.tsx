@@ -107,6 +107,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 });
 
 function RootShell({ children }: { children: ReactNode }) {
+  if (import.meta.env.VITE_BIBI_CSR === "true") {
+    return <><HeadContent />{children}</>;
+  }
   return (
     <html lang="vi">
       <head>

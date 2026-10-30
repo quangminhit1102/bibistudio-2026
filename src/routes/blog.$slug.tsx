@@ -77,7 +77,7 @@ function slugifyHeading(text: string, index: number) {
 
 
 function PostPage() {
-  const { post, related } = Route.useLoaderData();
+  const { post, related }: { post: NonNullable<ReturnType<typeof getBlogPost>>; related: NonNullable<ReturnType<typeof getBlogPost>>[] } = Route.useLoaderData();
 
   const toc = post.content
     .map((block, index) =>

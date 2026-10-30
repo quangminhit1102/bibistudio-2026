@@ -1,0 +1,47 @@
+name: Deploy staging
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+permissions:
+  contents: read
+  actions: read
+  deployments: write
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: false
+jobs:
+  deploy:
+    if: github.ref == 'refs/heads/main' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' && github.event.workflow_run.head_repository.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: staging
+    env:
+      RELEASE_ID: ${{ github.event.workflow_run.head_sha }}-${{ github.event.workflow_run.id }}
+      DEPLOY_ENV: staging
+      BASE_URL: https://staging.bibistudio.vn
+      GITHUB_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          ref: main
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: "24"
+      - id: trusted
+        run: node scripts/github-release.mjs
+      - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0
+        with:
+          artifact-ids: ${{ steps.trusted.outputs.artifactId }}
+          run-id: ${{ steps.trusted.outputs.ciRunId }}
+          github-token: ${{ github.token }}
+          path: .release-download
+          merge-multiple: true
+      - run: npm ci --ignore-scripts
+      - run: npx --no-install playwright install --with-deps chromium
+      - run: node scripts/deploy-client.mjs
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          ARTIFACT_ID: ${{ steps.trusted.outputs.artifactId }}

@@ -11,8 +11,10 @@
     "prebuild:dev": "npm run validate:catalogue",
     "prebuild:cpanel": "npm run validate:catalogue",
     "prebuild:cpanel:temp": "npm run validate:catalogue",
-    "dev": "vite dev",
-    "build": "vite build",
+    "postinstall": "node scripts/install-backend.mjs",
+    "dev": "node --env-file-if-exists=.env scripts/dev.mjs",
+    "check": "node scripts/check.mjs",
+    "build": "node scripts/build.mjs",
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",
@@ -57,9 +59,12 @@
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^15.15.0",
     "nitro": "3.0.260603-beta",
+    "playwright": "^1.64.1",
     "prettier": "^3.7.3",
+    "tar": "^7.5.22",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.56.1",
-    "vite": "^8.1.5"
+    "vite": "^8.1.5",
+    "yaml": "^2.9.1"
   }
 }

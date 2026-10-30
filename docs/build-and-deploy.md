@@ -1,20 +1,20 @@
 # BiBi Studio — hướng dẫn develop, build và deploy
 
-**Trạng thái ngày 30/10/2026:** quy trình FE + BE dưới đây là bản thiết kế, chưa triển khai. Source hiện tại mới có frontend static, kiểm tra ảnh và các script build/deploy cPanel cũ. App Node `/node-test` chạy riêng trên hosting, chưa tích hợp CI/CD. Các lệnh và workflow ở phần quy trình mới chỉ được dùng sau khi chúng đã được triển khai và nghiệm thu.
+**Trạng thái ngày 30/10/2026:** local FE + Express API, check, build artifact và preview đã triển khai và kiểm thử trên Node 24/Windows. Workflow CI/CD và receiver đã có trong source nhưng chưa chạy trên GitHub/hosting. cPanel đã tạo `staging.bibistudio.vn` với document root riêng; DNS/HTTPS công khai còn đang xác minh. Chưa cấp deploy key, chưa cutover production. `/node-test` vẫn là app riêng hiện có. Không coi các bước CD bên dưới là đã nghiệm thu cho tới khi có run ID và kết quả HTTP thực tế.
 
 Tài liệu này dành cho người phát triển và agent khi cần chạy local, kiểm tra thay đổi, phát hành, rollback hoặc điều tra deploy. Quyết định kiến trúc và điều kiện triển khai được ghi tại [thiết kế CI/CD](superpowers/specs/2026-10-30-bibistudio-cicd-design.md).
 
 ## 1. Đọc nhanh
 
-Sau khi hoàn thành triển khai, chỉ cần nhớ ba lệnh:
+Chỉ cần nhớ ba lệnh local:
 
-| Việc cần làm | Lệnh dự kiến | Khi nào hoàn thành |
+| Việc cần làm | Lệnh | Khi nào hoàn thành |
 |---|---|---|
 | Develop và debug | `npm run dev` | FE/BE cùng sẵn sàng, trình duyệt gọi được API local |
 | Kiểm tra trước commit/PR | `npm run check` | TypeScript, lint theo phạm vi, ảnh và toàn bộ test đều đạt |
 | Build FE + BE | `npm run build` | Có gói phát hành và manifest nhận dạng phiên bản, exit code 0 |
 
-Cài dependencies lần đầu hoặc khi lockfile thay đổi bằng `npm ci`; thiết lập dự kiến tự cài cả backend theo lockfile của nó. Dùng Node major 24. Deploy không yêu cầu build hoặc SSH thủ công trên máy dev: GitHub Actions thực hiện sau khi code được kiểm tra.
+Cài dependencies lần đầu hoặc khi lockfile thay đổi bằng `npm ci`; hook tự cài backend và deploy tools theo các lockfile riêng. Dùng Node major 24 và bảo đảm `node --version` trả v24 trước khi chạy npm. Node khác sẽ bị hook từ chối. Sau khi provisioning CD hoàn tất, GitHub Actions đảm nhiệm deploy, máy dev không cần SSH để phát hành.
 
 Muốn thử bản build trên máy: `npm run build -- --preview`. Đây là tùy chọn của lệnh build, không phải một luồng deploy.
 
@@ -110,7 +110,11 @@ Lần đầu chuyển production phải có baseline của website static đang 
 
 Host SSH đã kiểm tra bắt tay: `h217103.tino.org:22`, tài khoản cPanel `vhplasti`. Fingerprint ED25519 đã đối chiếu qua phiên cPanel nằm trong tài liệu thiết kế. Chưa kiểm tra đăng nhập SSH bằng deploy key hoặc GitHub runner; tạo key và cấp quyền phải được xác nhận tại thời điểm thực hiện.
 
-Các tên biến cấu hình dự kiến: `SSH_HOST`, `SSH_PORT`, `SSH_USER`, `SSH_PRIVATE_KEY`, `SSH_KNOWN_HOSTS`. Phạm vi secrets phải được xác minh theo gói GitHub. Giữ khóa staging/production riêng khi có thể; các đường dẫn deploy hợp lệ nằm trong wrapper cấu hình trên server, không nhận đường dẫn tùy ý từ workflow input.
+Secret được source sử dụng là `DEPLOY_SSH_KEY`, riêng trong mỗi GitHub environment `staging` và `production`. Host, user và ED25519 known-host key được pin trong `scripts/deploy-client.mjs`. Không dùng `StrictHostKeyChecking=no`. Đường dẫn deploy nằm trong cấu hình receiver ngoài Git trên server, không nhận đường dẫn từ workflow input.
+
+Workflow source: [CI](../.github/workflows/ci.yml), [Deploy staging](../.github/workflows/staging.yml), [Promote production](../.github/workflows/production.yml), [Rollback](../.github/workflows/rollback.yml). CI chạy check/build giống local; chỉ main push mới xuất artifact `release-<SHA>-<run ID>`, giữ 30 ngày. Production nhận đúng release ID, kiểm tra CI main thành công và deployment staging thành công cùng artifact ID/checksum trước SSH; không build lại. Hết hạn artifact thì tạo release mới qua CI/staging.
+
+Receiver dùng `flock` theo môi trường, kiểm tra archive/checksum trước giải nén, cài runtime dependency bằng `npm ci --omit=dev --ignore-scripts`, chuyển current, restart Passenger và kiểm tra HTTP. Giữ current/previous/baseline và năm release thành công gần nhất. Assets có hash được giữ lâu hơn tối thiểu 30 ngày; hiện không tự prune assets, quota chặn upload mới khi vượt ngân sách. Operator phải kiểm tra dung lượng trước khi tăng quota hoặc dọn assets.
 
 ## 10. Khi gặp lỗi
 

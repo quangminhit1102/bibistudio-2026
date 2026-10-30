@@ -1,0 +1,9 @@
+{
+  "name": "bibistudio-deploy-tools",
+  "version": "1.0.0",
+  "private": true,
+  "type": "commonjs",
+  "dependencies": {
+    "tar": "7.5.22"
+  }
+}

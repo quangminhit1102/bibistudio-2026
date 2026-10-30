@@ -104,6 +104,7 @@ export function SiteFooter() {
           <p className="flex gap-5">
             <Link to="/about" className="hover:text-foreground">Về BiBi</Link>
             <Link to="/contact" className="hover:text-foreground">Liên hệ</Link>
+            <Link to="/api-test" className="hover:text-foreground">Kiểm tra API</Link>
           </p>
         </div>
       </div>

@@ -1,0 +1,50 @@
+name: Promote production
+on:
+  workflow_dispatch:
+    inputs:
+      release_id:
+        description: Exact release ID that passed staging
+        required: true
+        type: string
+permissions:
+  contents: read
+  actions: read
+  deployments: write
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+jobs:
+  promote:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: production
+    env:
+      RELEASE_ID: ${{ inputs.release_id }}
+      DEPLOY_ENV: production
+      BASE_URL: https://bibistudio.vn
+      GITHUB_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          ref: main
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: "24"
+      - id: trusted
+        run: node scripts/github-release.mjs
+      - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0
+        with:
+          artifact-ids: ${{ steps.trusted.outputs.artifactId }}
+          run-id: ${{ steps.trusted.outputs.ciRunId }}
+          github-token: ${{ github.token }}
+          path: .release-download
+          merge-multiple: true
+      - run: npm ci --ignore-scripts
+      - run: npx --no-install playwright install --with-deps chromium
+      - run: node scripts/deploy-client.mjs
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          ARTIFACT_ID: ${{ steps.trusted.outputs.artifactId }}
+          EXPECTED_CHECKSUM: ${{ steps.trusted.outputs.checksum }}

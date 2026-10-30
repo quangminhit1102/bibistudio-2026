@@ -1,0 +1,14 @@
+Options -Indexes
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteRule ^(?:api|node-test|\.well-known|assets)(?:/|$) - [L]
+  RewriteRule ^_bibi/ - [L]
+  RewriteCond %{DOCUMENT_ROOT}/_bibi/$1 -f
+  RewriteRule ^(.+)$ _bibi/$1 [L]
+  RewriteRule ^ _bibi/index.html [L]
+</IfModule>
+<IfModule mod_headers.c>
+  <FilesMatch "\.(?:html|json)$">
+    Header set Cache-Control "no-store"
+  </FilesMatch>
+</IfModule>
