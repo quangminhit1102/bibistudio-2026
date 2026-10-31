@@ -44,10 +44,10 @@ Không tạo module, component hoặc dependencies runtime mới. Không viết 
 
 **Interfaces:** Nguồn PNG và slug nằm trong bảng spec. `<place>` là phần slug bỏ hậu tố `-map-notebook`: `da-nang`, `ha-giang`, `sai-gon`, `ca-mau`, `da-lat`, `ha-noi`, `hoi-an`, `hue`, `nha-trang`, `phu-yen`, `phu-quoc`, `quang-ninh`, `viet-nam`.
 
-- [ ] Kiểm tra `git status`, catalogue hiện tại và đủ13 file nguồn; ghi hash SHA256, kích thước pixel và ánh xạ vào ledger. Dừng xử lý mẫu nếu file nguồn thiếu hoặc không đọc được, không thay bằng placeholder.
-- [ ] Tìm công cụ chuyển đổi local sẵn có hỗ trợ WebP. Chuyển đổi bằng công cụ thông thường với giữ tỷ lệ, không crop/upscale, cạnh dài2000px tối đa. Không thay package/lockfile của ứng dụng chỉ để nén ảnh.
-- [ ] Đọc lại13 file kết quả bằng decoder: đúng WebP, kích thước hợp lệ, tên ASCII, đủ13 đường dẫn riêng biệt. Ghi dung lượng trước/sau; nếu vượt600KB thì điều chỉnh chất lượng sau khi xem ảnh, không đánh đổi chữ bị nhòe để ép đạt ngưỡng.
-- [ ] Xem trực tiếp toàn bộ13 ảnh kết quả, đối chiếu địa danh trên bìa với tên file; kiểm tra chữ nhỏ và toàn bộ cuốn sổ. Ghi kết quả thực tế vào ledger.
+- [x] Kiểm tra `git status`, catalogue hiện tại và đủ13 file nguồn; ghi hash SHA256, kích thước pixel và ánh xạ vào ledger. Dừng xử lý mẫu nếu file nguồn thiếu hoặc không đọc được, không thay bằng placeholder.
+- [x] Tìm công cụ chuyển đổi local sẵn có hỗ trợ WebP. Chuyển đổi bằng công cụ thông thường với giữ tỷ lệ, không crop/upscale, cạnh dài2000px tối đa. Không thay package/lockfile của ứng dụng chỉ để nén ảnh.
+- [x] Đọc lại13 file kết quả bằng decoder: đúng WebP, kích thước hợp lệ, tên ASCII, đủ13 đường dẫn riêng biệt. Ghi dung lượng trước/sau; nếu vượt600KB thì điều chỉnh chất lượng sau khi xem ảnh, không đánh đổi chữ bị nhòe để ép đạt ngưỡng.
+- [x] Xem trực tiếp toàn bộ13 ảnh kết quả, đối chiếu địa danh trên bìa với tên file; kiểm tra chữ nhỏ và toàn bộ cuốn sổ. Ghi kết quả thực tế vào ledger.
 
 Deliverable:13 ảnh web đã được kiểm tra; giữ chưa commit riêng để commit cùng catalogue ở Task2 thành một thay đổi có thể sử dụng.
 
@@ -57,12 +57,12 @@ Deliverable:13 ảnh web đã được kiểm tra; giữ chưa commit riêng đ�
 
 **Interfaces:** Dùng helper `p(...)` hiện có, `images: ["/catalogue/notebook-map-<place>-mockup.webp"]`. Ánh xạ tên/slug theo spec và ảnh Task1; không đổi cấu trúc `Product`.
 
-- [ ] Đối chiếu catalogue mới nhất với bảng13 mẫu; lưu danh sách slug và dữ liệu của sản phẩm ngoài phạm vi để kiểm tra sau khi sửa. Nếu đã xuất hiện mẫu mới thì cập nhật bản ghi đó, không thêm trùng.
-- [ ] Đổi tên Việt/Anh và gallery của `da-nang-map-notebook`, `ha-giang-map-notebook`, `sai-gon-map-notebook`; giữ slug, featured và các thuộc tính khác. Rà mô tả hiện có, chỉ chỉnh nếu mâu thuẫn với mockup mới.
-- [ ] Thêm mười mẫu còn thiếu ngay sau nhóm bản đồ hiện hữu, theo thứ tự bảng spec. Dùng tên Việt đã duyệt và tên Anh tương ứng; mô tả ngắn song ngữ về minh họa địa danh trên bìa, alt text theo helper; không bịa thông số, số trang hoặc chất liệu.
-- [ ] Kiểm tra dữ liệu thực:13 slug khớp bảng, duy nhất trên toàn catalogue, đúng type/collection, mỗi gallery đúng một ảnh Task1. Tổng sản phẩm tăng10 nếu preflight không có thay đổi mới; so sánh sản phẩm ngoài phạm vi không đổi nội dung (sortOrder có thể dịch do chèn nhóm mới).
-- [ ] Chạy Node24 `npm run check`: exit0, không lỗi types/lint/catalogue/tests. Validator ảnh hiện tại chủ yếu kiểm tra asset descriptor, vì vậy không dùng kết quả đó thay cho kiểm tra13 ảnh mới trực tiếp ở Task1.
-- [ ] Chạy `git diff --check`, xem diff dữ liệu và danh sách file, rồi commit13 ảnh cùng catalogue và ledger: `feat: refresh map notebook catalogue mockups`.
+- [x] Đối chiếu catalogue mới nhất với bảng13 mẫu; lưu danh sách slug và dữ liệu của sản phẩm ngoài phạm vi để kiểm tra sau khi sửa. Nếu đã xuất hiện mẫu mới thì cập nhật bản ghi đó, không thêm trùng.
+- [x] Đổi tên Việt/Anh và gallery của `da-nang-map-notebook`, `ha-giang-map-notebook`, `sai-gon-map-notebook`; giữ slug, featured và các thuộc tính khác. Rà mô tả hiện có, chỉ chỉnh nếu mâu thuẫn với mockup mới.
+- [x] Thêm mười mẫu còn thiếu ngay sau nhóm bản đồ hiện hữu, theo thứ tự bảng spec. Dùng tên Việt đã duyệt và tên Anh tương ứng; mô tả ngắn song ngữ về minh họa địa danh trên bìa, alt text theo helper; không bịa thông số, số trang hoặc chất liệu.
+- [x] Kiểm tra dữ liệu thực:13 slug khớp bảng, duy nhất trên toàn catalogue, đúng type/collection, mỗi gallery đúng một ảnh Task1. Tổng sản phẩm tăng10 nếu preflight không có thay đổi mới; so sánh sản phẩm ngoài phạm vi không đổi nội dung (sortOrder có thể dịch do chèn nhóm mới).
+- [x] Chạy Node24 `npm run check`: exit0, không lỗi types/lint/catalogue/tests. Validator ảnh hiện tại chủ yếu kiểm tra asset descriptor, vì vậy không dùng kết quả đó thay cho kiểm tra13 ảnh mới trực tiếp ở Task1.
+- [x] Chạy `git diff --check`, xem diff dữ liệu và danh sách file, rồi commit13 ảnh cùng catalogue và ledger: `feat: refresh map notebook catalogue mockups`.
 
 ### Task 3: Nghiệm thu bản build và bàn giao
 
@@ -70,12 +70,12 @@ Deliverable:13 ảnh web đã được kiểm tra; giữ chưa commit riêng đ�
 
 **Interfaces:** Dùng `npm run build -- --preview` theo runbook; kiểm tra trên URL preview do lệnh thực tế báo. Sản phẩm ở `/products/<slug>`; tìm đường dẫn danh sách/collection từ UI hoặc route source, không đoán URL.
 
-- [ ] Build với Node24, yêu cầu exit0 và ghi release/artifact local thực tế. Khởi động preview từ bản build; xác nhận FE/BE READY và `/api-test` khớp version local.
-- [ ] Kiểm tra trên browser13 trang detail: tên và ảnh đúng mẫu, ảnh có kích thước tự nhiên dương và giải mã được; không lỗi tải ảnh/JS. Mở lại ba URL cũ và mười URL mới, xác nhận không404.
-- [ ] Kiểm tra danh sách Sổ tay, Khám phá Việt Nam, tìm kiếm với tên có dấu (ví dụ “Sổ tay bản đồ Đà Lạt”) và sản phẩm liên quan: ảnh/tên mới hiện đúng; hover ba mẫu cũ không hiện ảnh cũ.
-- [ ] Kiểm tra viewport desktop1440×900 và mobile390×844: card/detail chứa đủ cuốn sổ và tiêu đề; desktop magnifier, mobile/fullscreen mở/đóng được với gallery một ảnh. Xem toàn bộ13 mẫu; lưu screenshot đại diện danh sách, detail desktop và mobile tại thư mục visualization của session.
-- [ ] Nếu cần sửa component ảnh để đạt yêu cầu, ghi rõ lỗi và phạm vi trước; không thay bố cục rộng hơn thiết kế đã duyệt. Nếu có sửa logic, thêm regression phù hợp và chạy lại kiểm tra bị ảnh hưởng.
-- [ ] Ghi chính xác kết quả check/build/browser, dung lượng13 ảnh, screenshot và giới hạn chưa kiểm chứng vào ledger. Commit bằng chứng, bàn giao link tài liệu/ảnh; chưa ghi production đã cập nhật. Việc push và phát hành là bước riêng sau review theo luồng manual production, có rollback.
+- [x] Build với Node24, yêu cầu exit0 và ghi release/artifact local thực tế. Khởi động preview từ bản build; xác nhận FE/BE READY và `/api-test` khớp version local.
+- [x] Kiểm tra trên browser13 trang detail: tên và ảnh đúng mẫu, ảnh có kích thước tự nhiên dương và giải mã được; không lỗi tải ảnh/JS. Mở lại ba URL cũ và mười URL mới, xác nhận không404.
+- [x] Kiểm tra danh sách Sổ tay, Khám phá Việt Nam, tìm kiếm với tên có dấu (ví dụ “Sổ tay bản đồ Đà Lạt”) và sản phẩm liên quan: ảnh/tên mới hiện đúng; hover ba mẫu cũ không hiện ảnh cũ.
+- [x] Kiểm tra viewport desktop1440×900 và mobile390×844: card/detail chứa đủ cuốn sổ và tiêu đề; desktop magnifier, mobile/fullscreen mở/đóng được với gallery một ảnh. Xem toàn bộ13 mẫu; lưu screenshot đại diện danh sách, detail desktop và mobile tại thư mục visualization của session.
+- [x] Nếu cần sửa component ảnh để đạt yêu cầu, ghi rõ lỗi và phạm vi trước; không thay bố cục rộng hơn thiết kế đã duyệt. Nếu có sửa logic, thêm regression phù hợp và chạy lại kiểm tra bị ảnh hưởng.
+- [x] Ghi chính xác kết quả check/build/browser, dung lượng13 ảnh, screenshot và giới hạn chưa kiểm chứng vào ledger. Commit bằng chứng, bàn giao link tài liệu/ảnh; chưa ghi production đã cập nhật. Việc push và phát hành là bước riêng sau review theo luồng manual production, có rollback.
 
 ## Plan self-review
 
