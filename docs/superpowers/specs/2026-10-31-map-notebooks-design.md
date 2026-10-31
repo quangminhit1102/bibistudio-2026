@@ -1,4 +1,4 @@
-# Cập nhật mockup sổ bản đồ — thiết kế chờ duyệt
+# Cập nhật mockup sổ bản đồ — thiết kế đã duyệt
 
 ## Mục tiêu và phạm vi
 
@@ -57,4 +57,4 @@ Không thay sản phẩm món ăn, thiệp, magnet hoặc các sổ địa danh 
 
 ## Trạng thái
 
-Đã kiểm kê và xem trực tiếp 13 file nguồn, tổng khoảng 98,8 MiB; đã đối chiếu ba sản phẩm bản đồ hiện có và ảnh chính cũ. Chưa chuyển đổi ảnh, sửa dữ liệu sản phẩm, build hoặc deploy cho thay đổi này. Chờ người dùng duyệt tài liệu, sau đó mới lập kế hoạch triển khai chi tiết.
+Đã kiểm kê và xem trực tiếp 13 file nguồn, tổng khoảng 98,8 MiB; đã đối chiếu ba sản phẩm bản đồ hiện có và ảnh chính cũ. Người dùng đã duyệt thiết kế sau khi chốt quy tắc tên “Sổ tay bản đồ + địa danh”. Chưa chuyển đổi ảnh, sửa dữ liệu sản phẩm, build hoặc deploy cho thay đổi này.
