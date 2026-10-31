@@ -106,7 +106,7 @@ Không xóa domain, key, secret hoặc các run cũ chỉ để làm sạch side
 - [Production20f9f2a](https://github.com/quangminhit1102/bibistudio-2026/actions/runs/41173071609) đạt HTTP/browser/images/old-client, FE/BE cùng release; www và `/node-test`200.
 - [Rollback baseline](https://github.com/quangminhit1102/bibistudio-2026/actions/runs/41168044956) và [khôi phục release](https://github.com/quangminhit1102/bibistudio-2026/actions/runs/41168281680) đã thử qua gate thật; checksum baseline index khớp qua HTTPS.
 - [Staging20f9f2a](https://github.com/quangminhit1102/bibistudio-2026/actions/runs/41170107813) đạt sau sửa LiteSpeed cache. Trước đó fixture503 tự rollback và run cũ bị từ chối; [run41168646955](https://github.com/quangminhit1102/bibistudio-2026/actions/runs/41168646955) giữ nguyên trạng thái lỗi để ghi nhận bug cache và recovery.
-- Thay đổi production-only phải có run CI và manual production từ artifact không có staging evidence; ghi nhận kết quả thực tế trong bàn giao, không coi YAML đúng là deploy đã đạt.
+- Production-only đã nghiệm thu bằng [CI main41188480787](https://github.com/quangminhit1102/bibistudio-2026/actions/runs/41188480787) và [manual production41188651522](https://github.com/quangminhit1102/bibistudio-2026/actions/runs/41188651522), release `0bc74538db34e673123370cfc422f449e7823533-41188480787`, không có staging deployment cho SHA này. HTTP/browser/images/old-client đạt; kiểm tra độc lập FE/BE khớp, www/API200. Receipt giữ bản trước20f9f2a để rollback. Đây không phải một lần diễn tập rollback mới.
 
 | Lỗi | Kiểm tra đầu tiên |
 |---|---|
