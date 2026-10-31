@@ -65,6 +65,14 @@ test("workflows pin actions and isolate deployment credentials from CI", async (
     } else assert.ok(!source.includes("secrets."));
   }
   assert.ok(Object.hasOwn(workflows.ci.on, "pull_request"));
+  const upload = workflows.ci.jobs.verify.steps.find((step) =>
+    step.uses?.startsWith("actions/upload-artifact@"),
+  );
+  assert.equal(
+    upload.with["include-hidden-files"],
+    true,
+    "hidden .releases directory must be included in artifact upload",
+  );
   assert.ok(workflows.staging.on.workflow_run);
   assert.ok(workflows.production.on.workflow_dispatch);
   assert.ok(!JSON.stringify(workflows.production).includes("npm run build"));
