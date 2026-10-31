@@ -2,7 +2,7 @@
   "environment": "staging",
   "root": "/home/vhplasti/bibi-deploy/staging",
   "site": "/home/vhplasti/staging.bibistudio.vn",
-  "baseUrl": "https://staging.bibistudio.vn",
+  "baseUrl": "https://bibi-staging.103-130-217-103.sslip.io",
   "npmBin": "/home/vhplasti/nodevenv/bibi-deploy/staging/app/24/bin/npm",
   "runtimeBin": "/home/vhplasti/nodevenv/bibi-deploy/staging/app/24/bin",
   "maxArchiveBytes": 268435456,

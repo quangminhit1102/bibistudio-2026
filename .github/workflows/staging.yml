@@ -20,7 +20,7 @@ jobs:
     env:
       RELEASE_ID: ${{ github.event.workflow_run.head_sha }}-${{ github.event.workflow_run.id }}
       DEPLOY_ENV: staging
-      BASE_URL: https://staging.bibistudio.vn
+      BASE_URL: https://bibi-staging.103-130-217-103.sslip.io
       GITHUB_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
