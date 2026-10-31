@@ -1,10 +1,10 @@
 # BiBi Studio — hướng dẫn develop, build và deploy
 
-**Trạng thái ngày 30/10/2026:** local FE + Express API, check, build artifact và preview đã triển khai. [CI thật 41086747811](https://github.com/quangminhit1102/bibistudio-2026/actions/runs/41086747811) thành công trên Linux cho commit `70d7283` thuộc nhánh `codex/fullstack-cicd-continue`; main chưa nhận implementation nên chưa có artifact phát hành main. cPanel staging đã có domain riêng, Passenger Node24, receiver và baseline static; SSH key riêng đã được người dùng duyệt/cấp/lưu vào GitHub staging. Hostname staging tạm đã có DNS/HTTPS hợp lệ; chưa deploy release API qua pipeline, chưa cutover production. `/node-test` giữ nguyên app riêng hiện có.
+**Trạng thái ngày 31/10/2026:** local FE + Express API, check, build và preview đã triển khai. [CI main 41166043229](https://github.com/quangminhit1102/bibistudio-2026/actions/runs/41166043229) và [deploy staging 41166133570](https://github.com/quangminhit1102/bibistudio-2026/actions/runs/41166133570) thành công. Release staging: `27f4d41f7a2ea9d51ae6497be68c63662c077320-41166043229`, artifact ID `13029302597` (179 MB). Production chưa cutover; baseline static và routing cũ đã được sao lưu ngoài document root. Chưa cấp production key.
 
-Bằng chứng hiện có: Windows check 47 tests (46 đạt, 1 test quyền POSIX bỏ qua); check/build GitHub Linux thành công; actionlint 1.7.12 đạt; SSH receiver `check` trả đúng staging/Node24, chờ lock thật 19 giây, từ chối `id`, `check; id`, `rollback ../../production`. HTTP nội bộ hosting với Host staging chứng minh symlink/current, SPA deep link và ảnh; API trả JSON 503 đúng baseline chưa kích hoạt backend. HTTP này **không chứng minh HTTPS/DNS công khai hoặc deploy FE/BE release đã hoàn tất**.
+Bằng chứng: Windows check 47 tests (46 đạt, 1 quyền POSIX bỏ qua), Linux CI/check/build đạt, actionlint đạt. Runner SSH check/upload/deploy thật; HTTP và browser kiểm tra FE/BE cùng release, API JSON404, route sâu, ảnh sản phẩm; tab từ baseline giữ được 2 assets cũ khi tải không cache và điều hướng sau deploy. Fixture staging trả HTTP503 đã được kích hoạt có kiểm soát: receiver báo lỗi và tự phục hồi release tốt; smoke độc lập xác nhận phục hồi. Run cũ bị từ chối trước activation. Fixture chỉ phục vụ diễn tập, không phải artifact CI để promotion. `/node-test` và vhplastic.com vẫn trả HTTP200 qua kiểm tra bên ngoài; production chưa đổi.
 
-**Phương án khi không đăng nhập được Tino:** đã tạo hostname thử nghiệm `bibi-staging.103-130-217-103.sslip.io` trỏ cùng document root staging. DNS công khai đúng IP và HTTP đã tới Passenger (JSON503 baseline đúng thiết kế). Ngày 31/10 đã kiểm chứng HTTPS hợp lệ: trang chủ và route sản phẩm 200, ảnh chính decode 1600px; API JSON503 đúng baseline chưa kích hoạt. Workflow dùng hostname tạm này. Domain tạm do cPanel cấp `inventive-tan-mole.103-130-216-108.cpanel.site` trỏ IP khác với IP tài khoản nên không dùng cho pipeline. Production vẫn giữ nguyên `bibistudio.vn`.
+**Staging tạm khi chưa vào được Tino:** dùng [bibi-staging.103-130-217-103.sslip.io](https://bibi-staging.103-130-217-103.sslip.io/api-test), DNS công khai đúng IP tài khoản và HTTPS hợp lệ, đã kiểm tra từ máy dev, hosting và runner. `staging.bibistudio.vn` vẫn cần sửa DNS công khai khi lấy lại quyền quản lý. Domain cPanel `inventive-tan-mole.103-130-216-108.cpanel.site` trỏ IP khác nên không dùng. Production tiếp tục dùng `bibistudio.vn`.
 
 Tài liệu này dành cho người phát triển và agent khi cần chạy local, kiểm tra thay đổi, phát hành, rollback hoặc điều tra deploy. Quyết định kiến trúc và điều kiện triển khai được ghi tại [thiết kế CI/CD](superpowers/specs/2026-10-30-bibistudio-cicd-design.md).
 
@@ -27,7 +27,7 @@ Muốn thử bản build trên máy: `npm run build -- --preview`. Đây là tù
 | Môi trường | Frontend | API | Mục đích |
 |---|---|---|---|
 | Local | http://localhost:5173 | /api qua proxy tới 127.0.0.1:3001 | Code và debug |
-| Staging — HTTPS hợp lệ, chờ release | https://bibi-staging.103-130-217-103.sslip.io | /api cùng tên miền | Thử bản phát hành trên cPanel |
+| Staging — đã deploy và test | https://bibi-staging.103-130-217-103.sslip.io | /api cùng tên miền | Thử bản phát hành trên cPanel |
 | Production | https://bibistudio.vn | /api cùng tên miền — dự kiến tạo | Website công khai |
 
 Backend ban đầu có ba API GET: `/api/health`, `/api/version`, `/api/demo`. Chưa có database hoặc tài khoản đăng nhập. `/api-test` là trang riêng để xem trạng thái, phiên bản FE/BE, dữ liệu demo và lỗi kết nối.
@@ -49,7 +49,7 @@ Cấu hình tùy chỉnh được mô tả trong `.env.example` sau khi triển 
 
 Build biến source thành file có thể chạy/phục vụ trên hosting. Deploy đưa đúng file đó lên một môi trường, chọn nó làm bản đang hoạt động và kiểm tra bằng HTTP. Build thành công chưa chứng minh hosting chạy đúng; push main cũng chưa có nghĩa production đã cập nhật.
 
-`npm run build` dự kiến tạo artifact gồm frontend static, backend JavaScript đã biên dịch, manifests/lockfile cần cho dependencies runtime và release manifest. Không chứa private key, file env thật hoặc node_modules từ máy Windows.
+`npm run build` tạo artifact gồm frontend static, backend JavaScript đã biên dịch, manifests/lockfile cần cho dependencies runtime và release manifest. Không chứa private key, file env thật hoặc node_modules từ máy Windows.
 
 Local build có nhận dạng local rõ ràng để thử; không được promotion như một bản CI đã kiểm tra. CI build có release ID từ source SHA đầy đủ và CI run ID, kèm checksum. Chính artifact CI này được dùng lại khi promotion staging sang production, không build lại từ latest main.
 
@@ -68,7 +68,7 @@ Nếu CI lỗi thì staging không đổi. Nếu staging lỗi sau activation th
 
 ## 6. Phát hành production từ GitHub
 
-Tên workflow dự kiến là **Deploy production**; tên chính xác phải được cập nhật tại đây khi file workflow được tạo.
+Workflow phát hành là **Promote production** (`production.yml`).
 
 1. Mở GitHub → Actions → workflow production → Run workflow từ định nghĩa tin cậy trên main.
 2. Chọn release ID đã có CI main và staging smoke test thành công. Không chọn một SHA chưa được thử hoặc thay bằng latest main.
@@ -88,7 +88,7 @@ Source release nằm ngoài document root; frontend chỉ phục vụ tài nguy�
 
 ## 8. Rollback
 
-Tên workflow dự kiến là **Rollback**. Dùng khi bản mới sai hoặc kiểm tra sau deploy thất bại.
+Workflow phục hồi là **Rollback** (`rollback.yml`). Dùng khi bản mới sai hoặc kiểm tra sau deploy thất bại.
 
 1. Chọn môi trường và một release thành công trước đó còn trên hosting.
 2. Workflow/hosting kiểm tra release tồn tại, đổi con trỏ về bản trước và restart Passenger.
@@ -103,7 +103,7 @@ Lần đầu chuyển production phải có baseline của website static đang 
 
 | Bước | Tiêu chí hoàn thành |
 |---|---|
-| Staging domain, DNS và SSL | staging.bibistudio.vn trỏ đúng hosting và HTTPS hợp lệ |
+| Staging domain, DNS và SSL | Hostname staging tạm nêu trên đã có DNS/HTTPS hợp lệ |
 | Node apps staging/production | /api mount đúng từng môi trường, app root riêng |
 | Routing và chuyển release | Chứng minh symlink/current, SPA fallback và restart Passenger trên staging |
 | Bootstrap deploy wrapper | Chỉ cho check/upload/deploy/rollback trong môi trường được phép |
@@ -112,7 +112,7 @@ Lần đầu chuyển production phải có baseline của website static đang 
 | CI và staging | Commit main hợp lệ tạo artifact và tự deploy staging |
 | Production baseline | Có bản cũ để phục hồi, diễn tập rollback staging đạt |
 
-Host SSH: `h217103.tino.org:22`, tài khoản cPanel `vhplasti`. Fingerprint ED25519 đã đối chiếu qua phiên cPanel nằm trong tài liệu thiết kế và được pin trong deploy client. SSH staging bằng deploy key đã đăng nhập/check thực tế; GitHub runner authentication vẫn cần kiểm chứng trong lượt deploy đầu. Public key staging có `restrict` và forced-command receiver cố định cấu hình staging; private key không nằm trong Git/log/chat. GitHub environment staging chỉ cho nhánh main. Production key và cutover vẫn chưa cấp/thực hiện.
+Host SSH: `h217103.tino.org:22`, tài khoản cPanel `vhplasti`. Fingerprint ED25519 đã đối chiếu qua phiên cPanel nằm trong tài liệu thiết kế và được pin trong deploy client. SSH staging bằng deploy key đã đăng nhập/check thực tế; GitHub runner authentication/check/upload/deploy đã đạt trong run 41166133570. Public key staging có `restrict` và forced-command receiver cố định cấu hình staging; private key không nằm trong Git/log/chat. GitHub environment staging chỉ cho nhánh main. Production key và cutover vẫn chưa cấp/thực hiện.
 
 Secret được source sử dụng là `DEPLOY_SSH_KEY`, riêng trong mỗi GitHub environment `staging` và `production`. Host, user và ED25519 known-host key được pin trong `scripts/deploy-client.mjs`. Không dùng `StrictHostKeyChecking=no`. Đường dẫn deploy nằm trong cấu hình receiver ngoài Git trên server, không nhận đường dẫn từ workflow input.
 
