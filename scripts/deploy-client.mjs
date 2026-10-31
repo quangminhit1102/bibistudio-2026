@@ -9,6 +9,7 @@ import { github } from "./github-release.mjs";
 import { smoke } from "./smoke.mjs";
 import { browserSmoke, captureOpenClient } from "./browser-smoke.mjs";
 import { isMain } from "./runtime.mjs";
+import { assertArtifactChecksum } from "./release-policy.mjs";
 export async function deployClient() {
   const { RELEASE_ID: id, DEPLOY_ENV: environment, BASE_URL: baseUrl } = process.env;
   if (
@@ -78,11 +79,10 @@ export async function deployClient() {
     const checksum = createHash("sha256")
       .update(await readFile(archive))
       .digest("hex");
-    if (
-      (await readFile(archive + ".sha256", "utf8")).trim() !== checksum ||
-      (environment === "production" && process.env.EXPECTED_CHECKSUM !== checksum)
-    )
-      throw new Error("Artifact checksum mismatch");
+    assertArtifactChecksum(checksum, await readFile(archive + ".sha256", "utf8"), {
+      production: environment === "production",
+      expectedChecksum: process.env.EXPECTED_CHECKSUM,
+    });
     await ssh(`upload ${id} ${checksum}`, archive);
     oldClient = await captureOpenClient(baseUrl);
     const output = await ssh(`deploy ${id}`);

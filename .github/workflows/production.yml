@@ -1,9 +1,9 @@
-name: Promote production
+name: Deploy production
 on:
   workflow_dispatch:
     inputs:
       release_id:
-        description: Exact release ID that passed staging
+        description: Exact release ID from successful main CI
         required: true
         type: string
 permissions:

@@ -1,5 +1,6 @@
 import { appendFile } from "node:fs/promises";
 import { isMain } from "./runtime.mjs";
+import { REQUIRE_STAGING_BEFORE_PRODUCTION } from "./release-policy.mjs";
 export function assertTrustedRun(run, releaseId, repository) {
   if (
     !/^[a-f0-9]{40}-[1-9][0-9]*$/.test(releaseId) ||
@@ -40,23 +41,26 @@ export async function github(route, body) {
   if (!response.ok) throw new Error(`GitHub ${route}: HTTP ${response.status}`);
   return response.json();
 }
-export async function validateRelease(releaseId, { production = false } = {}) {
+export async function validateRelease(
+  releaseId,
+  { production = false, request = github, repository = process.env.GITHUB_REPOSITORY } = {},
+) {
   if (!/^[a-f0-9]{40}-[1-9][0-9]*$/.test(releaseId)) throw new Error("Invalid release ID");
   const ciRunId = releaseId.split("-")[1];
-  const run = await github(`actions/runs/${ciRunId}`);
-  assertTrustedRun(run, releaseId, process.env.GITHUB_REPOSITORY);
-  const { artifacts } = await github(`actions/runs/${ciRunId}/artifacts?per_page=100`);
+  const run = await request(`actions/runs/${ciRunId}`);
+  assertTrustedRun(run, releaseId, repository);
+  const { artifacts } = await request(`actions/runs/${ciRunId}/artifacts?per_page=100`);
   const artifact = artifacts.find((a) => a.name === `release-${releaseId}` && !a.expired);
   if (!artifact) throw new Error("Trusted artifact missing or expired");
   let evidence;
-  if (production) {
-    const deployments = await github(
+  if (production && REQUIRE_STAGING_BEFORE_PRODUCTION) {
+    const deployments = await request(
       `deployments?environment=staging&sha=${run.head_sha}&per_page=100`,
     );
     for (const d of deployments) {
       try {
         const payload = typeof d.payload === "string" ? JSON.parse(d.payload) : d.payload;
-        assertStagingEvidence(d, await github(`deployments/${d.id}/statuses`), {
+        assertStagingEvidence(d, await request(`deployments/${d.id}/statuses`), {
           releaseId,
           ciRunId,
           checksum: payload?.checksum,
