@@ -28,6 +28,7 @@ async function inspectRelease(config, id) {
 }
 async function point(config, dir) {
   inside(path.join(config.root, "releases"), dir);
+  await refreshPublicMetadata(config, dir);
   const next = path.join(config.root, ".current-" + randomUUID());
   await fs.symlink(dir, next, process.platform === "win32" ? "junction" : "dir");
   const current = path.join(config.root, "current");
@@ -36,6 +37,34 @@ async function point(config, dir) {
       if (e.code !== "ENOENT") throw e;
     });
   await fs.rename(next, current);
+}
+async function refreshPublicMetadata(config, dir) {
+  // Archives use epoch mtimes for reproducibility. LiteSpeed can reuse old
+  // static bytes across symlink switches when size and mtime are unchanged.
+  // Change filesystem metadata only; the artifact's file contents stay intact.
+  const marker = path.join(config.root, "last-public-mtime");
+  let previous = 0;
+  try {
+    const value = (await fs.readFile(marker, "utf8")).trim();
+    if (!/^\d+$/.test(value) || !Number.isSafeInteger(Number(value)))
+      throw new Error("Invalid public file timestamp marker");
+    previous = Number(value);
+  } catch (error) {
+    if (error.code !== "ENOENT") throw error;
+  }
+  // A strict second-level increase also handles rapid rollback/re-activation.
+  const seconds = Math.max(Math.floor(Date.now() / 1000), previous + 1);
+  await atomicWrite(marker, String(seconds));
+  async function stamp(base, top = false) {
+    for (const entry of await fs.readdir(base, { withFileTypes: true })) {
+      if (top && entry.name === "assets") continue;
+      const file = path.join(base, entry.name);
+      if (entry.isDirectory()) await stamp(file);
+      else if (entry.isFile()) await fs.utimes(file, seconds, seconds);
+      else throw new Error("Unexpected public release entry");
+    }
+  }
+  await stamp(path.join(dir, "frontend"), true);
 }
 async function atomicWrite(file, bytes, mode = 0o600) {
   const next = file + ".new-" + randomUUID();

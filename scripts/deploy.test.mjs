@@ -119,7 +119,8 @@ test("first deployment failure restores original routing and removes current", a
 test("baseline rollback restores original static routing", async (t) => {
   const config = await fixture(t);
   const baseline = join(config.root, "releases/baseline");
-  await mkdir(baseline);
+  await mkdir(join(baseline, "frontend"), { recursive: true });
+  await writeFile(join(baseline, "frontend/index.html"), "baseline");
   await writeFile(
     join(baseline, "manifest.json"),
     JSON.stringify({ isBaseline: true, releaseId: "baseline" }),
