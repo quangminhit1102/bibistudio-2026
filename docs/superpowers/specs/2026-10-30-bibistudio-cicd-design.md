@@ -1,6 +1,6 @@
 # BiBi Studio: phát triển và CI/CD cho frontend + API trên cPanel
 
-Trạng thái: thiết kế đề xuất, chờ người dùng duyệt. Chưa cho phép tạo khóa truy cập hoặc thay đổi production.
+Trạng thái ngày 31/10/2026: thiết kế đã được người dùng duyệt và triển khai. Staging và promotion production đã có run thật; key mỗi môi trường và diễn tập production được xác nhận riêng. Kết quả nghiệm thu hiện hành nằm trong [build-and-deploy.md](../../build-and-deploy.md), các quan sát trước triển khai dưới đây là lịch sử.
 
 ## 1. Mục tiêu và quyết định đã có
 
@@ -8,7 +8,7 @@ Người dùng chọn React + Node.js/Express và quy trình CI/CD với staging
 
 Kết quả cần đạt: code local, kiểm tra PR, tự cập nhật staging từ main, phát hành đúng release đã thử lên production, xác minh FE/BE và quay về release trước được.
 
-## 2. Bằng chứng từ hosting và source
+## 2. Bằng chứng từ hosting và source trước triển khai
 
 - Repository: `quangminhit1102/bibistudio-2026`, source chính là `main`; chưa có GitHub workflows.
 - Frontend hiện được build bằng `vite.cpanel.config.ts`, đầu ra `dist-cpanel`; document root production `/home/vhplasti/bibistudio.vn`.
@@ -138,3 +138,8 @@ File JS/CSS có hash được giữ trong kho assets công khai dùng chung tron
 Người triển khai chọn chi tiết cấu trúc module, thư viện test HTTP và cách viết wrapper, giữ Node 24 và TypeScript/Express như thiết kế. Chọn phiên bản dependencies tương thích tại thời điểm thực hiện, không suy diễn version hosting khác với kết quả đã đo.
 
 Các bước chỉ triển khai sau duyệt thiết kế/kế hoạch: provisioning staging DNS/SSL và hai Node apps, cài wrapper, cấp SSH key, GitHub environments/secrets/workflows. Nếu gặp bước tạo/cấp credential phải xác nhận thao tác cụ thể tại thời điểm thực hiện. Chưa có xác thực SSH runner, chưa xác minh gói GitHub, chưa chứng minh symlink/routing staging: đây là các cổng kiểm tra của kế hoạch, không phải kết quả đã hoàn tất.
+
+
+## Cập nhật triển khai 31/10/2026
+
+Do người dùng không vào được Tino DNS, staging dùng hostname tạm `bibi-staging.103-130-217-103.sslip.io` đã kiểm chứng DNS/HTTPS; document root vẫn `/home/vhplasti/staging.bibistudio.vn`. Đây là phụ thuộc DNS bên ngoài tạm thời; đổi lại hostname khi DNS gốc được khôi phục. Production vẫn `bibistudio.vn`. GitHub runner SSH/Node24.22.2, immutable artifact, Passenger, smoke và giữ assets tab cũ đã được kiểm chứng qua run thật. Production environment chỉ nhận main và có required reviewer chủ repo, cho phép tự duyệt; không coi đó là người duyệt độc lập.

@@ -1,8 +1,8 @@
 # BiBi Studio — hướng dẫn develop, build và deploy
 
-**Trạng thái ngày 31/10/2026:** local FE + Express API, check, build và preview đã triển khai. [CI main 41166043229](https://github.com/quangminhit1102/bibistudio-2026/actions/runs/41166043229) và [deploy staging 41166133570](https://github.com/quangminhit1102/bibistudio-2026/actions/runs/41166133570) thành công. Release staging: `27f4d41f7a2ea9d51ae6497be68c63662c077320-41166043229`, artifact ID `13029302597` (179 MB). Production chưa cutover; baseline static và routing cũ đã được sao lưu ngoài document root. Chưa cấp production key.
+**Trạng thái ngày 31/10/2026:** local FE + Express API, check, build và preview đã triển khai. [CI main 41166043229](https://github.com/quangminhit1102/bibistudio-2026/actions/runs/41166043229) và [deploy staging 41166133570](https://github.com/quangminhit1102/bibistudio-2026/actions/runs/41166133570) thành công. Release đã nghiệm thu staging/production: `27f4d41f7a2ea9d51ae6497be68c63662c077320-41166043229`, artifact ID `13029302597` (179 MB). [Promotion production 41167399214](https://github.com/quangminhit1102/bibistudio-2026/actions/runs/41167399214) đã đạt với cùng artifact; [rollback baseline 41168044956](https://github.com/quangminhit1102/bibistudio-2026/actions/runs/41168044956) đạt và checksum trang cũ được xác nhận qua HTTPS. [Khôi phục release 41168281680](https://github.com/quangminhit1102/bibistudio-2026/actions/runs/41168281680) cũng đạt; production cuối cùng phục vụ release nêu trên, FE/BE khớp qua smoke độc lập và browser, kể cả hostname www. Key riêng từng môi trường đã được người dùng cấp phép và lưu GitHub secrets. Staging tự nhận push main tiếp theo nên có thể đi trước production.
 
-Bằng chứng: Windows check 47 tests (46 đạt, 1 quyền POSIX bỏ qua), Linux CI/check/build đạt, actionlint đạt. Runner SSH check/upload/deploy thật; HTTP và browser kiểm tra FE/BE cùng release, API JSON404, route sâu, ảnh sản phẩm; tab từ baseline giữ được 2 assets cũ khi tải không cache và điều hướng sau deploy. Fixture staging trả HTTP503 đã được kích hoạt có kiểm soát: receiver báo lỗi và tự phục hồi release tốt; smoke độc lập xác nhận phục hồi. Run cũ bị từ chối trước activation. Fixture chỉ phục vụ diễn tập, không phải artifact CI để promotion. `/node-test` và vhplastic.com vẫn trả HTTP200 qua kiểm tra bên ngoài; production chưa đổi.
+Bằng chứng: Windows check 47 tests (46 đạt, 1 quyền POSIX bỏ qua), Linux CI/check/build đạt, actionlint đạt. Runner SSH check/upload/deploy thật; HTTP và browser kiểm tra FE/BE cùng release, API JSON404, route sâu, ảnh sản phẩm; tab từ baseline giữ được 2 assets cũ khi tải không cache và điều hướng sau deploy. Fixture staging trả HTTP503 đã được kích hoạt có kiểm soát: receiver báo lỗi và tự phục hồi release tốt; smoke độc lập xác nhận phục hồi. Run cũ bị từ chối trước activation. Fixture chỉ phục vụ diễn tập, không phải artifact CI để promotion. `/node-test` và vhplastic.com vẫn trả HTTP200 qua kiểm tra bên ngoài. Production đã qua cùng HTTP/browser smoke và kiểm tra tab cũ; checksum archive staging/production trùng `6165cf01f68aeb9253ed510d0f194234ab14d2e376c403db8f1c6ac7050d6720`.
 
 **Staging tạm khi chưa vào được Tino:** dùng [bibi-staging.103-130-217-103.sslip.io](https://bibi-staging.103-130-217-103.sslip.io/api-test), DNS công khai đúng IP tài khoản và HTTPS hợp lệ, đã kiểm tra từ máy dev, hosting và runner. `staging.bibistudio.vn` vẫn cần sửa DNS công khai khi lấy lại quyền quản lý. Domain cPanel `inventive-tan-mole.103-130-216-108.cpanel.site` trỏ IP khác nên không dùng. Production tiếp tục dùng `bibistudio.vn`.
 
@@ -28,11 +28,11 @@ Muốn thử bản build trên máy: `npm run build -- --preview`. Đây là tù
 |---|---|---|---|
 | Local | http://localhost:5173 | /api qua proxy tới 127.0.0.1:3001 | Code và debug |
 | Staging — đã deploy và test | https://bibi-staging.103-130-217-103.sslip.io | /api cùng tên miền | Thử bản phát hành trên cPanel |
-| Production | https://bibistudio.vn | /api cùng tên miền — dự kiến tạo | Website công khai |
+| Production | https://bibistudio.vn | /api cùng tên miền | Website công khai |
 
 Backend ban đầu có ba API GET: `/api/health`, `/api/version`, `/api/demo`. Chưa có database hoặc tài khoản đăng nhập. `/api-test` là trang riêng để xem trạng thái, phiên bản FE/BE, dữ liệu demo và lỗi kết nối.
 
-Production hiện chưa có các API này; endpoint đã được thử thực tế là `https://bibistudio.vn/node-test/`.
+Production có các API này qua Passenger Node24. App thử cũ `https://bibistudio.vn/node-test/` vẫn riêng biệt.
 
 ## 3. Chạy và debug local
 
@@ -43,7 +43,7 @@ Production hiện chưa có các API này; endpoint đã được thử thực t
 5. Chạy `npm run check` trước khi gửi thay đổi. Sửa các kiểm tra thất bại, đọc đúng exit code và kết quả từng nhóm.
 6. Nhấn Ctrl+C để dừng cả FE/BE. Xác nhận có thể chạy lại ngay, không bị cổng chiếm bởi tiến trình cũ. Quy trình này phải được kiểm tra trên Windows.
 
-Cấu hình tùy chỉnh được mô tả trong `.env.example` sau khi triển khai; file env thật ở máy người dùng và bị gitignore. API demo có mặc định đủ để khởi động, không yêu cầu chép secrets từ production.
+Cấu hình tùy chỉnh được mô tả trong `.env.example`; file env thật ở máy người dùng và bị gitignore. API demo có mặc định đủ để khởi động, không yêu cầu chép secrets từ production.
 
 ## 4. Build khác với deploy như thế nào
 
@@ -76,7 +76,7 @@ Workflow phát hành là **Promote production** (`production.yml`).
 4. Hosting triển khai FE/BE cùng release. Job xác nhận version API, version FE và kiểm tra browser/HTTP trước khi báo thành công.
 5. Người vận hành đọc kết quả job và mở website kiểm tra một trang sản phẩm cùng `/api-test`. Ghi nhận release ID, source SHA và môi trường đã phát hành.
 
-Production không tự đổi chỉ vì main vừa được push. Quyền duyệt theo GitHub environments được dùng nếu gói tài khoản hỗ trợ; trường hợp không hỗ trợ thì thao tác Run workflow là điểm phát hành chủ động, không giả định có người duyệt độc lập.
+Production không tự đổi chỉ vì main vừa được push. Environment production đã bật required reviewer `quangminhit1102` và chỉ nhận nhánh main. Sau Run workflow, mở run → Review deployments → chọn production → Approve and deploy. Cấu hình cho phép chủ repo tự duyệt; đây không phải quy trình có người duyệt độc lập. Staging tự chạy, không có gate này.
 
 ## 7. Những gì deploy phải giữ nguyên
 
@@ -90,12 +90,12 @@ Source release nằm ngoài document root; frontend chỉ phục vụ tài nguy�
 
 Workflow phục hồi là **Rollback** (`rollback.yml`). Dùng khi bản mới sai hoặc kiểm tra sau deploy thất bại.
 
-1. Chọn môi trường và một release thành công trước đó còn trên hosting.
-2. Workflow/hosting kiểm tra release tồn tại, đổi con trỏ về bản trước và restart Passenger.
-3. Kiểm tra lại API, version FE/BE, trang sản phẩm và ảnh. Chỉ coi rollback hoàn thành khi bản cũ thực sự phục vụ HTTP đúng.
+1. Mở Actions → Rollback → Run workflow trên main; chọn environment và release_id thành công còn trên hosting, hoặc `baseline` cho website static trước cutover.
+2. Với production, duyệt Review deployments. Hosting kiểm tra release tồn tại, đổi con trỏ và restart Passenger. Có thể chọn lại release thành công vừa rời đi để khôi phục sau diễn tập; vẫn dùng đúng files trên hosting.
+3. Kiểm tra lại API, version FE/BE, trang sản phẩm và ảnh. Baseline static chưa có API demo nên kiểm tra trang/ảnh và checksum baseline. Chỉ coi rollback hoàn thành khi mục tiêu thực sự phục vụ HTTP đúng.
 4. Giữ log của lần deploy lỗi để sửa bằng commit mới. Rollback không rewrite Git history.
 
-Lần đầu chuyển production phải có baseline của website static đang hoạt động và cấu hình routing cũ. Rollback phải được diễn tập trên staging trước. Hiện chưa dùng MySQL, nên không có migration hoặc phục hồi dữ liệu trong quy trình này.
+Baseline production đã sao lưu tại `/home/vhplasti/bibi-deploy/production/releases/baseline`, routing gốc tại `production/baseline.htaccess`. Diễn tập staging lỗi503/tự phục hồi và production baseline/khôi phục release đều đạt ngày 31/10/2026. Hiện chưa dùng MySQL, nên không có migration hoặc phục hồi dữ liệu trong quy trình này.
 
 ## 9. Thiết lập một lần trước khi dùng CI/CD
 
@@ -112,7 +112,7 @@ Lần đầu chuyển production phải có baseline của website static đang 
 | CI và staging | Commit main hợp lệ tạo artifact và tự deploy staging |
 | Production baseline | Có bản cũ để phục hồi, diễn tập rollback staging đạt |
 
-Host SSH: `h217103.tino.org:22`, tài khoản cPanel `vhplasti`. Fingerprint ED25519 đã đối chiếu qua phiên cPanel nằm trong tài liệu thiết kế và được pin trong deploy client. SSH staging bằng deploy key đã đăng nhập/check thực tế; GitHub runner authentication/check/upload/deploy đã đạt trong run 41166133570. Public key staging có `restrict` và forced-command receiver cố định cấu hình staging; private key không nằm trong Git/log/chat. GitHub environment staging chỉ cho nhánh main. Production key và cutover vẫn chưa cấp/thực hiện.
+Host SSH: `h217103.tino.org:22`, tài khoản cPanel `vhplasti`. Fingerprint ED25519 đã đối chiếu qua phiên cPanel nằm trong tài liệu thiết kế và được pin trong deploy client. SSH staging bằng deploy key đã đăng nhập/check thực tế; GitHub runner authentication/check/upload/deploy đã đạt trong run 41166133570. Public key staging có `restrict` và forced-command receiver cố định cấu hình staging; private key không nằm trong Git/log/chat. GitHub environment staging chỉ cho nhánh main. Production cũng có key riêng và forced-command trỏ config production; runner check/upload/deploy đã đạt trong run 41167399214.
 
 Secret được source sử dụng là `DEPLOY_SSH_KEY`, riêng trong mỗi GitHub environment `staging` và `production`. Host, user và ED25519 known-host key được pin trong `scripts/deploy-client.mjs`. Không dùng `StrictHostKeyChecking=no`. Đường dẫn deploy nằm trong cấu hình receiver ngoài Git trên server, không nhận đường dẫn từ workflow input.
 
@@ -141,10 +141,10 @@ Receiver dùng `flock` theo môi trường, kiểm tra archive/checksum trước
 5. Báo cáo kết quả: commit/release, môi trường, checks đã chạy, kết quả thực tế, còn bước nào chưa hoàn tất. Phân biệt source đã push, artifact đã build và website đã cập nhật.
 6. Khi quy trình được triển khai: cập nhật trạng thái tài liệu, tên lệnh/workflow, link tới source cấu hình và bằng chứng nghiệm thu. Giữ hướng dẫn nhất quán với thiết kế; nếu thay đổi kiến trúc thì cập nhật cả hai.
 
-## 12. Quy trình hiện tại trong khi CI/CD mới chưa có
+## 12. Luồng deploy FE cũ — chỉ lưu để tham khảo
 
-Source main và nhánh artifact `deploy/cpanel-prod` vẫn là luồng cũ. `npm run build:cpanel` build FE; `npm run deploy:cpanel:prod:push` build, commit và có thể push nhánh artifact; cPanel dùng Update from Remote → Deploy HEAD Commit.
+Nhánh artifact `deploy/cpanel-prod` thuộc luồng cũ đã được thay bằng CI/CD release. `npm run build:cpanel` build FE; `npm run deploy:cpanel:prod:push` build, commit và có thể push nhánh artifact; cPanel dùng Update from Remote → Deploy HEAD Commit.
 
-Đọc [hướng dẫn cPanel hiện tại](cpanel-artifact-deploy.md) khi vận hành luồng cũ. Script hiện chỉ push khi tạo được commit mới; nếu đã có commit artifact local mà build không đổi thì cần kiểm tra trạng thái nhánh và push commit đó riêng theo tài liệu.
+[Hướng dẫn cPanel cũ](cpanel-artifact-deploy.md) chỉ lưu để tham khảo. Script hiện chỉ push khi tạo được commit mới; nếu đã có commit artifact local mà build không đổi thì cần kiểm tra trạng thái nhánh và push commit đó riêng theo tài liệu.
 
-Sau khi cutover CI/CD mới, dừng dùng luồng deploy FE cũ song song vì nó có thể ghi đè routing mới. Giữ lịch sử để tham khảo; rollback dùng release của hệ thống mới hoặc baseline đã chuẩn bị, không force-push.
+Không dùng luồng deploy FE cũ song song với CI/CD release vì nó có thể ghi đè routing mới. Giữ lịch sử để tham khảo; rollback dùng release của hệ thống mới hoặc baseline đã chuẩn bị, không force-push.

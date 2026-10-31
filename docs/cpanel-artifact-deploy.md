@@ -1,4 +1,6 @@
-# cPanel Artifact Deploy
+# cPanel Artifact Deploy — legacy
+
+Production đã chuyển sang release CI/CD ngày 31/10/2026. Dùng [build-and-deploy.md](build-and-deploy.md) cho develop, deploy và rollback. Không chạy luồng artifact FE cũ lên production đang dùng receiver/Passenger vì có thể ghi đè routing. Nội dung bên dưới chỉ lưu để tham khảo lịch sử.
 
 ## Catalogue images
 
