@@ -11,23 +11,23 @@ Dùng 13 mockup được cung cấp tại `C:/Users/Admin/Downloads/MOCKUP BAN D
 
 ## Ánh xạ nguồn → sản phẩm
 
-Tất cả dùng `productType: notebook`, `collection: explore-vietnam`. Giữ nguyên tên và slug của ba sản phẩm hiện hữu. Các slug còn lại dưới đây là đề xuất của agent, chưa tồn tại trong catalogue đã kiểm tra.
+Tất cả dùng `productType: notebook`, `collection: explore-vietnam`. Người dùng đã chốt tên Việt theo cấu trúc **Sổ tay bản đồ + địa danh**, tên Anh theo cấu trúc **[Place] Map Notebook** (ví dụ Da Lat Map Notebook, Vietnam Map Notebook). Ba sản phẩm hiện hữu cũng đổi tên hiển thị theo quy tắc này, giữ nguyên slug và URL. Các slug còn lại dưới đây là đề xuất của agent, chưa tồn tại trong catalogue đã kiểm tra.
 
 | File PNG nguồn | Tên sản phẩm | Slug | Xử lý |
 |---|---|---|---|
-| MOCKUP_DN.png | Bản đồ Đà Nẵng | da-nang-map-notebook | Thay gallery |
-| MOCKUP_HG.png | Bản đồ Hà Giang | ha-giang-map-notebook | Thay gallery |
-| MOCKUP_SG.png | Bản đồ Sài Gòn | sai-gon-map-notebook | Thay gallery |
-| MOCKUP_CA MAU.png | Bản đồ Cà Mau | ca-mau-map-notebook | Thêm mới |
-| MOCKUP_DA LAT.png | Bản đồ Đà Lạt | da-lat-map-notebook | Thêm mới |
-| MOCKUP_HN.png | Bản đồ Hà Nội | ha-noi-map-notebook | Thêm mới |
-| MOCKUP_HOI AN.png | Bản đồ Hội An | hoi-an-map-notebook | Thêm mới |
-| MOCKUP_HUE.png | Bản đồ Huế | hue-map-notebook | Thêm mới |
-| MOCKUP_NHA TRANG.png | Bản đồ Nha Trang | nha-trang-map-notebook | Thêm mới |
-| MOCKUP_PHU YEN.png | Bản đồ Phú Yên | phu-yen-map-notebook | Thêm mới |
-| MOCKUP_PQ.png | Bản đồ Phú Quốc | phu-quoc-map-notebook | Thêm mới |
-| MOCKUP_QUANG NINH.png | Bản đồ Quảng Ninh | quang-ninh-map-notebook | Thêm mới |
-| MOCKUP_VN.png | Bản đồ Việt Nam | viet-nam-map-notebook | Thêm mới |
+| MOCKUP_DN.png | Sổ tay bản đồ Đà Nẵng | da-nang-map-notebook | Thay gallery |
+| MOCKUP_HG.png | Sổ tay bản đồ Hà Giang | ha-giang-map-notebook | Thay gallery |
+| MOCKUP_SG.png | Sổ tay bản đồ Sài Gòn | sai-gon-map-notebook | Thay gallery |
+| MOCKUP_CA MAU.png | Sổ tay bản đồ Cà Mau | ca-mau-map-notebook | Thêm mới |
+| MOCKUP_DA LAT.png | Sổ tay bản đồ Đà Lạt | da-lat-map-notebook | Thêm mới |
+| MOCKUP_HN.png | Sổ tay bản đồ Hà Nội | ha-noi-map-notebook | Thêm mới |
+| MOCKUP_HOI AN.png | Sổ tay bản đồ Hội An | hoi-an-map-notebook | Thêm mới |
+| MOCKUP_HUE.png | Sổ tay bản đồ Huế | hue-map-notebook | Thêm mới |
+| MOCKUP_NHA TRANG.png | Sổ tay bản đồ Nha Trang | nha-trang-map-notebook | Thêm mới |
+| MOCKUP_PHU YEN.png | Sổ tay bản đồ Phú Yên | phu-yen-map-notebook | Thêm mới |
+| MOCKUP_PQ.png | Sổ tay bản đồ Phú Quốc | phu-quoc-map-notebook | Thêm mới |
+| MOCKUP_QUANG NINH.png | Sổ tay bản đồ Quảng Ninh | quang-ninh-map-notebook | Thêm mới |
+| MOCKUP_VN.png | Sổ tay bản đồ Việt Nam | viet-nam-map-notebook | Thêm mới |
 
 ## Cách thực hiện đề xuất
 
