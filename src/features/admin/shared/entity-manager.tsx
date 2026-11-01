@@ -19,6 +19,7 @@ import {
 } from "./ui/primitives";
 import { downloadBlob, makeCsv, date } from "./lib/text";
 import { UnsavedDialog } from "./forms/preference-form";
+import { internalTarget } from "./lib/navigation";
 export interface EntityConfig<K extends EntityKey> {
   entity: K;
   title: string;
@@ -33,6 +34,8 @@ export interface EntityConfig<K extends EntityKey> {
   editHref?: (id: string) => string;
   detailHref?: (id: string) => string;
   allowCreate?: boolean;
+  allowDelete?: boolean;
+  returnPath?: string;
   readOnly?: boolean;
   duplicate?: boolean;
   dateField?: "createdAt" | "lastSeenAt" | "startedAt";
@@ -60,7 +63,9 @@ export function EntityManager<K extends EntityKey>({ config }: { config: EntityC
   const navigate = useNavigate();
   const resource = config.resource ?? resourceForEntity(config.entity);
   const permitted = (action: "create" | "update" | "delete" | "export") =>
-    !config.readOnly && can(runtime.session, resource, action, role.data);
+    !config.readOnly &&
+    !(action === "delete" && config.allowDelete === false) &&
+    can(runtime.session, resource, action, role.data);
   const [state, setState] = useState<TableState>(() => {
     const value = readState();
     return { ...value, sort: value.sort ?? config.defaultSort };
@@ -128,8 +133,15 @@ export function EntityManager<K extends EntityKey>({ config }: { config: EntityC
       void invalidate();
     },
   });
+  const destination = (href: string) =>
+    config.returnPath
+      ? {
+          ...internalTarget(href),
+          search: { returnTo: config.returnPath + location.search } as never,
+        }
+      : internalTarget(href);
   const openEdit = (row: AdminModels[K]) =>
-    config.editHref ? void navigate({ to: config.editHref(row.id) as "/admin" }) : setEditing(row);
+    config.editHref ? void navigate(destination(config.editHref(row.id))) : setEditing(row);
   const columns: ColumnDef<AdminModels[K], unknown>[] = [
     ...(config.columns ?? [
       {
@@ -165,7 +177,7 @@ export function EntityManager<K extends EntityKey>({ config }: { config: EntityC
               ? [
                   {
                     label: "Xem chi tiết",
-                    onSelect: () => void navigate({ to: config.detailHref!(row.id) as "/admin" }),
+                    onSelect: () => void navigate(destination(config.detailHref!(row.id))),
                   },
                 ]
               : []),
@@ -200,12 +212,16 @@ export function EntityManager<K extends EntityKey>({ config }: { config: EntityC
                   },
                 ]
               : []),
-            {
-              label: "Xóa",
-              danger: true,
-              disabled: !permitted("delete"),
-              onSelect: () => setRemove(row.original),
-            },
+            ...(config.allowDelete === false
+              ? []
+              : [
+                  {
+                    label: "Xóa",
+                    danger: true,
+                    disabled: !permitted("delete"),
+                    onSelect: () => setRemove(row.original),
+                  },
+                ]),
           ]}
         />
       ),
@@ -258,7 +274,7 @@ export function EntityManager<K extends EntityKey>({ config }: { config: EntityC
               variant="primary"
               onClick={() =>
                 config.createHref
-                  ? void navigate({ to: config.createHref as "/admin" })
+                  ? void navigate(destination(config.createHref))
                   : setEditing("new")
               }
             >

@@ -232,7 +232,7 @@ export function RecordForm({
                     ))}
                   </select>
                 ) : field.type === "checkbox" ? (
-                  <input type="checkbox" {...register(field.key)} />
+                  <input type="checkbox" aria-label={field.label} {...register(field.key)} />
                 ) : field.type === "date" ? (
                   <Controller
                     name={field.key}

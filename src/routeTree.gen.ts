@@ -16,6 +16,7 @@ import { Route as ApiTestRouteImport } from './routes/api-test'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminAuditLogsRouteImport } from './routes/admin.audit-logs'
+import { Route as AdminCustomersRouteImport } from './routes/admin.customers'
 import { Route as AdminDashboardRouteImport } from './routes/admin.dashboard'
 import { Route as AdminLoginRouteImport } from './routes/admin.login'
 import { Route as AdminNotificationsRouteImport } from './routes/admin.notifications'
@@ -55,6 +56,8 @@ import { Route as AdminContentCategoriesRouteImport } from './routes/admin.conte
 import { Route as AdminContentMediaRouteImport } from './routes/admin.content.media'
 import { Route as AdminContentPostsRouteImport } from './routes/admin.content.posts'
 import { Route as AdminContentTagsRouteImport } from './routes/admin.content.tags'
+import { Route as AdminCustomersIdRouteImport } from './routes/admin.customers.$id'
+import { Route as AdminCustomersCreateRouteImport } from './routes/admin.customers.create'
 import { Route as AdminProductsIndexRouteImport } from './routes/admin.products.index'
 import { Route as AdminProductsIdRouteImport } from './routes/admin.products.$id'
 import { Route as AdminProductsCategoriesRouteImport } from './routes/admin.products.categories'
@@ -77,6 +80,7 @@ import { Route as AdminBookstoreBooksIdRouteImport } from './routes/admin.bookst
 import { Route as AdminBookstoreBooksCreateRouteImport } from './routes/admin.bookstore.books.create'
 import { Route as AdminContentPostsIdRouteImport } from './routes/admin.content.posts.$id'
 import { Route as AdminContentPostsCreateRouteImport } from './routes/admin.content.posts.create'
+import { Route as AdminCustomersIdEditRouteImport } from './routes/admin.customers.$id.edit'
 import { Route as AdminProductsIdEditRouteImport } from './routes/admin.products.$id.edit'
 import { Route as AdminSalesOrdersIdRouteImport } from './routes/admin.sales.orders.$id'
 import { Route as AdminBookstoreBooksIdEditRouteImport } from './routes/admin.bookstore.books.$id.edit'
@@ -115,6 +119,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
 const AdminAuditLogsRoute = AdminAuditLogsRouteImport.update({
   id: '/audit-logs',
   path: '/audit-logs',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminCustomersRoute = AdminCustomersRouteImport.update({
+  id: '/customers',
+  path: '/customers',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminDashboardRoute = AdminDashboardRouteImport.update({
@@ -317,6 +326,16 @@ const AdminContentTagsRoute = AdminContentTagsRouteImport.update({
   path: '/content/tags',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminCustomersIdRoute = AdminCustomersIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AdminCustomersRoute,
+} as any)
+const AdminCustomersCreateRoute = AdminCustomersCreateRouteImport.update({
+  id: '/create',
+  path: '/create',
+  getParentRoute: () => AdminCustomersRoute,
+} as any)
 const AdminProductsIndexRoute = AdminProductsIndexRouteImport.update({
   id: '/products/',
   path: '/products/',
@@ -429,6 +448,11 @@ const AdminContentPostsCreateRoute = AdminContentPostsCreateRouteImport.update({
   path: '/create',
   getParentRoute: () => AdminContentPostsRoute,
 } as any)
+const AdminCustomersIdEditRoute = AdminCustomersIdEditRouteImport.update({
+  id: '/edit',
+  path: '/edit',
+  getParentRoute: () => AdminCustomersIdRoute,
+} as any)
 const AdminProductsIdEditRoute = AdminProductsIdEditRouteImport.update({
   id: '/edit',
   path: '/edit',
@@ -458,6 +482,7 @@ export interface FileRoutesByFullPath {
   '/api-test': typeof ApiTestRoute
   '/contact': typeof ContactRoute
   '/admin/audit-logs': typeof AdminAuditLogsRoute
+  '/admin/customers': typeof AdminCustomersRouteWithChildren
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/notifications': typeof AdminNotificationsRoute
@@ -493,6 +518,8 @@ export interface FileRoutesByFullPath {
   '/admin/content/media': typeof AdminContentMediaRoute
   '/admin/content/posts': typeof AdminContentPostsRouteWithChildren
   '/admin/content/tags': typeof AdminContentTagsRoute
+  '/admin/customers/$id': typeof AdminCustomersIdRouteWithChildren
+  '/admin/customers/create': typeof AdminCustomersCreateRoute
   '/admin/products/$id': typeof AdminProductsIdRouteWithChildren
   '/admin/products/categories': typeof AdminProductsCategoriesRoute
   '/admin/products/create': typeof AdminProductsCreateRoute
@@ -520,6 +547,7 @@ export interface FileRoutesByFullPath {
   '/admin/bookstore/books/create': typeof AdminBookstoreBooksCreateRoute
   '/admin/content/posts/$id': typeof AdminContentPostsIdRouteWithChildren
   '/admin/content/posts/create': typeof AdminContentPostsCreateRoute
+  '/admin/customers/$id/edit': typeof AdminCustomersIdEditRoute
   '/admin/products/$id/edit': typeof AdminProductsIdEditRoute
   '/admin/sales/orders/$id': typeof AdminSalesOrdersIdRoute
   '/admin/bookstore/books/$id/edit': typeof AdminBookstoreBooksIdEditRoute
@@ -531,6 +559,7 @@ export interface FileRoutesByTo {
   '/api-test': typeof ApiTestRoute
   '/contact': typeof ContactRoute
   '/admin/audit-logs': typeof AdminAuditLogsRoute
+  '/admin/customers': typeof AdminCustomersRouteWithChildren
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/notifications': typeof AdminNotificationsRoute
@@ -566,6 +595,8 @@ export interface FileRoutesByTo {
   '/admin/content/media': typeof AdminContentMediaRoute
   '/admin/content/posts': typeof AdminContentPostsRouteWithChildren
   '/admin/content/tags': typeof AdminContentTagsRoute
+  '/admin/customers/$id': typeof AdminCustomersIdRouteWithChildren
+  '/admin/customers/create': typeof AdminCustomersCreateRoute
   '/admin/products/$id': typeof AdminProductsIdRouteWithChildren
   '/admin/products/categories': typeof AdminProductsCategoriesRoute
   '/admin/products/create': typeof AdminProductsCreateRoute
@@ -593,6 +624,7 @@ export interface FileRoutesByTo {
   '/admin/bookstore/books/create': typeof AdminBookstoreBooksCreateRoute
   '/admin/content/posts/$id': typeof AdminContentPostsIdRouteWithChildren
   '/admin/content/posts/create': typeof AdminContentPostsCreateRoute
+  '/admin/customers/$id/edit': typeof AdminCustomersIdEditRoute
   '/admin/products/$id/edit': typeof AdminProductsIdEditRoute
   '/admin/sales/orders/$id': typeof AdminSalesOrdersIdRoute
   '/admin/bookstore/books/$id/edit': typeof AdminBookstoreBooksIdEditRoute
@@ -606,6 +638,7 @@ export interface FileRoutesById {
   '/api-test': typeof ApiTestRoute
   '/contact': typeof ContactRoute
   '/admin/audit-logs': typeof AdminAuditLogsRoute
+  '/admin/customers': typeof AdminCustomersRouteWithChildren
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/notifications': typeof AdminNotificationsRoute
@@ -641,6 +674,8 @@ export interface FileRoutesById {
   '/admin/content/media': typeof AdminContentMediaRoute
   '/admin/content/posts': typeof AdminContentPostsRouteWithChildren
   '/admin/content/tags': typeof AdminContentTagsRoute
+  '/admin/customers/$id': typeof AdminCustomersIdRouteWithChildren
+  '/admin/customers/create': typeof AdminCustomersCreateRoute
   '/admin/products/$id': typeof AdminProductsIdRouteWithChildren
   '/admin/products/categories': typeof AdminProductsCategoriesRoute
   '/admin/products/create': typeof AdminProductsCreateRoute
@@ -668,6 +703,7 @@ export interface FileRoutesById {
   '/admin/bookstore/books/create': typeof AdminBookstoreBooksCreateRoute
   '/admin/content/posts/$id': typeof AdminContentPostsIdRouteWithChildren
   '/admin/content/posts/create': typeof AdminContentPostsCreateRoute
+  '/admin/customers/$id/edit': typeof AdminCustomersIdEditRoute
   '/admin/products/$id/edit': typeof AdminProductsIdEditRoute
   '/admin/sales/orders/$id': typeof AdminSalesOrdersIdRoute
   '/admin/bookstore/books/$id/edit': typeof AdminBookstoreBooksIdEditRoute
@@ -682,6 +718,7 @@ export interface FileRouteTypes {
     | '/api-test'
     | '/contact'
     | '/admin/audit-logs'
+    | '/admin/customers'
     | '/admin/dashboard'
     | '/admin/login'
     | '/admin/notifications'
@@ -717,6 +754,8 @@ export interface FileRouteTypes {
     | '/admin/content/media'
     | '/admin/content/posts'
     | '/admin/content/tags'
+    | '/admin/customers/$id'
+    | '/admin/customers/create'
     | '/admin/products/$id'
     | '/admin/products/categories'
     | '/admin/products/create'
@@ -744,6 +783,7 @@ export interface FileRouteTypes {
     | '/admin/bookstore/books/create'
     | '/admin/content/posts/$id'
     | '/admin/content/posts/create'
+    | '/admin/customers/$id/edit'
     | '/admin/products/$id/edit'
     | '/admin/sales/orders/$id'
     | '/admin/bookstore/books/$id/edit'
@@ -755,6 +795,7 @@ export interface FileRouteTypes {
     | '/api-test'
     | '/contact'
     | '/admin/audit-logs'
+    | '/admin/customers'
     | '/admin/dashboard'
     | '/admin/login'
     | '/admin/notifications'
@@ -790,6 +831,8 @@ export interface FileRouteTypes {
     | '/admin/content/media'
     | '/admin/content/posts'
     | '/admin/content/tags'
+    | '/admin/customers/$id'
+    | '/admin/customers/create'
     | '/admin/products/$id'
     | '/admin/products/categories'
     | '/admin/products/create'
@@ -817,6 +860,7 @@ export interface FileRouteTypes {
     | '/admin/bookstore/books/create'
     | '/admin/content/posts/$id'
     | '/admin/content/posts/create'
+    | '/admin/customers/$id/edit'
     | '/admin/products/$id/edit'
     | '/admin/sales/orders/$id'
     | '/admin/bookstore/books/$id/edit'
@@ -829,6 +873,7 @@ export interface FileRouteTypes {
     | '/api-test'
     | '/contact'
     | '/admin/audit-logs'
+    | '/admin/customers'
     | '/admin/dashboard'
     | '/admin/login'
     | '/admin/notifications'
@@ -864,6 +909,8 @@ export interface FileRouteTypes {
     | '/admin/content/media'
     | '/admin/content/posts'
     | '/admin/content/tags'
+    | '/admin/customers/$id'
+    | '/admin/customers/create'
     | '/admin/products/$id'
     | '/admin/products/categories'
     | '/admin/products/create'
@@ -891,6 +938,7 @@ export interface FileRouteTypes {
     | '/admin/bookstore/books/create'
     | '/admin/content/posts/$id'
     | '/admin/content/posts/create'
+    | '/admin/customers/$id/edit'
     | '/admin/products/$id/edit'
     | '/admin/sales/orders/$id'
     | '/admin/bookstore/books/$id/edit'
@@ -960,6 +1008,13 @@ declare module '@tanstack/react-router' {
       path: '/audit-logs'
       fullPath: '/admin/audit-logs'
       preLoaderRoute: typeof AdminAuditLogsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/customers': {
+      id: '/admin/customers'
+      path: '/customers'
+      fullPath: '/admin/customers'
+      preLoaderRoute: typeof AdminCustomersRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/dashboard': {
@@ -1235,6 +1290,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminContentTagsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/customers/$id': {
+      id: '/admin/customers/$id'
+      path: '/$id'
+      fullPath: '/admin/customers/$id'
+      preLoaderRoute: typeof AdminCustomersIdRouteImport
+      parentRoute: typeof AdminCustomersRoute
+    }
+    '/admin/customers/create': {
+      id: '/admin/customers/create'
+      path: '/create'
+      fullPath: '/admin/customers/create'
+      preLoaderRoute: typeof AdminCustomersCreateRouteImport
+      parentRoute: typeof AdminCustomersRoute
+    }
     '/admin/products/': {
       id: '/admin/products/'
       path: '/products'
@@ -1389,6 +1458,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminContentPostsCreateRouteImport
       parentRoute: typeof AdminContentPostsRoute
     }
+    '/admin/customers/$id/edit': {
+      id: '/admin/customers/$id/edit'
+      path: '/edit'
+      fullPath: '/admin/customers/$id/edit'
+      preLoaderRoute: typeof AdminCustomersIdEditRouteImport
+      parentRoute: typeof AdminCustomersIdRoute
+    }
     '/admin/products/$id/edit': {
       id: '/admin/products/$id/edit'
       path: '/edit'
@@ -1419,6 +1495,31 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface AdminCustomersIdRouteChildren {
+  AdminCustomersIdEditRoute: typeof AdminCustomersIdEditRoute
+}
+
+const AdminCustomersIdRouteChildren: AdminCustomersIdRouteChildren = {
+  AdminCustomersIdEditRoute: AdminCustomersIdEditRoute,
+}
+
+const AdminCustomersIdRouteWithChildren =
+  AdminCustomersIdRoute._addFileChildren(AdminCustomersIdRouteChildren)
+
+interface AdminCustomersRouteChildren {
+  AdminCustomersIdRoute: typeof AdminCustomersIdRouteWithChildren
+  AdminCustomersCreateRoute: typeof AdminCustomersCreateRoute
+}
+
+const AdminCustomersRouteChildren: AdminCustomersRouteChildren = {
+  AdminCustomersIdRoute: AdminCustomersIdRouteWithChildren,
+  AdminCustomersCreateRoute: AdminCustomersCreateRoute,
+}
+
+const AdminCustomersRouteWithChildren = AdminCustomersRoute._addFileChildren(
+  AdminCustomersRouteChildren,
+)
 
 interface AdminAccountsUsersRouteChildren {
   AdminAccountsUsersIdRoute: typeof AdminAccountsUsersIdRoute
@@ -1520,6 +1621,7 @@ const AdminSalesOrdersRouteWithChildren =
 
 interface AdminRouteChildren {
   AdminAuditLogsRoute: typeof AdminAuditLogsRoute
+  AdminCustomersRoute: typeof AdminCustomersRouteWithChildren
   AdminDashboardRoute: typeof AdminDashboardRoute
   AdminLoginRoute: typeof AdminLoginRoute
   AdminNotificationsRoute: typeof AdminNotificationsRoute
@@ -1574,6 +1676,7 @@ interface AdminRouteChildren {
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminAuditLogsRoute: AdminAuditLogsRoute,
+  AdminCustomersRoute: AdminCustomersRouteWithChildren,
   AdminDashboardRoute: AdminDashboardRoute,
   AdminLoginRoute: AdminLoginRoute,
   AdminNotificationsRoute: AdminNotificationsRoute,

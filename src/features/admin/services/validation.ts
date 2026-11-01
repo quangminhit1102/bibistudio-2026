@@ -214,6 +214,16 @@ export async function validateRecord<K extends EntityKey>(
   }
 }
 export async function assertDeletable(entity: EntityKey, id: string, tx: AdminTransaction) {
+  if (entity === "customers" && (await tx.list("purchaseSlips")).some((s) => s.customerId === id))
+    throw new ServiceError(
+      "validation",
+      "Khách đã có phiếu mua hàng; hãy ngừng sử dụng thay vì xóa.",
+    );
+  if (
+    entity === "products" &&
+    (await tx.list("purchaseSlips")).some((s) => s.items.some((i) => i.productId === id))
+  )
+    throw new ServiceError("validation", "Sản phẩm đã có phiếu mua hàng; hãy ẩn thay vì xóa.");
   const used = (
     await Promise.all(
       ["books", "products", "posts", "categories", "users", "orders"].map((e) =>

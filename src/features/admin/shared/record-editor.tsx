@@ -18,6 +18,7 @@ import {
   useNotice,
 } from "./ui/primitives";
 import { date } from "./lib/text";
+import { internalTarget } from "./lib/navigation";
 const RichPreview = lazy(() => import("../content/components/rich-editor"));
 export function RecordEditor<K extends EntityKey>({
   config,
@@ -73,7 +74,7 @@ export function RecordEditor<K extends EntityKey>({
           fields={config.fields}
           initial={(snapshot ?? config.defaults) as unknown as FormValues}
           onDirtyChange={setDirty}
-          onCancel={() => void navigate({ to: listHref as "/admin" })}
+          onCancel={() => void navigate(internalTarget(listHref))}
           onSave={async (values) => {
             const service = runtime.service(config.entity, config.resource);
             const editable = Object.fromEntries(config.fields.map((f) => [f.key, values[f.key]]));
@@ -83,7 +84,7 @@ export function RecordEditor<K extends EntityKey>({
             await query.invalidateQueries({ queryKey: ["bibi-admin"] });
             flushSync(() => setDirty(false));
             notice("Đã lưu dữ liệu demo.");
-            void navigate({ to: listHref as "/admin" });
+            void navigate(internalTarget(listHref));
           }}
         />
       </Card>
