@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   useReactTable,
   getCoreRowModel,
@@ -61,6 +61,12 @@ export function DataTable<T extends { id: string }>({
   const [showColumns, setShowColumns] = useState(false);
   const [q, setQ] = useState(state.search);
   const rowsSelected = selection ?? localSelection;
+  // Client row models schedule page resets when sorting changes. Keep the
+  // reference stable across the table's own updates to avoid a reset loop.
+  const sorting = useMemo(
+    () => (state.sort ? [{ id: state.sort.field, desc: state.sort.direction === "desc" }] : []),
+    [state.sort],
+  );
   useEffect(() => {
     const timer = setTimeout(() => {
       if (q !== state.search) onStateChange({ ...state, page: 1, search: q });
@@ -77,7 +83,7 @@ export function DataTable<T extends { id: string }>({
     rowCount: clientRows?.length ?? result.total,
     state: {
       pagination: { pageIndex: state.page - 1, pageSize: state.pageSize },
-      sorting: state.sort ? [{ id: state.sort.field, desc: state.sort.direction === "desc" }] : [],
+      sorting,
       globalFilter: state.search,
       columnVisibility: state.columnVisibility ?? {},
       rowSelection: rowsSelected,
