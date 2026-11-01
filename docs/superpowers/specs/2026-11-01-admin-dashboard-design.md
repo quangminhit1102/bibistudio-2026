@@ -1,6 +1,6 @@
 # BiBi Admin — thiết kế tích hợp và phạm vi đầy đủ
 
-Ngày:2026-11-01. Trạng thái: kiến trúc và mockup đã được người dùng duyệt; tài liệu này chờ duyệt trước implementation plan. Chưa triển khai admin vào ứng dụng.
+Ngày:2026-11-01. Trạng thái: kiến trúc và mockup đã được người dùng duyệt; tài liệu này đã được người dùng duyệt để lập implementation plan. Chưa triển khai admin vào ứng dụng.
 
 ## 1. Ý định và quyết định của người dùng
 
