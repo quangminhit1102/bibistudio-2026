@@ -4,6 +4,7 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
@@ -13,6 +14,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { FloatingContact } from "../components/floating-contact";
+import { isAdminPath } from "../lib/admin-boundary";
 
 function NotFoundComponent() {
   return (
@@ -148,13 +150,14 @@ function ImageFade() {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const admin = useRouterState({ select: (state) => isAdminPath(state.location.pathname, import.meta.env.VITE_ROUTER_BASEPATH || '/') });
 
   return (
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
-      <FloatingContact />
-      <ImageFade />
+      {!admin && <FloatingContact />}
+      {!admin && <ImageFade />}
     </QueryClientProvider>
   );
 }

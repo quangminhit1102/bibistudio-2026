@@ -37,6 +37,7 @@ export default defineConfig(({ mode }: ConfigEnv) => {
       emitCpanelIndex(),
     ],
     build: {
+      manifest: true,
       outDir: "dist-cpanel",
       emptyOutDir: true,
       rollupOptions: {

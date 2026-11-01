@@ -9,6 +9,8 @@ try {
     "Lint scope: backend/src, new tooling, API client/page. Existing catalogue UI is not reformatted.",
   );
   await node("node_modules/eslint/bin/eslint.js", [
+    "src/features/admin",
+    "src/lib/admin-boundary.ts",
     "backend/src",
     "src/lib/api-demo.ts",
     "src/routes/api-test.tsx",
@@ -18,6 +20,7 @@ try {
     "--no-warn-ignored",
   ]);
   await node("scripts/catalogue-images.mjs");
+  await node("node_modules/vitest/vitest.mjs", ["run", "--config", "vitest.admin.config.ts"]);
   const scripts = (await readdir(join(root, "scripts")))
     .filter((n) => n.endsWith(".test.mjs"))
     .map((n) => `scripts/${n}`);
