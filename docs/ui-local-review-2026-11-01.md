@@ -23,3 +23,15 @@
 - Ảnh bằng chứng tại thư mục visualization của session: `ui-local-font-zoom.png`, `ui-local-footer.png`, `ui-local-home-mobile.png`. Viewport override đã reset.
 
 Chờ người dùng review giao diện trước mọi bước phát hành.
+
+## Phát hành production sau khi người dùng duyệt
+
+Người dùng yêu cầu push lên production ngày 01/11/2026. Fetch phát hiện Lovable có thêm merge commit 0af044b chỉ đổi bun.lock; đã merge giữ nguyên lịch sử, không force-push. Source giao diện đã review được đưa lên main tại 4c791499859ea42bbb7214c7bd3e222b2a6a4a57.
+
+- Check Node24 ngoài sandbox:55 tests,54 pass,0 fail,1 POSIX skip. Sandbox không cho các test HTTP/deploy hoạt động đầy đủ; lần ngoài sandbox đạt exit0.
+- CI main [41274633689](https://github.com/quangminhit1102/bibistudio-2026/actions/runs/41274633689) thành công49s; artifact13071350494.
+- [Production41274734050](https://github.com/quangminhit1102/bibistudio-2026/actions/runs/41274734050) đã qua environment approval; promote thành công2m27s.
+- Release: `4c791499859ea42bbb7214c7bd3e222b2a6a4a57-41274633689`. Receipt previous: `e1df4d2348eb9e06426afd7584c86a982c8f3278-41255894313`. Giữ rollback, không diễn tập chuyển bản trong lần này.
+- Workflow xác nhận HTTP smoke, browser sản phẩm/API-test và old-client2 retained assets không dùng cache. Chạy độc lập scripts/smoke.mjs trên production đạt, bao gồm FE/BE version khớp, health/demo/JSON404 và ảnh.
+- Browser production Đà Nẵng: Lora đã tải, toàn bộ href Facebook/Messenger là bidiary, footer-wordmark0; ảnh chính decode đạt. Lens background1959.98×2338.87 trên ảnh render653.325×779.624, tương ứng3×. Không gửi tin nhắn.
+- Screenshot production lưu trong thư mục visualization session: ui-production-zoom.png.
