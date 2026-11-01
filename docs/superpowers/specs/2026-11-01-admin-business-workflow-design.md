@@ -1,6 +1,6 @@
 # BiBi Admin — khách mua hàng, phiếu mua hàng và phân tích gọn
 
-Ngày: 01/11/2026 (Asia/Saigon). Trạng thái: đã qua Lovable review và builder check, chờ người dùng duyệt; chưa được duyệt triển khai. Khi được duyệt, tài liệu này thay thế yêu cầu analytics/bookstore/sales/notification tương ứng trong thiết kế admin ban đầu; các module khác giữ phạm vi hiện có.
+Ngày viết: 01/11/2026 (Asia/Saigon). Người dùng đã duyệt thiết kế và bốn quy tắc nghiệp vụ ngày 02/11/2026, sau Lovable review và builder check. Tài liệu này thay thế yêu cầu analytics/bookstore/sales/notification tương ứng trong thiết kế admin ban đầu; các module khác giữ phạm vi hiện có. Bước tiếp theo là lập kế hoạch triển khai, chưa đồng nghĩa các chức năng đã được xây dựng.
 
 ## 1. Mục đích và quyết định đã có
 
