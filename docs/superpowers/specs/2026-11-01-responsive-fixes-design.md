@@ -15,6 +15,12 @@ Giữ phong cách, bố cục chính và nội dung hiện tại; sửa các đi
 
 Trang chủ đang lấy ba sản phẩm explore-vietnam bằng slice(0,3). Hiển thị bốn sản phẩm theo thứ tự catalogue hiện tại; dùng hai cột/hai hàng để không còn ô trống. Đề xuất kỹ thuật của người triển khai: giữ 2×2 cả trong cột nội dung desktop vì khu vực này chỉ chiếm khoảng nửa chiều rộng trang.
 
+## Slider đầu trang chủ — bổ sung đã xác nhận
+
+Bỏ chú thích/link ở góc trái phía dưới ảnh HeroSlides (ví dụ Bàn giấy của BiBi hoặc tên bộ sưu tập); giữ phần tiêu đề chính bên ngoài ảnh. Thay các vạch chuyển ảnh bằng chấm tròn. Đề xuất thể hiện: đặt giữa phía dưới ảnh, chấm nhỏ với trạng thái active rõ, nền nhẹ để đọc được trên ảnh sáng/tối; mỗi nút có vùng bấm ít nhất44×44px, tên truy cập, trạng thái hiện tại và focus bàn phím. Dùng Lovable góp ý thiết kế, áp dụng local sau khi duyệt; không để Lovable tự triển khai cloud.
+
+Giữ nguyên ảnh, alt text, chuyển ảnh tự động5500ms và reduced motion; không thêm thư viện. Các link khám phá bộ sưu tập ngoài slider vẫn giữ. So với giữ vị trí góc phải, đặt giữa là lựa chọn đề xuất để cân đối sau khi bỏ caption, chưa phải yêu cầu gốc của người dùng.
+
 ## Rà soát và giới hạn sửa
 
 Dùng review source từ Lovable làm danh sách nghi vấn, không coi suy luận là lỗi đã chứng minh. Kiểm tra trang chủ, danh sách sản phẩm và bộ lọc, loại sản phẩm, bộ sưu tập/danh sách và chi tiết, chi tiết sản phẩm/gallery/fullscreen, tìm kiếm, nhật ký/bài viết, giới thiệu, liên hệ, header/menu/footer/nút liên hệ và API-test.
@@ -28,6 +34,7 @@ Lora/Inter, bảng màu, nội dung/ảnh/thứ tự catalogue, zoom3×, link bi
 ## Tiêu chí nghiệm thu
 
 - Phần Khám phá Việt Nam có đúng bốn sản phẩm, bố cục2×2.
+- Slider không còn caption góc trái; nút tròn chuyển đúng ảnh, active/focus rõ, dễ bấm trên mobile; tiêu đề hero chính giữ nguyên.
 - Không tràn ngang ở các trang/kích thước đã kiểm tra; ảnh đã tải phải decode được, phân biệt ảnh lazy chưa tải.
 - Menu/filter/search mở đóng và thao tác được; gallery/fullscreen hoạt động; nút liên hệ/back-to-top không che nhau hoặc chặn nội dung quan trọng.
 - Font dễ đọc, tiêu đề không bị cắt, header tablet không va chạm; reduced motion được tôn trọng.
