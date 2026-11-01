@@ -138,6 +138,9 @@ export const collections: Collection[] = [
 ];
 
 let order = 0;
+for (const item of [...productTypes, ...collections]) {
+  if (item.image) item.image = catalogueAssetUrl(item.image);
+}
 function p(
   slug: string,
   vi: string,
@@ -159,7 +162,7 @@ function p(
     collection,
     occasion,
     description: { vi: descriptionVi, en: descriptionEn },
-    images,
+    images: images.map(catalogueAssetUrl),
     imageAlt: { vi: `${vi} — sản phẩm BiBi Studio`, en: `${en} — a BiBi Studio paper good` },
     featured,
     sortOrder: order,

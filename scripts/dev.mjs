@@ -12,6 +12,7 @@ export async function startDevelopment({
   backendEntry = "src/server.ts",
   onBackendState = () => {},
   cacheDir,
+  prebundle = true,
 } = {}) {
   await assertPortsFree([frontendPort, backendPort, inspectorPort]);
   process.env.BACKEND_PORT = String(backendPort);
@@ -76,6 +77,7 @@ export async function startDevelopment({
       configFile: join(root, "vite.local.config.ts"),
       root,
       ...(cacheDir ? { cacheDir } : {}),
+      ...(prebundle ? {} : { optimizeDeps: { noDiscovery: true, include: [] } }),
       customLogger: logger,
       server: { host, port: frontendPort, strictPort: true },
     });
