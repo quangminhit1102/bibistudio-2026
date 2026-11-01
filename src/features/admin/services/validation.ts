@@ -1,6 +1,19 @@
 import { z } from "zod";
 import type { AdminModels, AdminTransaction, EntityKey } from "./contracts";
 import { ServiceError } from "./errors";
+import { defaultPermissions } from "../accounts/permissions";
+import { safeDocument } from "../content/sanitize";
+export function documentMediaIds(raw: string): string[] {
+  const doc = safeDocument(raw);
+  const ids: string[] = [];
+  const walk = (node: typeof doc) => {
+    if (node.type === "image" && typeof node.attrs?.mediaId === "string")
+      ids.push(node.attrs.mediaId);
+    node.content?.forEach(walk);
+  };
+  walk(doc);
+  return ids;
+}
 const name = z.string().trim().min(1, "Vui lòng nhập tên").max(200);
 const amount = z.number().int().min(0, "Giá trị không được âm");
 const catalogue = z
@@ -93,6 +106,13 @@ export async function validateRecord<K extends EntityKey>(
       );
   }
   const records = await tx.list(entity);
+  if (
+    entity === "roles" &&
+    row.id === "super-admin" &&
+    JSON.stringify((row as AdminModels["roles"]).permissions) !==
+      JSON.stringify(defaultPermissions("super-admin"))
+  )
+    throw new ServiceError("validation", "Quyền của Super Admin được bảo vệ.");
   for (const field of ["sku", "slug", "isbn", "email"]) {
     const value = (row as unknown as Record<string, unknown>)[field];
     if (
@@ -145,11 +165,39 @@ export async function validateRecord<K extends EntityKey>(
         throw new ServiceError("validation", "Tác giả không tồn tại.");
     if (!(await tx.get("publishers", b.publisherId)))
       throw new ServiceError("validation", "Nhà xuất bản không tồn tại.");
+    for (const id of b.genreIds) {
+      const genre = await tx.get("categories", id);
+      if (genre?.kind !== "genre") throw new ServiceError("validation", "Thể loại không tồn tại.");
+    }
+  }
+  if (entity === "posts") {
+    const p = row as AdminModels["posts"];
+    if (!(await tx.get("users", p.authorId)))
+      throw new ServiceError("validation", "Tác giả bài viết không tồn tại.");
+    if (p.categoryId && (await tx.get("categories", p.categoryId))?.kind !== "content")
+      throw new ServiceError("validation", "Chuyên mục không tồn tại.");
+    for (const id of p.tagIds)
+      if (!(await tx.get("tags", id))) throw new ServiceError("validation", "Thẻ không tồn tại.");
+    p.content = JSON.stringify(safeDocument(p.content));
+    for (const id of [...documentMediaIds(p.content), ...(p.imageId ? [p.imageId] : [])])
+      if (!(await tx.get("media", id)))
+        throw new ServiceError("validation", "Ảnh bài viết không tồn tại.");
+    if (p.publishAt && !Number.isFinite(Date.parse(p.publishAt)))
+      throw new ServiceError("validation", "Ngày xuất bản không hợp lệ.");
   }
   if (entity === "products" || entity === "books") {
     const p = row as AdminModels["products"];
     if (p.reserved > p.stock)
       throw new ServiceError("validation", "Tồn kho không thể thấp hơn lượng đã giữ.");
+    if (
+      entity === "products" &&
+      p.categoryId &&
+      (await tx.get("categories", p.categoryId))?.kind !== "product"
+    )
+      throw new ServiceError("validation", "Danh mục sản phẩm không tồn tại.");
+    for (const id of p.imageIds)
+      if (!(await tx.get("media", id)))
+        throw new ServiceError("validation", "Ảnh sản phẩm không tồn tại.");
   }
 }
 export async function assertDeletable(entity: EntityKey, id: string, tx: AdminTransaction) {
@@ -173,6 +221,12 @@ export async function assertDeletable(entity: EntityKey, id: string, tx: AdminTr
     "imageId",
   ];
   for (const row of used) {
+    if (
+      entity === "media" &&
+      "content" in row &&
+      documentMediaIds(String(row.content)).includes(id)
+    )
+      throw new ServiceError("validation", "Ảnh đang được sử dụng trong nội dung bài viết.");
     if (entity === "users" && row.id === id) continue;
     const value = row as unknown as Record<string, unknown>;
     for (const field of referenceFields) {

@@ -97,6 +97,7 @@ export interface OrderItem {
   unitPrice: number;
 }
 export interface Order extends BaseRecord {
+  visitorId?: string;
   number: string;
   customer: { name: string; email: string; address: string };
   items: OrderItem[];
@@ -237,6 +238,8 @@ export interface AdminTransaction {
   remove(entity: EntityKey, id: string): Promise<void>;
 }
 export interface AdminStore extends Pick<AdminTransaction, "get" | "list"> {
+  readonly generation: number;
+  invalidateOperations(): void;
   transaction<T>(entities: EntityKey[], work: (tx: AdminTransaction) => Promise<T>): Promise<T>;
   reset(): Promise<void>;
   close(): Promise<void>;
@@ -246,9 +249,14 @@ export interface AdminStore extends Pick<AdminTransaction, "get" | "list"> {
   putBlob(key: string, value: Blob): Promise<void>;
   getBlob(key: string): Promise<Blob | undefined>;
   removeBlob(key: string): Promise<void>;
-  importMedia(records: { asset: MediaAsset; blob: Blob }[]): Promise<void>;
+  importMedia(records: { asset: MediaAsset; blob: Blob }[], actor?: string): Promise<void>;
 }
 export interface EntityService<K extends EntityKey> {
+  export(input: ListInput): Promise<AdminModels[K][]>;
+  bulk(
+    action: { type: "delete" } | { type: "update"; values: Partial<CreateInput<K>> },
+    records: { id: string; revision: number }[],
+  ): Promise<{ updated: number; failures: { id: string; message: string }[] }>;
   list(input: ListInput): Promise<ListResult<AdminModels[K]>>;
   get(id: string, signal?: AbortSignal): Promise<AdminModels[K]>;
   create(input: CreateInput<K>): Promise<AdminModels[K]>;

@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Plus, Trash2 } from "lucide-react";
@@ -18,6 +18,7 @@ import {
   useNotice,
 } from "./ui/primitives";
 import { downloadBlob, makeCsv, date } from "./lib/text";
+import { UnsavedDialog } from "./forms/preference-form";
 export interface EntityConfig<K extends EntityKey> {
   entity: K;
   title: string;
@@ -34,6 +35,8 @@ export interface EntityConfig<K extends EntityKey> {
   allowCreate?: boolean;
   readOnly?: boolean;
   duplicate?: boolean;
+  dateField?: "createdAt" | "lastSeenAt" | "startedAt";
+  defaultSort?: { field: string; direction: "asc" | "desc" };
 }
 function readState(): TableState {
   const p = new URLSearchParams(location.search);
@@ -41,8 +44,12 @@ function readState(): TableState {
     page: Math.max(1, Number(p.get("page")) || 1),
     pageSize: [10, 20, 50, 100].includes(Number(p.get("size"))) ? Number(p.get("size")) : 10,
     search: p.get("q") ?? "",
-    filters: {},
-    sort: undefined,
+    filters: Object.fromEntries(
+      [...p].filter(([k]) => k.startsWith("f_")).map(([k, v]) => [k.slice(2), v]),
+    ),
+    sort: p.get("sort")
+      ? { field: p.get("sort")!, direction: p.get("dir") === "desc" ? "desc" : "asc" }
+      : undefined,
   };
 }
 export function EntityManager<K extends EntityKey>({ config }: { config: EntityConfig<K> }) {
@@ -54,13 +61,18 @@ export function EntityManager<K extends EntityKey>({ config }: { config: EntityC
   const resource = config.resource ?? resourceForEntity(config.entity);
   const permitted = (action: "create" | "update" | "delete" | "export") =>
     !config.readOnly && can(runtime.session, resource, action, role.data);
-  const [state, setState] = useState<TableState>(readState);
+  const [state, setState] = useState<TableState>(() => {
+    const value = readState();
+    return { ...value, sort: value.sort ?? config.defaultSort };
+  });
   const [selected, setSelected] = useState<RowSelectionState>({});
   const [editing, setEditing] = useState<AdminModels[K] | "new" | null>(null);
   const [remove, setRemove] = useState<AdminModels[K] | null>(null);
   const [dirty, setDirty] = useState(false);
   const [discard, setDiscard] = useState(false);
   const [bulkDelete, setBulkDelete] = useState(false);
+  const [bulkStatus, setBulkStatus] = useState("");
+  const statusOptions = config.fields.find((f) => f.key === "status")?.options;
   const updateState = useCallback((s: TableState) => {
     setState(s);
     const p = new URLSearchParams(location.search);
@@ -68,14 +80,34 @@ export function EntityManager<K extends EntityKey>({ config }: { config: EntityC
     p.set("size", String(s.pageSize));
     if (s.search) p.set("q", s.search);
     else p.delete("q");
+    for (const key of [...p.keys()]) if (key.startsWith("f_")) p.delete(key);
+    for (const [key, value] of Object.entries(s.filters)) if (value) p.set("f_" + key, value);
+    if (s.sort) {
+      p.set("sort", s.sort.field);
+      p.set("dir", s.sort.direction);
+    } else {
+      p.delete("sort");
+      p.delete("dir");
+    }
     history.replaceState(history.state, "", location.pathname + "?" + p);
   }, []);
   const result = useEntity(
     config.entity,
-    { ...state, filters: { ...state.filters, ...config.fixedFilters } },
+    {
+      ...state,
+      filters: {
+        ...state.filters,
+        ...config.fixedFilters,
+        ...(config.dateField ? { dateField: config.dateField } : {}),
+      },
+    },
     resource,
   );
   const invalidate = () => client.invalidateQueries({ queryKey: ["bibi-admin"] });
+  useEffect(() => {
+    if (result.data && result.data.page !== state.page)
+      updateState({ ...state, page: result.data.page });
+  }, [result.data, state, updateState]);
   const service = runtime.service(config.entity, resource);
   const mutation = useMutation({
     mutationKey: ["bibi-admin", config.entity],
@@ -92,96 +124,95 @@ export function EntityManager<K extends EntityKey>({ config }: { config: EntityC
   });
   const openEdit = (row: AdminModels[K]) =>
     config.editHref ? void navigate({ to: config.editHref(row.id) as "/admin" }) : setEditing(row);
-  const columns = useMemo<ColumnDef<AdminModels[K], unknown>[]>(
-    () => [
-      ...(config.columns ?? [
-        {
-          accessorKey: "name",
-          header: "Tên",
-          cell: ({ row }) => (
-            <strong>
-              {String(
-                (row.original as unknown as FormValues).name ??
-                  (row.original as unknown as FormValues).title ??
-                  row.id,
-              )}
-            </strong>
-          ),
-        },
-        {
-          accessorKey: "createdAt",
-          header: "Ngày tạo",
-          cell: ({ getValue }) => date(String(getValue())),
-        },
-      ]),
+  const columns: ColumnDef<AdminModels[K], unknown>[] = [
+    ...(config.columns ?? [
       {
-        id: "actions",
-        header: "",
-        enableSorting: false,
-        enableHiding: false,
-        size: 55,
+        accessorKey: "name",
+        header: "Tên",
         cell: ({ row }) => (
-          <ActionMenu
-            label={`Thao tác ${row.id}`}
-            items={[
-              ...(config.detailHref
-                ? [
-                    {
-                      label: "Xem chi tiết",
-                      onSelect: () => void navigate({ to: config.detailHref!(row.id) as "/admin" }),
-                    },
-                  ]
-                : []),
-              {
-                label: "Chỉnh sửa",
-                disabled: !permitted("update"),
-                onSelect: () => openEdit(row.original),
-              },
-              ...(config.duplicate
-                ? [
-                    {
-                      label: "Nhân bản",
-                      disabled: !permitted("create"),
-                      onSelect: async () => {
-                        try {
-                          const raw = { ...row.original } as unknown as FormValues;
-                          for (const k of ["id", "createdAt", "updatedAt", "revision"])
-                            delete raw[k];
-                          raw.name = String(raw.name) + " (bản sao)";
-                          for (const k of ["sku", "slug", "isbn"])
-                            if (raw[k]) raw[k] = String(raw[k]) + "-" + Date.now();
-                          await service.create(raw as CreateInput<K>);
-                          notice("Đã nhân bản.");
-                          void invalidate();
-                        } catch (e) {
-                          notice(e instanceof Error ? e.message : "Không thể nhân bản", "error");
-                        }
-                      },
-                    },
-                  ]
-                : []),
-              {
-                label: "Xóa",
-                danger: true,
-                disabled: !permitted("delete"),
-                onSelect: () => setRemove(row.original),
-              },
-            ]}
-          />
+          <strong>
+            {String(
+              (row.original as unknown as FormValues).name ??
+                (row.original as unknown as FormValues).title ??
+                row.id,
+            )}
+          </strong>
         ),
       },
-    ],
-    [config, role.data, runtime.session],
-  );
+      {
+        accessorKey: "createdAt",
+        header: "Ngày tạo",
+        cell: ({ getValue }) => date(String(getValue())),
+      },
+    ]),
+    {
+      id: "actions",
+      header: "Thao tác",
+      enableSorting: false,
+      enableHiding: false,
+      size: 55,
+      cell: ({ row }) => (
+        <ActionMenu
+          label={`Thao tác ${row.id}`}
+          items={[
+            ...(config.detailHref
+              ? [
+                  {
+                    label: "Xem chi tiết",
+                    onSelect: () => void navigate({ to: config.detailHref!(row.id) as "/admin" }),
+                  },
+                ]
+              : []),
+            {
+              label: "Chỉnh sửa",
+              disabled: !permitted("update"),
+              onSelect: () => openEdit(row.original),
+            },
+            ...(config.duplicate
+              ? [
+                  {
+                    label: "Nhân bản",
+                    disabled: !permitted("create"),
+                    onSelect: async () => {
+                      try {
+                        const raw = { ...row.original } as unknown as FormValues;
+                        for (const k of ["id", "createdAt", "updatedAt", "revision"]) delete raw[k];
+                        raw.name = String(raw.name) + " (bản sao)";
+                        for (const k of ["sku", "slug", "isbn"])
+                          if (raw[k]) raw[k] = String(raw[k]) + "-" + Date.now();
+                        await service.create(raw as CreateInput<K>);
+                        notice("Đã nhân bản.");
+                        void invalidate();
+                      } catch (e) {
+                        notice(e instanceof Error ? e.message : "Không thể nhân bản", "error");
+                      }
+                    },
+                  },
+                ]
+              : []),
+            {
+              label: "Xóa",
+              danger: true,
+              disabled: !permitted("delete"),
+              onSelect: () => setRemove(row.original),
+            },
+          ]}
+        />
+      ),
+    },
+  ];
   const exportRows = async () => {
     try {
-      const rows = await service.list({
+      const all = await service.export({
         ...state,
         page: 1,
         pageSize: 200,
-        filters: { ...state.filters, ...config.fixedFilters },
+        filters: {
+          ...state.filters,
+          ...config.fixedFilters,
+          ...(config.dateField ? { dateField: config.dateField } : {}),
+        },
       });
-      const all = rows.items;
       const keys = Object.keys(all[0] ?? {});
       downloadBlob(
         new Blob(
@@ -207,6 +238,7 @@ export function EntityManager<K extends EntityKey>({ config }: { config: EntityC
   };
   return (
     <>
+      <UnsavedDialog dirty={dirty && !!editing} />
       <PageTitle
         title={config.title}
         description={config.description}
@@ -227,6 +259,48 @@ export function EntityManager<K extends EntityKey>({ config }: { config: EntityC
         }
       />
       <div className="a-toolbar">
+        {Object.values(selected).some(Boolean) && permitted("update") && statusOptions && (
+          <select
+            aria-label="Đổi trạng thái các mục đã chọn"
+            value=""
+            onChange={(e) => setBulkStatus(e.target.value)}
+          >
+            <option value="">Đổi trạng thái đã chọn…</option>
+            {statusOptions.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+        )}
+        {config.dateField && (
+          <>
+            <input
+              aria-label="Lọc từ ngày"
+              type="date"
+              value={state.filters.from ?? ""}
+              onChange={(e) =>
+                updateState({
+                  ...state,
+                  page: 1,
+                  filters: { ...state.filters, from: e.target.value },
+                })
+              }
+            />
+            <input
+              aria-label="Lọc đến ngày"
+              type="date"
+              value={state.filters.to ?? ""}
+              onChange={(e) =>
+                updateState({
+                  ...state,
+                  page: 1,
+                  filters: { ...state.filters, to: e.target.value },
+                })
+              }
+            />
+          </>
+        )}
         {config.filters?.map((f) => (
           <select
             key={f.field}
@@ -293,6 +367,33 @@ export function EntityManager<K extends EntityKey>({ config }: { config: EntityC
           )}
         </div>
       </Modal>
+      <ConfirmDialog
+        open={!!bulkStatus}
+        title="Đổi trạng thái các mục đã chọn?"
+        description="Mỗi bản ghi được kiểm tra trước khi lưu. Các lỗi sẽ được báo cụ thể."
+        onCancel={() => setBulkStatus("")}
+        onConfirm={async () => {
+          const records = await Promise.all(
+            Object.keys(selected)
+              .filter((k) => selected[k])
+              .map((id) => service.get(id)),
+          );
+          const result = await service.bulk(
+            {
+              type: "update",
+              values: { status: bulkStatus } as unknown as Partial<CreateInput<K>>,
+            },
+            records,
+          );
+          setSelected({});
+          await invalidate();
+          if (result.failures.length)
+            throw new Error(
+              `Đã cập nhật ${result.updated}; ${result.failures.length} mục lỗi: ${result.failures[0].message}`,
+            );
+          notice(`Đã cập nhật ${result.updated} mục.`);
+        }}
+      />
       <ConfirmDialog
         open={discard}
         title="Bỏ thay đổi chưa lưu?"

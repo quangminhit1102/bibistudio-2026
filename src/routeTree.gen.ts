@@ -14,12 +14,72 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as ApiTestRouteImport } from './routes/api-test'
 import { Route as ContactRouteImport } from './routes/contact'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as AdminAuditLogsRouteImport } from './routes/admin.audit-logs'
+import { Route as AdminDashboardRouteImport } from './routes/admin.dashboard'
+import { Route as AdminLoginRouteImport } from './routes/admin.login'
+import { Route as AdminNotificationsRouteImport } from './routes/admin.notifications'
 import { Route as BlogIndexRouteImport } from './routes/blog.index'
 import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 import { Route as CollectionsIndexRouteImport } from './routes/collections.index'
 import { Route as CollectionsSlugRouteImport } from './routes/collections.$slug'
 import { Route as ProductsIndexRouteImport } from './routes/products.index'
 import { Route as ProductsSlugRouteImport } from './routes/products.$slug'
+import { Route as AdminAccountsIndexRouteImport } from './routes/admin.accounts.index'
+import { Route as AdminAccountsPermissionsRouteImport } from './routes/admin.accounts.permissions'
+import { Route as AdminAccountsRolesRouteImport } from './routes/admin.accounts.roles'
+import { Route as AdminAccountsUsersRouteImport } from './routes/admin.accounts.users'
+import { Route as AdminAnalyticsIndexRouteImport } from './routes/admin.analytics.index'
+import { Route as AdminAnalyticsOverviewRouteImport } from './routes/admin.analytics.overview'
+import { Route as AdminAnalyticsPagesRouteImport } from './routes/admin.analytics.pages'
+import { Route as AdminAnalyticsSessionsRouteImport } from './routes/admin.analytics.sessions'
+import { Route as AdminAnalyticsTrafficSourcesRouteImport } from './routes/admin.analytics.traffic-sources'
+import { Route as AdminAnalyticsVisitorsRouteImport } from './routes/admin.analytics.visitors'
+import { Route as AdminBookstoreIndexRouteImport } from './routes/admin.bookstore.index'
+import { Route as AdminBookstoreAuthorsRouteImport } from './routes/admin.bookstore.authors'
+import { Route as AdminBookstoreBooksRouteImport } from './routes/admin.bookstore.books'
+import { Route as AdminBookstoreGenresRouteImport } from './routes/admin.bookstore.genres'
+import { Route as AdminBookstoreInventoryRouteImport } from './routes/admin.bookstore.inventory'
+import { Route as AdminBookstorePublishersRouteImport } from './routes/admin.bookstore.publishers'
+import { Route as AdminComponentsIndexRouteImport } from './routes/admin.components.index'
+import { Route as AdminComponentsActionsRouteImport } from './routes/admin.components.actions'
+import { Route as AdminComponentsChartsRouteImport } from './routes/admin.components.charts'
+import { Route as AdminComponentsDataDisplayRouteImport } from './routes/admin.components.data-display'
+import { Route as AdminComponentsFeedbackRouteImport } from './routes/admin.components.feedback'
+import { Route as AdminComponentsFormsRouteImport } from './routes/admin.components.forms'
+import { Route as AdminComponentsNavigationRouteImport } from './routes/admin.components.navigation'
+import { Route as AdminComponentsOverlaysRouteImport } from './routes/admin.components.overlays'
+import { Route as AdminComponentsOverviewRouteImport } from './routes/admin.components.overview'
+import { Route as AdminContentIndexRouteImport } from './routes/admin.content.index'
+import { Route as AdminContentCategoriesRouteImport } from './routes/admin.content.categories'
+import { Route as AdminContentMediaRouteImport } from './routes/admin.content.media'
+import { Route as AdminContentPostsRouteImport } from './routes/admin.content.posts'
+import { Route as AdminContentTagsRouteImport } from './routes/admin.content.tags'
+import { Route as AdminProductsIndexRouteImport } from './routes/admin.products.index'
+import { Route as AdminProductsIdRouteImport } from './routes/admin.products.$id'
+import { Route as AdminProductsCategoriesRouteImport } from './routes/admin.products.categories'
+import { Route as AdminProductsCreateRouteImport } from './routes/admin.products.create'
+import { Route as AdminProductsInventoryRouteImport } from './routes/admin.products.inventory'
+import { Route as AdminProductsListRouteImport } from './routes/admin.products.list'
+import { Route as AdminSalesIndexRouteImport } from './routes/admin.sales.index'
+import { Route as AdminSalesOrderHistoryRouteImport } from './routes/admin.sales.order-history'
+import { Route as AdminSalesOrdersRouteImport } from './routes/admin.sales.orders'
+import { Route as AdminSalesReportsRouteImport } from './routes/admin.sales.reports'
+import { Route as AdminSalesTransactionsRouteImport } from './routes/admin.sales.transactions'
+import { Route as AdminSettingsIndexRouteImport } from './routes/admin.settings.index'
+import { Route as AdminSettingsAppearanceRouteImport } from './routes/admin.settings.appearance'
+import { Route as AdminSettingsGeneralRouteImport } from './routes/admin.settings.general'
+import { Route as AdminSettingsProfileRouteImport } from './routes/admin.settings.profile'
+import { Route as AdminSettingsSecurityRouteImport } from './routes/admin.settings.security'
+import { Route as AdminAnalyticsVisitorsIdRouteImport } from './routes/admin.analytics.visitors.$id'
+import { Route as AdminBookstoreBooksIdRouteImport } from './routes/admin.bookstore.books.$id'
+import { Route as AdminBookstoreBooksCreateRouteImport } from './routes/admin.bookstore.books.create'
+import { Route as AdminContentPostsIdRouteImport } from './routes/admin.content.posts.$id'
+import { Route as AdminContentPostsCreateRouteImport } from './routes/admin.content.posts.create'
+import { Route as AdminProductsIdEditRouteImport } from './routes/admin.products.$id.edit'
+import { Route as AdminSalesOrdersIdRouteImport } from './routes/admin.sales.orders.$id'
+import { Route as AdminBookstoreBooksIdEditRouteImport } from './routes/admin.bookstore.books.$id.edit'
+import { Route as AdminContentPostsIdEditRouteImport } from './routes/admin.content.posts.$id.edit'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -45,6 +105,31 @@ const ContactRoute = ContactRouteImport.update({
   id: '/contact',
   path: '/contact',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAuditLogsRoute = AdminAuditLogsRouteImport.update({
+  id: '/audit-logs',
+  path: '/audit-logs',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminDashboardRoute = AdminDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminLoginRoute = AdminLoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminNotificationsRoute = AdminNotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => AdminRoute,
 } as any)
 const BlogIndexRoute = BlogIndexRouteImport.update({
   id: '/blog/',
@@ -76,46 +161,508 @@ const ProductsSlugRoute = ProductsSlugRouteImport.update({
   path: '/products/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminAccountsIndexRoute = AdminAccountsIndexRouteImport.update({
+  id: '/accounts/',
+  path: '/accounts/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAccountsPermissionsRoute =
+  AdminAccountsPermissionsRouteImport.update({
+    id: '/accounts/permissions',
+    path: '/accounts/permissions',
+    getParentRoute: () => AdminRoute,
+  } as any)
+const AdminAccountsRolesRoute = AdminAccountsRolesRouteImport.update({
+  id: '/accounts/roles',
+  path: '/accounts/roles',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAccountsUsersRoute = AdminAccountsUsersRouteImport.update({
+  id: '/accounts/users',
+  path: '/accounts/users',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAnalyticsIndexRoute = AdminAnalyticsIndexRouteImport.update({
+  id: '/analytics/',
+  path: '/analytics/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAnalyticsOverviewRoute = AdminAnalyticsOverviewRouteImport.update({
+  id: '/analytics/overview',
+  path: '/analytics/overview',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAnalyticsPagesRoute = AdminAnalyticsPagesRouteImport.update({
+  id: '/analytics/pages',
+  path: '/analytics/pages',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAnalyticsSessionsRoute = AdminAnalyticsSessionsRouteImport.update({
+  id: '/analytics/sessions',
+  path: '/analytics/sessions',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAnalyticsTrafficSourcesRoute =
+  AdminAnalyticsTrafficSourcesRouteImport.update({
+    id: '/analytics/traffic-sources',
+    path: '/analytics/traffic-sources',
+    getParentRoute: () => AdminRoute,
+  } as any)
+const AdminAnalyticsVisitorsRoute = AdminAnalyticsVisitorsRouteImport.update({
+  id: '/analytics/visitors',
+  path: '/analytics/visitors',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminBookstoreIndexRoute = AdminBookstoreIndexRouteImport.update({
+  id: '/bookstore/',
+  path: '/bookstore/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminBookstoreAuthorsRoute = AdminBookstoreAuthorsRouteImport.update({
+  id: '/bookstore/authors',
+  path: '/bookstore/authors',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminBookstoreBooksRoute = AdminBookstoreBooksRouteImport.update({
+  id: '/bookstore/books',
+  path: '/bookstore/books',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminBookstoreGenresRoute = AdminBookstoreGenresRouteImport.update({
+  id: '/bookstore/genres',
+  path: '/bookstore/genres',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminBookstoreInventoryRoute = AdminBookstoreInventoryRouteImport.update({
+  id: '/bookstore/inventory',
+  path: '/bookstore/inventory',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminBookstorePublishersRoute =
+  AdminBookstorePublishersRouteImport.update({
+    id: '/bookstore/publishers',
+    path: '/bookstore/publishers',
+    getParentRoute: () => AdminRoute,
+  } as any)
+const AdminComponentsIndexRoute = AdminComponentsIndexRouteImport.update({
+  id: '/components/',
+  path: '/components/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminComponentsActionsRoute = AdminComponentsActionsRouteImport.update({
+  id: '/components/actions',
+  path: '/components/actions',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminComponentsChartsRoute = AdminComponentsChartsRouteImport.update({
+  id: '/components/charts',
+  path: '/components/charts',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminComponentsDataDisplayRoute =
+  AdminComponentsDataDisplayRouteImport.update({
+    id: '/components/data-display',
+    path: '/components/data-display',
+    getParentRoute: () => AdminRoute,
+  } as any)
+const AdminComponentsFeedbackRoute = AdminComponentsFeedbackRouteImport.update({
+  id: '/components/feedback',
+  path: '/components/feedback',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminComponentsFormsRoute = AdminComponentsFormsRouteImport.update({
+  id: '/components/forms',
+  path: '/components/forms',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminComponentsNavigationRoute =
+  AdminComponentsNavigationRouteImport.update({
+    id: '/components/navigation',
+    path: '/components/navigation',
+    getParentRoute: () => AdminRoute,
+  } as any)
+const AdminComponentsOverlaysRoute = AdminComponentsOverlaysRouteImport.update({
+  id: '/components/overlays',
+  path: '/components/overlays',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminComponentsOverviewRoute = AdminComponentsOverviewRouteImport.update({
+  id: '/components/overview',
+  path: '/components/overview',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminContentIndexRoute = AdminContentIndexRouteImport.update({
+  id: '/content/',
+  path: '/content/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminContentCategoriesRoute = AdminContentCategoriesRouteImport.update({
+  id: '/content/categories',
+  path: '/content/categories',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminContentMediaRoute = AdminContentMediaRouteImport.update({
+  id: '/content/media',
+  path: '/content/media',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminContentPostsRoute = AdminContentPostsRouteImport.update({
+  id: '/content/posts',
+  path: '/content/posts',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminContentTagsRoute = AdminContentTagsRouteImport.update({
+  id: '/content/tags',
+  path: '/content/tags',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminProductsIndexRoute = AdminProductsIndexRouteImport.update({
+  id: '/products/',
+  path: '/products/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminProductsIdRoute = AdminProductsIdRouteImport.update({
+  id: '/products/$id',
+  path: '/products/$id',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminProductsCategoriesRoute = AdminProductsCategoriesRouteImport.update({
+  id: '/products/categories',
+  path: '/products/categories',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminProductsCreateRoute = AdminProductsCreateRouteImport.update({
+  id: '/products/create',
+  path: '/products/create',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminProductsInventoryRoute = AdminProductsInventoryRouteImport.update({
+  id: '/products/inventory',
+  path: '/products/inventory',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminProductsListRoute = AdminProductsListRouteImport.update({
+  id: '/products/list',
+  path: '/products/list',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSalesIndexRoute = AdminSalesIndexRouteImport.update({
+  id: '/sales/',
+  path: '/sales/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSalesOrderHistoryRoute = AdminSalesOrderHistoryRouteImport.update({
+  id: '/sales/order-history',
+  path: '/sales/order-history',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSalesOrdersRoute = AdminSalesOrdersRouteImport.update({
+  id: '/sales/orders',
+  path: '/sales/orders',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSalesReportsRoute = AdminSalesReportsRouteImport.update({
+  id: '/sales/reports',
+  path: '/sales/reports',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSalesTransactionsRoute = AdminSalesTransactionsRouteImport.update({
+  id: '/sales/transactions',
+  path: '/sales/transactions',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSettingsIndexRoute = AdminSettingsIndexRouteImport.update({
+  id: '/settings/',
+  path: '/settings/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSettingsAppearanceRoute = AdminSettingsAppearanceRouteImport.update({
+  id: '/settings/appearance',
+  path: '/settings/appearance',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSettingsGeneralRoute = AdminSettingsGeneralRouteImport.update({
+  id: '/settings/general',
+  path: '/settings/general',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSettingsProfileRoute = AdminSettingsProfileRouteImport.update({
+  id: '/settings/profile',
+  path: '/settings/profile',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSettingsSecurityRoute = AdminSettingsSecurityRouteImport.update({
+  id: '/settings/security',
+  path: '/settings/security',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAnalyticsVisitorsIdRoute =
+  AdminAnalyticsVisitorsIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => AdminAnalyticsVisitorsRoute,
+  } as any)
+const AdminBookstoreBooksIdRoute = AdminBookstoreBooksIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AdminBookstoreBooksRoute,
+} as any)
+const AdminBookstoreBooksCreateRoute =
+  AdminBookstoreBooksCreateRouteImport.update({
+    id: '/create',
+    path: '/create',
+    getParentRoute: () => AdminBookstoreBooksRoute,
+  } as any)
+const AdminContentPostsIdRoute = AdminContentPostsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AdminContentPostsRoute,
+} as any)
+const AdminContentPostsCreateRoute = AdminContentPostsCreateRouteImport.update({
+  id: '/create',
+  path: '/create',
+  getParentRoute: () => AdminContentPostsRoute,
+} as any)
+const AdminProductsIdEditRoute = AdminProductsIdEditRouteImport.update({
+  id: '/edit',
+  path: '/edit',
+  getParentRoute: () => AdminProductsIdRoute,
+} as any)
+const AdminSalesOrdersIdRoute = AdminSalesOrdersIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AdminSalesOrdersRoute,
+} as any)
+const AdminBookstoreBooksIdEditRoute =
+  AdminBookstoreBooksIdEditRouteImport.update({
+    id: '/edit',
+    path: '/edit',
+    getParentRoute: () => AdminBookstoreBooksIdRoute,
+  } as any)
+const AdminContentPostsIdEditRoute = AdminContentPostsIdEditRouteImport.update({
+  id: '/edit',
+  path: '/edit',
+  getParentRoute: () => AdminContentPostsIdRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/admin': typeof AdminRoute
+  '/admin': typeof AdminRouteWithChildren
   '/api-test': typeof ApiTestRoute
   '/contact': typeof ContactRoute
+  '/admin/audit-logs': typeof AdminAuditLogsRoute
+  '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/login': typeof AdminLoginRoute
+  '/admin/notifications': typeof AdminNotificationsRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/collections/$slug': typeof CollectionsSlugRoute
   '/products/$slug': typeof ProductsSlugRoute
+  '/admin/': typeof AdminIndexRoute
   '/blog/': typeof BlogIndexRoute
   '/collections/': typeof CollectionsIndexRoute
   '/products/': typeof ProductsIndexRoute
+  '/admin/accounts/permissions': typeof AdminAccountsPermissionsRoute
+  '/admin/accounts/roles': typeof AdminAccountsRolesRoute
+  '/admin/accounts/users': typeof AdminAccountsUsersRoute
+  '/admin/analytics/overview': typeof AdminAnalyticsOverviewRoute
+  '/admin/analytics/pages': typeof AdminAnalyticsPagesRoute
+  '/admin/analytics/sessions': typeof AdminAnalyticsSessionsRoute
+  '/admin/analytics/traffic-sources': typeof AdminAnalyticsTrafficSourcesRoute
+  '/admin/analytics/visitors': typeof AdminAnalyticsVisitorsRouteWithChildren
+  '/admin/bookstore/authors': typeof AdminBookstoreAuthorsRoute
+  '/admin/bookstore/books': typeof AdminBookstoreBooksRouteWithChildren
+  '/admin/bookstore/genres': typeof AdminBookstoreGenresRoute
+  '/admin/bookstore/inventory': typeof AdminBookstoreInventoryRoute
+  '/admin/bookstore/publishers': typeof AdminBookstorePublishersRoute
+  '/admin/components/actions': typeof AdminComponentsActionsRoute
+  '/admin/components/charts': typeof AdminComponentsChartsRoute
+  '/admin/components/data-display': typeof AdminComponentsDataDisplayRoute
+  '/admin/components/feedback': typeof AdminComponentsFeedbackRoute
+  '/admin/components/forms': typeof AdminComponentsFormsRoute
+  '/admin/components/navigation': typeof AdminComponentsNavigationRoute
+  '/admin/components/overlays': typeof AdminComponentsOverlaysRoute
+  '/admin/components/overview': typeof AdminComponentsOverviewRoute
+  '/admin/content/categories': typeof AdminContentCategoriesRoute
+  '/admin/content/media': typeof AdminContentMediaRoute
+  '/admin/content/posts': typeof AdminContentPostsRouteWithChildren
+  '/admin/content/tags': typeof AdminContentTagsRoute
+  '/admin/products/$id': typeof AdminProductsIdRouteWithChildren
+  '/admin/products/categories': typeof AdminProductsCategoriesRoute
+  '/admin/products/create': typeof AdminProductsCreateRoute
+  '/admin/products/inventory': typeof AdminProductsInventoryRoute
+  '/admin/products/list': typeof AdminProductsListRoute
+  '/admin/sales/order-history': typeof AdminSalesOrderHistoryRoute
+  '/admin/sales/orders': typeof AdminSalesOrdersRouteWithChildren
+  '/admin/sales/reports': typeof AdminSalesReportsRoute
+  '/admin/sales/transactions': typeof AdminSalesTransactionsRoute
+  '/admin/settings/appearance': typeof AdminSettingsAppearanceRoute
+  '/admin/settings/general': typeof AdminSettingsGeneralRoute
+  '/admin/settings/profile': typeof AdminSettingsProfileRoute
+  '/admin/settings/security': typeof AdminSettingsSecurityRoute
+  '/admin/accounts/': typeof AdminAccountsIndexRoute
+  '/admin/analytics/': typeof AdminAnalyticsIndexRoute
+  '/admin/bookstore/': typeof AdminBookstoreIndexRoute
+  '/admin/components/': typeof AdminComponentsIndexRoute
+  '/admin/content/': typeof AdminContentIndexRoute
+  '/admin/products/': typeof AdminProductsIndexRoute
+  '/admin/sales/': typeof AdminSalesIndexRoute
+  '/admin/settings/': typeof AdminSettingsIndexRoute
+  '/admin/analytics/visitors/$id': typeof AdminAnalyticsVisitorsIdRoute
+  '/admin/bookstore/books/$id': typeof AdminBookstoreBooksIdRouteWithChildren
+  '/admin/bookstore/books/create': typeof AdminBookstoreBooksCreateRoute
+  '/admin/content/posts/$id': typeof AdminContentPostsIdRouteWithChildren
+  '/admin/content/posts/create': typeof AdminContentPostsCreateRoute
+  '/admin/products/$id/edit': typeof AdminProductsIdEditRoute
+  '/admin/sales/orders/$id': typeof AdminSalesOrdersIdRoute
+  '/admin/bookstore/books/$id/edit': typeof AdminBookstoreBooksIdEditRoute
+  '/admin/content/posts/$id/edit': typeof AdminContentPostsIdEditRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/admin': typeof AdminRoute
   '/api-test': typeof ApiTestRoute
   '/contact': typeof ContactRoute
+  '/admin/audit-logs': typeof AdminAuditLogsRoute
+  '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/login': typeof AdminLoginRoute
+  '/admin/notifications': typeof AdminNotificationsRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/collections/$slug': typeof CollectionsSlugRoute
   '/products/$slug': typeof ProductsSlugRoute
+  '/admin': typeof AdminIndexRoute
   '/blog': typeof BlogIndexRoute
   '/collections': typeof CollectionsIndexRoute
   '/products': typeof ProductsIndexRoute
+  '/admin/accounts/permissions': typeof AdminAccountsPermissionsRoute
+  '/admin/accounts/roles': typeof AdminAccountsRolesRoute
+  '/admin/accounts/users': typeof AdminAccountsUsersRoute
+  '/admin/analytics/overview': typeof AdminAnalyticsOverviewRoute
+  '/admin/analytics/pages': typeof AdminAnalyticsPagesRoute
+  '/admin/analytics/sessions': typeof AdminAnalyticsSessionsRoute
+  '/admin/analytics/traffic-sources': typeof AdminAnalyticsTrafficSourcesRoute
+  '/admin/analytics/visitors': typeof AdminAnalyticsVisitorsRouteWithChildren
+  '/admin/bookstore/authors': typeof AdminBookstoreAuthorsRoute
+  '/admin/bookstore/books': typeof AdminBookstoreBooksRouteWithChildren
+  '/admin/bookstore/genres': typeof AdminBookstoreGenresRoute
+  '/admin/bookstore/inventory': typeof AdminBookstoreInventoryRoute
+  '/admin/bookstore/publishers': typeof AdminBookstorePublishersRoute
+  '/admin/components/actions': typeof AdminComponentsActionsRoute
+  '/admin/components/charts': typeof AdminComponentsChartsRoute
+  '/admin/components/data-display': typeof AdminComponentsDataDisplayRoute
+  '/admin/components/feedback': typeof AdminComponentsFeedbackRoute
+  '/admin/components/forms': typeof AdminComponentsFormsRoute
+  '/admin/components/navigation': typeof AdminComponentsNavigationRoute
+  '/admin/components/overlays': typeof AdminComponentsOverlaysRoute
+  '/admin/components/overview': typeof AdminComponentsOverviewRoute
+  '/admin/content/categories': typeof AdminContentCategoriesRoute
+  '/admin/content/media': typeof AdminContentMediaRoute
+  '/admin/content/posts': typeof AdminContentPostsRouteWithChildren
+  '/admin/content/tags': typeof AdminContentTagsRoute
+  '/admin/products/$id': typeof AdminProductsIdRouteWithChildren
+  '/admin/products/categories': typeof AdminProductsCategoriesRoute
+  '/admin/products/create': typeof AdminProductsCreateRoute
+  '/admin/products/inventory': typeof AdminProductsInventoryRoute
+  '/admin/products/list': typeof AdminProductsListRoute
+  '/admin/sales/order-history': typeof AdminSalesOrderHistoryRoute
+  '/admin/sales/orders': typeof AdminSalesOrdersRouteWithChildren
+  '/admin/sales/reports': typeof AdminSalesReportsRoute
+  '/admin/sales/transactions': typeof AdminSalesTransactionsRoute
+  '/admin/settings/appearance': typeof AdminSettingsAppearanceRoute
+  '/admin/settings/general': typeof AdminSettingsGeneralRoute
+  '/admin/settings/profile': typeof AdminSettingsProfileRoute
+  '/admin/settings/security': typeof AdminSettingsSecurityRoute
+  '/admin/accounts': typeof AdminAccountsIndexRoute
+  '/admin/analytics': typeof AdminAnalyticsIndexRoute
+  '/admin/bookstore': typeof AdminBookstoreIndexRoute
+  '/admin/components': typeof AdminComponentsIndexRoute
+  '/admin/content': typeof AdminContentIndexRoute
+  '/admin/products': typeof AdminProductsIndexRoute
+  '/admin/sales': typeof AdminSalesIndexRoute
+  '/admin/settings': typeof AdminSettingsIndexRoute
+  '/admin/analytics/visitors/$id': typeof AdminAnalyticsVisitorsIdRoute
+  '/admin/bookstore/books/$id': typeof AdminBookstoreBooksIdRouteWithChildren
+  '/admin/bookstore/books/create': typeof AdminBookstoreBooksCreateRoute
+  '/admin/content/posts/$id': typeof AdminContentPostsIdRouteWithChildren
+  '/admin/content/posts/create': typeof AdminContentPostsCreateRoute
+  '/admin/products/$id/edit': typeof AdminProductsIdEditRoute
+  '/admin/sales/orders/$id': typeof AdminSalesOrdersIdRoute
+  '/admin/bookstore/books/$id/edit': typeof AdminBookstoreBooksIdEditRoute
+  '/admin/content/posts/$id/edit': typeof AdminContentPostsIdEditRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/admin': typeof AdminRoute
+  '/admin': typeof AdminRouteWithChildren
   '/api-test': typeof ApiTestRoute
   '/contact': typeof ContactRoute
+  '/admin/audit-logs': typeof AdminAuditLogsRoute
+  '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/login': typeof AdminLoginRoute
+  '/admin/notifications': typeof AdminNotificationsRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/collections/$slug': typeof CollectionsSlugRoute
   '/products/$slug': typeof ProductsSlugRoute
+  '/admin/': typeof AdminIndexRoute
   '/blog/': typeof BlogIndexRoute
   '/collections/': typeof CollectionsIndexRoute
   '/products/': typeof ProductsIndexRoute
+  '/admin/accounts/permissions': typeof AdminAccountsPermissionsRoute
+  '/admin/accounts/roles': typeof AdminAccountsRolesRoute
+  '/admin/accounts/users': typeof AdminAccountsUsersRoute
+  '/admin/analytics/overview': typeof AdminAnalyticsOverviewRoute
+  '/admin/analytics/pages': typeof AdminAnalyticsPagesRoute
+  '/admin/analytics/sessions': typeof AdminAnalyticsSessionsRoute
+  '/admin/analytics/traffic-sources': typeof AdminAnalyticsTrafficSourcesRoute
+  '/admin/analytics/visitors': typeof AdminAnalyticsVisitorsRouteWithChildren
+  '/admin/bookstore/authors': typeof AdminBookstoreAuthorsRoute
+  '/admin/bookstore/books': typeof AdminBookstoreBooksRouteWithChildren
+  '/admin/bookstore/genres': typeof AdminBookstoreGenresRoute
+  '/admin/bookstore/inventory': typeof AdminBookstoreInventoryRoute
+  '/admin/bookstore/publishers': typeof AdminBookstorePublishersRoute
+  '/admin/components/actions': typeof AdminComponentsActionsRoute
+  '/admin/components/charts': typeof AdminComponentsChartsRoute
+  '/admin/components/data-display': typeof AdminComponentsDataDisplayRoute
+  '/admin/components/feedback': typeof AdminComponentsFeedbackRoute
+  '/admin/components/forms': typeof AdminComponentsFormsRoute
+  '/admin/components/navigation': typeof AdminComponentsNavigationRoute
+  '/admin/components/overlays': typeof AdminComponentsOverlaysRoute
+  '/admin/components/overview': typeof AdminComponentsOverviewRoute
+  '/admin/content/categories': typeof AdminContentCategoriesRoute
+  '/admin/content/media': typeof AdminContentMediaRoute
+  '/admin/content/posts': typeof AdminContentPostsRouteWithChildren
+  '/admin/content/tags': typeof AdminContentTagsRoute
+  '/admin/products/$id': typeof AdminProductsIdRouteWithChildren
+  '/admin/products/categories': typeof AdminProductsCategoriesRoute
+  '/admin/products/create': typeof AdminProductsCreateRoute
+  '/admin/products/inventory': typeof AdminProductsInventoryRoute
+  '/admin/products/list': typeof AdminProductsListRoute
+  '/admin/sales/order-history': typeof AdminSalesOrderHistoryRoute
+  '/admin/sales/orders': typeof AdminSalesOrdersRouteWithChildren
+  '/admin/sales/reports': typeof AdminSalesReportsRoute
+  '/admin/sales/transactions': typeof AdminSalesTransactionsRoute
+  '/admin/settings/appearance': typeof AdminSettingsAppearanceRoute
+  '/admin/settings/general': typeof AdminSettingsGeneralRoute
+  '/admin/settings/profile': typeof AdminSettingsProfileRoute
+  '/admin/settings/security': typeof AdminSettingsSecurityRoute
+  '/admin/accounts/': typeof AdminAccountsIndexRoute
+  '/admin/analytics/': typeof AdminAnalyticsIndexRoute
+  '/admin/bookstore/': typeof AdminBookstoreIndexRoute
+  '/admin/components/': typeof AdminComponentsIndexRoute
+  '/admin/content/': typeof AdminContentIndexRoute
+  '/admin/products/': typeof AdminProductsIndexRoute
+  '/admin/sales/': typeof AdminSalesIndexRoute
+  '/admin/settings/': typeof AdminSettingsIndexRoute
+  '/admin/analytics/visitors/$id': typeof AdminAnalyticsVisitorsIdRoute
+  '/admin/bookstore/books/$id': typeof AdminBookstoreBooksIdRouteWithChildren
+  '/admin/bookstore/books/create': typeof AdminBookstoreBooksCreateRoute
+  '/admin/content/posts/$id': typeof AdminContentPostsIdRouteWithChildren
+  '/admin/content/posts/create': typeof AdminContentPostsCreateRoute
+  '/admin/products/$id/edit': typeof AdminProductsIdEditRoute
+  '/admin/sales/orders/$id': typeof AdminSalesOrdersIdRoute
+  '/admin/bookstore/books/$id/edit': typeof AdminBookstoreBooksIdEditRoute
+  '/admin/content/posts/$id/edit': typeof AdminContentPostsIdEditRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -125,25 +672,144 @@ export interface FileRouteTypes {
     | '/admin'
     | '/api-test'
     | '/contact'
+    | '/admin/audit-logs'
+    | '/admin/dashboard'
+    | '/admin/login'
+    | '/admin/notifications'
     | '/blog/$slug'
     | '/collections/$slug'
     | '/products/$slug'
+    | '/admin/'
     | '/blog/'
     | '/collections/'
     | '/products/'
+    | '/admin/accounts/permissions'
+    | '/admin/accounts/roles'
+    | '/admin/accounts/users'
+    | '/admin/analytics/overview'
+    | '/admin/analytics/pages'
+    | '/admin/analytics/sessions'
+    | '/admin/analytics/traffic-sources'
+    | '/admin/analytics/visitors'
+    | '/admin/bookstore/authors'
+    | '/admin/bookstore/books'
+    | '/admin/bookstore/genres'
+    | '/admin/bookstore/inventory'
+    | '/admin/bookstore/publishers'
+    | '/admin/components/actions'
+    | '/admin/components/charts'
+    | '/admin/components/data-display'
+    | '/admin/components/feedback'
+    | '/admin/components/forms'
+    | '/admin/components/navigation'
+    | '/admin/components/overlays'
+    | '/admin/components/overview'
+    | '/admin/content/categories'
+    | '/admin/content/media'
+    | '/admin/content/posts'
+    | '/admin/content/tags'
+    | '/admin/products/$id'
+    | '/admin/products/categories'
+    | '/admin/products/create'
+    | '/admin/products/inventory'
+    | '/admin/products/list'
+    | '/admin/sales/order-history'
+    | '/admin/sales/orders'
+    | '/admin/sales/reports'
+    | '/admin/sales/transactions'
+    | '/admin/settings/appearance'
+    | '/admin/settings/general'
+    | '/admin/settings/profile'
+    | '/admin/settings/security'
+    | '/admin/accounts/'
+    | '/admin/analytics/'
+    | '/admin/bookstore/'
+    | '/admin/components/'
+    | '/admin/content/'
+    | '/admin/products/'
+    | '/admin/sales/'
+    | '/admin/settings/'
+    | '/admin/analytics/visitors/$id'
+    | '/admin/bookstore/books/$id'
+    | '/admin/bookstore/books/create'
+    | '/admin/content/posts/$id'
+    | '/admin/content/posts/create'
+    | '/admin/products/$id/edit'
+    | '/admin/sales/orders/$id'
+    | '/admin/bookstore/books/$id/edit'
+    | '/admin/content/posts/$id/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/about'
-    | '/admin'
     | '/api-test'
     | '/contact'
+    | '/admin/audit-logs'
+    | '/admin/dashboard'
+    | '/admin/login'
+    | '/admin/notifications'
     | '/blog/$slug'
     | '/collections/$slug'
     | '/products/$slug'
+    | '/admin'
     | '/blog'
     | '/collections'
     | '/products'
+    | '/admin/accounts/permissions'
+    | '/admin/accounts/roles'
+    | '/admin/accounts/users'
+    | '/admin/analytics/overview'
+    | '/admin/analytics/pages'
+    | '/admin/analytics/sessions'
+    | '/admin/analytics/traffic-sources'
+    | '/admin/analytics/visitors'
+    | '/admin/bookstore/authors'
+    | '/admin/bookstore/books'
+    | '/admin/bookstore/genres'
+    | '/admin/bookstore/inventory'
+    | '/admin/bookstore/publishers'
+    | '/admin/components/actions'
+    | '/admin/components/charts'
+    | '/admin/components/data-display'
+    | '/admin/components/feedback'
+    | '/admin/components/forms'
+    | '/admin/components/navigation'
+    | '/admin/components/overlays'
+    | '/admin/components/overview'
+    | '/admin/content/categories'
+    | '/admin/content/media'
+    | '/admin/content/posts'
+    | '/admin/content/tags'
+    | '/admin/products/$id'
+    | '/admin/products/categories'
+    | '/admin/products/create'
+    | '/admin/products/inventory'
+    | '/admin/products/list'
+    | '/admin/sales/order-history'
+    | '/admin/sales/orders'
+    | '/admin/sales/reports'
+    | '/admin/sales/transactions'
+    | '/admin/settings/appearance'
+    | '/admin/settings/general'
+    | '/admin/settings/profile'
+    | '/admin/settings/security'
+    | '/admin/accounts'
+    | '/admin/analytics'
+    | '/admin/bookstore'
+    | '/admin/components'
+    | '/admin/content'
+    | '/admin/products'
+    | '/admin/sales'
+    | '/admin/settings'
+    | '/admin/analytics/visitors/$id'
+    | '/admin/bookstore/books/$id'
+    | '/admin/bookstore/books/create'
+    | '/admin/content/posts/$id'
+    | '/admin/content/posts/create'
+    | '/admin/products/$id/edit'
+    | '/admin/sales/orders/$id'
+    | '/admin/bookstore/books/$id/edit'
+    | '/admin/content/posts/$id/edit'
   id:
     | '__root__'
     | '/'
@@ -151,18 +817,78 @@ export interface FileRouteTypes {
     | '/admin'
     | '/api-test'
     | '/contact'
+    | '/admin/audit-logs'
+    | '/admin/dashboard'
+    | '/admin/login'
+    | '/admin/notifications'
     | '/blog/$slug'
     | '/collections/$slug'
     | '/products/$slug'
+    | '/admin/'
     | '/blog/'
     | '/collections/'
     | '/products/'
+    | '/admin/accounts/permissions'
+    | '/admin/accounts/roles'
+    | '/admin/accounts/users'
+    | '/admin/analytics/overview'
+    | '/admin/analytics/pages'
+    | '/admin/analytics/sessions'
+    | '/admin/analytics/traffic-sources'
+    | '/admin/analytics/visitors'
+    | '/admin/bookstore/authors'
+    | '/admin/bookstore/books'
+    | '/admin/bookstore/genres'
+    | '/admin/bookstore/inventory'
+    | '/admin/bookstore/publishers'
+    | '/admin/components/actions'
+    | '/admin/components/charts'
+    | '/admin/components/data-display'
+    | '/admin/components/feedback'
+    | '/admin/components/forms'
+    | '/admin/components/navigation'
+    | '/admin/components/overlays'
+    | '/admin/components/overview'
+    | '/admin/content/categories'
+    | '/admin/content/media'
+    | '/admin/content/posts'
+    | '/admin/content/tags'
+    | '/admin/products/$id'
+    | '/admin/products/categories'
+    | '/admin/products/create'
+    | '/admin/products/inventory'
+    | '/admin/products/list'
+    | '/admin/sales/order-history'
+    | '/admin/sales/orders'
+    | '/admin/sales/reports'
+    | '/admin/sales/transactions'
+    | '/admin/settings/appearance'
+    | '/admin/settings/general'
+    | '/admin/settings/profile'
+    | '/admin/settings/security'
+    | '/admin/accounts/'
+    | '/admin/analytics/'
+    | '/admin/bookstore/'
+    | '/admin/components/'
+    | '/admin/content/'
+    | '/admin/products/'
+    | '/admin/sales/'
+    | '/admin/settings/'
+    | '/admin/analytics/visitors/$id'
+    | '/admin/bookstore/books/$id'
+    | '/admin/bookstore/books/create'
+    | '/admin/content/posts/$id'
+    | '/admin/content/posts/create'
+    | '/admin/products/$id/edit'
+    | '/admin/sales/orders/$id'
+    | '/admin/bookstore/books/$id/edit'
+    | '/admin/content/posts/$id/edit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
-  AdminRoute: typeof AdminRoute
+  AdminRoute: typeof AdminRouteWithChildren
   ApiTestRoute: typeof ApiTestRoute
   ContactRoute: typeof ContactRoute
   BlogSlugRoute: typeof BlogSlugRoute
@@ -210,6 +936,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ContactRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/audit-logs': {
+      id: '/admin/audit-logs'
+      path: '/audit-logs'
+      fullPath: '/admin/audit-logs'
+      preLoaderRoute: typeof AdminAuditLogsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/dashboard': {
+      id: '/admin/dashboard'
+      path: '/dashboard'
+      fullPath: '/admin/dashboard'
+      preLoaderRoute: typeof AdminDashboardRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/login': {
+      id: '/admin/login'
+      path: '/login'
+      fullPath: '/admin/login'
+      preLoaderRoute: typeof AdminLoginRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/notifications': {
+      id: '/admin/notifications'
+      path: '/notifications'
+      fullPath: '/admin/notifications'
+      preLoaderRoute: typeof AdminNotificationsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/blog/': {
       id: '/blog/'
       path: '/blog'
@@ -252,13 +1013,595 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProductsSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/accounts/': {
+      id: '/admin/accounts/'
+      path: '/accounts'
+      fullPath: '/admin/accounts/'
+      preLoaderRoute: typeof AdminAccountsIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/accounts/permissions': {
+      id: '/admin/accounts/permissions'
+      path: '/accounts/permissions'
+      fullPath: '/admin/accounts/permissions'
+      preLoaderRoute: typeof AdminAccountsPermissionsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/accounts/roles': {
+      id: '/admin/accounts/roles'
+      path: '/accounts/roles'
+      fullPath: '/admin/accounts/roles'
+      preLoaderRoute: typeof AdminAccountsRolesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/accounts/users': {
+      id: '/admin/accounts/users'
+      path: '/accounts/users'
+      fullPath: '/admin/accounts/users'
+      preLoaderRoute: typeof AdminAccountsUsersRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/analytics/': {
+      id: '/admin/analytics/'
+      path: '/analytics'
+      fullPath: '/admin/analytics/'
+      preLoaderRoute: typeof AdminAnalyticsIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/analytics/overview': {
+      id: '/admin/analytics/overview'
+      path: '/analytics/overview'
+      fullPath: '/admin/analytics/overview'
+      preLoaderRoute: typeof AdminAnalyticsOverviewRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/analytics/pages': {
+      id: '/admin/analytics/pages'
+      path: '/analytics/pages'
+      fullPath: '/admin/analytics/pages'
+      preLoaderRoute: typeof AdminAnalyticsPagesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/analytics/sessions': {
+      id: '/admin/analytics/sessions'
+      path: '/analytics/sessions'
+      fullPath: '/admin/analytics/sessions'
+      preLoaderRoute: typeof AdminAnalyticsSessionsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/analytics/traffic-sources': {
+      id: '/admin/analytics/traffic-sources'
+      path: '/analytics/traffic-sources'
+      fullPath: '/admin/analytics/traffic-sources'
+      preLoaderRoute: typeof AdminAnalyticsTrafficSourcesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/analytics/visitors': {
+      id: '/admin/analytics/visitors'
+      path: '/analytics/visitors'
+      fullPath: '/admin/analytics/visitors'
+      preLoaderRoute: typeof AdminAnalyticsVisitorsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/bookstore/': {
+      id: '/admin/bookstore/'
+      path: '/bookstore'
+      fullPath: '/admin/bookstore/'
+      preLoaderRoute: typeof AdminBookstoreIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/bookstore/authors': {
+      id: '/admin/bookstore/authors'
+      path: '/bookstore/authors'
+      fullPath: '/admin/bookstore/authors'
+      preLoaderRoute: typeof AdminBookstoreAuthorsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/bookstore/books': {
+      id: '/admin/bookstore/books'
+      path: '/bookstore/books'
+      fullPath: '/admin/bookstore/books'
+      preLoaderRoute: typeof AdminBookstoreBooksRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/bookstore/genres': {
+      id: '/admin/bookstore/genres'
+      path: '/bookstore/genres'
+      fullPath: '/admin/bookstore/genres'
+      preLoaderRoute: typeof AdminBookstoreGenresRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/bookstore/inventory': {
+      id: '/admin/bookstore/inventory'
+      path: '/bookstore/inventory'
+      fullPath: '/admin/bookstore/inventory'
+      preLoaderRoute: typeof AdminBookstoreInventoryRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/bookstore/publishers': {
+      id: '/admin/bookstore/publishers'
+      path: '/bookstore/publishers'
+      fullPath: '/admin/bookstore/publishers'
+      preLoaderRoute: typeof AdminBookstorePublishersRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/components/': {
+      id: '/admin/components/'
+      path: '/components'
+      fullPath: '/admin/components/'
+      preLoaderRoute: typeof AdminComponentsIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/components/actions': {
+      id: '/admin/components/actions'
+      path: '/components/actions'
+      fullPath: '/admin/components/actions'
+      preLoaderRoute: typeof AdminComponentsActionsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/components/charts': {
+      id: '/admin/components/charts'
+      path: '/components/charts'
+      fullPath: '/admin/components/charts'
+      preLoaderRoute: typeof AdminComponentsChartsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/components/data-display': {
+      id: '/admin/components/data-display'
+      path: '/components/data-display'
+      fullPath: '/admin/components/data-display'
+      preLoaderRoute: typeof AdminComponentsDataDisplayRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/components/feedback': {
+      id: '/admin/components/feedback'
+      path: '/components/feedback'
+      fullPath: '/admin/components/feedback'
+      preLoaderRoute: typeof AdminComponentsFeedbackRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/components/forms': {
+      id: '/admin/components/forms'
+      path: '/components/forms'
+      fullPath: '/admin/components/forms'
+      preLoaderRoute: typeof AdminComponentsFormsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/components/navigation': {
+      id: '/admin/components/navigation'
+      path: '/components/navigation'
+      fullPath: '/admin/components/navigation'
+      preLoaderRoute: typeof AdminComponentsNavigationRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/components/overlays': {
+      id: '/admin/components/overlays'
+      path: '/components/overlays'
+      fullPath: '/admin/components/overlays'
+      preLoaderRoute: typeof AdminComponentsOverlaysRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/components/overview': {
+      id: '/admin/components/overview'
+      path: '/components/overview'
+      fullPath: '/admin/components/overview'
+      preLoaderRoute: typeof AdminComponentsOverviewRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/content/': {
+      id: '/admin/content/'
+      path: '/content'
+      fullPath: '/admin/content/'
+      preLoaderRoute: typeof AdminContentIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/content/categories': {
+      id: '/admin/content/categories'
+      path: '/content/categories'
+      fullPath: '/admin/content/categories'
+      preLoaderRoute: typeof AdminContentCategoriesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/content/media': {
+      id: '/admin/content/media'
+      path: '/content/media'
+      fullPath: '/admin/content/media'
+      preLoaderRoute: typeof AdminContentMediaRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/content/posts': {
+      id: '/admin/content/posts'
+      path: '/content/posts'
+      fullPath: '/admin/content/posts'
+      preLoaderRoute: typeof AdminContentPostsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/content/tags': {
+      id: '/admin/content/tags'
+      path: '/content/tags'
+      fullPath: '/admin/content/tags'
+      preLoaderRoute: typeof AdminContentTagsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/products/': {
+      id: '/admin/products/'
+      path: '/products'
+      fullPath: '/admin/products/'
+      preLoaderRoute: typeof AdminProductsIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/products/$id': {
+      id: '/admin/products/$id'
+      path: '/products/$id'
+      fullPath: '/admin/products/$id'
+      preLoaderRoute: typeof AdminProductsIdRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/products/categories': {
+      id: '/admin/products/categories'
+      path: '/products/categories'
+      fullPath: '/admin/products/categories'
+      preLoaderRoute: typeof AdminProductsCategoriesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/products/create': {
+      id: '/admin/products/create'
+      path: '/products/create'
+      fullPath: '/admin/products/create'
+      preLoaderRoute: typeof AdminProductsCreateRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/products/inventory': {
+      id: '/admin/products/inventory'
+      path: '/products/inventory'
+      fullPath: '/admin/products/inventory'
+      preLoaderRoute: typeof AdminProductsInventoryRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/products/list': {
+      id: '/admin/products/list'
+      path: '/products/list'
+      fullPath: '/admin/products/list'
+      preLoaderRoute: typeof AdminProductsListRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/sales/': {
+      id: '/admin/sales/'
+      path: '/sales'
+      fullPath: '/admin/sales/'
+      preLoaderRoute: typeof AdminSalesIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/sales/order-history': {
+      id: '/admin/sales/order-history'
+      path: '/sales/order-history'
+      fullPath: '/admin/sales/order-history'
+      preLoaderRoute: typeof AdminSalesOrderHistoryRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/sales/orders': {
+      id: '/admin/sales/orders'
+      path: '/sales/orders'
+      fullPath: '/admin/sales/orders'
+      preLoaderRoute: typeof AdminSalesOrdersRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/sales/reports': {
+      id: '/admin/sales/reports'
+      path: '/sales/reports'
+      fullPath: '/admin/sales/reports'
+      preLoaderRoute: typeof AdminSalesReportsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/sales/transactions': {
+      id: '/admin/sales/transactions'
+      path: '/sales/transactions'
+      fullPath: '/admin/sales/transactions'
+      preLoaderRoute: typeof AdminSalesTransactionsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/settings/': {
+      id: '/admin/settings/'
+      path: '/settings'
+      fullPath: '/admin/settings/'
+      preLoaderRoute: typeof AdminSettingsIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/settings/appearance': {
+      id: '/admin/settings/appearance'
+      path: '/settings/appearance'
+      fullPath: '/admin/settings/appearance'
+      preLoaderRoute: typeof AdminSettingsAppearanceRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/settings/general': {
+      id: '/admin/settings/general'
+      path: '/settings/general'
+      fullPath: '/admin/settings/general'
+      preLoaderRoute: typeof AdminSettingsGeneralRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/settings/profile': {
+      id: '/admin/settings/profile'
+      path: '/settings/profile'
+      fullPath: '/admin/settings/profile'
+      preLoaderRoute: typeof AdminSettingsProfileRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/settings/security': {
+      id: '/admin/settings/security'
+      path: '/settings/security'
+      fullPath: '/admin/settings/security'
+      preLoaderRoute: typeof AdminSettingsSecurityRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/analytics/visitors/$id': {
+      id: '/admin/analytics/visitors/$id'
+      path: '/$id'
+      fullPath: '/admin/analytics/visitors/$id'
+      preLoaderRoute: typeof AdminAnalyticsVisitorsIdRouteImport
+      parentRoute: typeof AdminAnalyticsVisitorsRoute
+    }
+    '/admin/bookstore/books/$id': {
+      id: '/admin/bookstore/books/$id'
+      path: '/$id'
+      fullPath: '/admin/bookstore/books/$id'
+      preLoaderRoute: typeof AdminBookstoreBooksIdRouteImport
+      parentRoute: typeof AdminBookstoreBooksRoute
+    }
+    '/admin/bookstore/books/create': {
+      id: '/admin/bookstore/books/create'
+      path: '/create'
+      fullPath: '/admin/bookstore/books/create'
+      preLoaderRoute: typeof AdminBookstoreBooksCreateRouteImport
+      parentRoute: typeof AdminBookstoreBooksRoute
+    }
+    '/admin/content/posts/$id': {
+      id: '/admin/content/posts/$id'
+      path: '/$id'
+      fullPath: '/admin/content/posts/$id'
+      preLoaderRoute: typeof AdminContentPostsIdRouteImport
+      parentRoute: typeof AdminContentPostsRoute
+    }
+    '/admin/content/posts/create': {
+      id: '/admin/content/posts/create'
+      path: '/create'
+      fullPath: '/admin/content/posts/create'
+      preLoaderRoute: typeof AdminContentPostsCreateRouteImport
+      parentRoute: typeof AdminContentPostsRoute
+    }
+    '/admin/products/$id/edit': {
+      id: '/admin/products/$id/edit'
+      path: '/edit'
+      fullPath: '/admin/products/$id/edit'
+      preLoaderRoute: typeof AdminProductsIdEditRouteImport
+      parentRoute: typeof AdminProductsIdRoute
+    }
+    '/admin/sales/orders/$id': {
+      id: '/admin/sales/orders/$id'
+      path: '/$id'
+      fullPath: '/admin/sales/orders/$id'
+      preLoaderRoute: typeof AdminSalesOrdersIdRouteImport
+      parentRoute: typeof AdminSalesOrdersRoute
+    }
+    '/admin/bookstore/books/$id/edit': {
+      id: '/admin/bookstore/books/$id/edit'
+      path: '/edit'
+      fullPath: '/admin/bookstore/books/$id/edit'
+      preLoaderRoute: typeof AdminBookstoreBooksIdEditRouteImport
+      parentRoute: typeof AdminBookstoreBooksIdRoute
+    }
+    '/admin/content/posts/$id/edit': {
+      id: '/admin/content/posts/$id/edit'
+      path: '/edit'
+      fullPath: '/admin/content/posts/$id/edit'
+      preLoaderRoute: typeof AdminContentPostsIdEditRouteImport
+      parentRoute: typeof AdminContentPostsIdRoute
+    }
   }
 }
+
+interface AdminAnalyticsVisitorsRouteChildren {
+  AdminAnalyticsVisitorsIdRoute: typeof AdminAnalyticsVisitorsIdRoute
+}
+
+const AdminAnalyticsVisitorsRouteChildren: AdminAnalyticsVisitorsRouteChildren =
+  {
+    AdminAnalyticsVisitorsIdRoute: AdminAnalyticsVisitorsIdRoute,
+  }
+
+const AdminAnalyticsVisitorsRouteWithChildren =
+  AdminAnalyticsVisitorsRoute._addFileChildren(
+    AdminAnalyticsVisitorsRouteChildren,
+  )
+
+interface AdminBookstoreBooksIdRouteChildren {
+  AdminBookstoreBooksIdEditRoute: typeof AdminBookstoreBooksIdEditRoute
+}
+
+const AdminBookstoreBooksIdRouteChildren: AdminBookstoreBooksIdRouteChildren = {
+  AdminBookstoreBooksIdEditRoute: AdminBookstoreBooksIdEditRoute,
+}
+
+const AdminBookstoreBooksIdRouteWithChildren =
+  AdminBookstoreBooksIdRoute._addFileChildren(
+    AdminBookstoreBooksIdRouteChildren,
+  )
+
+interface AdminBookstoreBooksRouteChildren {
+  AdminBookstoreBooksIdRoute: typeof AdminBookstoreBooksIdRouteWithChildren
+  AdminBookstoreBooksCreateRoute: typeof AdminBookstoreBooksCreateRoute
+}
+
+const AdminBookstoreBooksRouteChildren: AdminBookstoreBooksRouteChildren = {
+  AdminBookstoreBooksIdRoute: AdminBookstoreBooksIdRouteWithChildren,
+  AdminBookstoreBooksCreateRoute: AdminBookstoreBooksCreateRoute,
+}
+
+const AdminBookstoreBooksRouteWithChildren =
+  AdminBookstoreBooksRoute._addFileChildren(AdminBookstoreBooksRouteChildren)
+
+interface AdminContentPostsIdRouteChildren {
+  AdminContentPostsIdEditRoute: typeof AdminContentPostsIdEditRoute
+}
+
+const AdminContentPostsIdRouteChildren: AdminContentPostsIdRouteChildren = {
+  AdminContentPostsIdEditRoute: AdminContentPostsIdEditRoute,
+}
+
+const AdminContentPostsIdRouteWithChildren =
+  AdminContentPostsIdRoute._addFileChildren(AdminContentPostsIdRouteChildren)
+
+interface AdminContentPostsRouteChildren {
+  AdminContentPostsIdRoute: typeof AdminContentPostsIdRouteWithChildren
+  AdminContentPostsCreateRoute: typeof AdminContentPostsCreateRoute
+}
+
+const AdminContentPostsRouteChildren: AdminContentPostsRouteChildren = {
+  AdminContentPostsIdRoute: AdminContentPostsIdRouteWithChildren,
+  AdminContentPostsCreateRoute: AdminContentPostsCreateRoute,
+}
+
+const AdminContentPostsRouteWithChildren =
+  AdminContentPostsRoute._addFileChildren(AdminContentPostsRouteChildren)
+
+interface AdminProductsIdRouteChildren {
+  AdminProductsIdEditRoute: typeof AdminProductsIdEditRoute
+}
+
+const AdminProductsIdRouteChildren: AdminProductsIdRouteChildren = {
+  AdminProductsIdEditRoute: AdminProductsIdEditRoute,
+}
+
+const AdminProductsIdRouteWithChildren = AdminProductsIdRoute._addFileChildren(
+  AdminProductsIdRouteChildren,
+)
+
+interface AdminSalesOrdersRouteChildren {
+  AdminSalesOrdersIdRoute: typeof AdminSalesOrdersIdRoute
+}
+
+const AdminSalesOrdersRouteChildren: AdminSalesOrdersRouteChildren = {
+  AdminSalesOrdersIdRoute: AdminSalesOrdersIdRoute,
+}
+
+const AdminSalesOrdersRouteWithChildren =
+  AdminSalesOrdersRoute._addFileChildren(AdminSalesOrdersRouteChildren)
+
+interface AdminRouteChildren {
+  AdminAuditLogsRoute: typeof AdminAuditLogsRoute
+  AdminDashboardRoute: typeof AdminDashboardRoute
+  AdminLoginRoute: typeof AdminLoginRoute
+  AdminNotificationsRoute: typeof AdminNotificationsRoute
+  AdminIndexRoute: typeof AdminIndexRoute
+  AdminAccountsPermissionsRoute: typeof AdminAccountsPermissionsRoute
+  AdminAccountsRolesRoute: typeof AdminAccountsRolesRoute
+  AdminAccountsUsersRoute: typeof AdminAccountsUsersRoute
+  AdminAnalyticsOverviewRoute: typeof AdminAnalyticsOverviewRoute
+  AdminAnalyticsPagesRoute: typeof AdminAnalyticsPagesRoute
+  AdminAnalyticsSessionsRoute: typeof AdminAnalyticsSessionsRoute
+  AdminAnalyticsTrafficSourcesRoute: typeof AdminAnalyticsTrafficSourcesRoute
+  AdminAnalyticsVisitorsRoute: typeof AdminAnalyticsVisitorsRouteWithChildren
+  AdminBookstoreAuthorsRoute: typeof AdminBookstoreAuthorsRoute
+  AdminBookstoreBooksRoute: typeof AdminBookstoreBooksRouteWithChildren
+  AdminBookstoreGenresRoute: typeof AdminBookstoreGenresRoute
+  AdminBookstoreInventoryRoute: typeof AdminBookstoreInventoryRoute
+  AdminBookstorePublishersRoute: typeof AdminBookstorePublishersRoute
+  AdminComponentsActionsRoute: typeof AdminComponentsActionsRoute
+  AdminComponentsChartsRoute: typeof AdminComponentsChartsRoute
+  AdminComponentsDataDisplayRoute: typeof AdminComponentsDataDisplayRoute
+  AdminComponentsFeedbackRoute: typeof AdminComponentsFeedbackRoute
+  AdminComponentsFormsRoute: typeof AdminComponentsFormsRoute
+  AdminComponentsNavigationRoute: typeof AdminComponentsNavigationRoute
+  AdminComponentsOverlaysRoute: typeof AdminComponentsOverlaysRoute
+  AdminComponentsOverviewRoute: typeof AdminComponentsOverviewRoute
+  AdminContentCategoriesRoute: typeof AdminContentCategoriesRoute
+  AdminContentMediaRoute: typeof AdminContentMediaRoute
+  AdminContentPostsRoute: typeof AdminContentPostsRouteWithChildren
+  AdminContentTagsRoute: typeof AdminContentTagsRoute
+  AdminProductsIdRoute: typeof AdminProductsIdRouteWithChildren
+  AdminProductsCategoriesRoute: typeof AdminProductsCategoriesRoute
+  AdminProductsCreateRoute: typeof AdminProductsCreateRoute
+  AdminProductsInventoryRoute: typeof AdminProductsInventoryRoute
+  AdminProductsListRoute: typeof AdminProductsListRoute
+  AdminSalesOrderHistoryRoute: typeof AdminSalesOrderHistoryRoute
+  AdminSalesOrdersRoute: typeof AdminSalesOrdersRouteWithChildren
+  AdminSalesReportsRoute: typeof AdminSalesReportsRoute
+  AdminSalesTransactionsRoute: typeof AdminSalesTransactionsRoute
+  AdminSettingsAppearanceRoute: typeof AdminSettingsAppearanceRoute
+  AdminSettingsGeneralRoute: typeof AdminSettingsGeneralRoute
+  AdminSettingsProfileRoute: typeof AdminSettingsProfileRoute
+  AdminSettingsSecurityRoute: typeof AdminSettingsSecurityRoute
+  AdminAccountsIndexRoute: typeof AdminAccountsIndexRoute
+  AdminAnalyticsIndexRoute: typeof AdminAnalyticsIndexRoute
+  AdminBookstoreIndexRoute: typeof AdminBookstoreIndexRoute
+  AdminComponentsIndexRoute: typeof AdminComponentsIndexRoute
+  AdminContentIndexRoute: typeof AdminContentIndexRoute
+  AdminProductsIndexRoute: typeof AdminProductsIndexRoute
+  AdminSalesIndexRoute: typeof AdminSalesIndexRoute
+  AdminSettingsIndexRoute: typeof AdminSettingsIndexRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminAuditLogsRoute: AdminAuditLogsRoute,
+  AdminDashboardRoute: AdminDashboardRoute,
+  AdminLoginRoute: AdminLoginRoute,
+  AdminNotificationsRoute: AdminNotificationsRoute,
+  AdminIndexRoute: AdminIndexRoute,
+  AdminAccountsPermissionsRoute: AdminAccountsPermissionsRoute,
+  AdminAccountsRolesRoute: AdminAccountsRolesRoute,
+  AdminAccountsUsersRoute: AdminAccountsUsersRoute,
+  AdminAnalyticsOverviewRoute: AdminAnalyticsOverviewRoute,
+  AdminAnalyticsPagesRoute: AdminAnalyticsPagesRoute,
+  AdminAnalyticsSessionsRoute: AdminAnalyticsSessionsRoute,
+  AdminAnalyticsTrafficSourcesRoute: AdminAnalyticsTrafficSourcesRoute,
+  AdminAnalyticsVisitorsRoute: AdminAnalyticsVisitorsRouteWithChildren,
+  AdminBookstoreAuthorsRoute: AdminBookstoreAuthorsRoute,
+  AdminBookstoreBooksRoute: AdminBookstoreBooksRouteWithChildren,
+  AdminBookstoreGenresRoute: AdminBookstoreGenresRoute,
+  AdminBookstoreInventoryRoute: AdminBookstoreInventoryRoute,
+  AdminBookstorePublishersRoute: AdminBookstorePublishersRoute,
+  AdminComponentsActionsRoute: AdminComponentsActionsRoute,
+  AdminComponentsChartsRoute: AdminComponentsChartsRoute,
+  AdminComponentsDataDisplayRoute: AdminComponentsDataDisplayRoute,
+  AdminComponentsFeedbackRoute: AdminComponentsFeedbackRoute,
+  AdminComponentsFormsRoute: AdminComponentsFormsRoute,
+  AdminComponentsNavigationRoute: AdminComponentsNavigationRoute,
+  AdminComponentsOverlaysRoute: AdminComponentsOverlaysRoute,
+  AdminComponentsOverviewRoute: AdminComponentsOverviewRoute,
+  AdminContentCategoriesRoute: AdminContentCategoriesRoute,
+  AdminContentMediaRoute: AdminContentMediaRoute,
+  AdminContentPostsRoute: AdminContentPostsRouteWithChildren,
+  AdminContentTagsRoute: AdminContentTagsRoute,
+  AdminProductsIdRoute: AdminProductsIdRouteWithChildren,
+  AdminProductsCategoriesRoute: AdminProductsCategoriesRoute,
+  AdminProductsCreateRoute: AdminProductsCreateRoute,
+  AdminProductsInventoryRoute: AdminProductsInventoryRoute,
+  AdminProductsListRoute: AdminProductsListRoute,
+  AdminSalesOrderHistoryRoute: AdminSalesOrderHistoryRoute,
+  AdminSalesOrdersRoute: AdminSalesOrdersRouteWithChildren,
+  AdminSalesReportsRoute: AdminSalesReportsRoute,
+  AdminSalesTransactionsRoute: AdminSalesTransactionsRoute,
+  AdminSettingsAppearanceRoute: AdminSettingsAppearanceRoute,
+  AdminSettingsGeneralRoute: AdminSettingsGeneralRoute,
+  AdminSettingsProfileRoute: AdminSettingsProfileRoute,
+  AdminSettingsSecurityRoute: AdminSettingsSecurityRoute,
+  AdminAccountsIndexRoute: AdminAccountsIndexRoute,
+  AdminAnalyticsIndexRoute: AdminAnalyticsIndexRoute,
+  AdminBookstoreIndexRoute: AdminBookstoreIndexRoute,
+  AdminComponentsIndexRoute: AdminComponentsIndexRoute,
+  AdminContentIndexRoute: AdminContentIndexRoute,
+  AdminProductsIndexRoute: AdminProductsIndexRoute,
+  AdminSalesIndexRoute: AdminSalesIndexRoute,
+  AdminSettingsIndexRoute: AdminSettingsIndexRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
-  AdminRoute: AdminRoute,
+  AdminRoute: AdminRouteWithChildren,
   ApiTestRoute: ApiTestRoute,
   ContactRoute: ContactRoute,
   BlogSlugRoute: BlogSlugRoute,

@@ -56,6 +56,13 @@ export default function RichEditor({
       extensions: [StarterKit.configure({ link: { openOnClick: false } }), image],
       content: safeDocument(value),
       editable: !readOnly,
+      editorProps: {
+        attributes: {
+          role: "textbox",
+          "aria-label": "Nội dung bài viết",
+          "aria-multiline": "true",
+        },
+      },
       immediatelyRender: false,
       onUpdate: ({ editor }) =>
         onChange(JSON.stringify(safeDocument(JSON.stringify(editor.getJSON())))),

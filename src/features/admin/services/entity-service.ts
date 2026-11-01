@@ -19,9 +19,14 @@ export function createEntityService<K extends EntityKey>(
   session: () => DemoSession | null,
   resource: Resource = resourceForEntity(entity),
 ): EntityService<K> {
+  const generation = store.generation;
   const authorize = async (action: Action) => {
+    if (store.generation !== generation)
+      throw new ServiceError("aborted", "Phiên thao tác đã thay đổi. Tải lại trước khi tiếp tục.");
     const s = session();
     requirePermission(s, resource, action, s ? await store.get("roles", s.roleId) : undefined);
+    if (store.generation !== generation)
+      throw new ServiceError("aborted", "Đã hủy thao tác của phiên cũ.");
   };
   const audit = async (
     tx: Parameters<Parameters<AdminStore["transaction"]>[1]>[0],
@@ -43,14 +48,62 @@ export function createEntityService<K extends EntityKey>(
       after: JSON.stringify(after ?? null),
     });
   };
-  return {
+  const service: EntityService<K> = {
+    async export(input) {
+      await authorize("export");
+      const rows: AdminModels[K][] = [];
+      let page = 1;
+      while (true) {
+        const result = await service.list({ ...input, page, pageSize: 200 });
+        rows.push(...result.items);
+        if (rows.length >= result.total) break;
+        page++;
+      }
+      return rows;
+    },
+    async bulk(action, records) {
+      await authorize(action.type === "delete" ? "delete" : "update");
+      let updated = 0;
+      const failures: { id: string; message: string }[] = [];
+      for (const record of records) {
+        try {
+          if (action.type === "delete") await service.remove(record.id, record.revision);
+          else await service.update(record.id, action.values, record.revision);
+          updated++;
+        } catch (e) {
+          failures.push({
+            id: record.id,
+            message: e instanceof Error ? e.message : "Không thể lưu bản ghi.",
+          });
+        }
+      }
+      return { updated, failures };
+    },
     async list(input) {
       await authorize("view");
       assertNotAborted(input.signal);
       let rows = await store.list(entity);
       const search = normalizeSearch(input.search ?? "");
       if (search) rows = rows.filter((r) => normalizeSearch(JSON.stringify(r)).includes(search));
-      for (const [key, value] of Object.entries(input.filters ?? {}))
+      const filters = input.filters ?? {};
+      const dateField = ["createdAt", "lastSeenAt", "startedAt"].includes(filters.dateField)
+        ? filters.dateField
+        : "createdAt";
+      if (filters.from)
+        rows = rows.filter(
+          (r) =>
+            Date.parse(String((r as unknown as Record<string, unknown>)[dateField])) >=
+            Date.parse(filters.from + "T00:00:00+07:00"),
+        );
+      if (filters.to)
+        rows = rows.filter(
+          (r) =>
+            Date.parse(String((r as unknown as Record<string, unknown>)[dateField])) <
+            Date.parse(filters.to + "T00:00:00+07:00") + 86400000,
+        );
+      for (const [key, value] of Object.entries(filters).filter(
+        ([k]) => !["from", "to", "dateField"].includes(k),
+      ))
         if (value && value !== "all")
           rows = rows.filter(
             (r) => String((r as unknown as Record<string, unknown>)[key]) === value,
@@ -83,6 +136,12 @@ export function createEntityService<K extends EntityKey>(
     },
     async create(input) {
       await authorize("create");
+      if (
+        entity === "users" &&
+        (input as CreateInput<"users">).roleId === "super-admin" &&
+        session()?.roleId !== "super-admin"
+      )
+        throw new ServiceError("forbidden", "Chỉ Super Admin được cấp vai trò này.");
       if (["audit", "orders", "payments", "stock", "visitors", "sessions"].includes(entity))
         throw new ServiceError("validation", "Dùng quy trình chuyên biệt cho dữ liệu này.");
       return store.transaction(entityKeys, async (tx) => {
@@ -107,6 +166,17 @@ export function createEntityService<K extends EntityKey>(
       return store.transaction(entityKeys, async (tx) => {
         const before = await tx.get(entity, id);
         if (!before) throw new ServiceError("not-found", "Không tìm thấy dữ liệu.");
+        if (
+          session()?.roleId !== "super-admin" &&
+          ((entity === "users" &&
+            ((before as AdminModels["users"]).roleId === "super-admin" ||
+              (input as Partial<CreateInput<"users">>).roleId === "super-admin")) ||
+            (entity === "roles" && id === "super-admin"))
+        )
+          throw new ServiceError(
+            "forbidden",
+            "Chỉ Super Admin được chỉnh sửa quyền quản trị cao nhất.",
+          );
         if (before.revision !== revision)
           throw new ServiceError("conflict", "Dữ liệu đã thay đổi. Tải lại trước khi lưu.");
         const row = {
@@ -137,4 +207,5 @@ export function createEntityService<K extends EntityKey>(
       });
     },
   };
+  return service;
 }

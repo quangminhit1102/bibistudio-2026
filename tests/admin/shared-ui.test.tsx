@@ -28,4 +28,5 @@ it("dialog has a name, closes by Escape and restores focus", async () => {
   expect(screen.getByRole("dialog", { name: "Biểu mẫu" })).toBeInTheDocument();
   await u.keyboard("{Escape}");
   expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  expect(screen.getByRole('button',{name:'Mở'})).toHaveFocus();
 });

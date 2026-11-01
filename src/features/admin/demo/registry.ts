@@ -46,6 +46,9 @@ const pending = new WeakMap<AdminStore, Map<Group, Promise<void>>>();
 export function clearSeedCache(store: AdminStore) {
   pending.delete(store);
 }
+export async function drainSeedJobs(store: AdminStore) {
+  await Promise.allSettled([...(pending.get(store)?.values() ?? [])]);
+}
 export async function ensureDataset(store: AdminStore, entity: EntityKey) {
   const group = groupForEntity[entity];
   let jobs = pending.get(store);
@@ -70,9 +73,8 @@ export async function ensureDataset(store: AdminStore, entity: EntityKey) {
   jobs.set(group, job);
   try {
     await job;
-  } catch (e) {
+  } finally {
     jobs.delete(group);
-    throw e;
   }
   async function ensureGroup(g: Group) {
     const key = Object.entries(groupForEntity).find(([, value]) => value === g)?.[0] as EntityKey;

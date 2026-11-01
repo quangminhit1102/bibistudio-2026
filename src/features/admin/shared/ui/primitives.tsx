@@ -3,6 +3,7 @@ import {
   forwardRef,
   useContext,
   useState,
+  useRef,
   type ButtonHTMLAttributes,
   type ReactNode,
 } from "react";
@@ -71,15 +72,22 @@ export function Field({
   description,
   children,
   required,
+  group = false,
 }: {
   label: string;
   error?: string;
   description?: string;
   children: ReactNode;
   required?: boolean;
+  group?: boolean;
 }) {
+  const Container = group ? "div" : "label";
   return (
-    <label className="a-field">
+    <Container
+      className="a-field"
+      role={group ? "group" : undefined}
+      aria-label={group ? label : undefined}
+    >
       <span>
         {label}
         {required && <span aria-hidden> *</span>}
@@ -91,7 +99,7 @@ export function Field({
           {error}
         </small>
       )}
-    </label>
+    </Container>
   );
 }
 export function Modal({
@@ -101,6 +109,7 @@ export function Modal({
   description,
   children,
   wide = false,
+  placement = "center",
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -108,15 +117,29 @@ export function Modal({
   description?: string;
   children: ReactNode;
   wide?: boolean;
+  placement?: "center" | "right" | "left";
 }) {
+  const opener = useRef<HTMLElement | null>(null);
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
         <div
-          className={`admin-root a-portal ${document.querySelector(".admin-root.dark") ? "dark" : ""}`}
+          className={`admin-root a-portal ${typeof document !== "undefined" && document.querySelector(".admin-root.dark") ? "dark" : ""}`}
         >
           <Dialog.Overlay className="a-overlay" />
-          <Dialog.Content className={`a-modal ${wide ? "a-modal-wide" : ""}`}>
+          <Dialog.Content
+            onOpenAutoFocus={() => {
+              opener.current =
+                document.activeElement instanceof HTMLElement ? document.activeElement : null;
+            }}
+            onCloseAutoFocus={(event) => {
+              if (opener.current?.isConnected) {
+                event.preventDefault();
+                opener.current.focus();
+              }
+            }}
+            className={`a-modal ${wide ? "a-modal-wide" : ""} ${placement !== "center" ? "a-modal-" + placement : ""}`}
+          >
             <header>
               <div>
                 <Dialog.Title>{title}</Dialog.Title>
@@ -209,7 +232,10 @@ export function ActionMenu({
         </Button>
       </DropdownMenu.Trigger>
       <DropdownMenu.Portal>
-        <DropdownMenu.Content className="admin-root a-menu" sideOffset={5}>
+        <DropdownMenu.Content
+          className={`admin-root a-menu ${typeof document !== "undefined" && document.querySelector(".admin-root.dark") ? "dark" : ""}`}
+          sideOffset={5}
+        >
           {items.map((item) => (
             <DropdownMenu.Item
               key={item.label}
@@ -231,7 +257,10 @@ export function Tooltip({ label, children }: { label: string; children: ReactNod
       <RadixTooltip.Root>
         <RadixTooltip.Trigger asChild>{children}</RadixTooltip.Trigger>
         <RadixTooltip.Portal>
-          <RadixTooltip.Content className="admin-root a-tooltip" sideOffset={5}>
+          <RadixTooltip.Content
+            className={`admin-root a-tooltip ${typeof document !== "undefined" && document.querySelector(".admin-root.dark") ? "dark" : ""}`}
+            sideOffset={5}
+          >
             {label}
           </RadixTooltip.Content>
         </RadixTooltip.Portal>

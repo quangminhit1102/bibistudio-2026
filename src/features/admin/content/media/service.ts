@@ -3,6 +3,7 @@ import { requirePermission } from "../../accounts/permissions";
 import { ServiceError } from "../../services/errors";
 import { validateImageFile } from "./limits";
 export function createMediaService(store: AdminStore, session: () => DemoSession | null) {
+  const generation = store.generation;
   return {
     async import(files: File[]) {
       const s = session();
@@ -38,10 +39,17 @@ export function createMediaService(store: AdminStore, session: () => DemoSession
         });
         image.close();
       }
-      await store.importMedia(prepared);
+      if (store.generation !== generation)
+        throw new ServiceError(
+          "aborted",
+          "Thao tác nhập ảnh đã bị hủy do phiên/reset dữ liệu thay đổi.",
+        );
+      await store.importMedia(prepared, s!.userId);
       return prepared.map((p) => p.asset);
     },
     async openBlob(id: string) {
+      const s = session();
+      requirePermission(s, "content", "view", s ? await store.get("roles", s.roleId) : undefined);
       const asset = await store.get("media", id);
       if (!asset) throw new ServiceError("not-found", "Không tìm thấy ảnh.");
       const blob = await store.getBlob(asset.blobKey);

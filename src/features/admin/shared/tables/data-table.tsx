@@ -189,15 +189,31 @@ export function DataTable<T extends { id: string }>({
                     </th>
                   )}
                   {hg.headers.map((h) => (
-                    <th key={h.id} style={{ width: h.getSize() }}>
-                      <button
-                        onClick={
-                          h.column.getCanSort() ? h.column.getToggleSortingHandler() : undefined
-                        }
-                      >
-                        {flexRender(h.column.columnDef.header, h.getContext())}
-                        {h.column.getCanSort() && <ArrowDownUp size={11} aria-hidden />}
-                      </button>
+                    <th
+                      key={h.id}
+                      style={{ width: h.getSize() }}
+                      aria-sort={
+                        h.column.getCanSort()
+                          ? h.column.getIsSorted() === "asc"
+                            ? "ascending"
+                            : h.column.getIsSorted() === "desc"
+                              ? "descending"
+                              : "none"
+                          : undefined
+                      }
+                    >
+                      {h.column.getCanSort() ? (
+                        <button
+                          onClick={
+                            h.column.getCanSort() ? h.column.getToggleSortingHandler() : undefined
+                          }
+                        >
+                          {flexRender(h.column.columnDef.header, h.getContext())}
+                          {h.column.getCanSort() && <ArrowDownUp size={11} aria-hidden />}
+                        </button>
+                      ) : (
+                        <span>{flexRender(h.column.columnDef.header, h.getContext())}</span>
+                      )}
                       {h.column.getCanResize() && (
                         <div
                           className="a-resizer"

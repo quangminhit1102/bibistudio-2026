@@ -10,6 +10,8 @@ Trạng thái website hiện tại phải đọc từ [API version](https://bibi
 
 ## 1. Ba lệnh local
 
+Admin demo local nằm tại `/admin`, dùng cùng lệnh dev/check/build. Xem [hướng dẫn admin](admin.md) và [biên bản kiểm chứng](admin-acceptance.md). Dữ liệu/ảnh admin lưu trong trình duyệt, chưa nối Express/MySQL và chưa làm thay đổi catalogue public.
+
 Dùng **Node 24**; cài dependencies lần đầu hoặc sau đổi lockfile bằng `npm ci`. Hook cài cả backend và deploy tools theo lockfile riêng. Không cần secret hosting, MySQL hoặc Docker để chạy API demo.
 
 | Việc | Lệnh | Kết quả cần thấy |

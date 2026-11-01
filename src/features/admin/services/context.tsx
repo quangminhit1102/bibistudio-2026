@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { createAdminStore } from "../demo/store";
-import { ensureDataset, clearSeedCache } from "../demo/registry";
+import { ensureDataset, clearSeedCache, drainSeedJobs } from "../demo/registry";
 import { createEntityService } from "./entity-service";
 import type {
   AdminStore,
@@ -46,11 +46,12 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     [store, session],
   );
   const logout = useCallback(async () => {
+    store.invalidateOperations();
     await query.cancelQueries({ queryKey: ["bibi-admin"] });
     query.removeQueries({ queryKey: ["bibi-admin"] });
     localStorage.removeItem("bibi-admin:session");
     setSession(null);
-  }, [query]);
+  }, [query, store]);
   const login = async (id: string) => {
     await ensure("users");
     const user = await store.get("users", id);
@@ -69,6 +70,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     if (query.isMutating({ mutationKey: ["bibi-admin"] }))
       throw new ServiceError("conflict", "Đợi thao tác đang lưu hoàn tất trước khi reset.");
     await query.cancelQueries({ queryKey: ["bibi-admin"] });
+    await drainSeedJobs(store);
     await store.reset();
     clearSeedCache(store);
     query.removeQueries({ queryKey: ["bibi-admin"] });

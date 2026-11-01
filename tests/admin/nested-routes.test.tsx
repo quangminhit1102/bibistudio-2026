@@ -1,0 +1,5 @@
+import {it,expect} from 'vitest';
+import {render,screen} from '@testing-library/react';
+import {createRootRoute,createRoute,createRouter,createMemoryHistory,RouterProvider,Outlet} from '@tanstack/react-router';
+import {RouteLeaf} from '../../src/lib/route-leaf';
+it('nested admin create/edit/detail routes replace list content instead of being swallowed',async()=>{const root=createRootRoute({component:Outlet});const parent=createRoute({getParentRoute:()=>root,path:'products',component:()=> <RouteLeaf routeId={parent.id} page={()=> <h1>Product list</h1>}/>});const child=createRoute({getParentRoute:()=>parent,path:'create',component:()=> <h1>Create product</h1>});const router=createRouter({routeTree:root.addChildren([parent.addChildren([child])]),history:createMemoryHistory({initialEntries:['/products/create']})});render(<RouterProvider router={router}/>);expect(await screen.findByRole('heading',{name:'Create product'})).toBeInTheDocument();expect(screen.queryByRole('heading',{name:'Product list'})).not.toBeInTheDocument();await router.navigate({to:'/products'});expect(await screen.findByRole('heading',{name:'Product list'})).toBeInTheDocument();});

@@ -7,9 +7,11 @@ import { Button, Modal, Skeleton, ErrorState, useNotice } from "../../shared/ui/
 export default function MediaPicker({
   value,
   onChange,
+  max = 10,
 }: {
   value: string[];
   onChange: (ids: string[]) => void;
+  max?: number;
 }) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -21,8 +23,10 @@ export default function MediaPicker({
   const upload = async (files: File[]) => {
     setBusy(true);
     try {
+      if (value.length + files.length > max)
+        throw new Error(`Tối đa ${max} ảnh. Xóa ảnh đang chọn trước khi thêm ảnh mới.`);
       const added = await createMediaService(runtime.store, () => runtime.session).import(files);
-      if (value.length + added.length > 10)
+      if (value.length + added.length > max)
         throw new Error("Tối đa10 ảnh cho một sản phẩm. Ảnh đã nhập nằm trong thư viện.");
       onChange([...value, ...added.map((a) => a.id)]);
       await query.invalidateQueries({ queryKey: ["bibi-admin", "media"] });
@@ -83,7 +87,7 @@ export default function MediaPicker({
                   key={asset.id}
                   onClick={() => {
                     if (value.includes(asset.id)) onChange(value.filter((v) => v !== asset.id));
-                    else if (value.length < 10) onChange([...value, asset.id]);
+                    else if (value.length < max) onChange([...value, asset.id]);
                   }}
                 >
                   <MediaImage id={asset.id} alt={asset.name} />

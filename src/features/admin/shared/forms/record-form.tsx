@@ -150,6 +150,7 @@ export function RecordForm({
           return (
             <div key={field.key} className={field.full ? "a-full" : ""}>
               <Field
+                group={field.type === "rich-text" || field.type === "media"}
                 label={field.label}
                 required={field.required}
                 description={field.description}
@@ -182,6 +183,7 @@ export function RecordForm({
                     render={({ field: f }) => (
                       <Suspense fallback={<Skeleton rows={1} />}>
                         <MediaPicker
+                          max={Array.isArray(initial[field.key]) ? 10 : 1}
                           value={
                             Array.isArray(f.value)
                               ? f.value
@@ -227,6 +229,25 @@ export function RecordForm({
                   </select>
                 ) : field.type === "checkbox" ? (
                   <input type="checkbox" {...register(field.key)} />
+                ) : field.type === "date" ? (
+                  <Controller
+                    name={field.key}
+                    control={control}
+                    rules={rule}
+                    render={({ field: f }) => (
+                      <input
+                        type="date"
+                        value={typeof f.value === "string" ? f.value.slice(0, 10) : ""}
+                        onChange={(e) =>
+                          f.onChange(
+                            e.target.value
+                              ? new Date(e.target.value + "T00:00:00+07:00").toISOString()
+                              : null,
+                          )
+                        }
+                      />
+                    )}
+                  />
                 ) : (
                   <input
                     type={field.type}

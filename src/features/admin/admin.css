@@ -1298,6 +1298,101 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+.admin-root .a-modal-left,
+.admin-root .a-modal-right {
+  top: 0;
+  bottom: 0;
+  transform: none;
+  height: 100svh;
+  max-height: 100svh;
+  width: min(420px, 92vw);
+  border-radius: 0;
+  overflow: auto;
+}
+.admin-root .a-modal-left {
+  left: 0;
+  right: auto;
+}
+.admin-root .a-modal-right {
+  right: 0;
+  left: auto;
+}
+.admin-root .a-example {
+  min-width: 0;
+}
+.admin-root .a-example > h2 {
+  margin: 0 0 8px;
+  font-size: 16px;
+}
+.admin-root .a-example > p {
+  font-size: 12px;
+  color: var(--a-muted);
+  line-height: 1.6;
+}
+.admin-root .a-example-preview {
+  flex-wrap: wrap;
+  align-items: flex-start;
+  padding: 18px 0;
+  min-height: 90px;
+}
+.admin-root .a-example-preview > small {
+  flex-basis: 100%;
+  color: var(--a-muted);
+}
+.admin-root .a-example pre {
+  max-width: 100%;
+  overflow: auto;
+  font-size: 11px;
+  background: var(--a-bg);
+  padding: 14px;
+  border-radius: 6px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.admin-root .a-popover {
+  background: var(--a-surface);
+  border: 1px solid var(--a-border);
+  border-radius: 8px;
+  padding: 14px;
+  box-shadow: 0 10px 35px #0002;
+  z-index: 120;
+  max-width: min(380px, 90vw);
+  color: var(--a-text);
+}
+.admin-root [data-highlighted] {
+  background: var(--a-bg);
+  outline: 2px solid var(--a-accent);
+}
+.admin-root [aria-current="page"].a-btn,
+.admin-root [aria-pressed="true"].a-btn,
+.admin-root [data-state="active"].a-btn {
+  background: var(--a-accent);
+  color: var(--a-on);
+}
+.admin-root progress {
+  accent-color: var(--a-accent);
+  width: min(260px, 100%);
+  height: 12px;
+}
+.admin-root .a-example-sidebar {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  border-right: 1px solid var(--a-border);
+  padding: 12px;
+  gap: 6px;
+}
+.admin-root [role="tree"] button {
+  display: block;
+  margin: 5px 0;
+  padding: 7px 12px;
+}
+.admin-root [role="tree"] [role="group"] {
+  padding-left: 20px;
+}
+.admin-root .a-main > .a-card + .a-card {
+  margin-top: 18px;
+}
 @media print {
   .a-sidebar,
   .a-topbar,

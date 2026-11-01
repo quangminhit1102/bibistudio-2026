@@ -1,4 +1,6 @@
 import { useEffect, useState, lazy, Suspense } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { getProfile } from "../accounts/profile-service";
 import { Outlet, Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import {
   Menu,
@@ -16,6 +18,8 @@ import { useAdmin, useRole, useEntity } from "../services/context";
 import { can, roleNames } from "../accounts/permissions";
 import { DemoLogin } from "../accounts/pages/login";
 import { navigation } from "./navigation";
+import { HeaderNotifications } from "../notifications/header-menu";
+import { ErrorState } from "../shared/ui/primitives";
 import {
   Badge,
   Button,
@@ -27,7 +31,20 @@ import {
 const GlobalSearch = lazy(() => import("./global-search"));
 export function AdminLayout() {
   const runtime = useAdmin();
+  const { session, logout } = runtime;
   const role = useRole();
+  const account = useQuery({
+    queryKey: ["bibi-admin", "session", runtime.session?.userId],
+    enabled: !!runtime.session,
+    queryFn: async () => {
+      await runtime.ensure("users");
+      return getProfile(runtime.store, runtime.session);
+    },
+  });
+  useEffect(() => {
+    if (session && (account.error || (account.data && account.data.roleId !== session.roleId)))
+      void logout();
+  }, [account.error, account.data, session, logout]);
   const [collapsed, setCollapsed] = useState(false);
   const [drawer, setDrawer] = useState(false);
   const [search, setSearch] = useState(false);
@@ -66,6 +83,16 @@ export function AdminLayout() {
       g.items.flatMap((i) => [{ label: i.label, path: i.path }, ...(i.children ?? [])]),
     )
     .find((i) => pathname.endsWith(i.path));
+  const routeGroup = navigation
+    .flatMap((g) => g.items)
+    .find((i) => {
+      const module = i.path.split("/")[2];
+      return pathname.includes("/admin/" + module);
+    });
+  const ownPreferences =
+    pathname.endsWith("/settings/profile") || pathname.endsWith("/settings/appearance");
+  const forbidden =
+    !ownPreferences && routeGroup && !can(runtime.session, routeGroup.resource, "view", role.data);
   const nav = (
     <>
       <Link to="/admin/dashboard" className="a-wordmark">
@@ -163,6 +190,9 @@ export function AdminLayout() {
                     <kbd>⌘ K</kbd>
                   </Button>
                   <Badge tone="warning">DEMO</Badge>
+                  {can(runtime.session, "notifications", "view", role.data) && (
+                    <HeaderNotifications />
+                  )}
                   <Button
                     size="icon"
                     variant="ghost"
@@ -190,7 +220,15 @@ export function AdminLayout() {
                 Không gian demo · Dữ liệu và ảnh được lưu cục bộ, không cập nhật website thật.
               </div>
               <main className="a-main">
-                <Outlet />
+                {role.isPending || account.isPending ? (
+                  <Skeleton />
+                ) : forbidden ? (
+                  <ErrorState
+                    error={new Error("Vai trò demo hiện tại không có quyền truy cập module này.")}
+                  />
+                ) : (
+                  <Outlet />
+                )}
               </main>
               <footer className="a-app-footer">
                 BiBi Studio <span>Made with care · Admin demo</span>

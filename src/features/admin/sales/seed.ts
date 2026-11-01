@@ -17,6 +17,7 @@ export function seed(): SeedBatch {
     return {
       ...seedBase(`order-${i + 1}`, i % 30),
       number: `BIBI-${1000 + i + 1}`,
+      visitorId: `visitor-${(i % 80) + 1}`,
       customer: {
         name: `Khách demo ${i + 1}`,
         email: `customer${i + 1}@example.test`,
@@ -29,10 +30,17 @@ export function seed(): SeedBatch {
       status,
       paymentStatus: status === "Delivered" ? "Paid" : "Pending",
       notes: "",
-      timeline: [
-        { status: "Pending", at: createdAt },
-        ...(status !== "Pending" ? [{ status, at: createdAt }] : []),
-      ],
+      timeline: (status === "Delivered"
+        ? ["Pending", "Confirmed", "Processing", "Shipped", "Delivered"]
+        : status === "Confirmed"
+          ? ["Pending", "Confirmed"]
+          : status === "Cancelled"
+            ? ["Pending", "Cancelled"]
+            : ["Pending"]
+      ).map((status, index) => ({
+        status: status as Order["status"],
+        at: new Date(Date.parse(createdAt) + index * 60000).toISOString(),
+      })),
     };
   });
   return {
