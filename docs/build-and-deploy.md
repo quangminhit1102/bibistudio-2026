@@ -18,7 +18,7 @@ Dùng **Node 24**; cài dependencies lần đầu hoặc sau đổi lockfile b�
 | Kiểm tra | `npm run check` | TypeScript, lint theo phạm vi, ảnh và tests đều đạt |
 | Build FE và BE | `npm run build` | Artifact và checksum được tạo, exit 0 |
 
-Tùy chọn xem bản build local: `npm run build -- --preview`.
+Xem bản build local: chạy `npm run build`, lấy đường dẫn bundle `.releases/local-<SHA>` từ kết quả, rồi chạy `node scripts/preview.mjs .releases/local-<SHA>`. Shortcut `npm run build -- --preview` hiện gặp vòng import sau khi tạo artifact (đã quan sát ngày 01/11/2026); dùng hai lệnh riêng đến khi tooling được sửa.
 
 FE mặc định `http://localhost:5173`; `/api` proxy tới BE `127.0.0.1:3001`. Trang `/api-test` hiển thị version FE/BE, dữ liệu demo, lỗi và nút thử lại. FE có HMR; BE tự restart khi sửa source. Inspector BE là `127.0.0.1:9230`; debugger hỗ trợ Node có thể attach, pause/resume và debug TypeScript. Log có tiền tố FE/BE, báo UNAVAILABLE khi BE lỗi và READY sau khi phục hồi. Ctrl+C dừng cả hai; có thể khởi động lại mà không bị giữ cổng.
 
@@ -107,6 +107,7 @@ Không xóa domain, key, secret hoặc các run cũ chỉ để làm sạch side
 - [Rollback baseline](https://github.com/quangminhit1102/bibistudio-2026/actions/runs/41168044956) và [khôi phục release](https://github.com/quangminhit1102/bibistudio-2026/actions/runs/41168281680) đã thử qua gate thật; checksum baseline index khớp qua HTTPS.
 - [Staging20f9f2a](https://github.com/quangminhit1102/bibistudio-2026/actions/runs/41170107813) đạt sau sửa LiteSpeed cache. Trước đó fixture503 tự rollback và run cũ bị từ chối; [run41168646955](https://github.com/quangminhit1102/bibistudio-2026/actions/runs/41168646955) giữ nguyên trạng thái lỗi để ghi nhận bug cache và recovery.
 - Production-only đã nghiệm thu bằng [CI main41188480787](https://github.com/quangminhit1102/bibistudio-2026/actions/runs/41188480787) và [manual production41188651522](https://github.com/quangminhit1102/bibistudio-2026/actions/runs/41188651522), release `0bc74538db34e673123370cfc422f449e7823533-41188480787`, không có staging deployment cho SHA này. HTTP/browser/images/old-client đạt; kiểm tra độc lập FE/BE khớp, www/API200. Receipt giữ bản trước20f9f2a để rollback. Đây không phải một lần diễn tập rollback mới.
+- Bộ13 mockup sổ bản đồ đã phát hành ngày01/11/2026 bằng [CI main41255894313](https://github.com/quangminhit1102/bibistudio-2026/actions/runs/41255894313) và [production41261096084](https://github.com/quangminhit1102/bibistudio-2026/actions/runs/41261096084), release `e1df4d2348eb9e06426afd7584c86a982c8f3278-41255894313`. Workflow và kiểm tra độc lập đạt:13 detail đúng tên/ảnh,13 WebP khớp bytes/SHA256, FE/BE khớp, www và node-test200, tab cũ tải2 assets không dùng cache. Receipt giữ bản trước0bc7453; không diễn tập rollback mới.
 
 | Lỗi | Kiểm tra đầu tiên |
 |---|---|
