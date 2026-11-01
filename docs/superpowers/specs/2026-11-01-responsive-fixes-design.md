@@ -1,6 +1,6 @@
 # Responsive fixes — BiBi Studio
 
-Ngày: 2026-11-01. Trạng thái: chờ người dùng duyệt thiết kế; chưa sửa product code.
+Ngày: 2026-11-01. Trạng thái: người dùng đã duyệt thiết kế và plan; triển khai local, chưa push/deploy.
 
 ## Mục tiêu
 

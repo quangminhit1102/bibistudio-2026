@@ -37,31 +37,31 @@
 
 **Interfaces:** Home reads productsByCollection("explore-vietnam"); HeroSlides({slides: Slide[]}) keeps its current API and state.
 
-- [ ] Capture baseline home mobile: Explore Vietnam has3 cards and hero still has caption/line indicators.
-- [ ] Apply Lovable recommendation from message umsg_01m6as0502fqhbbef7d8rnzc20 locally: remove caption/link and unused cur variable; centre a subtle dark translucent rounded indicator backing;6px outline inactive dots,8px solid ivory active dot,44px buttons, group label Chọn ảnh, existing Ảnh N labels and aria-current, visible focus, motion-reduce transition disabled. Use bottom20px mobile/24px desktop. Keep main headline and timer logic.
-- [ ] Change Explore Vietnam selection slice(0,4), remove sm:grid-cols-3 from its grid, retaining grid-cols-2 and existing gap.
-- [ ] In browser verify exactly4 product links in that section,2 distinct column positions and2 row positions. Select first/last hero dots and verify active image/current state; inspect44px bounds and keyboard focus, check bright/dark slides.
-- [ ] Commit homepage change locally after checks.
+- [x] Capture baseline home mobile: Explore Vietnam has3 cards and hero still has caption/line indicators.
+- [x] Apply Lovable recommendation from message umsg_01m6as0502fqhbbef7d8rnzc20 locally: remove caption/link and unused cur variable; centre a subtle dark translucent rounded indicator backing;6px outline inactive dots,8px solid ivory active dot,44px buttons, group label Chọn ảnh, existing Ảnh N labels and aria-current, visible focus, motion-reduce transition disabled. Use bottom20px mobile/24px desktop. Keep main headline and timer logic.
+- [x] Change Explore Vietnam selection slice(0,4), remove sm:grid-cols-3 from its grid, retaining grid-cols-2 and existing gap.
+- [x] In browser verify exactly4 product links in that section,2 distinct column positions and2 row positions. Select first/last hero dots and verify active image/current state; inspect44px bounds and keyboard focus, check bright/dark slides.
+- [x] Commit homepage change locally after checks.
 
 ### Task2: Verify and fix responsive defects
 
 **Interfaces:** Existing route/component APIs remain unchanged. Findings must include URL, viewport, observed defect and screenshot/DOM evidence before a candidate file is modified.
 
-- [ ] Run baseline route matrix at CSS widths360,390,768,1024,1440: /, /products, /products/notebooks, /collections, /collections/explore-vietnam, /collections/greeting-cards, /products/da-nang-map-notebook, /blog, a real article discovered from listing, /about, /contact, /api-test. Measure scrollWidth<=innerWidth and inspect headings/controls; scroll for lazy content.
-- [ ] On360×640 exercise menu open/navigation/close, search input/results/close, product filters apply/clear/close and focus accessibility. At1024 inspect desktop header collision. On product mobile inspect contact bar/back-to-top at page bottom and fullscreen open/close; do not send messages or calls.
-- [ ] Reproduce Lovable suspects: What we make text overflow, tablet contact map/button wrapping and fixed bottom overlap. Do not standardize gutters or change breakpoint just for stylistic consistency when no defect exists.
-- [ ] For each confirmed defect apply smallest CSS/markup fix in its owning file, then repeat the exact failing viewport/action and adjacent breakpoint. If it needs a main-layout redesign, report it instead of expanding scope.
-- [ ] Record confirmed fixes and not-reproduced suspects in review document. Commit fixes locally when their targeted checks pass.
+- [x] Run baseline route matrix at CSS widths360,390,768,1024,1440: /, /products, /products/notebooks, /collections, /collections/explore-vietnam, /collections/greeting-cards, /products/da-nang-map-notebook, /blog, a real article discovered from listing, /about, /contact, /api-test. Measure scrollWidth<=innerWidth and inspect headings/controls; scroll for lazy content.
+- [x] On360×640 exercise menu open/navigation/close, search input/results/close, product filters apply/clear/close and focus accessibility. At1024 inspect desktop header collision. On product mobile inspect contact bar/back-to-top at page bottom and fullscreen open/close; do not send messages or calls.
+- [x] Reproduce Lovable suspects: What we make text overflow, tablet contact map/button wrapping and fixed bottom overlap. Do not standardize gutters or change breakpoint just for stylistic consistency when no defect exists.
+- [x] For each confirmed defect apply smallest CSS/markup fix in its owning file, then repeat the exact failing viewport/action and adjacent breakpoint. If it needs a main-layout redesign, report it instead of expanding scope.
+- [x] Record confirmed fixes and not-reproduced suspects in review document. Commit fixes locally when their targeted checks pass.
 
 ### Task3: Build and deliver local review
 
 **Interfaces:** Existing npm run check/build; scripts/preview.mjs accepts built release-directory path, PREVIEW_PORT sets new free port.
 
-- [ ] Use bundled Node24; run npm run check and require exit0. If sandbox prevents HTTP test servers, rerun with proper escalation; report actual results.
-- [ ] Commit source locally; npm run build must exit0 and create local-<SHA> bundle. Start preview via separate scripts/preview.mjs command on a free port; do not use broken build --preview shortcut or replace user's older preview without notice.
-- [ ] On built preview repeat route overflow checks and targeted interaction tests. Verify Lora loaded, bidiary hrefs, zoom3×, absent giant footer wordmark, working product images and FE/BE API-test version. Check reduced-motion autoplay behavior using browser-supported emulation if available; otherwise state limit explicitly and verify source guards without claiming runtime coverage.
-- [ ] Capture final home mobile2×2, hero desktop/mobile dot controls and evidence of other fixed defects; reset viewport overrides. Update review document with exact matrix, results, preview URL and limitations.
-- [ ] Deliver local preview link and concise change/test summary. Keep production unchanged and do not push.
+- [x] Use bundled Node24; run npm run check and require exit0. If sandbox prevents HTTP test servers, rerun with proper escalation; report actual results.
+- [x] Commit source locally; npm run build must exit0 and create local-<SHA> bundle. Start preview via separate scripts/preview.mjs command on a free port; do not use broken build --preview shortcut or replace user's older preview without notice.
+- [x] On built preview repeat route overflow checks and targeted interaction tests. Verify Lora loaded, bidiary hrefs, zoom3×, absent giant footer wordmark, working product images and FE/BE API-test version. Check reduced-motion autoplay behavior using browser-supported emulation if available; otherwise state limit explicitly and verify source guards without claiming runtime coverage.
+- [x] Capture final home mobile2×2, hero desktop/mobile dot controls and evidence of other fixed defects; reset viewport overrides. Update review document with exact matrix, results, preview URL and limitations.
+- [x] Deliver local preview link and concise change/test summary. Keep production unchanged and do not push.
 
 ## Self-review
 
