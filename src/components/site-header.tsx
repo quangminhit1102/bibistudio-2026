@@ -72,13 +72,13 @@ export function SiteHeader() {
         </Link>
 
         <nav aria-label="Điều hướng chính" className="hidden lg:block">
-          <ul className="flex items-center gap-6 xl:gap-8">
+          <ul className="flex items-center gap-3 xl:gap-8">
             {nav.map((n) => (
               <li key={n.to} onMouseEnter={() => setMega(n.mega ?? null)} onFocus={() => setMega(n.mega ?? null)}>
                 <Link
                   to={n.to}
                   onClick={() => setMega(null)}
-                  className="py-3 text-[12px] font-medium uppercase tracking-[0.2em] text-foreground/80 transition hover:text-foreground"
+                  className="whitespace-nowrap py-3 text-[12px] font-medium uppercase tracking-[0.2em] text-foreground/80 transition hover:text-foreground"
                   activeOptions={{ exact: n.to === "/" }}
                   activeProps={{ className: "text-foreground underline underline-offset-8" }}
                 >

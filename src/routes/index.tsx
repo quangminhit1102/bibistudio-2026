@@ -23,7 +23,6 @@ function HeroSlides({ slides }: { slides: Slide[] }) {
     const t = setInterval(() => setI((v) => (v + 1) % slides.length), 5500);
     return () => clearInterval(t);
   }, [slides.length]);
-  const cur = slides[i];
   return (
     <div className="absolute inset-0 animate-unveil">
       {slides.map((s, k) => (
@@ -36,16 +35,11 @@ function HeroSlides({ slides }: { slides: Slide[] }) {
           className={`absolute inset-0 h-full w-full object-cover transition-[opacity,transform] duration-[1800ms] ease-out ${k === i ? "scale-100 opacity-100" : "scale-[1.05] opacity-0"}`}
         />
       ))}
-      <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-4 bg-gradient-to-t from-foreground/45 to-transparent p-5 pt-16 sm:p-6">
-        {cur.slug ? (
-          <Link to="/collections/$slug" params={{ slug: cur.slug }} className="font-display text-xl italic text-background underline-offset-4 hover:underline sm:text-2xl">
-            {cur.label} →
-          </Link>
-        ) : <span className="font-display text-xl italic text-background sm:text-2xl">{cur.label}</span>}
-        <div className="flex gap-2">
+      <div role="group" aria-label="Chọn ảnh" className="absolute inset-x-0 bottom-5 flex justify-center sm:bottom-6">
+        <div className="flex rounded-full bg-foreground/20 px-1 backdrop-blur-sm">
           {slides.map((s, k) => (
-            <button key={s.src} onClick={() => setI(k)} aria-label={`Ảnh ${k + 1}`} className="grid h-6 place-items-center">
-              <span className={`block h-0.5 transition-all duration-500 ${k === i ? "w-8 bg-background" : "w-4 bg-background/50"}`} />
+            <button key={s.src} type="button" onClick={() => setI(k)} aria-label={`Ảnh ${k + 1}`} aria-current={k === i ? "true" : undefined} className="grid size-11 place-items-center rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-background">
+              <span className={`block rounded-full border border-background transition-[width,height,background-color] duration-300 motion-reduce:transition-none ${k === i ? "size-2 bg-background" : "size-1.5 bg-transparent"}`} />
             </button>
           ))}
         </div>
@@ -100,7 +94,7 @@ function CollectionTile({ c, className = "", ratio = "4/5", big = false }: { c: 
 
 function Home() {
   const [ev, food, motivation, aoDai, cards, flowers, spiral] = collections;
-  const evProducts = productsByCollection("explore-vietnam").slice(0, 3);
+  const evProducts = productsByCollection("explore-vietnam").slice(0, 4);
   const heroSlides: Slide[] = [
     { src: heroImg, alt: "Sổ tay, postcard, bao thư và giấy viết thư BiBi Studio trên bàn gỗ", label: "Bàn giấy của BiBi" },
     ...[motivation, cards, flowers, ev].filter((c) => c.image).map((c) => ({ src: c.image!, alt: tx(c.name), label: tx(c.name), slug: c.slug })),
@@ -224,7 +218,7 @@ function Home() {
             <p className="eyebrow">Câu chuyện nổi bật</p>
             <h2 className="mt-5 font-display text-5xl leading-[1.02] md:text-6xl">Việt Nam,<br /><em className="text-kraft">qua từng trang giấy.</em></h2>
             <p className="mt-6 max-w-md text-[15px] leading-relaxed text-muted-foreground">{tx(ev.intro)}</p>
-            <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3">
+            <div className="mt-10 grid grid-cols-2 gap-4">
               {evProducts.map((p, i) => <CatalogueCard key={p.slug} product={p} index={i} />)}
             </div>
             <Link to="/collections/$slug" params={{ slug: ev.slug }} className="mt-10 inline-flex items-center gap-2 text-[12px] font-medium uppercase tracking-[0.22em] underline underline-offset-8">
