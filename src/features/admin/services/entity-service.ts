@@ -153,7 +153,18 @@ export function createEntityService<K extends EntityKey>(
         session()?.roleId !== "super-admin"
       )
         throw new ServiceError("forbidden", "Chỉ Super Admin được cấp vai trò này.");
-      if (["audit", "orders", "payments", "stock", "visitors", "sessions"].includes(entity))
+      if (
+        [
+          "audit",
+          "orders",
+          "payments",
+          "stock",
+          "visitors",
+          "sessions",
+          "purchaseSlips",
+          "notificationReads",
+        ].includes(entity)
+      )
         throw new ServiceError("validation", "Dùng quy trình chuyên biệt cho dữ liệu này.");
       return store.transaction(entityKeys, async (tx) => {
         const now = new Date().toISOString();
@@ -177,7 +188,11 @@ export function createEntityService<K extends EntityKey>(
     },
     async update(id, input, revision) {
       await authorize("update");
-      if (["audit", "stock", "orders", "payments"].includes(entity))
+      if (
+        ["audit", "stock", "orders", "payments", "purchaseSlips", "notificationReads"].includes(
+          entity,
+        )
+      )
         throw new ServiceError("validation", "Dùng quy trình chuyên biệt để cập nhật.");
       return store.transaction(entityKeys, async (tx) => {
         const before = await tx.get(entity, id);
@@ -254,11 +269,22 @@ export function createEntityService<K extends EntityKey>(
       )
         await Promise.all([
           ensureDataset(store, "posts"),
-          ensureDataset(store, "orders"),
+          ensureDataset(store, "purchaseSlips"),
           ensureDataset(store, "users"),
         ]);
       await authorize("delete");
-      if (["audit", "stock", "orders", "payments", "visitors", "sessions"].includes(entity))
+      if (
+        [
+          "audit",
+          "stock",
+          "orders",
+          "payments",
+          "visitors",
+          "sessions",
+          "purchaseSlips",
+          "notificationReads",
+        ].includes(entity)
+      )
         throw new ServiceError("validation", "Lịch sử không thể xóa.");
       return store.transaction(entityKeys, async (tx) => {
         const row = await tx.get(entity, id);

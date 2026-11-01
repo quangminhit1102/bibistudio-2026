@@ -37,7 +37,22 @@ function preference<T>(key: string, fallback: T): T {
 }
 export function AdminProvider({ children }: { children: ReactNode }) {
   const query = useQueryClient();
-  const [store] = useState(() => createAdminStore());
+  const [storageBlocked, setStorageBlocked] = useState(false);
+  const [store] = useState(() =>
+    createAdminStore(undefined, { onBlocked: () => setStorageBlocked(true) }),
+  );
+  useEffect(() => {
+    let active = true;
+    void store
+      .getMeta("storage-ready")
+      .then(() => {
+        if (active) setStorageBlocked(false);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [store]);
   const [session, setSession] = useState<DemoSession | null>(() => preference("session", null));
   const [theme, themeState] = useState<Theme>(() => preference("theme", "light"));
   useEffect(() => {
@@ -96,7 +111,17 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     await logout();
   };
   const value = { store, session, theme, setTheme, service, ensure, logout, login, reset };
-  return <RuntimeContext.Provider value={value}>{children}</RuntimeContext.Provider>;
+  return (
+    <RuntimeContext.Provider value={value}>
+      {storageBlocked && (
+        <p role="alert" className="a-banner">
+          Đang chờ nâng cấp dữ liệu. Hãy đóng hoặc tải lại các tab admin cũ; dữ liệu hiện có được
+          giữ nguyên.
+        </p>
+      )}
+      {children}
+    </RuntimeContext.Provider>
+  );
 }
 export function useAdmin() {
   const c = useContext(RuntimeContext);

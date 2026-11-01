@@ -8,6 +8,40 @@ export interface NamedRecord extends BaseRecord {
   name: string;
   description?: string;
 }
+export interface Customer extends NamedRecord {
+  kind: "bookstore" | "individual" | "company";
+  address: string;
+  vatApplied: boolean;
+  notes: string;
+  active: boolean;
+  phone?: string;
+  email?: string;
+}
+export interface SlipItem {
+  lineId: string;
+  productId: string;
+  sku: string;
+  name: string;
+  quantity: number;
+  unitPrice: number;
+}
+export interface PurchaseSlip extends BaseRecord {
+  number: string;
+  customerId: string;
+  customerSnapshot: Pick<Customer, "name" | "address" | "kind">;
+  vatApplied: boolean;
+  items: SlipItem[];
+  total: number;
+  notes: string;
+  status: "saved" | "void";
+  voidedAt: string | null;
+  voidReason: string;
+}
+export interface NotificationRead extends BaseRecord {
+  userId: string;
+  notificationId: string;
+  readAt: string;
+}
 export interface CatalogueRecord extends NamedRecord {
   slug: string;
   price: number;
@@ -172,6 +206,9 @@ export interface Setting extends BaseRecord {
   values: Record<string, string | number | boolean>;
 }
 export interface AdminModels {
+  customers: Customer;
+  purchaseSlips: PurchaseSlip;
+  notificationReads: NotificationRead;
   products: AdminProduct;
   books: AdminBook;
   categories: Category;
@@ -193,6 +230,9 @@ export interface AdminModels {
 }
 export type EntityKey = keyof AdminModels;
 export const entityKeys: EntityKey[] = [
+  "customers",
+  "purchaseSlips",
+  "notificationReads",
   "products",
   "books",
   "categories",

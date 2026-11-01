@@ -7,17 +7,25 @@ import {
   type EntityKey,
 } from "../services/contracts";
 import { storageError, ServiceError } from "../services/errors";
-export function createAdminStore(name = "bibi-admin-demo"): AdminStore {
+export function createAdminStore(
+  name = "bibi-admin-demo",
+  options: { onBlocked?: () => void } = {},
+): AdminStore {
   let generation = 0;
   let connection: Promise<IDBPDatabase> | undefined;
   const db = () =>
     (connection ??= (async () => {
       try {
-        return await openDB(name, 1, {
+        return await openDB(name, 2, {
           upgrade(d) {
-            for (const entity of entityKeys) d.createObjectStore(entity, { keyPath: "id" });
-            d.createObjectStore("meta");
-            d.createObjectStore("blobs");
+            for (const entity of entityKeys)
+              if (!d.objectStoreNames.contains(entity))
+                d.createObjectStore(entity, { keyPath: "id" });
+            if (!d.objectStoreNames.contains("meta")) d.createObjectStore("meta");
+            if (!d.objectStoreNames.contains("blobs")) d.createObjectStore("blobs");
+          },
+          blocked() {
+            options.onBlocked?.();
           },
           blocking() {
             void close();

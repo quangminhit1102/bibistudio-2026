@@ -98,6 +98,9 @@ export function requirePermission(
 export const resourceForEntity = (entity: EntityKey): Resource =>
   (
     ({
+      customers: "bookstore",
+      purchaseSlips: "sales",
+      notificationReads: "notifications",
       products: "products",
       books: "bookstore",
       authors: "bookstore",

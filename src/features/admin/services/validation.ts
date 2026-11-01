@@ -31,6 +31,18 @@ const catalogue = z
   })
   .passthrough();
 export const schemas = {
+  customers: z
+    .object({
+      name,
+      kind: z.enum(["bookstore", "individual", "company"]),
+      address: z.string().max(1000),
+      vatApplied: z.boolean(),
+      notes: z.string().max(5000),
+      active: z.boolean(),
+      phone: z.string().max(50).optional(),
+      email: z.union([z.literal(""), z.string().email()]).optional(),
+    })
+    .passthrough(),
   products: catalogue.extend({
     sku: name,
     productType: name,
@@ -114,6 +126,7 @@ export async function validateRecord<K extends EntityKey>(
   )
     throw new ServiceError("validation", "Quyền của Super Admin được bảo vệ.");
   for (const field of ["sku", "slug", "isbn", "email"]) {
+    if (entity === "customers" && field === "email") continue;
     const value = (row as unknown as Record<string, unknown>)[field];
     if (
       value &&
