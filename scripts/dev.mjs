@@ -11,6 +11,7 @@ export async function startDevelopment({
   signal,
   backendEntry = "src/server.ts",
   onBackendState = () => {},
+  cacheDir,
 } = {}) {
   await assertPortsFree([frontendPort, backendPort, inspectorPort]);
   process.env.BACKEND_PORT = String(backendPort);
@@ -74,6 +75,7 @@ export async function startDevelopment({
     vite = await createViteServer({
       configFile: join(root, "vite.local.config.ts"),
       root,
+      ...(cacheDir ? { cacheDir } : {}),
       customLogger: logger,
       server: { host, port: frontendPort, strictPort: true },
     });

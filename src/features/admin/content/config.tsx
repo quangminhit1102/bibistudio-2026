@@ -4,6 +4,7 @@ import { Badge } from "../shared/ui/primitives";
 import { date } from "../shared/lib/text";
 export const postConfig: EntityConfig<"posts"> = {
   entity: "posts",
+  duplicate: true,
   title: "Bài viết",
   description: "Nhật ký, ý tưởng và những câu chuyện từ BiBi — dữ liệu demo.",
   createHref: "/admin/content/posts/create",

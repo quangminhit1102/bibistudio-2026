@@ -71,6 +71,7 @@ import { Route as AdminSettingsAppearanceRouteImport } from './routes/admin.sett
 import { Route as AdminSettingsGeneralRouteImport } from './routes/admin.settings.general'
 import { Route as AdminSettingsProfileRouteImport } from './routes/admin.settings.profile'
 import { Route as AdminSettingsSecurityRouteImport } from './routes/admin.settings.security'
+import { Route as AdminAccountsUsersIdRouteImport } from './routes/admin.accounts.users.$id'
 import { Route as AdminAnalyticsVisitorsIdRouteImport } from './routes/admin.analytics.visitors.$id'
 import { Route as AdminBookstoreBooksIdRouteImport } from './routes/admin.bookstore.books.$id'
 import { Route as AdminBookstoreBooksCreateRouteImport } from './routes/admin.bookstore.books.create'
@@ -396,6 +397,11 @@ const AdminSettingsSecurityRoute = AdminSettingsSecurityRouteImport.update({
   path: '/settings/security',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminAccountsUsersIdRoute = AdminAccountsUsersIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AdminAccountsUsersRoute,
+} as any)
 const AdminAnalyticsVisitorsIdRoute =
   AdminAnalyticsVisitorsIdRouteImport.update({
     id: '/$id',
@@ -464,7 +470,7 @@ export interface FileRoutesByFullPath {
   '/products/': typeof ProductsIndexRoute
   '/admin/accounts/permissions': typeof AdminAccountsPermissionsRoute
   '/admin/accounts/roles': typeof AdminAccountsRolesRoute
-  '/admin/accounts/users': typeof AdminAccountsUsersRoute
+  '/admin/accounts/users': typeof AdminAccountsUsersRouteWithChildren
   '/admin/analytics/overview': typeof AdminAnalyticsOverviewRoute
   '/admin/analytics/pages': typeof AdminAnalyticsPagesRoute
   '/admin/analytics/sessions': typeof AdminAnalyticsSessionsRoute
@@ -508,6 +514,7 @@ export interface FileRoutesByFullPath {
   '/admin/products/': typeof AdminProductsIndexRoute
   '/admin/sales/': typeof AdminSalesIndexRoute
   '/admin/settings/': typeof AdminSettingsIndexRoute
+  '/admin/accounts/users/$id': typeof AdminAccountsUsersIdRoute
   '/admin/analytics/visitors/$id': typeof AdminAnalyticsVisitorsIdRoute
   '/admin/bookstore/books/$id': typeof AdminBookstoreBooksIdRouteWithChildren
   '/admin/bookstore/books/create': typeof AdminBookstoreBooksCreateRoute
@@ -536,7 +543,7 @@ export interface FileRoutesByTo {
   '/products': typeof ProductsIndexRoute
   '/admin/accounts/permissions': typeof AdminAccountsPermissionsRoute
   '/admin/accounts/roles': typeof AdminAccountsRolesRoute
-  '/admin/accounts/users': typeof AdminAccountsUsersRoute
+  '/admin/accounts/users': typeof AdminAccountsUsersRouteWithChildren
   '/admin/analytics/overview': typeof AdminAnalyticsOverviewRoute
   '/admin/analytics/pages': typeof AdminAnalyticsPagesRoute
   '/admin/analytics/sessions': typeof AdminAnalyticsSessionsRoute
@@ -580,6 +587,7 @@ export interface FileRoutesByTo {
   '/admin/products': typeof AdminProductsIndexRoute
   '/admin/sales': typeof AdminSalesIndexRoute
   '/admin/settings': typeof AdminSettingsIndexRoute
+  '/admin/accounts/users/$id': typeof AdminAccountsUsersIdRoute
   '/admin/analytics/visitors/$id': typeof AdminAnalyticsVisitorsIdRoute
   '/admin/bookstore/books/$id': typeof AdminBookstoreBooksIdRouteWithChildren
   '/admin/bookstore/books/create': typeof AdminBookstoreBooksCreateRoute
@@ -610,7 +618,7 @@ export interface FileRoutesById {
   '/products/': typeof ProductsIndexRoute
   '/admin/accounts/permissions': typeof AdminAccountsPermissionsRoute
   '/admin/accounts/roles': typeof AdminAccountsRolesRoute
-  '/admin/accounts/users': typeof AdminAccountsUsersRoute
+  '/admin/accounts/users': typeof AdminAccountsUsersRouteWithChildren
   '/admin/analytics/overview': typeof AdminAnalyticsOverviewRoute
   '/admin/analytics/pages': typeof AdminAnalyticsPagesRoute
   '/admin/analytics/sessions': typeof AdminAnalyticsSessionsRoute
@@ -654,6 +662,7 @@ export interface FileRoutesById {
   '/admin/products/': typeof AdminProductsIndexRoute
   '/admin/sales/': typeof AdminSalesIndexRoute
   '/admin/settings/': typeof AdminSettingsIndexRoute
+  '/admin/accounts/users/$id': typeof AdminAccountsUsersIdRoute
   '/admin/analytics/visitors/$id': typeof AdminAnalyticsVisitorsIdRoute
   '/admin/bookstore/books/$id': typeof AdminBookstoreBooksIdRouteWithChildren
   '/admin/bookstore/books/create': typeof AdminBookstoreBooksCreateRoute
@@ -729,6 +738,7 @@ export interface FileRouteTypes {
     | '/admin/products/'
     | '/admin/sales/'
     | '/admin/settings/'
+    | '/admin/accounts/users/$id'
     | '/admin/analytics/visitors/$id'
     | '/admin/bookstore/books/$id'
     | '/admin/bookstore/books/create'
@@ -801,6 +811,7 @@ export interface FileRouteTypes {
     | '/admin/products'
     | '/admin/sales'
     | '/admin/settings'
+    | '/admin/accounts/users/$id'
     | '/admin/analytics/visitors/$id'
     | '/admin/bookstore/books/$id'
     | '/admin/bookstore/books/create'
@@ -874,6 +885,7 @@ export interface FileRouteTypes {
     | '/admin/products/'
     | '/admin/sales/'
     | '/admin/settings/'
+    | '/admin/accounts/users/$id'
     | '/admin/analytics/visitors/$id'
     | '/admin/bookstore/books/$id'
     | '/admin/bookstore/books/create'
@@ -1335,6 +1347,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSettingsSecurityRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/accounts/users/$id': {
+      id: '/admin/accounts/users/$id'
+      path: '/$id'
+      fullPath: '/admin/accounts/users/$id'
+      preLoaderRoute: typeof AdminAccountsUsersIdRouteImport
+      parentRoute: typeof AdminAccountsUsersRoute
+    }
     '/admin/analytics/visitors/$id': {
       id: '/admin/analytics/visitors/$id'
       path: '/$id'
@@ -1400,6 +1419,17 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface AdminAccountsUsersRouteChildren {
+  AdminAccountsUsersIdRoute: typeof AdminAccountsUsersIdRoute
+}
+
+const AdminAccountsUsersRouteChildren: AdminAccountsUsersRouteChildren = {
+  AdminAccountsUsersIdRoute: AdminAccountsUsersIdRoute,
+}
+
+const AdminAccountsUsersRouteWithChildren =
+  AdminAccountsUsersRoute._addFileChildren(AdminAccountsUsersRouteChildren)
 
 interface AdminAnalyticsVisitorsRouteChildren {
   AdminAnalyticsVisitorsIdRoute: typeof AdminAnalyticsVisitorsIdRoute
@@ -1496,7 +1526,7 @@ interface AdminRouteChildren {
   AdminIndexRoute: typeof AdminIndexRoute
   AdminAccountsPermissionsRoute: typeof AdminAccountsPermissionsRoute
   AdminAccountsRolesRoute: typeof AdminAccountsRolesRoute
-  AdminAccountsUsersRoute: typeof AdminAccountsUsersRoute
+  AdminAccountsUsersRoute: typeof AdminAccountsUsersRouteWithChildren
   AdminAnalyticsOverviewRoute: typeof AdminAnalyticsOverviewRoute
   AdminAnalyticsPagesRoute: typeof AdminAnalyticsPagesRoute
   AdminAnalyticsSessionsRoute: typeof AdminAnalyticsSessionsRoute
@@ -1550,7 +1580,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminIndexRoute: AdminIndexRoute,
   AdminAccountsPermissionsRoute: AdminAccountsPermissionsRoute,
   AdminAccountsRolesRoute: AdminAccountsRolesRoute,
-  AdminAccountsUsersRoute: AdminAccountsUsersRoute,
+  AdminAccountsUsersRoute: AdminAccountsUsersRouteWithChildren,
   AdminAnalyticsOverviewRoute: AdminAnalyticsOverviewRoute,
   AdminAnalyticsPagesRoute: AdminAnalyticsPagesRoute,
   AdminAnalyticsSessionsRoute: AdminAnalyticsSessionsRoute,

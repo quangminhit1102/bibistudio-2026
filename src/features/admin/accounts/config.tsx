@@ -4,6 +4,7 @@ import { date } from "../shared/lib/text";
 import { roleNames, defaultPermissions } from "./permissions";
 export const userConfig: EntityConfig<"users"> = {
   entity: "users",
+  detailHref: (id) => "/admin/accounts/users/" + id,
   title: "Người dùng",
   description: "Tài khoản giả lập dùng để thử vai trò. Không phải quản lý tài khoản production.",
   defaults: { name: "", email: "", roleId: "viewer", active: true, lastLogin: null },

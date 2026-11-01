@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import type { EntityKey } from "../../services/contracts";
 import { useAdmin } from "../../services/context";
 import { Button, Field, Skeleton } from "../ui/primitives";
+import { calendarDate } from "../lib/text";
 const RichEditor = lazy(() => import("../../content/components/rich-editor"));
 const MediaPicker = lazy(() => import("../../content/components/media-picker"));
 export interface FormField {
@@ -95,6 +96,7 @@ export function RecordForm({
   onCancel,
   onDirtyChange,
   saveLabel = "Lưu thay đổi",
+  mediaScope = "content",
 }: {
   fields: FormField[];
   initial: FormValues;
@@ -102,6 +104,7 @@ export function RecordForm({
   onCancel: () => void;
   onDirtyChange?: (dirty: boolean) => void;
   saveLabel?: string;
+  mediaScope?: "content" | "products" | "bookstore";
 }) {
   const {
     register,
@@ -183,6 +186,7 @@ export function RecordForm({
                     render={({ field: f }) => (
                       <Suspense fallback={<Skeleton rows={1} />}>
                         <MediaPicker
+                          scope={mediaScope}
                           max={Array.isArray(initial[field.key]) ? 10 : 1}
                           value={
                             Array.isArray(f.value)
@@ -237,7 +241,7 @@ export function RecordForm({
                     render={({ field: f }) => (
                       <input
                         type="date"
-                        value={typeof f.value === "string" ? f.value.slice(0, 10) : ""}
+                        value={calendarDate(f.value)}
                         onChange={(e) =>
                           f.onChange(
                             e.target.value

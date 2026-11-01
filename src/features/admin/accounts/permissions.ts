@@ -1,5 +1,25 @@
 import type { Action, DemoSession, Resource, Role, EntityKey } from "../services/contracts";
 import { ServiceError } from "../services/errors";
+import type { AdminStore } from "../services/contracts";
+export async function authorizeOperation(
+  store: AdminStore,
+  session: DemoSession | null,
+  resource: Resource,
+  action: Action,
+) {
+  const generation = store.generation;
+  const assertActive = () => {
+    if (generation !== store.generation)
+      throw new ServiceError("aborted", "Phiên đã thay đổi. Thao tác cũ đã bị hủy.");
+  };
+  const role = session ? await store.get("roles", session.roleId) : undefined;
+  const user = session ? await store.get("users", session.userId) : undefined;
+  assertActive();
+  if (user && (!user.active || user.roleId !== session?.roleId))
+    throw new ServiceError("forbidden", "Tài khoản đã thay đổi, hãy đăng nhập lại.");
+  requirePermission(session, resource, action, role);
+  return assertActive;
+}
 export const resources: Resource[] = [
   "dashboard",
   "analytics",

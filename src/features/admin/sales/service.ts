@@ -6,7 +6,7 @@ import type {
   PaymentStatus,
   AdminTransaction,
 } from "../services/contracts";
-import { requirePermission } from "../accounts/permissions";
+import { authorizeOperation } from "../accounts/permissions";
 import { ServiceError } from "../services/errors";
 export const orderTransitions: Record<OrderStatus, OrderStatus[]> = {
   Pending: ["Confirmed", "Cancelled"],
@@ -41,12 +41,7 @@ export const paymentLabels: Record<PaymentStatus, string> = {
 export const totalOrder = (order: Pick<Order, "items" | "shipping" | "discount">) =>
   order.items.reduce((n, i) => n + i.quantity * i.unitPrice, 0) + order.shipping - order.discount;
 async function authorize(store: AdminStore, session: DemoSession | null) {
-  requirePermission(
-    session,
-    "sales",
-    "update",
-    session ? await store.get("roles", session.roleId) : undefined,
-  );
+  return authorizeOperation(store, session, "sales", "update");
 }
 async function audit(
   tx: AdminTransaction,
@@ -85,10 +80,11 @@ export async function transitionOrder(
   next: OrderStatus,
   revision: number,
 ) {
-  await authorize(store, session);
+  const assertActive = await authorize(store, session);
   return store.transaction(
     ["orders", "products", "books", "stock", "payments", "audit"],
     async (tx) => {
+      assertActive();
       const before = await tx.get("orders", id);
       if (!before) throw new ServiceError("not-found", "Không tìm thấy đơn hàng.");
       if (before.revision !== revision)
@@ -154,6 +150,7 @@ export async function transitionOrder(
       await tx.put("orders", after);
       if (after.paymentStatus !== before.paymentStatus) await syncPayment(tx, after);
       await audit(tx, session, before, after, "transition:" + next);
+      assertActive();
       return after;
     },
   );
@@ -165,8 +162,9 @@ export async function transitionPayment(
   next: PaymentStatus,
   revision: number,
 ) {
-  await authorize(store, session);
+  const assertActive = await authorize(store, session);
   return store.transaction(["orders", "payments", "audit"], async (tx) => {
+    assertActive();
     const before = await tx.get("orders", id);
     if (!before) throw new ServiceError("not-found", "Không tìm thấy đơn.");
     if (before.revision !== revision) throw new ServiceError("conflict", "Đơn đã thay đổi.");
@@ -187,6 +185,7 @@ export async function transitionPayment(
     await tx.put("orders", after);
     await syncPayment(tx, after);
     await audit(tx, session, before, after, "payment:" + next);
+    assertActive();
     return after;
   });
 }
@@ -197,15 +196,17 @@ export async function updateOrderNotes(
   notes: string,
   revision: number,
 ) {
-  await authorize(store, session);
+  const assertActive = await authorize(store, session);
   if (notes.length > 5000) throw new ServiceError("validation", "Ghi chú tối đa5000 ký tự.");
   return store.transaction(["orders", "audit"], async (tx) => {
+    assertActive();
     const before = await tx.get("orders", id);
     if (!before) throw new ServiceError("not-found", "Không tìm thấy đơn.");
     if (before.revision !== revision) throw new ServiceError("conflict", "Đơn đã thay đổi.");
     const after = { ...before, notes, revision: revision + 1, updatedAt: new Date().toISOString() };
     await tx.put("orders", after);
     await audit(tx, session, before, after, "notes");
+    assertActive();
     return after;
   });
 }

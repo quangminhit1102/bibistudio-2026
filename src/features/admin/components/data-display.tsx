@@ -1,3 +1,4 @@
+import { componentUsage } from "./usage";
 import { useState } from "react";
 import { Button, Badge, Card, EmptyState, Skeleton, Tooltip } from "../shared/ui/primitives";
 import { DataTable, type TableState } from "../shared/tables/data-table";
@@ -210,11 +211,7 @@ export default function DataDisplay() {
           key={name}
           name={name}
           description="Cách hiển thị nội dung nhất quán; bảng cuộn bên trong khối trên màn hình nhỏ."
-          code={
-            name === "Data Table"
-              ? "<DataTable<Product> columns={columns} result={result} state={state} onStateChange={setState} />"
-              : '<DataExample name="' + name + '" />'
-          }
+          code={componentUsage("data-display", name)}
         >
           <DataExample name={name} />
         </Example>

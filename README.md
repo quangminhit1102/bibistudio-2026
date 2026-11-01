@@ -1,6 +1,8 @@
-# Cozy Corner
+# BiBi Studio
 
-Build this app using the HTML files referenced below. You can hotlink the images referenced in the HTML. The attached images are screenshots of the desired screens. Here are public links to the html of the screens which you should read and use to build the app:
+Website catalogue BiBi Studio với React/TanStack, API demo Express và admin demo local.
+
+Hướng dẫn thống nhất cho người và agent: [develop, build, deploy, rollback](docs/build-and-deploy.md), [admin demo](docs/admin.md), [biên bản kiểm chứng local](docs/admin-acceptance.md). Dùng Node24, `npm ci`, `npm run dev` để chạy FE+BE cùng lúc; `npm run check` để kiểm tra và `npm run build` để tạo artifact. Admin tại `/admin`, lưu dữ liệu/ảnh trong trình duyệt; chưa nối database hoặc đăng nhập production.
 
 This project was built with [Lovable](https://lovable.dev).
 

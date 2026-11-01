@@ -8,10 +8,12 @@ export default function MediaPicker({
   value,
   onChange,
   max = 10,
+  scope = "content",
 }: {
   value: string[];
   onChange: (ids: string[]) => void;
   max?: number;
+  scope?: "content" | "products" | "bookstore";
 }) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -19,13 +21,15 @@ export default function MediaPicker({
   const query = useQueryClient();
   const notice = useNotice();
   const input = useRef<HTMLInputElement>(null);
-  const media = useEntity("media", { page: 1, pageSize: 200 });
+  const media = useEntity("media", { page: 1, pageSize: 200 }, scope);
   const upload = async (files: File[]) => {
     setBusy(true);
     try {
       if (value.length + files.length > max)
         throw new Error(`Tối đa ${max} ảnh. Xóa ảnh đang chọn trước khi thêm ảnh mới.`);
-      const added = await createMediaService(runtime.store, () => runtime.session).import(files);
+      const added = await createMediaService(runtime.store, () => runtime.session, scope).import(
+        files,
+      );
       if (value.length + added.length > max)
         throw new Error("Tối đa10 ảnh cho một sản phẩm. Ảnh đã nhập nằm trong thư viện.");
       onChange([...value, ...added.map((a) => a.id)]);

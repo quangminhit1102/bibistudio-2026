@@ -1,3 +1,4 @@
+import { componentUsage } from "./usage";
 import { useState } from "react";
 import { Plus, Heart, ChevronDown } from "lucide-react";
 import { Button, ActionMenu, type ButtonVariant } from "../shared/ui/primitives";
@@ -118,11 +119,7 @@ export default function Actions() {
           key={name}
           name={name}
           description="Hỗ trợ bàn phím, focus rõ, kích thước và trạng thái phù hợp với thao tác."
-          code={
-            name === "Toggle Button"
-              ? "<Button aria-pressed={selected} onClick={() => setSelected(!selected)}>Theo dõi</Button>"
-              : '<Button variant="primary" loading={isSaving} onClick={save}>Lưu thay đổi</Button>'
-          }
+          code={componentUsage("actions", name)}
         >
           <ActionExample name={name} />
         </Example>

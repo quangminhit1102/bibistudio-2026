@@ -13,6 +13,7 @@ import { ServiceError, assertNotAborted } from "./errors";
 import { validateRecord, assertDeletable } from "./validation";
 import { requirePermission, resourceForEntity } from "../accounts/permissions";
 import { normalizeSearch } from "../shared/lib/text";
+import { ensureDataset } from "../demo/registry";
 export function createEntityService<K extends EntityKey>(
   store: AdminStore,
   entity: K,
@@ -86,6 +87,15 @@ export function createEntityService<K extends EntityKey>(
       const search = normalizeSearch(input.search ?? "");
       if (search) rows = rows.filter((r) => normalizeSearch(JSON.stringify(r)).includes(search));
       const filters = input.filters ?? {};
+      if ((entity === "products" || entity === "books") && filters.availability)
+        rows = rows.filter((row) => {
+          const item = row as AdminModels["books"];
+          return filters.availability === "in-stock"
+            ? item.stock - item.reserved > 0
+            : filters.availability === "out-of-stock"
+              ? item.stock - item.reserved <= 0
+              : true;
+        });
       const dateField = ["createdAt", "lastSeenAt", "startedAt"].includes(filters.dateField)
         ? filters.dateField
         : "createdAt";
@@ -102,12 +112,13 @@ export function createEntityService<K extends EntityKey>(
             Date.parse(filters.to + "T00:00:00+07:00") + 86400000,
         );
       for (const [key, value] of Object.entries(filters).filter(
-        ([k]) => !["from", "to", "dateField"].includes(k),
+        ([k]) => !["from", "to", "dateField", "availability"].includes(k),
       ))
         if (value && value !== "all")
-          rows = rows.filter(
-            (r) => String((r as unknown as Record<string, unknown>)[key]) === value,
-          );
+          rows = rows.filter((r) => {
+            const field = (r as unknown as Record<string, unknown>)[key];
+            return Array.isArray(field) ? field.includes(value) : String(field) === value;
+          });
       if (input.sort) {
         const { field, direction } = input.sort;
         rows.sort((a, b) => {
@@ -154,6 +165,11 @@ export function createEntityService<K extends EntityKey>(
           revision: 1,
         } as AdminModels[K];
         await validateRecord(entity, row, tx);
+        if (
+          (entity === "products" || entity === "books") &&
+          (row as AdminModels["products"]).reserved !== 0
+        )
+          throw new ServiceError("validation", "Sản phẩm mới không được kế thừa lượng giữ hàng.");
         await tx.put(entity, row);
         await audit(tx, "create", row.id, null, row);
         return row;
@@ -179,6 +195,16 @@ export function createEntityService<K extends EntityKey>(
           );
         if (before.revision !== revision)
           throw new ServiceError("conflict", "Dữ liệu đã thay đổi. Tải lại trước khi lưu.");
+        if (
+          (entity === "products" || entity === "books") &&
+          "reserved" in input &&
+          (input as Partial<CreateInput<"products">>).reserved !==
+            (before as AdminModels["products"]).reserved
+        )
+          throw new ServiceError(
+            "validation",
+            "Lượng giữ hàng chỉ thay đổi qua quy trình đơn hàng.",
+          );
         const row = {
           ...before,
           ...input,
@@ -189,17 +215,60 @@ export function createEntityService<K extends EntityKey>(
         } as AdminModels[K];
         await validateRecord(entity, row, tx, before);
         await tx.put(entity, row);
+        if (
+          (entity === "products" || entity === "books") &&
+          (row as AdminModels["products"]).stock !== (before as AdminModels["products"]).stock
+        ) {
+          const now = new Date().toISOString();
+          await tx.put("stock", {
+            id: crypto.randomUUID(),
+            createdAt: now,
+            updatedAt: now,
+            revision: 1,
+            entity,
+            entityId: id,
+            delta:
+              (row as AdminModels["products"]).stock - (before as AdminModels["products"]).stock,
+            balance: (row as AdminModels["products"]).stock,
+            reason: "Điều chỉnh qua biểu mẫu chỉnh sửa",
+          });
+        }
         await audit(tx, "update", id, before, row);
         return row;
       });
     },
     async remove(id, revision) {
       await authorize("delete");
+      if (
+        [
+          "products",
+          "books",
+          "categories",
+          "authors",
+          "publishers",
+          "tags",
+          "users",
+          "roles",
+          "media",
+        ].includes(entity)
+      )
+        await Promise.all([
+          ensureDataset(store, "posts"),
+          ensureDataset(store, "orders"),
+          ensureDataset(store, "users"),
+        ]);
+      await authorize("delete");
       if (["audit", "stock", "orders", "payments", "visitors", "sessions"].includes(entity))
         throw new ServiceError("validation", "Lịch sử không thể xóa.");
       return store.transaction(entityKeys, async (tx) => {
         const row = await tx.get(entity, id);
         if (!row) throw new ServiceError("not-found", "Không tìm thấy dữ liệu.");
+        if (
+          entity === "users" &&
+          (row as AdminModels["users"]).roleId === "super-admin" &&
+          session()?.roleId !== "super-admin"
+        )
+          throw new ServiceError("forbidden", "Chỉ Super Admin được xóa tài khoản có vai trò này.");
         if (row.revision !== revision) throw new ServiceError("conflict", "Dữ liệu đã thay đổi.");
         await assertDeletable(entity, id, tx);
         await tx.remove(entity, id);

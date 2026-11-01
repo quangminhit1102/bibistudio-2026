@@ -1,7 +1,7 @@
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { createAdminStore } from "../demo/store";
-import { ensureDataset, clearSeedCache, drainSeedJobs } from "../demo/registry";
+import { ensureDataset } from "../demo/registry";
 import { createEntityService } from "./entity-service";
 import type {
   AdminStore,
@@ -14,6 +14,7 @@ import type {
 } from "./contracts";
 import { resourceForEntity } from "../accounts/permissions";
 import { ServiceError } from "./errors";
+import { resetDemoData } from "../settings/service";
 type Theme = "light" | "dark" | "system";
 interface Runtime {
   store: AdminStore;
@@ -39,6 +40,25 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   const [store] = useState(() => createAdminStore());
   const [session, setSession] = useState<DemoSession | null>(() => preference("session", null));
   const [theme, themeState] = useState<Theme>(() => preference("theme", "light"));
+  useEffect(() => {
+    const sync = (event: StorageEvent) => {
+      if (event.key !== "bibi-admin:session") return;
+      store.invalidateOperations();
+      void query.cancelQueries({ queryKey: ["bibi-admin"] });
+      query.removeQueries({ queryKey: ["bibi-admin"] });
+      let next: DemoSession | null = null;
+      try {
+        const value = JSON.parse(event.newValue ?? "null");
+        if (value && typeof value.userId === "string" && typeof value.roleId === "string")
+          next = value;
+      } catch {
+        /* Invalid external preference expires the demo session. */
+      }
+      setSession(next);
+    };
+    window.addEventListener("storage", sync);
+    return () => window.removeEventListener("storage", sync);
+  }, [store, query]);
   const ensure = useCallback((entity: EntityKey) => ensureDataset(store, entity), [store]);
   const service = useCallback(
     <K extends EntityKey>(entity: K, resource?: Resource) =>
@@ -53,6 +73,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     setSession(null);
   }, [query, store]);
   const login = async (id: string) => {
+    store.invalidateOperations();
     await ensure("users");
     const user = await store.get("users", id);
     if (!user?.active) throw new ServiceError("forbidden", "Tài khoản demo không hoạt động.");
@@ -70,9 +91,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     if (query.isMutating({ mutationKey: ["bibi-admin"] }))
       throw new ServiceError("conflict", "Đợi thao tác đang lưu hoàn tất trước khi reset.");
     await query.cancelQueries({ queryKey: ["bibi-admin"] });
-    await drainSeedJobs(store);
-    await store.reset();
-    clearSeedCache(store);
+    await resetDemoData(store, session);
     query.removeQueries({ queryKey: ["bibi-admin"] });
     await logout();
   };

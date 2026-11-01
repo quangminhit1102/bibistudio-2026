@@ -113,7 +113,13 @@ export function EntityManager<K extends EntityKey>({ config }: { config: EntityC
     mutationKey: ["bibi-admin", config.entity],
     mutationFn: async (values: FormValues) =>
       editing && editing !== "new"
-        ? service.update(editing.id, values as Partial<CreateInput<K>>, editing.revision)
+        ? service.update(
+            editing.id,
+            Object.fromEntries(config.fields.map((f) => [f.key, values[f.key]])) as Partial<
+              CreateInput<K>
+            >,
+            editing.revision,
+          )
         : service.create(values as CreateInput<K>),
     onSuccess: () => {
       setDirty(false);
@@ -177,7 +183,11 @@ export function EntityManager<K extends EntityKey>({ config }: { config: EntityC
                       try {
                         const raw = { ...row.original } as unknown as FormValues;
                         for (const k of ["id", "createdAt", "updatedAt", "revision"]) delete raw[k];
-                        raw.name = String(raw.name) + " (bản sao)";
+                        if ("title" in raw) raw.title = String(raw.title) + " (bản sao)";
+                        else raw.name = String(raw.name) + " (bản sao)";
+                        if ("reserved" in raw) raw.reserved = 0;
+                        if ("status" in raw) raw.status = "draft";
+                        if ("publishAt" in raw) raw.publishAt = null;
                         for (const k of ["sku", "slug", "isbn"])
                           if (raw[k]) raw[k] = String(raw[k]) + "-" + Date.now();
                         await service.create(raw as CreateInput<K>);
@@ -357,6 +367,13 @@ export function EntityManager<K extends EntityKey>({ config }: { config: EntityC
         <div className="a-dialog-body">
           {editing && (
             <RecordForm
+              mediaScope={
+                config.entity === "products"
+                  ? "products"
+                  : config.entity === "books"
+                    ? "bookstore"
+                    : "content"
+              }
               key={editing === "new" ? "new" : editing.id}
               fields={config.fields}
               initial={(editing === "new" ? config.defaults : editing) as unknown as FormValues}

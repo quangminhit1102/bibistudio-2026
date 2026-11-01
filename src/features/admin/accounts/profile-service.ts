@@ -16,6 +16,7 @@ export async function saveProfile(
 ) {
   const parsed = profile.safeParse(values);
   if (!parsed.success) throw new ServiceError("validation", "Nhập họ tên và email hợp lệ.");
+  const generation = store.generation;
   await getProfile(store, session);
   return store.transaction(["users", "roles", "audit"], async (tx) => {
     const before = await tx.get("users", session!.userId);
@@ -38,6 +39,7 @@ export async function saveProfile(
       before: JSON.stringify({ name: before.name, email: before.email }),
       after: JSON.stringify(parsed.data),
     });
+    if (generation !== store.generation) throw new ServiceError("aborted", "Phiên đã thay đổi.");
     return after;
   });
 }

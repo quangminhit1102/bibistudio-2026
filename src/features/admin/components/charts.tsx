@@ -1,3 +1,4 @@
+import { componentUsage } from "./usage";
 import { useState } from "react";
 import Chart from "../shared/charts/chart";
 import type { ChartKind } from "../shared/charts/chart";
@@ -37,7 +38,7 @@ export default function Charts() {
           key={name}
           name={name}
           description="Màu đồng nhất, có tóm tắt dữ liệu đọc được và không chạy animation biểu đồ."
-          code={'<Chart kind="' + kinds[i] + '" data={points} label="Lượt xem theo ngày" />'}
+          code={componentUsage("charts", name)}
         >
           <ChartExample kind={kinds[i]} />
         </Example>

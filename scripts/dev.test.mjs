@@ -40,6 +40,7 @@ test(
         backendPort: ports[1],
         inspectorPort: ports[2],
         backendEntry: entry,
+        cacheDir: join(directory, "vite-cache"),
         onBackendState: (state) => states.push(state),
       });
       assert.equal((await fetch(`http://127.0.0.1:${ports[0]}/api/health`)).status, 200);

@@ -1,3 +1,4 @@
+import { componentUsage } from "./usage";
 import { useEffect, useId, useState } from "react";
 import { Button, Field } from "../shared/ui/primitives";
 import { Example } from "./example";
@@ -245,7 +246,7 @@ export default function Forms() {
           key={name}
           name={name}
           description="Chuyển trạng thái để kiểm tra default, disabled, invalid và required."
-          code={'<FormExample name="' + name + '" />'}
+          code={componentUsage("forms", name)}
         >
           <FormExample name={name} />
         </Example>

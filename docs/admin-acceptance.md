@@ -19,3 +19,11 @@ Ngày01/11/2026, Windows, Node24. Đây là biên bản đang bổ sung trong qu
 - Deep reload `/~vhplasti/admin/...`, network public không tải admin/chart/editor/seed.
 
 Không push, merge hoặc deploy admin trong đợt triển khai local này.
+
+## Review độc lập và sửa lỗi
+
+Reviewer độc lập đã kiểm tra toàn nhánh tại `e433e44`. Đợt sửa đã xử lý: revision của form được giữ theo snapshot, chỉ gửi field được phép và bảo vệ reserved; seed dữ liệu có thể tham chiếu trước khi xóa; kiểm tra quyền reset ở service; hủy mutation của phiên cũ và đồng bộ session qua tab; chặn Administrator xóa Super Admin; dashboard chỉ trả/hiện các hàng chi tiết được cấp quyền; stock edit ghi ledger, nhân bản không sao chép lượng giữ; calendar date theo múi giờ Việt Nam; Manager gắn ảnh theo quyền catalogue; thêm lọc sách, nhân bản bài viết, chi tiết từng user và usage code của component thật.
+
+Các regression đã chạy riêng đạt: reference/stock/reset/delete/logout/media6 ca cùng calendar; dashboard access1; management capabilities2; usage inventory1; edit snapshot1. Test snapshot đã tái hiện revision sai2 rồi xác nhận sửa về snapshot1. Test cross-tab được bổ sung sau sửa và đã đạt. Full check sau sửa đang chờ ghi nhận.
+
+Ba điểm nhỏ giữ lại để review sau: tìm chính xác tên có dấu ngoặc kép có thể không khớp search JSON; trang chi tiết còn hiện Edit cho Viewer rồi báo thiếu quyền; attachment picker có chọn file nhưng chưa kéo/thả (thư viện media riêng có kéo/thả).

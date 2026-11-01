@@ -1,11 +1,20 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useAnalytics } from "../../analytics/hooks";
-import { presetRange, conversionRate, within, previousRange } from "../../analytics/aggregate";
+import { presetRange } from "../../analytics/aggregate";
 import { PageTitle, Card, Badge, ErrorState, Skeleton } from "../../shared/ui/primitives";
 import { Kpi, ChartCard, DateFilter } from "../../shared/charts/blocks";
 import { money, date } from "../../shared/lib/text";
 import { orderLabels } from "../../sales/service";
+import { useAdmin, useRole } from "../../services/context";
+import { can } from "../../accounts/permissions";
+import type { Resource } from "../../services/contracts";
+import type { ReactNode } from "react";
+function Access({ resource, children }: { resource: Resource; children: ReactNode }) {
+  const runtime = useAdmin();
+  const role = useRole();
+  return can(runtime.session, resource, "view", role.data) ? children : null;
+}
 export default function Dashboard() {
   const [range, setRange] = useState(presetRange("30"));
   const report = useAnalytics(range, true);
@@ -26,35 +35,10 @@ export default function Dashboard() {
           const r = report.data,
             b = r.business!,
             prev = r.previousBusiness!,
-            conversion = conversionRate(
-              b.selected,
-              r.sessions.filter((s) => within(s.startedAt, range)).map((s) => s.visitorId),
-            ),
-            prevConversion = conversionRate(
-              prev.selected,
-              r.sessions
-                .filter((s) => within(s.startedAt, previousRange(range)))
-                .map((s) => s.visitorId),
-            ),
-            active = r.users.filter(
-              (u) =>
-                u.active &&
-                u.lastLogin &&
-                Date.parse(u.lastLogin) >= Date.parse(range.start) &&
-                Date.parse(u.lastLogin) < Date.parse(range.end),
-            ).length;
-          const categoryTotals = new Map<string, number>();
-          for (const order of b.selected.filter(
-            (o) => o.paymentStatus === "Paid" && !["Cancelled", "Refunded"].includes(o.status),
-          ))
-            for (const item of order.items) {
-              const group = r.products.find((p) => p.id === item.id)?.productType ?? "book";
-              categoryTotals.set(
-                group,
-                (categoryTotals.get(group) ?? 0) + item.unitPrice * item.quantity,
-              );
-            }
-          const categories = [...categoryTotals].map(([name, value]) => ({ name, value }));
+            conversion = r.rates.current,
+            prevConversion = r.rates.previous,
+            active = r.activeUsers;
+          const categories = r.categorySales;
           return (
             <>
               <div className="a-kpis">
@@ -74,7 +58,7 @@ export default function Dashboard() {
                 />
                 <Kpi
                   title="Sản phẩm"
-                  value={r.products.length}
+                  value={r.productCount}
                   description="Số bản ghi sản phẩm demo đang có, không bao gồm sách."
                 />
                 <Kpi
@@ -99,40 +83,42 @@ export default function Dashboard() {
               </div>
               <div className="a-dashboard-grid">
                 <ChartCard title="Doanh thu theo ngày" data={b.revenueTrend} />
-                <Card>
-                  <div className="a-card-head">
-                    <h2>Đơn hàng gần đây</h2>
-                    <Link className="a-btn a-btn-sm a-btn-ghost" to="/admin/sales/orders">
-                      Xem tất cả →
-                    </Link>
-                  </div>
-                  <div className="a-table-wrap">
-                    <table className="a-table" style={{ minWidth: 300 }}>
-                      <tbody>
-                        {b.selected
-                          .slice()
-                          .sort((a, c) => c.createdAt.localeCompare(a.createdAt))
-                          .slice(0, 6)
-                          .map((o) => (
-                            <tr key={o.id}>
-                              <td>
-                                <Link to={("/admin/sales/orders/" + o.id) as "/admin"}>
-                                  <strong>{o.number}</strong>
-                                  <small>{o.customer.name}</small>
-                                </Link>
-                              </td>
-                              <td>{money(o.total)}</td>
-                              <td>
-                                <Badge tone={o.status === "Delivered" ? "success" : "neutral"}>
-                                  {orderLabels[o.status]}
-                                </Badge>
-                              </td>
-                            </tr>
-                          ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </Card>
+                <Access resource="sales">
+                  <Card>
+                    <div className="a-card-head">
+                      <h2>Đơn hàng gần đây</h2>
+                      <Link className="a-btn a-btn-sm a-btn-ghost" to="/admin/sales/orders">
+                        Xem tất cả →
+                      </Link>
+                    </div>
+                    <div className="a-table-wrap">
+                      <table className="a-table" style={{ minWidth: 300 }}>
+                        <tbody>
+                          {b.selected
+                            .slice()
+                            .sort((a, c) => c.createdAt.localeCompare(a.createdAt))
+                            .slice(0, 6)
+                            .map((o) => (
+                              <tr key={o.id}>
+                                <td>
+                                  <Link to={("/admin/sales/orders/" + o.id) as "/admin"}>
+                                    <strong>{o.number}</strong>
+                                    <small>{o.customer.name}</small>
+                                  </Link>
+                                </td>
+                                <td>{money(o.total)}</td>
+                                <td>
+                                  <Badge tone={o.status === "Delivered" ? "success" : "neutral"}>
+                                    {orderLabels[o.status]}
+                                  </Badge>
+                                </td>
+                              </tr>
+                            ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </Card>
+                </Access>
               </div>
               <div className="a-grid-2">
                 <ChartCard title="Đơn hàng theo thời gian" data={b.orderTrend} kind="bar" />
@@ -144,89 +130,97 @@ export default function Dashboard() {
                 />
                 <ChartCard title="Nguồn truy cập" data={r.current.sources} kind="donut" />
                 <ChartCard title="Sản phẩm bán nhiều (demo)" data={b.topProducts} kind="bar" />
-                <Card>
-                  <h2>Sản phẩm sắp hết hàng</h2>
-                  <div className="a-table-wrap" style={{ marginTop: 18 }}>
-                    <table className="a-table" style={{ minWidth: 300 }}>
-                      <tbody>
-                        {r.products
-                          .filter((p) => p.stock - p.reserved < 35)
-                          .slice(0, 6)
-                          .map((p) => (
-                            <tr key={p.id}>
-                              <td>
-                                <Link to={("/admin/products/" + p.id) as "/admin"}>{p.name}</Link>
-                              </td>
-                              <td>
-                                <Badge tone="warning">{p.stock - p.reserved} khả dụng</Badge>
-                              </td>
-                            </tr>
-                          ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </Card>
-                <Card>
-                  <h2>Hoạt động gần đây</h2>
-                  <ol className="a-timeline" style={{ marginTop: 20 }}>
-                    {r.activity
-                      .slice(-5)
-                      .reverse()
-                      .map((a) => (
-                        <li key={a.id}>
-                          {a.action} · {a.resource}
-                          <small>{date(a.createdAt)}</small>
-                        </li>
-                      ))}
-                  </ol>
-                  {!r.activity.length && (
-                    <p style={{ marginTop: 18, color: "var(--a-muted)", fontSize: 12 }}>
-                      Hoạt động chỉnh sửa sẽ xuất hiện ở đây.
-                    </p>
-                  )}
-                </Card>
-                <Card>
-                  <h2>Thông báo hệ thống</h2>
-                  {r.notifications.slice(0, 4).map((n) => (
-                    <Link
-                      key={n.id}
-                      to={n.href as "/admin"}
-                      className="a-search-results"
-                      style={{
-                        display: "block",
-                        padding: "12px 0",
-                        borderBottom: "1px solid var(--a-border)",
-                      }}
-                    >
-                      <strong>{n.name}</strong>
-                      <small style={{ display: "block" }}>{n.description}</small>
-                    </Link>
-                  ))}
-                </Card>
-                <Card>
-                  <h2>Khách truy cập gần đây (mô phỏng)</h2>
-                  <div className="a-table-wrap" style={{ marginTop: 16 }}>
-                    <table className="a-table" style={{ minWidth: 300 }}>
-                      <tbody>
-                        {r.visitors
-                          .slice()
-                          .sort((a, c) => c.lastSeenAt.localeCompare(a.lastSeenAt))
-                          .slice(0, 5)
-                          .map((v) => (
-                            <tr key={v.id}>
-                              <td>
-                                <Link to={("/admin/analytics/visitors/" + v.id) as "/admin"}>
-                                  {v.anonymousId}
-                                </Link>
-                              </td>
-                              <td>{v.deviceType}</td>
-                              <td>{v.country}</td>
-                            </tr>
-                          ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </Card>
+                <Access resource="products">
+                  <Card>
+                    <h2>Sản phẩm sắp hết hàng</h2>
+                    <div className="a-table-wrap" style={{ marginTop: 18 }}>
+                      <table className="a-table" style={{ minWidth: 300 }}>
+                        <tbody>
+                          {r.products
+                            .filter((p) => p.stock - p.reserved < 35)
+                            .slice(0, 6)
+                            .map((p) => (
+                              <tr key={p.id}>
+                                <td>
+                                  <Link to={("/admin/products/" + p.id) as "/admin"}>{p.name}</Link>
+                                </td>
+                                <td>
+                                  <Badge tone="warning">{p.stock - p.reserved} khả dụng</Badge>
+                                </td>
+                              </tr>
+                            ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </Card>
+                </Access>
+                <Access resource="audit">
+                  <Card>
+                    <h2>Hoạt động gần đây</h2>
+                    <ol className="a-timeline" style={{ marginTop: 20 }}>
+                      {r.activity
+                        .slice(-5)
+                        .reverse()
+                        .map((a) => (
+                          <li key={a.id}>
+                            {a.action} · {a.resource}
+                            <small>{date(a.createdAt)}</small>
+                          </li>
+                        ))}
+                    </ol>
+                    {!r.activity.length && (
+                      <p style={{ marginTop: 18, color: "var(--a-muted)", fontSize: 12 }}>
+                        Hoạt động chỉnh sửa sẽ xuất hiện ở đây.
+                      </p>
+                    )}
+                  </Card>
+                </Access>
+                <Access resource="notifications">
+                  <Card>
+                    <h2>Thông báo hệ thống</h2>
+                    {r.notifications.slice(0, 4).map((n) => (
+                      <Link
+                        key={n.id}
+                        to={n.href as "/admin"}
+                        className="a-search-results"
+                        style={{
+                          display: "block",
+                          padding: "12px 0",
+                          borderBottom: "1px solid var(--a-border)",
+                        }}
+                      >
+                        <strong>{n.name}</strong>
+                        <small style={{ display: "block" }}>{n.description}</small>
+                      </Link>
+                    ))}
+                  </Card>
+                </Access>
+                <Access resource="analytics">
+                  <Card>
+                    <h2>Khách truy cập gần đây (mô phỏng)</h2>
+                    <div className="a-table-wrap" style={{ marginTop: 16 }}>
+                      <table className="a-table" style={{ minWidth: 300 }}>
+                        <tbody>
+                          {r.visitors
+                            .slice()
+                            .sort((a, c) => c.lastSeenAt.localeCompare(a.lastSeenAt))
+                            .slice(0, 5)
+                            .map((v) => (
+                              <tr key={v.id}>
+                                <td>
+                                  <Link to={("/admin/analytics/visitors/" + v.id) as "/admin"}>
+                                    {v.anonymousId}
+                                  </Link>
+                                </td>
+                                <td>{v.deviceType}</td>
+                                <td>{v.country}</td>
+                              </tr>
+                            ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </Card>
+                </Access>
               </div>
             </>
           );

@@ -1,6 +1,14 @@
 import { z } from "zod";
 import type { AdminStore, DemoSession } from "../services/contracts";
-import { requirePermission } from "../accounts/permissions";
+import { authorizeOperation } from "../accounts/permissions";
+import { drainSeedJobs, clearSeedCache } from "../demo/registry";
+export async function resetDemoData(store: AdminStore, session: DemoSession | null) {
+  const assertActive = await authorizeOperation(store, session, "settings", "settings");
+  await drainSeedJobs(store);
+  assertActive();
+  await store.reset();
+  clearSeedCache(store);
+}
 import { ServiceError } from "../services/errors";
 const schemas = {
   general: z.object({
@@ -21,12 +29,7 @@ export async function saveSetting(
   values: unknown,
   revision: number,
 ) {
-  requirePermission(
-    session,
-    "settings",
-    "update",
-    session ? await store.get("roles", session.roleId) : undefined,
-  );
+  const assertActive = await authorizeOperation(store, session, "settings", "update");
   const parsed = schemas[key].safeParse(values);
   if (!parsed.success)
     throw new ServiceError(
@@ -34,6 +37,7 @@ export async function saveSetting(
       "Thông tin cài đặt không hợp lệ. Kiểm tra tên, email và thời gian phiên (5–120 phút).",
     );
   return store.transaction(["settings", "audit"], async (tx) => {
+    assertActive();
     const before = await tx.get("settings", key);
     if (!before) throw new ServiceError("not-found", "Không tìm thấy cài đặt.");
     if (before.revision !== revision)
@@ -53,6 +57,7 @@ export async function saveSetting(
       before: JSON.stringify(before.values),
       after: JSON.stringify(after.values),
     });
+    assertActive();
     return after;
   });
 }

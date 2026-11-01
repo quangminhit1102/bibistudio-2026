@@ -6,7 +6,7 @@ import {
   type AdminModels,
   type EntityKey,
 } from "../services/contracts";
-import { storageError } from "../services/errors";
+import { storageError, ServiceError } from "../services/errors";
 export function createAdminStore(name = "bibi-admin-demo"): AdminStore {
   let generation = 0;
   let connection: Promise<IDBPDatabase> | undefined;
@@ -56,6 +56,7 @@ export function createAdminStore(name = "bibi-admin-demo"): AdminStore {
       }
     },
     async transaction<T>(entities: EntityKey[], work: (tx: AdminTransaction) => Promise<T>) {
+      const operationGeneration = generation;
       const tx = (await db()).transaction(
         [...new Set([...entities, ...(entities.includes("media") ? ["blobs"] : [])])],
         "readwrite",
@@ -76,6 +77,8 @@ export function createAdminStore(name = "bibi-admin-demo"): AdminStore {
       };
       try {
         const result = await work(api);
+        if (operationGeneration !== generation)
+          throw new ServiceError("aborted", "Phiên thay đổi trong khi lưu.");
         await tx.done;
         return result;
       } catch (e) {
@@ -109,6 +112,7 @@ export function createAdminStore(name = "bibi-admin-demo"): AdminStore {
       }
     },
     async importMedia(records, actor = "demo") {
+      const operationGeneration = generation;
       const tx = (await db()).transaction(["media", "blobs", "audit"], "readwrite");
       try {
         for (const item of records) {
@@ -128,6 +132,8 @@ export function createAdminStore(name = "bibi-admin-demo"): AdminStore {
             after: JSON.stringify(item.asset),
           });
         }
+        if (operationGeneration !== generation)
+          throw new ServiceError("aborted", "Phiên thay đổi trong khi nhập ảnh.");
         await tx.done;
       } catch (e) {
         try {

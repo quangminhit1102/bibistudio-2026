@@ -1,9 +1,7 @@
 import { readFile, readdir, writeFile } from "node:fs/promises";
 import { resolve, join } from "node:path";
 import { gzipSync } from "node:zlib";
-const baseline = resolve(
-  process.argv[2] ?? ".superpowers/sdd/2026-11-01-admin-dashboard/baseline/assets",
-);
+const baseline = process.argv[2] ? resolve(process.argv[2]) : null;
 const current = resolve(process.argv[3] ?? "dist-cpanel/assets");
 async function measure(dir) {
   const files = await readdir(dir);
@@ -38,7 +36,9 @@ async function measure(dir) {
     initialFiles: [...visited],
   };
 }
-const before = await measure(baseline),
+const before = baseline
+    ? await measure(baseline)
+    : JSON.parse(await readFile(resolve("docs/admin-baseline.json"), "utf8")).stats,
   after = await measure(current);
 const report = {
   before,

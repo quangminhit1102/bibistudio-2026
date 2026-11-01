@@ -1,5 +1,5 @@
 import type { AdminStore, DemoSession } from "../services/contracts";
-import { requirePermission } from "../accounts/permissions";
+import { authorizeOperation } from "../accounts/permissions";
 import { ServiceError } from "../services/errors";
 export async function adjustStock(
   store: AdminStore,
@@ -12,15 +12,16 @@ export async function adjustStock(
     revision: number;
   },
 ) {
-  requirePermission(
+  const assertActive = await authorizeOperation(
+    store,
     session,
     input.entity === "books" ? "bookstore" : "products",
     "update",
-    session ? await store.get("roles", session.roleId) : undefined,
   );
   if (!input.reason.trim() || !Number.isInteger(input.delta) || input.delta === 0)
     throw new ServiceError("validation", "Nhập số lượng nguyên khác0 và lý do điều chỉnh.");
   return store.transaction([input.entity, "stock", "audit"], async (tx) => {
+    assertActive();
     const before = await tx.get(input.entity, input.id);
     if (!before) throw new ServiceError("not-found", "Không tìm thấy sản phẩm.");
     if (before.revision !== input.revision)
@@ -53,5 +54,6 @@ export async function adjustStock(
       before: String(before.stock),
       after: String(stock),
     });
+    assertActive();
   });
 }

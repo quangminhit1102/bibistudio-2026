@@ -99,7 +99,7 @@ export default function Preferences() {
           </Card>
         )
       )}
-      {kind === "security" && (
+      {kind === "security" && can(runtime.session, "settings", "settings", role.data) && (
         <Card>
           <h2>Khôi phục dữ liệu demo</h2>
           <p>

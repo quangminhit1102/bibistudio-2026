@@ -1,3 +1,4 @@
+import { componentUsage } from "./usage";
 import { useState } from "react";
 import { LoaderCircle, CheckCircle, TriangleAlert, AlertCircle } from "lucide-react";
 import {
@@ -121,7 +122,7 @@ export default function Feedback() {
           key={name}
           name={name}
           description="Thông báo có nội dung cụ thể; thành công chỉ hiển thị sau thao tác demo."
-          code={'<FeedbackExample name="' + name + '" />'}
+          code={componentUsage("feedback", name)}
         >
           <FeedbackExample name={name} />
         </Example>

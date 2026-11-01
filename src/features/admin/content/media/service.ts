@@ -2,12 +2,16 @@ import type { AdminStore, DemoSession, MediaAsset } from "../../services/contrac
 import { requirePermission } from "../../accounts/permissions";
 import { ServiceError } from "../../services/errors";
 import { validateImageFile } from "./limits";
-export function createMediaService(store: AdminStore, session: () => DemoSession | null) {
+export function createMediaService(
+  store: AdminStore,
+  session: () => DemoSession | null,
+  scope: "content" | "products" | "bookstore" = "content",
+) {
   const generation = store.generation;
   return {
     async import(files: File[]) {
       const s = session();
-      requirePermission(s, "content", "create", s ? await store.get("roles", s.roleId) : undefined);
+      requirePermission(s, scope, "create", s ? await store.get("roles", s.roleId) : undefined);
       if (files.length > 10) throw new ServiceError("validation", "Tối đa10 ảnh mỗi lần nhập.");
       const prepared: { asset: MediaAsset; blob: Blob }[] = [];
       for (const file of files) {
@@ -49,7 +53,7 @@ export function createMediaService(store: AdminStore, session: () => DemoSession
     },
     async openBlob(id: string) {
       const s = session();
-      requirePermission(s, "content", "view", s ? await store.get("roles", s.roleId) : undefined);
+      requirePermission(s, scope, "view", s ? await store.get("roles", s.roleId) : undefined);
       const asset = await store.get("media", id);
       if (!asset) throw new ServiceError("not-found", "Không tìm thấy ảnh.");
       const blob = await store.getBlob(asset.blobKey);

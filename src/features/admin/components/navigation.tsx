@@ -1,3 +1,4 @@
+import { componentUsage } from "./usage";
 import { useState } from "react";
 import { Tabs, ContextMenu, Menubar, Accordion } from "radix-ui";
 import { Button, Modal, ActionMenu } from "../shared/ui/primitives";
@@ -285,7 +286,7 @@ export default function Navigation() {
           key={name}
           name={name}
           description="Dùng Tab, Enter và phím mũi tên trong các menu/tab/cây nội dung."
-          code={'<NavigationExample name="' + name + '" />'}
+          code={componentUsage("navigation", name)}
         >
           <NavigationExample name={name} />
         </Example>

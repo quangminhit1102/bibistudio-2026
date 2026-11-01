@@ -1,3 +1,4 @@
+import { componentUsage } from "./usage";
 import { useState } from "react";
 import { Popover, HoverCard, AlertDialog } from "radix-ui";
 import { Button, Modal, ConfirmDialog, Tooltip, ActionMenu } from "../shared/ui/primitives";
@@ -177,7 +178,7 @@ export default function Overlays() {
           key={name}
           name={name}
           description="Hỗ trợ focus, Escape và quay lại nút mở. Thao tác chỉ ảnh hưởng ví dụ."
-          code={'<OverlayExample name="' + name + '" />'}
+          code={componentUsage("overlays", name)}
         >
           <OverlayExample name={name} />
         </Example>

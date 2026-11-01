@@ -10,7 +10,7 @@ const paths = {
   books: "/admin/bookstore/books/",
   orders: "/admin/sales/orders/",
   posts: "/admin/content/posts/",
-  users: "/admin/accounts/users",
+  users: "/admin/accounts/users/",
 };
 export default function GlobalSearch({ onClose }: { onClose: () => void }) {
   const runtime = useAdmin();
@@ -45,7 +45,7 @@ export default function GlobalSearch({ onClose }: { onClose: () => void }) {
                     ? String(row.number)
                     : "",
             entity,
-            path: paths[entity] + (entity === "users" ? "" : row.id),
+            path: paths[entity] + row.id,
           });
       }
       return matches;

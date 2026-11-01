@@ -1,10 +1,10 @@
-import { useState, lazy, Suspense } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useParams, useNavigate, Link } from "@tanstack/react-router";
 import { flushSync } from "react-dom";
 import { useAdmin, useRecord, useRole } from "../services/context";
 import { can, resourceForEntity } from "../accounts/permissions";
-import type { EntityKey, CreateInput } from "../services/contracts";
+import type { AdminModels, EntityKey, CreateInput } from "../services/contracts";
 import type { EntityConfig } from "./entity-manager";
 import { RecordForm, type FormValues } from "./forms/record-form";
 import { useUnsavedChanges } from "./forms/unsaved-guard";
@@ -35,10 +35,14 @@ export function RecordEditor<K extends EntityKey>({
   const record = useRecord(config.entity, id ?? "", config.resource);
   const role = useRole();
   const [dirty, setDirty] = useState(false);
+  const [snapshot, setSnapshot] = useState<AdminModels[K] | null>(null);
+  useEffect(() => {
+    if (record.data && (!snapshot || snapshot.id !== record.data.id)) setSnapshot(record.data);
+  }, [record.data, snapshot]);
   const blocker = useUnsavedChanges(dirty);
-  if (id && record.isPending) return <Skeleton />;
   if (record.error)
     return <ErrorState error={record.error} onRetry={() => void record.refetch()} />;
+  if (id && (record.isPending || !snapshot || snapshot.id !== id)) return <Skeleton />;
   if (
     !can(
       runtime.session,
@@ -58,16 +62,24 @@ export function RecordEditor<K extends EntityKey>({
       />
       <Card>
         <RecordForm
+          mediaScope={
+            config.entity === "products"
+              ? "products"
+              : config.entity === "books"
+                ? "bookstore"
+                : "content"
+          }
           key={id ?? "new"}
           fields={config.fields}
-          initial={(record.data ?? config.defaults) as unknown as FormValues}
+          initial={(snapshot ?? config.defaults) as unknown as FormValues}
           onDirtyChange={setDirty}
           onCancel={() => void navigate({ to: listHref as "/admin" })}
           onSave={async (values) => {
             const service = runtime.service(config.entity, config.resource);
-            if (id && record.data)
-              await service.update(id, values as Partial<CreateInput<K>>, record.data.revision);
-            else await service.create(values as CreateInput<K>);
+            const editable = Object.fromEntries(config.fields.map((f) => [f.key, values[f.key]]));
+            if (id && snapshot)
+              await service.update(id, editable as Partial<CreateInput<K>>, snapshot.revision);
+            else await service.create({ ...config.defaults, ...editable } as CreateInput<K>);
             await query.invalidateQueries({ queryKey: ["bibi-admin"] });
             flushSync(() => setDirty(false));
             notice("Đã lưu dữ liệu demo.");

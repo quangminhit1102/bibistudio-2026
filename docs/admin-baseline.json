@@ -1,0 +1,18 @@
+{
+  "sourceSha": "36b2721df0deca88e334d1e3a86eeb9dee42d653",
+  "capturedAt": "2026-11-01",
+  "entrySha256": "37cba451fcbc8f8e106eff1d33263f0d10e39aa035a426317bd1149737aff345",
+  "note": "Public build captured before admin; hash matched the retained local release. Later branch-base commits did not change public runtime.",
+  "stats": {
+    "entry": "cpanel-CRscWoOi.js",
+    "css": "styles-CPiH22WW.css",
+    "jsBytes": 582801,
+    "jsGzip": 174289,
+    "cssBytes": 60682,
+    "cssGzip": 11206,
+    "initialGzip": 174289,
+    "initialFiles": [
+      "cpanel-CRscWoOi.js"
+    ]
+  }
+}
