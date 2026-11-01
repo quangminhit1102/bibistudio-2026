@@ -1,0 +1,37 @@
+{
+  "before": {
+    "entry": "cpanel-CRscWoOi.js",
+    "css": "styles-CPiH22WW.css",
+    "jsBytes": 582801,
+    "jsGzip": 174289,
+    "cssBytes": 60682,
+    "cssGzip": 11206,
+    "initialGzip": 174289,
+    "initialFiles": [
+      "cpanel-CRscWoOi.js"
+    ]
+  },
+  "after": {
+    "entry": "cpanel-B3GnHqNw.js",
+    "css": "styles-BLGPVI_0.css",
+    "jsBytes": 582312,
+    "jsGzip": 172913,
+    "cssBytes": 60954,
+    "cssGzip": 11265,
+    "initialGzip": 181432,
+    "initialFiles": [
+      "cpanel-B3GnHqNw.js",
+      "dist-FdiGGiVE.js",
+      "useSelector-HKuzJ9gn.js",
+      "with-selector-DzGLJtWi.js"
+    ]
+  },
+  "delta": {
+    "jsGzip": 7143,
+    "cssGzip": 59
+  },
+  "limits": {
+    "jsGzip": 10240,
+    "cssGzip": 2048
+  }
+}

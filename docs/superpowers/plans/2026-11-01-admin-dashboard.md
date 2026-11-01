@@ -1,5 +1,7 @@
 # BiBi Admin Implementation Plan
 
+> Execution status (01/11/2026): integrated admin demo delivered locally on `codex/admin-dashboard`; application artifact source `a751c59`. See [acceptance](../../admin-acceptance.md) and [execution record](../reports/2026-11-01-admin-execution.md) for actual commands, results and three deferred minor findings. The checkboxes below preserve the original plan; they are not the canonical execution ledger. No push, merge or production deployment.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans or superpowers:subagent-driven-development to implement this plan task-by-task. Steps use checkbox syntax for tracking.
 
 **Goal:** Build the complete master-prompt admin demo under /admin, with the approved Lovable visual direction and measured public-site performance isolation.
