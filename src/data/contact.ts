@@ -4,8 +4,8 @@ export const contact = {
   phoneDisplay: "0392 969 000",
   email: "bibistudio@gmail.com",
   zalo: "https://zalo.me/0392969000",
-  facebook: "https://www.facebook.com/sharetosmile12",
-  messenger: "https://m.me/sharetosmile12",
+  facebook: "https://www.facebook.com/bidiary",
+  messenger: "https://m.me/bidiary",
 };
 
 // Meeting point saved by BiBi Studio in Google Maps.

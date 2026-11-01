@@ -1,6 +1,7 @@
 // Product-showcase motion primitives. All effects are transform/opacity only and
 // switch off for users who prefer reduced motion.
 import { useEffect, useRef, useState, type ReactNode, type CSSProperties } from "react";
+import { lensGeometry, type LensGeometry } from "@/lib/magnifier-geometry";
 
 export function prefersReducedMotion() {
   return typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -155,7 +156,9 @@ export function FilmStrip({ children, header }: { children: ReactNode; header?: 
 
 /** Product image with a hover magnifier (desktop) and double-tap zoom (touch). */
 export function Magnifier({ src, alt, className = "", style }: { src: string; alt: string; className?: string; style?: CSSProperties }) {
-  const [lens, setLens] = useState<{ x: number; y: number } | null>(null);
+  const lensSize = 176;
+  const [lens, setLens] = useState<LensGeometry | null>(null);
+  const imageRef = useRef<HTMLImageElement>(null);
   const [zoomed, setZoomed] = useState(false);
   const [origin, setOrigin] = useState("50% 50%");
   const lastTap = useRef(0);
@@ -171,7 +174,13 @@ export function Magnifier({ src, alt, className = "", style }: { src: string; al
     <div
       className={`relative cursor-zoom-in overflow-hidden ${className}`}
       style={style}
-      onPointerMove={(e) => { if (fine.current && e.pointerType === "mouse") setLens(pos(e)); }}
+      onPointerMove={(e) => {
+        if (!fine.current || e.pointerType !== "mouse") return;
+        const image = imageRef.current;
+        if (!image?.complete || !image.naturalWidth) return setLens(null);
+        const rect = e.currentTarget.getBoundingClientRect();
+        setLens(lensGeometry(e.clientX - rect.left, e.clientY - rect.top, rect.width, rect.height, image.naturalWidth, image.naturalHeight, lensSize));
+      }}
       onPointerLeave={() => setLens(null)}
       onPointerUp={(e) => {
         if (e.pointerType === "mouse") return;
@@ -185,6 +194,7 @@ export function Magnifier({ src, alt, className = "", style }: { src: string; al
       }}
     >
       <img
+        ref={imageRef}
         src={src}
         alt={alt}
         className="h-full w-full object-contain transition-transform duration-500 ease-out"
@@ -193,13 +203,16 @@ export function Magnifier({ src, alt, className = "", style }: { src: string; al
       {lens && (
         <div
           aria-hidden
-          className="pointer-events-none absolute size-44 -translate-x-1/2 -translate-y-1/2 rounded-full border border-background bg-no-repeat shadow-paper"
+          className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 rounded-full border border-background bg-no-repeat shadow-paper"
           style={{
-            left: `${lens.x}%`,
-            top: `${lens.y}%`,
+            width: lensSize,
+            height: lensSize,
+            left: `${lens.left}px`,
+            top: `${lens.top}px`,
             backgroundImage: `url("${src}")`,
-            backgroundSize: "260%",
-            backgroundPosition: `${lens.x}% ${lens.y}%`,
+            backgroundSize: `${lens.bgW}px ${lens.bgH}px`,
+            backgroundPosition: `${lens.bgX}px ${lens.bgY}px`,
+            backgroundOrigin: "border-box",
             backgroundColor: "var(--color-secondary)",
           }}
         />

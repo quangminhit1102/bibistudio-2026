@@ -1,4 +1,4 @@
-// Magazine-style footer: brand story · products · collections · contact & map, giant wordmark at the base.
+// Magazine-style footer: brand story · products · collections · contact & map.
 import { Link } from "@tanstack/react-router";
 import { ArrowUpRight, MapPin } from "lucide-react";
 import { BrandLogo } from "./brand-logo";
@@ -90,12 +90,6 @@ export function SiteFooter() {
             </a>
           </Col>
         </div>
-      </div>
-
-      <div aria-hidden className="pointer-events-none mt-16 select-none overflow-hidden px-3">
-        <p className="footer-wordmark whitespace-nowrap text-center font-display leading-[0.8] text-secondary">
-          BiBi Studio
-        </p>
       </div>
 
       <div className="border-t border-border">

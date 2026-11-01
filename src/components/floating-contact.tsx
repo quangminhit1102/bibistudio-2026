@@ -2,6 +2,7 @@
 // Floating contact bar for quick customer outreach.
 // Order: Phone -> Zalo -> Facebook -> Message (Messenger).
 import { Phone } from "lucide-react";
+import { contact } from "@/data/contact";
 
 interface ContactItem {
   id: string;
@@ -53,7 +54,7 @@ const contacts: ContactItem[] = [
   },
   {
     id: "facebook",
-    href: "https://www.facebook.com/sharetosmile12",
+    href: contact.facebook,
     label: "Facebook",
     title: "Fanpage BiBi Studio",
     bg: "bg-[#1877f2] hover:bg-[#1466d2]",
@@ -61,7 +62,7 @@ const contacts: ContactItem[] = [
   },
   {
     id: "messenger",
-    href: "https://m.me/sharetosmile12",
+    href: contact.messenger,
     label: "Messenger",
     title: "Nhắn tin Messenger",
     bg: "bg-[#0084ff] hover:bg-[#0070d9]",
