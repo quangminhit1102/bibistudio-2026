@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import type { ColumnDef } from "@tanstack/react-table";
 import { useAdmin, useEntity, useRole } from "../../services/context";
@@ -16,23 +16,28 @@ export default function Slips() {
     notice = useNotice(),
     navigate = useNavigate();
   const search = useSearch({ strict: false }) as Record<string, unknown>;
-  const [state, setState] = useState<TableState>(() => ({
-    page: Math.max(1, Number(search.page) || 1),
-    pageSize: [10, 20, 50, 100].includes(Number(search.size)) ? Number(search.size) : 10,
-    search: String(search.q ?? ""),
-    filters: Object.fromEntries(
-      Object.entries(search)
-        .filter(([key]) => key.startsWith("f_"))
-        .map(([key, v]) => [key.slice(2), String(v)]),
-    ),
-    sort: {
-      field: String(search.sort ?? "createdAt"),
-      direction: search.dir === "asc" ? "asc" : "desc",
-    },
-  }));
+  const [columnVisibility, setColumnVisibility] = useState<TableState["columnVisibility"]>();
+  const state = useMemo<TableState>(
+    () => ({
+      page: Math.max(1, Number(search.page) || 1),
+      pageSize: [10, 20, 50, 100].includes(Number(search.size)) ? Number(search.size) : 10,
+      search: String(search.q ?? ""),
+      filters: Object.fromEntries(
+        Object.entries(search)
+          .filter(([key]) => key.startsWith("f_"))
+          .map(([key, v]) => [key.slice(2), String(v)]),
+      ),
+      sort: {
+        field: String(search.sort ?? "createdAt"),
+        direction: search.dir === "asc" ? "asc" : "desc",
+      },
+      columnVisibility,
+    }),
+    [search, columnVisibility],
+  );
   const update = useCallback(
     (next: TableState) => {
-      setState(next);
+      setColumnVisibility(next.columnVisibility);
       const query: Record<string, string | number> = { page: next.page, size: next.pageSize };
       if (next.search) query.q = next.search;
       for (const [key, v] of Object.entries(next.filters)) if (v) query[`f_${key}`] = v;

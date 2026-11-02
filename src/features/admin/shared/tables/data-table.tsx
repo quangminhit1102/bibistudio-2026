@@ -62,6 +62,7 @@ export function DataTable<T extends { id: string }>({
   const [localSelection, setLocalSelection] = useState<RowSelectionState>({});
   const [showColumns, setShowColumns] = useState(false);
   const [q, setQ] = useState(state.search);
+  useEffect(() => setQ(state.search), [state.search]);
   const rowsSelected = selection ?? localSelection;
   // Client row models schedule page resets when sorting changes. Keep the
   // reference stable across the table's own updates to avoid a reset loop.

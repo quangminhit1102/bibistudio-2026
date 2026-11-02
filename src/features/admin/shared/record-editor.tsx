@@ -41,7 +41,7 @@ export function RecordEditor<K extends EntityKey>({
     if (record.data && (!snapshot || snapshot.id !== record.data.id)) setSnapshot(record.data);
   }, [record.data, snapshot]);
   const blocker = useUnsavedChanges(dirty);
-  if (record.error)
+  if (record.error && (!snapshot || snapshot.id !== id))
     return <ErrorState error={record.error} onRetry={() => void record.refetch()} />;
   if (id && (record.isPending || !snapshot || snapshot.id !== id)) return <Skeleton />;
   if (
@@ -61,6 +61,7 @@ export function RecordEditor<K extends EntityKey>({
         }
         description="Thay đổi chỉ áp dụng cho bộ dữ liệu demo trong trình duyệt."
       />
+      {record.error && <ErrorState error={record.error} onRetry={() => void record.refetch()} />}
       <Card>
         <RecordForm
           mediaScope={

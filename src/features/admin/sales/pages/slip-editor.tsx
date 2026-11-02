@@ -20,8 +20,11 @@ import { useSlipOptions } from "../hooks";
 import { SlipForm } from "../components/slip-form";
 import { createSlipService } from "../slip-service";
 export default function SlipEditor() {
-  const id = useRecordId(),
-    record = useRecord("purchaseSlips", id),
+  const id = useRecordId();
+  return <SlipEditorSession key={id || "new"} id={id} />;
+}
+function SlipEditorSession({ id }: { id: string }) {
+  const record = useRecord("purchaseSlips", id),
     options = useSlipOptions(),
     runtime = useAdmin(),
     role = useRole();
@@ -36,9 +39,7 @@ export default function SlipEditor() {
     if (record.data && (!snapshot || snapshot.id !== record.data.id)) setSnapshot(record.data);
   }, [record.data, snapshot]);
   const blocker = useUnsavedChanges(dirty);
-  if (options.isPending || role.isPending || (id && (record.isPending || !snapshot)))
-    return <Skeleton />;
-  if (options.error || record.error)
+  if ((!options.data && options.error) || (id && !snapshot && record.error))
     return (
       <ErrorState
         error={options.error ?? record.error}
@@ -48,6 +49,8 @@ export default function SlipEditor() {
         }}
       />
     );
+  if (!options.data || role.isPending || (id && (!snapshot || snapshot.id !== id)))
+    return <Skeleton />;
   if (!can(runtime.session, "sales", id ? "update" : "create", role.data))
     return <ErrorState error={new Error("Bạn không có quyền chỉnh sửa phiếu.")} />;
   if (snapshot?.status === "void")
@@ -58,6 +61,15 @@ export default function SlipEditor() {
         title={id ? "Chỉnh sửa phiếu mua hàng" : "Tạo phiếu mua hàng"}
         description="Ghi nhận sản phẩm bán cho khách · Demo · Không tự trừ kho"
       />
+      {(options.error || record.error) && (
+        <ErrorState
+          error={options.error ?? record.error}
+          onRetry={() => {
+            void options.refetch();
+            if (id) void record.refetch();
+          }}
+        />
+      )}
       <Card>
         <SlipForm
           key={id || "new"}
