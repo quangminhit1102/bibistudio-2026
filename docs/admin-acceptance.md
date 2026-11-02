@@ -1,4 +1,6 @@
-> Đợt hoàn thiện UI mới nhất: **chỉ local**, source `08af947`,131 admin tests đạt,96 component/100 trường hợp bố cục đã kiểm tra, artifact preview4193. Xem [nghiệm thu UI](superpowers/reports/2026-11-02-admin-ui-polish-acceptance.md) và [inventory96 mục](admin-component-audit.md). Chưa push/deploy đợt UI này.
+> Bổ sung theo review giao diện 02/11/2026: source `23f8759` tăng khoảng cách Login20px, khôi phục profile header ở mọi viewport, chỉnh avatar/tên/vai trò ở cuối sidebar và cho sidebar cuộn toàn bộ (footer static). Browser390/768/1440px không tràn ngang; menu Hồ sơ/Đăng xuất hoạt động.5 targeted tests Login/account/theme đạt, TypeScript/lint exit0, full build exit0. Preview4193 chạy artifact `local-23f8759b2e1419bfcd1275af86196e2b0b95da36`, FE/BE khớp; đã đo lại gap20px trên Login artifact390px. Chưa push/deploy.
+>
+> Đợt nghiệm thu UI trước bổ sung: source `08af947`,131 admin tests đạt,96 component/100 trường hợp bố cục đã kiểm tra. Xem [nghiệm thu UI](superpowers/reports/2026-11-02-admin-ui-polish-acceptance.md) và [inventory96 mục](admin-component-audit.md).
 >
 > Lịch sử phát hành trước đó: bản admin đã lên production tại `4c6e070`. Xem [biên bản production](superpowers/reports/2026-11-02-admin-production-release.md). Nội dung bên dưới là các biên bản lịch sử, không mô tả artifact UI mới nhất.
 
