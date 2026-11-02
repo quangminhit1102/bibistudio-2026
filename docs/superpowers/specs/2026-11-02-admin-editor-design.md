@@ -1,8 +1,8 @@
 # BiBi — Biên tập Bài viết và Sản phẩm với TinyMCE
 
-Ngày: 02/11/2026. Trạng thái: bố cục phác thảo đã được người dùng duyệt; thiết kế kỹ thuật chờ duyệt và chọn cách cấp phép/tải TinyMCE. Chưa triển khai source ứng dụng.
+Ngày: 02/11/2026. Trạng thái: người dùng đã duyệt bố cục và chọn Tiny Cloud dùng API key. Tiếp tục lập kế hoạch triển khai local; chưa triển khai source ứng dụng.
 
-Builder check độc lập ngày 02/11: không còn câu hỏi quan trọng ngoài lựa chọn Tiny Cloud/self-host và giấy phép đã nêu rõ đang chờ. Chưa chuyển sang implementation plan khi lựa chọn này chưa chốt.
+Builder check độc lập ngày 02/11: không còn câu hỏi quan trọng ngoài lựa chọn Tiny Cloud/self-host; người dùng sau đó chọn Tiny Cloud. Không tự tạo tài khoản hoặc chấp nhận điều khoản thay người dùng.
 
 ## Mục tiêu và phạm vi đã thống nhất
 
@@ -18,12 +18,12 @@ Không thêm AI, cộng tác realtime, video nhúng, quản lý đơn hàng hay 
 - TinyMCE: người dùng chọn vì bộ công cụ quen thuộc, tích hợp React và đủ nhu cầu biên tập.
 - CKEditor: đã được nhắc như ví dụ ban đầu; không chọn, không cài thêm editor song song.
 
-Cách tải/cấp phép TinyMCE còn cần người dùng chọn, không được suy ra từ việc duyệt mockup:
+Cách tải/cấp phép được xem xét riêng sau khi duyệt mockup:
 
 1. Tiny Cloud: wrapper React tải editor khi mở form qua API key do người dùng cung cấp; không cần chép bộ editor vào artifact, cần mạng và cấu hình domain/plan theo tài khoản. Đề xuất khi muốn giữ source riêng và tích hợp ít công sức.
 2. Self-host: tải editor từ asset cùng ứng dụng, không phụ thuộc Tiny Cloud lúc chạy; cần chọn tuân thủ GPL hoặc giấy phép thương mại. Không tự đặt `licenseKey='gpl'`, không tự mua license hay đăng ký tài khoản thay người dùng.
 
-Thiết kế phía dưới độc lập với lựa chọn này. Chỉ lập kế hoạch cài đặt cụ thể sau khi lựa chọn được chốt; không có chế độ `no-api-key` hay editor lỗi được coi là đã hoàn thành.
+Người dùng chọn phương án 1 qua câu trả lời “Tiny Cloud — dùng API key”. Cài wrapper React, không cài runtime self-host, không dùng `licenseKey='gpl'`. API key đọc từ `VITE_TINYMCE_API_KEY` trong `.env.local`; chỉ kiểm tra có/không, không in giá trị. Đây là key được dùng phía client nên xuất hiện trong browser theo cơ chế Tiny Cloud; người dùng cấu hình domain phù hợp trong tài khoản Tiny. Không có chế độ `no-api-key` hay editor lỗi được coi là đã hoàn thành.
 
 Nguồn chính thức kiểm tra ngày 02/11/2026: [License key](https://www.tiny.cloud/docs/tinymce/latest/license-key/), [React self-host](https://www.tiny.cloud/docs/tinymce/latest/react-pm-host/). Không coi tự host là mặc nhiên miễn phí cho mọi cách phân phối ứng dụng.
 
