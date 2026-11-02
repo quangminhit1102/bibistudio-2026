@@ -1,6 +1,6 @@
 # Chấm slider trang chủ — Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Chấm chuyển ảnh tròn, đơn giản, dễ bấm và không bị cắt khi hero cuộn/animation.
 
@@ -35,14 +35,15 @@
 
 **Interfaces:** Export `HeroSlide={src:string;alt:string;label?:string;slug?:string}`; `HeroSlides({slides}:{slides:HeroSlide[]})` sở hữu state/timer và layout ổn định, images nằm trong lớp motion riêng. Không đưa controls vào ancestor có transform/clip-path; `index.tsx` bỏ outer Parallax cũ quanh toàn component, component áp hiệu ứng riêng cho ảnh. Không đưa timer state lên page root gây render mọi section.
 
-- [ ] Browser tái hiện trước sửa tại scroll0,25%,50%,75% chiều cao hero trong transition và sau animation; chụp evidence clipping nếu tái hiện được, ghi rõ viewport. Nếu chưa tái hiện không tuyên bố đã xác nhận nguyên nhân; vẫn kiểm tra DOM/clip chain để chọn vị trí controls.
-- [ ] **RED:** `advances_after_5500ms_and_manual_selection_updates_current` assert lúc5499ms ảnh1/dot1,5500ms ảnh2/dot2; click dot3 tương ứng ảnh3. `does_not_autoplay_with_reduced_motion` sau11000ms vẫn ảnh1 nhưng click đổi được. `cleans_timer_on_unmount` không còn timer của component. Giữ image alt/aria-hidden cho active/inactive, count dots bằng count ảnh. Chạy `npm run test:admin -- tests/admin/hero-slides.test.tsx`, xác nhận FAIL chức năng/component mới thiếu.
-- [ ] Implement container ổn định có controls sibling image layer, dot fixed circle/ring, hit44px, aria-label tiếng Việt và aria-current; focus ring tương phản cả ảnh sáng/tối. Bỏ pill blur nặng, không hover kéo dài dot. Giữ eager ảnh đầu/lazy ảnh sau, opacity/transform transitions và reduced motion.
-- [ ] Chạy targeted PASS; browser360/390/768/1024/1440 tại các vị trí scroll trong/sau transition, resize, slow image load, keyboard Tab/Enter/Space, reduced motion, chọn ảnh/autoplay. Chụp trước/sau, đo hit44px và kiểm tra dots hoàn toàn biến khỏi viewport cùng hero. Kiểm tra không tràn ngang/không che CTA và không lỗi console sau unmount/remount.
-- [ ] Chạy `npm run check`, `npm run build`, `node scripts/admin-bundle-report.mjs`: exit0 và budget tổng đạt. Mở artifact `.releases/local-SHA` thật bằng `node scripts/preview.mjs <artifact>` rồi kiểm tra homepage/đi product/quay lại. Nếu admin plan chạy cùng đợt, dùng acceptance build cuối cùng chung nhưng ghi đúng SHA/artifact và không bỏ browser hero.
-- [ ] Cập nhật evidence/observed trong acceptance; `git diff --check`; commit `fix(site): keep circular hero controls outside moving image layers`. Không push/deploy.
+- [x] Browser tái hiện trước sửa tại scroll0,25%,50%,75% chiều cao hero trong transition và sau animation; chụp evidence clipping nếu tái hiện được, ghi rõ viewport. Nếu chưa tái hiện không tuyên bố đã xác nhận nguyên nhân; vẫn kiểm tra DOM/clip chain để chọn vị trí controls.
+- [x] **RED:** `advances_after_5500ms_and_manual_selection_updates_current` assert lúc5499ms ảnh1/dot1,5500ms ảnh2/dot2; click dot3 tương ứng ảnh3. `does_not_autoplay_with_reduced_motion` sau11000ms vẫn ảnh1 nhưng click đổi được. `cleans_timer_on_unmount` không còn timer của component. Giữ image alt/aria-hidden cho active/inactive, count dots bằng count ảnh. Chạy `npm run test:admin -- tests/admin/hero-slides.test.tsx`, xác nhận FAIL chức năng/component mới thiếu.
+- [x] Implement container ổn định có controls sibling image layer, dot fixed circle/ring, hit44px, aria-label tiếng Việt và aria-current; focus ring tương phản cả ảnh sáng/tối. Bỏ pill blur nặng, không hover kéo dài dot. Giữ eager ảnh đầu/lazy ảnh sau, opacity/transform transitions và reduced motion.
+- [x] Chạy targeted PASS; browser360/390/768/1024/1440 tại các vị trí scroll trong/sau transition, resize, slow image load, keyboard Tab/Enter/Space, reduced motion, chọn ảnh/autoplay. Chụp trước/sau, đo hit44px và kiểm tra dots hoàn toàn biến khỏi viewport cùng hero. Kiểm tra không tràn ngang/không che CTA và không lỗi console sau unmount/remount.
+- [x] Chạy `npm run check`, `npm run build`, `node scripts/admin-bundle-report.mjs`: exit0 và budget tổng đạt. Mở artifact `.releases/local-SHA` thật bằng `node scripts/preview.mjs <artifact>` rồi kiểm tra homepage/đi product/quay lại. Nếu admin plan chạy cùng đợt, dùng acceptance build cuối cùng chung nhưng ghi đúng SHA/artifact và không bỏ browser hero.
+- [x] Cập nhật evidence/observed trong acceptance; `git diff --check`; commit `fix(site): keep circular hero controls outside moving image layers`. Không push/deploy.
 
 ## Tự review plan và bàn giao
 
 Đã phủ yêu cầu dot tròn/đẹp/không clipping, accessibility, timer và reduced motion; kiểm chứng CSS bằng browser thay vì test lặp class. Không thay slider thành carousel thư viện hoặc mở rộng nội dung. Giữ phương thức Native cùng plan admin; chờ review plan trước triển khai.
 
+Nghiệm thu local hoàn tất cùng artifact admin08af947. Browser không expose reduced-motion OS/network throttling: kiểm tra reduced-motion bằng regression, geometry bằng browser; không khẳng định đã giả lập mạng chậm. Xem biên bản admin UI polish.

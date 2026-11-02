@@ -1,10 +1,10 @@
 # BiBi Admin — hướng dẫn cho người và agent
 
-Admin nằm trong app hiện có tại `/admin`, dùng React, TanStack Router/Query, TypeScript và CSS scoped. Đây là **demo trên trình duyệt**, chưa kết nối tài khoản, MySQL, thanh toán hoặc catalogue thật. Express hiện có vẫn chỉ phục vụ API demo. Không nhập dữ liệu nhạy cảm vào bản demo.
+Admin nằm trong app hiện có tại `/admin`, dùng React, TanStack Router/Query, TypeScript và CSS scoped. Giao diện dùng tiếng Việt, dữ liệu lưu trong trình duyệt; chưa nối auth server, MySQL hoặc thanh toán. Catalogue khởi tạo lấy từ dữ liệu website, các sửa đổi admin chưa xuất bản ra website. Không nhập dữ liệu nhạy cảm vào bản local này.
 
 ## Chạy và kiểm tra
 
-Dùng Node24 và các lệnh ở [build-and-deploy.md](build-and-deploy.md): `npm ci`, `npm run dev`, `npm run check`, `npm run build`. FE và BE chạy cùng bằng một lệnh dev; mở `http://localhost:5173/admin`. Chọn một tài khoản demo theo vai trò. Không cần mật khẩu hay database.
+Dùng Node24 và các lệnh ở [build-and-deploy.md](build-and-deploy.md): `npm ci`, `npm run dev`, `npm run check`, `npm run build`. FE và BE chạy cùng bằng một lệnh dev; mở `http://localhost:5173/admin`. Đăng nhập local bằng **bibi.admin / BibiLocal!2026**. Đây là fixture công khai trong source, không phải credential hosting hoặc bảo vệ production.
 
 `npm run test:admin` chỉ chạy bộ test admin. `npm run check` còn kiểm tra TypeScript, lint, ảnh catalogue, tooling triển khai và API. Build release dùng nguyên pipeline cPanel hiện có; admin được phát hành cùng FE khi có yêu cầu phát hành riêng. Không tự push/deploy chỉ vì test hoặc build đạt.
 
@@ -22,18 +22,18 @@ Dùng Node24 và các lệnh ở [build-and-deploy.md](build-and-deploy.md): `np
 | Media          | `/admin/content/media`                  | Nhập JPEG/PNG/WebP, xem trước, tìm, grid/list, xóa ảnh chưa dùng                 |
 | Tài khoản      | `/admin/accounts/users`                 | Users, roles, ma trận phân quyền demo                                            |
 | Hệ thống       | `/admin/audit-logs`, chuông trên header | Audit trước/sau; popup thông báo theo tài khoản, không có trang riêng            |
-| Cài đặt        | `/admin/settings/general`               | Chung, appearance, security mô phỏng, hồ sơ cá nhân, reset                       |
+| Cài đặt        | `/admin/settings/general`               | Thông tin studio, giao diện sáng/tối, hồ sơ cá nhân và ảnh đại diện              |
 | UI             | `/admin/components/overview`            | 7 nhóm ví dụ có tương tác, trạng thái và mã TypeScript                           |
 
-Link dùng TanStack Router để giữ basepath, kể cả `/~vhplasti`. `/admin/login` và `/admin` đi vào dashboard với màn chọn tài khoản khi chưa có session. `noindex` chỉ phục vụ crawler, không phải lớp bảo vệ truy cập.
+Link dùng TanStack Router để giữ basepath, kể cả `/~vhplasti`. Khi chưa có phiên, `/admin` mở Login; `returnTo` chỉ nhận đường dẫn admin nội bộ an toàn. Session v2 không lưu mật khẩu; session legacy hết hạn một lần và giữ DB. `noindex` chỉ phục vụ crawler, không phải lớp bảo vệ truy cập.
 
 ## Dữ liệu và reset
 
-IndexedDB `bibi-admin-demo` chứa entity records và ảnh Blob. localStorage chỉ chứa `bibi-admin:session` và `bibi-admin:theme`. Seed tải theo module, ID ổn định: 50 sản phẩm, 12 khách mua hàng, 30 phiếu mẫu, 30 users, 40 bài và 200 sessions/80 visitors. Thời điểm analytics demo cố định 01/11/2026; phiếu mới dùng thời gian thao tác thực tế, dashboard mặc định theo ngày Việt Nam hiện tại. DB v2 tạo các store mới và giữ toàn bộ sách/đơn/dữ liệu/ảnh cũ; không tự chuyển chúng sang khách hoặc phiếu. Không khởi tạo thêm legacy qua các trang mới.
+IndexedDB `bibi-admin-demo` chứa entity records và ảnh Blob; giữ tên DB cũ để không mất dữ liệu. localStorage chỉ chứa session và theme. Seed lazy lấy sản phẩm/bài viết từ catalogue/blog hiện có (hiện74 sản phẩm), ảnh dùng URL nội bộ. Khách, phiếu, tài khoản và analytics vẫn là dữ liệu thử; không phải doanh số/tracking thật. Analytics cố định 01/11/2026; phiếu mới dùng thời gian thao tác thực tế, preset ngày dùng giờ Việt Nam hiện tại.
 
 Seed không ghi vào `src/data/catalogue.ts`, không upload hosting và không làm thay đổi landing page. Ảnh admin nhập giới hạn5MiB/ảnh,40MP và10 file/lần. Metadata, Blob và audit được ghi cùng transaction; lỗi lưu không báo thành công. Xóa ảnh có liên kết trong gallery/ảnh đại diện/nội dung bài bị chặn. Xóa ảnh chưa dùng giải phóng cả Blob.
 
-Reset tại **Cài đặt → Bảo mật demo → Reset demo**, cần xác nhận. Nó xóa admin DB và phiên demo, giữ tùy chọn website công khai. Ảnh và các sửa đổi demo bị xóa; lần đăng nhập tiếp theo tạo bộ mẫu mới. Nếu đổi seed trong source, dữ liệu đã sửa không tự bị ghi đè; dùng reset để xem bộ mẫu mới.
+Không có nút reset/security giả trong UI. Migration trình bày có version và chỉ đổi field còn khớp baseline cũ chính xác; không ghi đè field đã sửa, audit, snapshot phiếu, counter, tiền, stock hoặc Blob. Chỉ9 slug bản đồ khớp chính xác được nối với ID cũ; sản phẩm khác có ID ổn định theo slug. Record cũ không bị xóa. Sản phẩm nguồn chưa có ảnh dùng fallback, không tự bịa ảnh.
 
 ## Quy tắc dữ liệu
 
@@ -47,9 +47,15 @@ Nội dung editor lưu JSON có whitelist nodes, marks và link; HTML dán dạn
 
 ## Quyền và giới hạn
 
-Super Admin/Administrator có quyền quản trị; Manager quản lý catalogue/sales; Editor quản lý nội dung; Viewer chỉ xem. Ma trận có thể chỉnh trong demo. Super Admin gốc và Super Admin cuối cùng được bảo vệ; Administrator không tự cấp vai trò cao nhất. Hồ sơ cá nhân chỉ sửa tên/email, không đổi role. Đổi role/vô hiệu hóa tài khoản đang dùng làm phiên demo cần đăng nhập lại.
+Vai trò hiển thị tiếng Việt, permission key giữ nguyên. Super Admin/Administrator có quyền quản trị; Manager quản lý catalogue/sales; Editor quản lý nội dung; Viewer chỉ xem. Super Admin gốc và cuối cùng được bảo vệ. Đổi role/ngừng hoạt động tài khoản đang dùng yêu cầu đăng nhập lại. Khách/tài khoản dùng Hoạt động/Ngừng hoạt động; sản phẩm/bài viết giữ trạng thái nghiệp vụ xuất bản riêng.
 
-Quyền được kiểm tra ở UI và service local để thử trải nghiệm. Người dùng có thể sửa dữ liệu trình duyệt: đây không phải auth/security production. MFA/session timeout ở trang Security chỉ là tùy chọn mô phỏng, chưa thực thi xác thực hoặc timeout server.
+Quyền được kiểm tra ở UI và service local để thử trải nghiệm. Người dùng có thể sửa dữ liệu trình duyệt: đây không phải auth/security production. URL Security cũ về Hồ sơ; không có MFA/reset mật khẩu/session timeout giả.
+
+## Hồ sơ và đăng nhập mở rộng
+
+Tên/email/ảnh đại diện dùng cùng một nút Lưu. Chọn hoặc xóa ảnh chỉ thay bản nháp; Hủy không ghi DB. JPEG/PNG/WebP hợp lệ tối đa5MiB và40 triệu pixel; kiểm tra signature và decode. Blob, reference, revision và audit commit nguyên tử; lỗi quota/xung đột giữ ảnh cũ và bản nháp. Avatar riêng theo chủ, không cấp thêm quyền Content hoặc đưa vào media gallery; preview URL được thu hồi khi đổi/unmount.
+
+`accounts/auth/contracts.ts` định nghĩa AuthService login/getSession/logout; `AdminProvider.authFactory` là seam thay local adapter bằng HTTP/session server sau này. Profile/CRUD vẫn dùng contract dịch vụ; không nhúng endpoint/SQL vào component. Bộ tùy chọn A–D chưa triển khai, chỉ E (ảnh hồ sơ) được chọn.
 
 ## Mở rộng Express/MySQL sau này
 
@@ -68,3 +74,5 @@ Thin route adapters lazy-load admin shell và từng page. Charts, TipTap editor
 Chuông mở popup bám nút trên desktop/mobile. Mỗi tài khoản có read receipt riêng; read mặc định cũ vẫn được tôn trọng. Click cập nhật ngay dấu đọc/badge; lỗi lưu khôi phục cả hai và không chuyển trang. Lưu thành công mới mở link hợp lệ; không có link thì giữ popup. Đánh dấu tất cả áp dụng toàn bộ thông báo, kể cả chưa tải trang. Đổi/đăng xuất tài khoản loại cache và bỏ kết quả mutation phiên cũ.
 
 Các URL bookstore cũ về danh sách khách; orders/history/transactions về danh sách phiếu, không chuyển ID sách/đơn cũ thành ID khách/phiếu. Analytics cũ về Khách truy cập, visitor ID cũ giữ qua query; notifications về dashboard. Quyền key `bookstore` vẫn giữ cho custom role nhưng nhãn là Khách mua hàng.
+
+Link phiếu mới dùng số `PMH-2026-0001`; URL primary ID cũ vẫn resolve rồi replace canonical, giữ query/hash. Service luôn cập nhật primary ID, không dùng số phiếu làm ID DB. Số trùng báo conflict; không chọn ngẫu nhiên record.
