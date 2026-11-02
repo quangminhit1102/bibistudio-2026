@@ -15,7 +15,8 @@ export function VoidSlip({ slip }: { slip: PurchaseSlip }) {
   return (
     <>
       <Button
-        variant="destructive"
+        variant="outline"
+        className="a-btn-danger-outline"
         onClick={() => {
           setOpen(true);
           setError("");

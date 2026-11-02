@@ -20,6 +20,7 @@ export const navigation: {
     label: string;
     path: string;
     resource: Resource;
+    action?: "view" | "create";
     icon: typeof Package;
     children?: { label: string; path: string }[];
   }[];
@@ -42,30 +43,29 @@ export const navigation: {
     ],
   },
   {
-    label: "Catalogue",
+    label: "Quản lý sản phẩm",
     items: [
       {
-        label: "Sản phẩm",
+        label: "Danh sách sản phẩm",
         path: "/admin/products/list",
         resource: "products",
         icon: Package,
-        children: [
-          { label: "Thêm sản phẩm", path: "/admin/products/create" },
-          { label: "Danh mục", path: "/admin/products/categories" },
-          { label: "Tồn kho sản phẩm", path: "/admin/products/inventory" },
-        ],
       },
       {
-        label: "Khách mua hàng",
-        path: "/admin/customers",
-        resource: "bookstore",
-        icon: BookOpen,
+        label: "Thêm sản phẩm",
+        path: "/admin/products/create",
+        resource: "products",
+        icon: Package,
+        action: "create",
       },
+      { label: "Danh mục", path: "/admin/products/categories", resource: "products", icon: Layers },
+      { label: "Tồn kho", path: "/admin/products/inventory", resource: "products", icon: Boxes },
     ],
   },
   {
     label: "Kinh doanh",
     items: [
+      { label: "Khách mua hàng", path: "/admin/customers", resource: "bookstore", icon: BookOpen },
       {
         label: "Phiếu mua hàng",
         path: "/admin/sales/slips",
@@ -116,7 +116,6 @@ export const navigation: {
         icon: Settings,
         children: [
           { label: "Giao diện", path: "/admin/settings/appearance" },
-          { label: "Bảo mật demo", path: "/admin/settings/security" },
           { label: "Hồ sơ", path: "/admin/settings/profile" },
         ],
       },

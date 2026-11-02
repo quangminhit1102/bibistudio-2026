@@ -2,6 +2,16 @@ import { expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { legacyDestination } from "../../src/features/admin/shell/legacy-destination";
 import { navigation } from "../../src/features/admin/shell/navigation";
+it("has a flat product group with exactly four direct destinations", () => {
+  const group = navigation.find((g) => g.label === "Quản lý sản phẩm")!;
+  expect(group.items.map((i) => i.label)).toEqual([
+    "Danh sách sản phẩm",
+    "Thêm sản phẩm",
+    "Danh mục",
+    "Tồn kho",
+  ]);
+  expect(group.items.every((i) => !i.children)).toBe(true);
+});
 import { searchAdmin } from "../../src/features/admin/shell/search-service";
 import { businessFixture } from "./business-fixtures";
 it("exposes only the new business destinations", () => {

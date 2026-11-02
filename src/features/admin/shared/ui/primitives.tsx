@@ -144,7 +144,7 @@ export function Modal({
               <div>
                 <Dialog.Title>{title}</Dialog.Title>
                 <Dialog.Description>
-                  {description ?? "Thay đổi được lưu trong dữ liệu demo của trình duyệt này."}
+                  {description ?? "Kiểm tra thông tin trước khi lưu."}
                 </Dialog.Description>
               </div>
               <Dialog.Close asChild>
@@ -220,15 +220,17 @@ export function ConfirmDialog({
 export function ActionMenu({
   label = "Thao tác",
   items,
+  trigger,
 }: {
   label?: string;
+  trigger?: ReactNode;
   items: { label: string; onSelect: () => void; disabled?: boolean; danger?: boolean }[];
 }) {
   return (
     <DropdownMenu.Root>
       <DropdownMenu.Trigger asChild>
-        <Button size="icon" variant="ghost" aria-label={label}>
-          <MoreHorizontal size={17} />
+        <Button size={trigger ? "md" : "icon"} variant="ghost" aria-label={label}>
+          {trigger ?? <MoreHorizontal size={17} />}
         </Button>
       </DropdownMenu.Trigger>
       <DropdownMenu.Portal>

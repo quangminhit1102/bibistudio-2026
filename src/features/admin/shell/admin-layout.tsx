@@ -1,33 +1,16 @@
 import { useEffect, useState, lazy, Suspense } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getProfile } from "../accounts/profile-service";
-import { Outlet, Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import {
-  Menu,
-  PanelLeftClose,
-  PanelLeftOpen,
-  Sun,
-  Moon,
-  Search,
-  LogOut,
-  ChevronDown,
-  ArrowUpRight,
-  Command,
-} from "lucide-react";
-import { useAdmin, useRole, useEntity } from "../services/context";
-import { can, roleNames } from "../accounts/permissions";
+import { Outlet, Link, useRouterState } from "@tanstack/react-router";
+import { Menu, PanelLeftClose, PanelLeftOpen, Sun, Moon, Search } from "lucide-react";
+import { useAdmin, useRole } from "../services/context";
+import { can } from "../accounts/permissions";
 import { Login } from "../accounts/pages/login";
+import { AccountMenu } from "./account-menu";
 import { navigation } from "./navigation";
 import { HeaderNotifications } from "../notifications/header-menu";
 import { ErrorState } from "../shared/ui/primitives";
-import {
-  Badge,
-  Button,
-  Modal,
-  NoticeProvider,
-  Skeleton,
-  ActionMenu,
-} from "../shared/ui/primitives";
+import { Button, Modal, NoticeProvider, Skeleton } from "../shared/ui/primitives";
 const GlobalSearch = lazy(() => import("./global-search"));
 export function AdminLayout() {
   const runtime = useAdmin();
@@ -50,7 +33,6 @@ export function AdminLayout() {
   const [search, setSearch] = useState(false);
   const [systemDark, setSystemDark] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const navigate = useNavigate();
   useEffect(() => {
     const q = matchMedia("(prefers-color-scheme: dark)");
     setSystemDark(q.matches);
@@ -75,7 +57,7 @@ export function AdminLayout() {
   const allowed = navigation
     .map((g) => ({
       ...g,
-      items: g.items.filter((i) => can(runtime.session, i.resource, "view", role.data)),
+      items: g.items.filter((i) => can(runtime.session, i.resource, i.action ?? "view", role.data)),
     }))
     .filter((g) => g.items.length);
   const active = allowed
@@ -98,7 +80,7 @@ export function AdminLayout() {
       <Link to="/admin/dashboard" className="a-wordmark">
         <b>B</b>
         <span>
-          BiBi Admin<small>STUDIO WORKSPACE</small>
+          BiBi Admin<small>KHÔNG GIAN QUẢN TRỊ</small>
         </span>
       </Link>
       <nav aria-label="Điều hướng quản trị">
@@ -110,27 +92,29 @@ export function AdminLayout() {
                 <Link
                   to={item.path as "/admin"}
                   title={item.label}
-                  className={`a-nav-link ${pathname.includes(item.path.replace(/\/(list|overview|books|orders|posts|general)$/, "")) ? "active" : ""}`}
+                  className={`a-nav-link ${pathname.endsWith(item.path) || (item.path === "/admin/products/list" && /\/admin\/products\/(?!create|categories|inventory|list)[^/]+/.test(pathname)) ? "active" : ""}`}
                 >
                   <item.icon size={18} />
                   <span>{item.label}</span>
                 </Link>
                 {item.children && !collapsed && (
-                  <details open={item.children.some((c) => pathname.endsWith(c.path))}>
-                    <summary>
-                      Trang trong {item.label}
-                      <ChevronDown size={13} />
-                    </summary>
-                    {item.children.map((c) => (
-                      <Link
-                        key={c.path}
-                        to={c.path as "/admin"}
-                        className={pathname.endsWith(c.path) ? "active" : ""}
-                      >
-                        {c.label}
-                      </Link>
-                    ))}
-                  </details>
+                  <div className="a-nav-children">
+                    {item.children
+                      .filter(
+                        (c) =>
+                          !c.path.endsWith("/create") ||
+                          can(runtime.session, item.resource, "create", role.data),
+                      )
+                      .map((c) => (
+                        <Link
+                          key={c.path}
+                          to={c.path as "/admin"}
+                          className={pathname.endsWith(c.path) ? "active" : ""}
+                        >
+                          {c.label}
+                        </Link>
+                      ))}
+                  </div>
                 )}
               </div>
             ))}
@@ -138,11 +122,7 @@ export function AdminLayout() {
         ))}
       </nav>
       <div className="a-sidebar-footer">
-        <span className="a-avatar">{runtime.session ? "MN" : "B"}</span>
-        <div>
-          <strong>{roleNames[runtime.session?.roleId ?? ""] ?? "Demo"}</strong>
-          <small>Dữ liệu trên trình duyệt</small>
-        </div>
+        {account.data && <AccountMenu user={account.data} compact={collapsed && !drawer} />}
       </div>
     </>
   );
@@ -177,7 +157,7 @@ export function AdminLayout() {
                   {collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
                 </Button>
                 <div className="a-breadcrumb">
-                  <span>Workspace</span>
+                  <span>Quản trị</span>
                   <span>/</span>
                   <strong>{active?.label ?? "BiBi Admin"}</strong>
                 </div>
@@ -191,7 +171,6 @@ export function AdminLayout() {
                     <span>Tìm kiếm</span>
                     <kbd>⌘ K</kbd>
                   </Button>
-                  <Badge tone="warning">DEMO</Badge>
                   {can(runtime.session, "notifications", "view", role.data) && (
                     <HeaderNotifications />
                   )}
@@ -203,37 +182,24 @@ export function AdminLayout() {
                   >
                     {dark ? <Sun size={18} /> : <Moon size={18} />}
                   </Button>
-                  <ActionMenu
-                    label="Menu tài khoản"
-                    items={[
-                      {
-                        label: "Hồ sơ",
-                        onSelect: () =>
-                          void navigate({ to: "/admin/settings/profile" as "/admin" }),
-                      },
-                      { label: "Xem website", onSelect: () => void navigate({ to: "/" }) },
-                      { label: "Đăng xuất demo", onSelect: () => void runtime.logout() },
-                    ]}
-                  />
+                  <div className="a-mobile-account">
+                    {account.data && <AccountMenu user={account.data} compact />}
+                  </div>
                 </div>
               </header>
-              <div className="a-demo-strip">
-                <span className="a-dot" />
-                Không gian demo · Dữ liệu và ảnh được lưu cục bộ, không cập nhật website thật.
-              </div>
               <main className="a-main">
                 {role.isPending || account.isPending ? (
                   <Skeleton />
                 ) : forbidden ? (
                   <ErrorState
-                    error={new Error("Vai trò demo hiện tại không có quyền truy cập module này.")}
+                    error={new Error("Vai trò hiện tại không có quyền truy cập module này.")}
                   />
                 ) : (
                   <Outlet />
                 )}
               </main>
               <footer className="a-app-footer">
-                BiBi Studio <span>Made with care · Admin demo</span>
+                BiBi Studio <span>Quản trị nội dung</span>
               </footer>
             </div>
             <Modal
