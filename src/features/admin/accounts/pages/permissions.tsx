@@ -26,7 +26,7 @@ export default function Permissions() {
     <>
       <PageTitle
         title="Ma trận phân quyền"
-        description="Chỉ mô phỏng quyền UI và mock service; backend thật phải tự xác thực và phân quyền."
+        description="Chỉ quyền UI và mock service; backend thật phải tự xác thực và phân quyền."
         actions={
           <Button
             variant="primary"
@@ -42,7 +42,7 @@ export default function Permissions() {
                       .update(role.id, { permissions: draft[role.id] }, role.revision);
                 await query.invalidateQueries({ queryKey: ["bibi-admin"] });
                 setDraft({});
-                notice("Đã lưu ma trận quyền demo.");
+                notice("Đã lưu ma trận quyền.");
               } catch (e) {
                 notice(e instanceof Error ? e.message : "Không thể lưu", "error");
               } finally {

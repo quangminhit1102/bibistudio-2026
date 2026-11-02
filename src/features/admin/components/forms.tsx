@@ -1,5 +1,7 @@
+import { componentLabel } from "./labels";
 import { componentUsage } from "./usage";
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useState, useRef } from "react";
+import { prepareAvatar } from "../accounts/profile-avatar";
 import { Button, Field } from "../shared/ui/primitives";
 import { Example } from "./example";
 import { componentCatalogue } from "./catalogue";
@@ -10,15 +12,24 @@ export function FormExample({ name }: { name: string }) {
   const [checked, setChecked] = useState(false);
   const [tags, setTags] = useState<string[]>([]);
   const [file, setFile] = useState<File>();
+  const [fileError, setFileError] = useState("");
+  const [validating, setValidating] = useState(false);
+  const fileTicket = useRef(0);
+  useEffect(
+    () => () => {
+      fileTicket.current++;
+    },
+    [],
+  );
   const [url, setUrl] = useState("");
   const [password, setPassword] = useState(false);
   const [end, setEnd] = useState("");
   useEffect(() => {
-    if (!file) return;
+    if (!file || name !== "Image Upload") return;
     const u = URL.createObjectURL(file);
     setUrl(u);
     return () => URL.revokeObjectURL(u);
-  }, [file]);
+  }, [file, name]);
   const disabled = mode === "disabled";
   const invalid = mode === "invalid";
   const required = mode === "required";
@@ -119,10 +130,30 @@ export function FormExample({ name }: { name: string }) {
         <input
           id={id}
           type="file"
-          disabled={disabled}
+          disabled={disabled || validating}
           required={required}
           accept={name === "Image Upload" ? "image/png,image/jpeg,image/webp" : undefined}
-          onChange={(e) => setFile(e.target.files?.[0])}
+          onChange={async (e) => {
+            const selected = e.target.files?.[0];
+            e.target.value = "";
+            if (!selected) return;
+            const ticket = ++fileTicket.current;
+            setFileError("");
+            if (name !== "Image Upload") {
+              setFile(selected);
+              return;
+            }
+            setValidating(true);
+            try {
+              await prepareAvatar(selected);
+              if (ticket === fileTicket.current) setFile(selected);
+            } catch (e) {
+              if (ticket === fileTicket.current)
+                setFileError(e instanceof Error ? e.message : "Ảnh không hợp lệ.");
+            } finally {
+              if (ticket === fileTicket.current) setValidating(false);
+            }
+          }}
         />
         {file && (
           <small>
@@ -212,27 +243,44 @@ export function FormExample({ name }: { name: string }) {
           Trạng thái{" "}
           <select value={mode} onChange={(e) => setMode(e.target.value)}>
             {["default", "disabled", "invalid", "required"].map((v) => (
-              <option key={v}>{v}</option>
+              <option key={v} value={v}>
+                {
+                  (
+                    {
+                      default: "Bình thường",
+                      disabled: "Vô hiệu hóa",
+                      invalid: "Không hợp lệ",
+                      required: "Bắt buộc",
+                    } as Record<string, string>
+                  )[v]
+                }
+              </option>
             ))}
           </select>
         </label>
       </div>
       <Field
-        label={name}
+        label={componentLabel(name)}
         required={required}
-        description="Giá trị được điều khiển bằng React state."
-        error={invalid ? "Giá trị chưa hợp lệ. Hãy kiểm tra lại." : undefined}
+        description="Nhập hoặc chọn để xem giá trị cập nhật."
+        error={fileError || (invalid ? "Giá trị chưa hợp lệ. Hãy kiểm tra lại." : undefined)}
       >
         {input}
       </Field>
       <small id={id + "-help"} role="status">
         Giá trị:{" "}
-        {file?.name ??
-          (tags.length
-            ? tags.join(", ")
-            : ["Checkbox", "Switch / Toggle"].includes(name)
-              ? String(checked)
-              : value || "chưa nhập")}
+        {name === "Password Input"
+          ? value
+            ? "••••••••"
+            : "chưa nhập"
+          : (file?.name ??
+            (tags.length
+              ? tags.join(", ")
+              : ["Checkbox", "Switch / Toggle"].includes(name)
+                ? checked
+                  ? "Đã chọn"
+                  : "Chưa chọn"
+                : value || "chưa nhập"))}
         {end ? " → " + end : ""}
       </small>
     </>
@@ -245,7 +293,7 @@ export default function Forms() {
         <Example
           key={name}
           name={name}
-          description="Chuyển trạng thái để kiểm tra default, disabled, invalid và required."
+          description="Kiểm tra trạng thái bình thường, vô hiệu hóa, không hợp lệ và bắt buộc."
           code={componentUsage("forms", name)}
         >
           <FormExample name={name} />

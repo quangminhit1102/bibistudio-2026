@@ -118,12 +118,10 @@ it("only navigates after persistence and no-link notifications keep the popup op
   expect(router.state.location.pathname).toBe("/admin/test");
   await waitFor(() =>
     expect(
-      screen.getByRole("button", { name: "Chưa đọc: Báo cáo demo đã sẵn sàng", exact: true }),
+      screen.getByRole("button", { name: "Chưa đọc: Báo cáo đã sẵn sàng", exact: true }),
     ).toBeEnabled(),
   );
-  await u.click(
-    screen.getByRole("button", { name: "Chưa đọc: Báo cáo demo đã sẵn sàng", exact: true }),
-  );
+  await u.click(screen.getByRole("button", { name: "Chưa đọc: Báo cáo đã sẵn sàng", exact: true }));
   await waitFor(() => expect(router.state.location.pathname).toBe("/admin/dashboard"));
   expect(screen.queryByRole("dialog", { name: "Thông báo", exact: true })).not.toBeInTheDocument();
 });

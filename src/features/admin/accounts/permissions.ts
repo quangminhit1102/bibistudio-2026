@@ -35,11 +35,11 @@ export const resources: Resource[] = [
 ];
 export const actions: Action[] = ["view", "create", "update", "delete", "export", "settings"];
 export const roleNames: Record<string, string> = {
-  "super-admin": "Super Admin",
-  administrator: "Administrator",
-  manager: "Manager",
-  editor: "Editor",
-  viewer: "Viewer",
+  "super-admin": "Quản trị cao nhất",
+  administrator: "Quản trị viên",
+  manager: "Quản lý",
+  editor: "Biên tập viên",
+  viewer: "Người xem",
 };
 export function defaultPermissions(id: string): Role["permissions"] {
   if (id === "super-admin" || id === "administrator")
@@ -90,10 +90,7 @@ export function requirePermission(
   role?: Role,
 ) {
   if (!can(session, resource, action, role))
-    throw new ServiceError(
-      "forbidden",
-      "Vai trò demo hiện tại không có quyền thực hiện thao tác này.",
-    );
+    throw new ServiceError("forbidden", "Vai trò hiện tại không có quyền thực hiện thao tác này.");
 }
 export const resourceForEntity = (entity: EntityKey): Resource =>
   (

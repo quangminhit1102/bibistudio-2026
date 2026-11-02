@@ -120,7 +120,7 @@ export default function Media() {
       ) : !result.data?.total ? (
         <EmptyState
           title="Thư viện đang trống"
-          description="Nhập ảnh để dùng trong sản phẩm, sách và bài viết demo."
+          description="Nhập ảnh để dùng trong sản phẩm, sách và bài viết."
         />
       ) : (
         <div className={mode === "grid" ? "a-media-grid" : "a-media-list"}>

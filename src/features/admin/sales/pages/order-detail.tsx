@@ -43,7 +43,7 @@ export default function OrderDetail() {
   const allowed = can(runtime.session, "sales", "update", role.data);
   const done = async () => {
     await client.invalidateQueries({ queryKey: ["bibi-admin"] });
-    notice("Đã cập nhật đơn hàng demo.");
+    notice("Đã cập nhật đơn hàng.");
   };
   return (
     <>
@@ -140,7 +140,7 @@ export default function OrderDetail() {
         </div>
         <div>
           <Card>
-            <h2>Khách hàng mô phỏng</h2>
+            <h2>Khách hàng</h2>
             <p style={{ marginTop: 15 }}>{record.customer.name}</p>
             <small>
               {record.customer.email}
@@ -155,7 +155,7 @@ export default function OrderDetail() {
                 {paymentLabels[record.paymentStatus]}
               </Badge>
             </p>
-            <small>Chỉ thay đổi trạng thái demo, không thu/chuyển tiền.</small>
+            <small>Chỉ thay đổi trạng thái, không thu/chuyển tiền.</small>
             <div className="a-actions" style={{ marginTop: 12 }}>
               {paymentTransitions[record.paymentStatus]
                 .filter((p) => p !== "Refunded")
@@ -213,7 +213,7 @@ export default function OrderDetail() {
       <ConfirmDialog
         open={next !== null}
         title={next ? orderLabels[next] : "Chuyển trạng thái"}
-        description="Cập nhật trạng thái demo và tồn kho liên quan. Thao tác không tạo giao dịch tài chính thật."
+        description="Cập nhật trạng thái và tồn kho liên quan. Thao tác không tạo giao dịch tài chính thật."
         onCancel={() => setNext(null)}
         onConfirm={async () => {
           if (next) {

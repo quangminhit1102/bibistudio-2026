@@ -35,12 +35,12 @@ export const day = (value: string) =>
     day: "2-digit",
   }).format(new Date(value));
 export function presetRange(preset: string): DateRange {
-  const now = Date.parse(DEMO_NOW);
+  const now = Date.parse(day(new Date().toISOString()) + "T00:00:00+07:00");
   const days = preset === "today" ? 1 : preset === "yesterday" ? 1 : preset === "7" ? 7 : 30;
   const end = preset === "yesterday" ? now : now + 86400000;
   return {
-    start: new Date(end - days * 86400000 - 7 * 3600000).toISOString(),
-    end: new Date(end - 7 * 3600000).toISOString(),
+    start: new Date(end - days * 86400000).toISOString(),
+    end: new Date(end).toISOString(),
   };
 }
 export const previousRange = (range: DateRange) => ({

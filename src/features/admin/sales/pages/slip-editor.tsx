@@ -65,7 +65,7 @@ function SlipEditorSession({ id }: { id: string }) {
     <>
       <PageTitle
         title={id ? "Chỉnh sửa phiếu mua hàng" : "Tạo phiếu mua hàng"}
-        description="Ghi nhận sản phẩm bán cho khách · Demo · Không tự trừ kho"
+        description="Ghi nhận sản phẩm bán cho khách · · Không tự trừ kho"
       />
       {(options.error || record.error) && (
         <ErrorState

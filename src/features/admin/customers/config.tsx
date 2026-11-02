@@ -20,7 +20,7 @@ export function customerReturnTo(input: unknown): string {
 export const customerConfig: EntityConfig<"customers"> = {
   entity: "customers",
   title: "Khách mua hàng",
-  description: "Quản lý nhà sách, cá nhân và công ty mua sản phẩm của BiBi. Dữ liệu demo.",
+  description: "Quản lý nhà sách, cá nhân và công ty mua sản phẩm của BiBi. Dữ liệu.",
   createHref: "/admin/customers/create",
   returnPath: "/admin/customers",
   allowDelete: false,
@@ -50,7 +50,7 @@ export const customerConfig: EntityConfig<"customers"> = {
     },
     {
       key: "active",
-      label: "Đang sử dụng",
+      label: "Hoạt động",
       type: "checkbox",
       description: "Tắt để ngừng chọn khách này khi lập phiếu mới. Phiếu cũ vẫn được giữ.",
     },
@@ -70,8 +70,8 @@ export const customerConfig: EntityConfig<"customers"> = {
       field: "active",
       label: "Sử dụng",
       options: [
-        { value: "true", label: "Đang sử dụng" },
-        { value: "false", label: "Ngừng sử dụng" },
+        { value: "true", label: "Hoạt động" },
+        { value: "false", label: "Ngừng hoạt động" },
       ],
     },
   ],
@@ -103,7 +103,7 @@ export const customerConfig: EntityConfig<"customers"> = {
     {
       accessorKey: "active",
       header: "Sử dụng",
-      cell: ({ getValue }) => <Badge>{getValue() ? "Đang sử dụng" : "Ngừng sử dụng"}</Badge>,
+      cell: ({ getValue }) => <Badge>{getValue() ? "Hoạt động" : "Ngừng hoạt động"}</Badge>,
     },
   ],
 };

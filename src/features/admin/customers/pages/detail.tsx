@@ -50,7 +50,7 @@ export default function CustomerDetail() {
     <>
       <PageTitle
         title={c.name}
-        description="Thông tin khách mua hàng · Demo"
+        description="Thông tin khách mua hàng ·"
         actions={
           <>
             <Link {...internalTarget(back)} className="a-btn">

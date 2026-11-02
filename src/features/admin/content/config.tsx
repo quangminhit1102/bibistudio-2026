@@ -6,7 +6,7 @@ export const postConfig: EntityConfig<"posts"> = {
   entity: "posts",
   duplicate: true,
   title: "Bài viết",
-  description: "Nhật ký, ý tưởng và những câu chuyện từ BiBi — dữ liệu demo.",
+  description: "Nhật ký, ý tưởng và những câu chuyện từ BiBi — dữ liệu.",
   createHref: "/admin/content/posts/create",
   editHref: (id) => `/admin/content/posts/${id}/edit`,
   detailHref: (id) => `/admin/content/posts/${id}`,
@@ -42,7 +42,7 @@ export const postConfig: EntityConfig<"posts"> = {
       type: "select",
       options: [
         { value: "draft", label: "Nháp" },
-        { value: "published", label: "Đã xuất bản demo" },
+        { value: "published", label: "Đã xuất bản" },
       ],
     },
     { key: "publishAt", label: "Ngày xuất bản", type: "date" },

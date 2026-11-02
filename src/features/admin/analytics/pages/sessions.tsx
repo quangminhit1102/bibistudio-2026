@@ -3,7 +3,7 @@ import { date } from "../../shared/lib/text";
 const config: EntityConfig<"sessions"> = {
   entity: "sessions",
   title: "Phiên truy cập",
-  description: "Phiên, nguồn và trang vào/ra trong bộ dữ liệu mô phỏng.",
+  description: "Phiên, nguồn và trang vào/ra trong bộ dữ liệu.",
   readOnly: true,
   dateField: "startedAt",
   defaultSort: { field: "startedAt", direction: "desc" },

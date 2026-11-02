@@ -8,10 +8,7 @@ export default function TrafficSources() {
   const result = useAnalytics(range);
   return (
     <>
-      <PageTitle
-        title="Nguồn truy cập"
-        description="Nguồn giới thiệu được khai báo trong phiên mô phỏng."
-      />
+      <PageTitle title="Nguồn truy cập" description="Nguồn giới thiệu được khai báo trong phiên." />
       <DateFilter value={range} onChange={setRange} />
       {result.isPending ? (
         <Skeleton />

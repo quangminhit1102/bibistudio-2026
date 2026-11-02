@@ -57,7 +57,7 @@ const named: Record<string, string> = {
     "<table><caption>Tồn kho</caption><thead><tr><th>Sản phẩm</th><th>Số lượng</th></tr></thead><tbody>{rows.map(r => <tr key={r.id}><td>{r.name}</td><td>{r.stock}</td></tr>)}</tbody></table>",
   "Data Table":
     "<DataTable<Product> columns={columns} result={result} state={state} onStateChange={setState} selection={selection} onSelectionChange={setSelection} onExport={exportCsv}/>",
-  Card: "<Card><h2>Catalogue</h2><p>Quản lý sản phẩm demo.</p><Button onClick={createProduct}>Thêm sản phẩm</Button></Card>",
+  Card: "<Card><h2>Catalogue</h2><p>Quản lý sản phẩm.</p><Button onClick={createProduct}>Thêm sản phẩm</Button></Card>",
   Badge:
     '<Badge tone="success">Đã xuất bản</Badge>\n<Badge tone="warning">Nháp</Badge>\n<Badge tone="error">Có lỗi</Badge>',
   Avatar: '<span className="a-avatar" role="img" aria-label="Minh Nguyễn">MN</span>',
@@ -71,7 +71,7 @@ const named: Record<string, string> = {
   "Empty State":
     '<EmptyState title="Chưa có sản phẩm" description="Tạo sản phẩm đầu tiên cho bộ sưu tập." action={<Button onClick={createProduct}>Tạo sản phẩm</Button>}/>',
   "Statistic Card":
-    '<Kpi title="Sản phẩm" value={50} raw={50} previous={45} description="Số bản ghi trong catalogue demo."/>',
+    '<Kpi title="Sản phẩm" value={50} raw={50} previous={45} description="Số bản ghi trong catalogue."/>',
   "Key-Value List":
     '<dl className="a-key-values"><dt>Mã sản phẩm</dt><dd>{product.sku}</dd><dt>Bộ sưu tập</dt><dd>{product.collection}</dd></dl>',
   Timeline:
@@ -219,7 +219,7 @@ export function componentUsage(category: string, name: string): string {
     return (
       '<Chart kind="' +
       kinds[name] +
-      '" data={[{name:"T2",value:15,secondary:8},{name:"T3",value:32,secondary:19}]} label="Lượt xem demo theo ngày"/>'
+      '" data={[{name:"T2",value:15,secondary:8},{name:"T3",value:32,secondary:19}]} label="Lượt xem theo ngày"/>'
     );
   throw new Error("Thiếu mã ví dụ cho " + name);
 }

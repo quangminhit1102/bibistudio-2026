@@ -1,3 +1,4 @@
+import { getAllProducts } from "../../src/data/catalogue";
 import { it, expect } from "vitest";
 import { createAdminStore } from "../../src/features/admin/demo/store";
 import { ensureDataset } from "../../src/features/admin/demo/registry";
@@ -28,7 +29,7 @@ it("product CRUD validates stock, unique SKU, relationships and public isolation
     const updated = await service.update(added.id, { name: "Đã cập nhật" }, added.revision);
     expect(updated.revision).toBe(2);
     await service.remove(updated.id, updated.revision);
-    expect((await service.list({ page: 1, pageSize: 100 })).total).toBe(50);
+    expect((await service.list({ page: 1, pageSize: 100 })).total).toBe(getAllProducts().length);
   } finally {
     await store.destroy();
   }

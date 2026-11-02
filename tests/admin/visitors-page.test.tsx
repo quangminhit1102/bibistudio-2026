@@ -56,9 +56,7 @@ it("shows requested fields and opens same-page detail from a mobile card then cl
     u = userEvent.setup();
   await screen.findByRole("columnheader", { name: "IP" });
   expect(screen.getByRole("columnheader", { name: "Thiết bị–Hệ điều hành" })).toBeInTheDocument();
-  await u.click(
-    await screen.findByRole("link", { name: "Xem thông tin demo-visitor-001", exact: true }),
-  );
+  await u.click(await screen.findByRole("link", { name: "Xem thông tin VIS-001", exact: true }));
   expect(
     await screen.findByRole("dialog", { name: "Chi tiết khách truy cập" }),
   ).toBeInTheDocument();
@@ -67,7 +65,7 @@ it("shows requested fields and opens same-page detail from a mobile card then cl
   await u.keyboard("{Escape}");
   await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
   expect(router.state.location.search.visitor).toBeUndefined();
-  await u.click(screen.getByRole("link", { name: "Xem thông tin demo-visitor-001", exact: true }));
+  await u.click(screen.getByRole("link", { name: "Xem thông tin VIS-001", exact: true }));
   await screen.findByRole("dialog", { name: "Chi tiết khách truy cập" });
   await act(async () => {
     router.history.back();
@@ -121,9 +119,7 @@ it("invalid visitor detail is recoverable and does not break the list", async ()
   expect(
     await screen.findByRole("heading", { name: "Khách truy cập", exact: true }),
   ).toBeInTheDocument();
-  await u.click(
-    await screen.findByRole("link", { name: "Xem thông tin demo-visitor-001", exact: true }),
-  );
+  await u.click(await screen.findByRole("link", { name: "Xem thông tin VIS-001", exact: true }));
   expect(
     await screen.findByRole("dialog", { name: "Chi tiết khách truy cập" }),
   ).toBeInTheDocument();

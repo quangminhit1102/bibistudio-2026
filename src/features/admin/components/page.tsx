@@ -1,3 +1,4 @@
+import { componentLabel, componentGroupLabels } from "./labels";
 import { lazy, Suspense } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Card, PageTitle, Skeleton } from "../shared/ui/primitives";
@@ -26,10 +27,10 @@ export default function ComponentPage() {
           <Link
             className="a-btn"
             aria-current={category === k ? "page" : undefined}
-            key={k}
+            key={componentGroupLabels[k as ComponentCategory]}
             to={("/admin/components/" + k) as "/admin"}
           >
-            {k}
+            {componentGroupLabels[k as ComponentCategory]}
           </Link>
         ))}
       </nav>
@@ -43,12 +44,12 @@ export default function ComponentPage() {
         <div className="a-grid-2">
           {Object.entries(componentCatalogue).map(([key, items]) => (
             <Card key={key}>
-              <h2>{key}</h2>
+              <h2>{componentGroupLabels[key as ComponentCategory]}</h2>
               <p>
-                {items.length} ví dụ · {items.join(", ")}
+                {items.length} ví dụ · {items.map(componentLabel).join(", ")}
               </p>
               <Link className="a-btn" to={("/admin/components/" + key) as "/admin"}>
-                Khám phá {key}
+                Khám phá {componentGroupLabels[key as ComponentCategory]}
               </Link>
             </Card>
           ))}

@@ -59,7 +59,7 @@ export function RecordEditor<K extends EntityKey>({
         title={
           id ? `Chỉnh sửa ${config.title.toLowerCase()}` : `Thêm ${config.title.toLowerCase()}`
         }
-        description="Thay đổi chỉ áp dụng cho bộ dữ liệu demo trong trình duyệt."
+        description="Kiểm tra nội dung và lưu thay đổi."
       />
       {record.error && <ErrorState error={record.error} onRetry={() => void record.refetch()} />}
       <Card>
@@ -84,7 +84,7 @@ export function RecordEditor<K extends EntityKey>({
             else await service.create({ ...config.defaults, ...editable } as CreateInput<K>);
             await query.invalidateQueries({ queryKey: ["bibi-admin"] });
             flushSync(() => setDirty(false));
-            notice("Đã lưu dữ liệu demo.");
+            notice("Đã lưu dữ liệu.");
             void navigate(internalTarget(listHref));
           }}
         />
@@ -116,7 +116,7 @@ export function RecordDetail<K extends EntityKey>({
     <>
       <PageTitle
         title={String(data.name ?? data.title ?? id)}
-        description={`${config.title} · Chi tiết dữ liệu demo`}
+        description={`${config.title} · Chi tiết dữ liệu`}
         actions={
           <>
             <Link to={listHref as "/admin"} className="a-btn">

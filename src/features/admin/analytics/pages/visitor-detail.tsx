@@ -17,7 +17,7 @@ export default function VisitorDetail() {
   const v = visitor.data!;
   return (
     <>
-      <PageTitle title={v.anonymousId} description="Hồ sơ mô phỏng, không phải một cá nhân thật." />
+      <PageTitle title={v.anonymousId} description="Hồ sơ, không phải một cá nhân thật." />
       <div className="a-detail-grid">
         <Card>
           <h2>Lịch sử phiên</h2>
@@ -46,7 +46,7 @@ export default function VisitorDetail() {
           ))}
         </Card>
         <Card>
-          <h2>Thông tin demo</h2>
+          <h2>Thông tin</h2>
           <dl className="a-key-values" style={{ marginTop: 18 }}>
             {Object.entries(v)
               .filter(([k]) => !["id", "createdAt", "updatedAt", "revision"].includes(k))

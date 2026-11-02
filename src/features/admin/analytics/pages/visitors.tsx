@@ -11,7 +11,7 @@ function visitorHref(id: string) {
 const config: EntityConfig<"visitors"> = {
   entity: "visitors",
   title: "Khách truy cập",
-  description: "Thông tin và phiên truy cập mô phỏng. IP được che; không theo dõi khách thật.",
+  description: "Thông tin và phiên truy cập. IP được che; không theo dõi khách thật.",
   readOnly: true,
   allowDelete: false,
   dateField: "lastSeenAt",

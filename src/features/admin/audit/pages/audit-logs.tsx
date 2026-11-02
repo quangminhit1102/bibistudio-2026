@@ -9,7 +9,7 @@ export default function AuditLogs() {
     () => ({
       entity: "audit",
       title: "Nhật ký hệ thống",
-      description: "Lịch sử thay đổi trong bộ dữ liệu demo. Không thể sửa hoặc xóa audit log.",
+      description: "Lịch sử thay đổi trong bộ dữ liệu. Không thể sửa hoặc xóa audit log.",
       readOnly: true,
       dateField: "createdAt",
       defaultSort: { field: "createdAt", direction: "desc" },

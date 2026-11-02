@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from "react";
 import { Button, Card } from "../shared/ui/primitives";
+import { componentLabel } from "./labels";
 export async function copyText(value: string) {
   if (!navigator.clipboard)
     throw new Error("Trình duyệt không hỗ trợ clipboard. Bạn có thể chọn và sao chép đoạn mã.");
@@ -19,7 +20,7 @@ export function Example({
   const [message, setMessage] = useState("");
   return (
     <Card className="a-example">
-      <h2>{name}</h2>
+      <h2 data-component={name}>{componentLabel(name)}</h2>
       <p>{description}</p>
       <div className="a-example-preview">{children}</div>
       <details>

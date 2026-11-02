@@ -12,7 +12,7 @@ export type NotificationView = Notification & { isRead: boolean };
 export type NotificationPage = ListResult<NotificationView> & { unreadCount: number };
 async function access(store: AdminStore, session: DemoSession | null) {
   const generation = store.generation;
-  if (!session) throw new ServiceError("forbidden", "Vui lòng chọn tài khoản demo.");
+  if (!session) throw new ServiceError("forbidden", "Vui lòng chọn tài khoản.");
   await ensureDataset(store, "users");
   const active = await authorizeOperation(store, session, "notifications", "view");
   const user = await store.get("users", session.userId);

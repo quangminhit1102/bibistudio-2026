@@ -21,7 +21,7 @@ export function createSlipService(
   ) {
     const actor = session(),
       generation = store.generation;
-    if (!actor) throw new ServiceError("forbidden", "Vui lòng chọn tài khoản demo.");
+    if (!actor) throw new ServiceError("forbidden", "Vui lòng chọn tài khoản.");
     await ensureDataset(store, "users");
     const assertActive = await authorizeOperation(store, actor, "sales", action);
     await ensureDataset(store, "purchaseSlips");

@@ -26,7 +26,7 @@ export function FeedbackExample({ name }: { name: string }) {
               ? "Còn bản nháp chưa lưu."
               : name === "Error Notification"
                 ? "Ví dụ lỗi: chưa lưu dữ liệu."
-                : "Thao tác demo đã hoàn tất.",
+                : "Thao tác đã hoàn tất.",
             name === "Error Notification"
               ? "error"
               : name === "Warning Notification"
@@ -41,7 +41,7 @@ export function FeedbackExample({ name }: { name: string }) {
   if (name === "Progress Bar")
     return (
       <>
-        <progress aria-label="Tiến độ xử lý demo" value={value} max={100} />
+        <progress aria-label="Tiến độ xử lý" value={value} max={100} />
         <span>{value}%</span>
         <Button onClick={() => setValue((v) => (v >= 100 ? 0 : Math.min(v + 15, 100)))}>
           Tiếp tục xử lý
@@ -58,14 +58,16 @@ export function FeedbackExample({ name }: { name: string }) {
   if (name === "Skeleton Loading")
     return (
       <>
-        <Button onClick={() => setRetry(!retry)}>{retry ? "Hiện loading" : "Hiện nội dung"}</Button>
+        <Button onClick={() => setRetry(!retry)}>
+          {retry ? "Hiện đang tải" : "Hiện nội dung"}
+        </Button>
         {retry ? <p>Nội dung đã tải.</p> : <Skeleton rows={3} />}
       </>
     );
   if (name === "Empty State")
     return (
       <EmptyState
-        title={retry ? "Đã tạo mục demo" : "Chưa có mục demo"}
+        title={retry ? "Đã tạo mục" : "Chưa có mục"}
         action={
           <Button onClick={() => setRetry(!retry)}>
             {retry ? "Xóa ví dụ" : "Tạo mục đầu tiên"}
@@ -77,7 +79,7 @@ export function FeedbackExample({ name }: { name: string }) {
     return retry ? (
       <p role="status">
         Đã tải lại dữ liệu ví dụ thành công.{" "}
-        <Button onClick={() => setRetry(false)}>Mô phỏng lỗi lại</Button>
+        <Button onClick={() => setRetry(false)}>lỗi lại</Button>
       </p>
     ) : (
       <ErrorState
@@ -92,7 +94,7 @@ export function FeedbackExample({ name }: { name: string }) {
         <ConfirmDialog
           open={open}
           title="Hoàn tất ví dụ?"
-          description="Chỉ cập nhật trạng thái trên trang showcase."
+          description="Chỉ cập nhật trạng thái trên trang thư viện."
           onCancel={() => setOpen(false)}
           onConfirm={() => {
             setOpen(false);
@@ -110,7 +112,7 @@ export function FeedbackExample({ name }: { name: string }) {
   return (
     <div role="alert" className="a-info-banner">
       <TriangleAlert size={18} />
-      Bạn đang xem dữ liệu mô phỏng; không có thay đổi trên production.
+      Kiểm tra thông tin trước khi thực hiện thay đổi.
     </div>
   );
 }
@@ -121,7 +123,7 @@ export default function Feedback() {
         <Example
           key={name}
           name={name}
-          description="Thông báo có nội dung cụ thể; thành công chỉ hiển thị sau thao tác demo."
+          description="Thông báo có nội dung cụ thể; thành công chỉ hiển thị sau thao tác."
           code={componentUsage("feedback", name)}
         >
           <FeedbackExample name={name} />

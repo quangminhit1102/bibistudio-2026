@@ -93,7 +93,7 @@ it("creates and edits customers on dedicated pages and deactivates without delet
   cleanup();
   mount(`/admin/customers/${created.id}/edit`);
   expect(await screen.findByRole("checkbox", { name: "Áp dụng VAT" })).toBeChecked();
-  await u.click(screen.getByRole("checkbox", { name: "Đang sử dụng" }));
+  await u.click(screen.getByRole("checkbox", { name: "Hoạt động" }));
   await u.click(screen.getByRole("button", { name: "Lưu thay đổi" }));
   await waitFor(async () =>
     expect((await fixture.store.get("customers", created.id))?.active).toBe(false),

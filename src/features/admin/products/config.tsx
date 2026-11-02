@@ -28,7 +28,7 @@ export const collectionOptions = [
 export const productConfig: EntityConfig<"products"> = {
   entity: "products",
   title: "Sản phẩm",
-  description: "Quản lý catalogue demo — mỗi sản phẩm bắt đầu từ một câu chuyện.",
+  description: "Quản lý catalogue — mỗi sản phẩm bắt đầu từ một câu chuyện.",
   createHref: "/admin/products/create",
   editHref: (id) => `/admin/products/${id}/edit`,
   detailHref: (id) => `/admin/products/${id}`,
@@ -66,7 +66,7 @@ export const productConfig: EntityConfig<"products"> = {
       entity: "categories",
       filter: { kind: "product" },
     },
-    { key: "price", label: "Giá demo (VND)", type: "number", min: 0 },
+    { key: "price", label: "Giá (VND)", type: "number", min: 0 },
     { key: "compareAt", label: "Giá so sánh (VND)", type: "number", min: 0 },
     { key: "stock", label: "Tồn kho", type: "number", min: 0 },
     { key: "shortDescription", label: "Mô tả ngắn", type: "textarea", full: true },
@@ -106,7 +106,7 @@ export const productConfig: EntityConfig<"products"> = {
       cell: ({ getValue }) =>
         collectionOptions.find((o) => o.value === getValue())?.label ?? String(getValue()),
     },
-    { accessorKey: "price", header: "Giá demo", cell: ({ getValue }) => money(Number(getValue())) },
+    { accessorKey: "price", header: "Giá", cell: ({ getValue }) => money(Number(getValue())) },
     { accessorKey: "stock", header: "Tồn kho" },
     {
       accessorKey: "status",

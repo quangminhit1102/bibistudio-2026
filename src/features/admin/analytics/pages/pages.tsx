@@ -10,7 +10,7 @@ export default function PopularPages() {
     <>
       <PageTitle
         title="Trang phổ biến"
-        description="Lượt xem được cộng từ page-view của các phiên demo."
+        description="Lượt xem được cộng từ page-view của các phiên."
       />
       <DateFilter value={range} onChange={setRange} />
       {result.isPending ? (

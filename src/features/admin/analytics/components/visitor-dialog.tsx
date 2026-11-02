@@ -23,7 +23,7 @@ export function VisitorDialog({ visitorId, onClose }: { visitorId: string; onClo
     <Modal
       open
       title="Chi tiết khách truy cập"
-      description="Dữ liệu mô phỏng, không xác định danh tính người thật."
+      description="Thông tin thiết bị, phiên truy cập và nội dung đã xem."
       onOpenChange={(open) => {
         if (!open) onClose();
       }}
@@ -77,7 +77,7 @@ export function VisitorDialog({ visitorId, onClose }: { visitorId: string; onClo
                           {s.referrer || "Trực tiếp"} · {s.pages.length} trang ·{" "}
                           {s.endedAt
                             ? `${Math.max(0, Math.round((Date.parse(s.endedAt) - Date.parse(s.startedAt)) / 60000))} phút`
-                            : "Chưa kết thúc (demo)"}
+                            : "Chưa kết thúc"}
                         </small>
                       </article>
                     ))}
@@ -97,7 +97,7 @@ export function VisitorDialog({ visitorId, onClose }: { visitorId: string; onClo
                       </Button>
                     </div>
                     <h2>Sản phẩm đã xem</h2>
-                    <p>Gom từ các phiên demo, không phải ý định mua hàng.</p>
+                    <p>Gom từ các phiên, không phải ý định mua hàng.</p>
                     {sessions.data.viewedProducts.length ? (
                       <ul>
                         {sessions.data.viewedProducts.map((p) => (

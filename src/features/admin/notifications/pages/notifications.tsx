@@ -34,7 +34,7 @@ export default function Notifications() {
     <>
       <PageTitle
         title="Thông báo"
-        description="Thông tin và nhắc việc trong workspace demo."
+        description="Thông tin và nhắc việc trong workspace."
         actions={
           <Button
             disabled={!allowed}

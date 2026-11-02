@@ -29,7 +29,7 @@ export default function OrderHistory() {
     <>
       <PageTitle
         title="Lịch sử đơn hàng"
-        description="Dòng thời gian trạng thái được lưu trong từng đơn demo."
+        description="Dòng thời gian trạng thái được lưu trong từng đơn."
       />
       <DataTable
         columns={[

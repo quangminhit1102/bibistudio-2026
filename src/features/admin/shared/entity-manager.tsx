@@ -130,7 +130,7 @@ export function EntityManager<K extends EntityKey>({ config }: { config: EntityC
     onSuccess: () => {
       setDirty(false);
       setEditing(null);
-      notice("Đã lưu dữ liệu demo.");
+      notice("Đã lưu dữ liệu.");
       void invalidate();
     },
   });
@@ -258,7 +258,7 @@ export function EntityManager<K extends EntityKey>({ config }: { config: EntityC
         ),
         config.entity + ".csv",
       );
-      notice(`Đã xuất ${all.length} dòng demo.`);
+      notice(`Đã xuất ${all.length} dòng.`);
     } catch (e) {
       notice(e instanceof Error ? e.message : "Xuất thất bại", "error");
     }

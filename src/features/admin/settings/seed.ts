@@ -8,10 +8,10 @@ export function seed(): SeedBatch {
       name: [
         "Chào mừng đến BiBi Admin",
         "Kiểm tra sản phẩm đang nháp",
-        "Báo cáo demo đã sẵn sàng",
+        "Báo cáo đã sẵn sàng",
         "Cập nhật thông tin hồ sơ",
       ][i % 4],
-      description: "Thông báo mô phỏng, không kết nối dữ liệu production.",
+      description: "Thông tin và công việc cần chú ý.",
       read: i > 2,
       level: i % 3 ? "info" : "warning",
       href: i % 2 ? "/admin/products/list" : "/admin/dashboard",
@@ -31,7 +31,7 @@ export function seed(): SeedBatch {
       {
         ...seedBase("profile"),
         key: "profile",
-        values: { name: "Minh Nguyễn", email: "demo1@example.test" },
+        values: { name: "Minh Nguyễn", email: "account1@example.test" },
       },
     ],
   };

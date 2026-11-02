@@ -10,7 +10,7 @@ export default function AnalyticsOverview() {
     <>
       <PageTitle
         title="Phân tích truy cập"
-        description="Hành vi truy cập mô phỏng, không thu thập hay theo dõi người dùng thật."
+        description="Hành vi truy cập, không thu thập hay theo dõi người dùng thật."
       />
       <DateFilter value={range} onChange={setRange} />
       {result.isPending ? (
@@ -49,12 +49,12 @@ export default function AnalyticsOverview() {
                 <Kpi
                   title="Phiên đang hoạt động"
                   value={r.activeSessions}
-                  description="Phiên chưa kết thúc, có page-view trong5 phút tính từ mốc demo cố định."
+                  description="Phiên chưa kết thúc, có page-view trong5 phút tính từ mốc cố định."
                 />
                 <Kpi
                   title="Thời lượng trung bình"
                   value={Math.round(r.averageDuration) + " giây"}
-                  description="Trung bình độ dài phiên từ thời điểm bắt đầu đến kết thúc hoặc mốc demo."
+                  description="Trung bình độ dài phiên từ thời điểm bắt đầu đến kết thúc hoặc mốc."
                 />
                 <Kpi
                   title="Tỷ lệ thoát"
@@ -72,7 +72,7 @@ export default function AnalyticsOverview() {
                   ]}
                   kind="donut"
                 />
-                <ChartCard title="Quốc gia mô phỏng" data={r.countries} kind="bar" />
+                <ChartCard title="Quốc gia" data={r.countries} kind="bar" />
                 <ChartCard title="Thiết bị" data={r.devices} kind="donut" />
                 <ChartCard title="Trình duyệt" data={r.browsers} kind="donut" />
                 <ChartCard title="Nguồn truy cập" data={r.sources} kind="bar" />

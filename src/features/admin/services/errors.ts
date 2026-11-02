@@ -14,7 +14,7 @@ export function storageError(error: unknown): ServiceError {
     ? error
     : new ServiceError(
         "storage",
-        `Không thể lưu dữ liệu demo. Kiểm tra dung lượng/quyền lưu trữ rồi thử lại. ${error instanceof Error ? error.message : ""}`,
+        `Không thể lưu dữ liệu. Kiểm tra dung lượng/quyền lưu trữ rồi thử lại. ${error instanceof Error ? error.message : ""}`,
       );
 }
 export function assertNotAborted(signal?: AbortSignal) {

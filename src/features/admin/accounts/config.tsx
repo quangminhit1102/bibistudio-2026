@@ -10,7 +10,7 @@ export const userConfig: EntityConfig<"users"> = {
   defaults: { name: "", email: "", roleId: "viewer", active: true, lastLogin: null },
   fields: [
     { key: "name", label: "Họ tên", type: "text", required: true },
-    { key: "email", label: "Email demo", type: "email", required: true },
+    { key: "email", label: "Email", type: "email", required: true },
     { key: "roleId", label: "Vai trò", type: "select", entity: "roles", required: true },
     { key: "active", label: "Tài khoản hoạt động", type: "checkbox" },
   ],

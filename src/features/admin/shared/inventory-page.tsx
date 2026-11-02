@@ -112,7 +112,7 @@ export function InventoryPage({ entity }: { entity: "products" | "books" }) {
           </table>
           {!history.data?.total && (
             <p style={{ padding: 18, color: "var(--a-muted)", fontSize: 12 }}>
-              Chưa có điều chỉnh trong dữ liệu demo này.
+              Chưa có điều chỉnh trong dữ liệu này.
             </p>
           )}
         </div>

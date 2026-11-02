@@ -20,12 +20,12 @@ function ChartExample({ kind }: { kind: ChartKind }) {
     <div style={{ width: "100%" }}>
       <div className="a-actions">
         <Button onClick={() => setEmpty(!empty)}>Bật/tắt dữ liệu</Button>
-        <Button onClick={() => setLoading(!loading)}>Bật/tắt loading</Button>
+        <Button onClick={() => setLoading(!loading)}>Bật/tắt đang tải</Button>
       </div>
       {loading ? (
         <Skeleton rows={5} />
       ) : (
-        <Chart kind={kind} data={empty ? [] : points} label="Lượt xem demo theo ngày" />
+        <Chart kind={kind} data={empty ? [] : points} label="Lượt xem theo ngày" />
       )}
     </div>
   );

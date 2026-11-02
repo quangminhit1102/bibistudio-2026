@@ -4,7 +4,7 @@ import { Badge } from "../../shared/ui/primitives";
 import { paymentLabels } from "../service";
 const config: EntityConfig<"payments"> = {
   entity: "payments",
-  title: "Giao dịch mô phỏng",
+  title: "Giao dịch",
   description: "Không kết nối cổng thanh toán, không thực hiện thu hoặc hoàn tiền thật.",
   readOnly: true,
   dateField: "createdAt",
@@ -22,7 +22,7 @@ const config: EntityConfig<"payments"> = {
     { accessorKey: "orderId", header: "Đơn liên quan" },
     {
       accessorKey: "amount",
-      header: "Giá trị demo",
+      header: "Giá trị",
       cell: ({ getValue }) => money(Number(getValue())),
     },
     {

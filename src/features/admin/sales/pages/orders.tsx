@@ -6,7 +6,7 @@ import { orderLabels, paymentLabels } from "../service";
 const config: EntityConfig<"orders"> = {
   entity: "orders",
   title: "Đơn hàng",
-  description: "Theo dõi đơn hàng mô phỏng, trạng thái và lịch sử thanh toán.",
+  description: "Theo dõi đơn hàng, trạng thái và lịch sử thanh toán.",
   readOnly: true,
   defaults: {
     number: "",

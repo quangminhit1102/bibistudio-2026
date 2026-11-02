@@ -59,7 +59,7 @@ export const bookConfig: EntityConfig<"books"> = {
         { value: "en", label: "English" },
       ],
     },
-    { key: "price", label: "Giá demo (VND)", type: "number", min: 0 },
+    { key: "price", label: "Giá (VND)", type: "number", min: 0 },
     { key: "stock", label: "Tồn kho", type: "number", min: 0 },
     { key: "status", label: "Trạng thái", type: "select", options: statuses },
     { key: "description", label: "Mô tả", type: "textarea", full: true },
@@ -92,7 +92,7 @@ export const bookConfig: EntityConfig<"books"> = {
       ),
     },
     { accessorKey: "year", header: "Năm" },
-    { accessorKey: "price", header: "Giá demo", cell: ({ getValue }) => money(Number(getValue())) },
+    { accessorKey: "price", header: "Giá", cell: ({ getValue }) => money(Number(getValue())) },
     { accessorKey: "stock", header: "Tồn kho" },
     {
       accessorKey: "status",
@@ -108,7 +108,7 @@ export const bookConfig: EntityConfig<"books"> = {
 export const authorConfig: EntityConfig<"authors"> = {
   entity: "authors",
   title: "Tác giả",
-  description: "Hồ sơ tác giả demo. Tác giả có sách liên kết không thể bị xóa.",
+  description: "Hồ sơ tác giả. Tác giả có sách liên kết không thể bị xóa.",
   defaults: { name: "", description: "", nationality: "Việt Nam", birthDate: "" },
   fields: [
     { key: "name", label: "Họ tên", type: "text", required: true },
@@ -120,12 +120,12 @@ export const authorConfig: EntityConfig<"authors"> = {
 export const publisherConfig: EntityConfig<"publishers"> = {
   entity: "publishers",
   title: "Nhà xuất bản",
-  description: "Danh sách nhà xuất bản và thông tin liên hệ mô phỏng.",
+  description: "Danh sách nhà xuất bản và thông tin liên hệ.",
   defaults: { name: "", description: "", country: "Việt Nam", email: "" },
   fields: [
     { key: "name", label: "Tên nhà xuất bản", type: "text", required: true },
     { key: "country", label: "Quốc gia", type: "text" },
-    { key: "email", label: "Email liên hệ demo", type: "email" },
+    { key: "email", label: "Email liên hệ", type: "email" },
     { key: "description", label: "Thông tin", type: "textarea", full: true },
   ],
 };

@@ -1,3 +1,4 @@
+import { componentLabel } from "./labels";
 import { componentUsage } from "./usage";
 import { useState } from "react";
 import { Tabs, ContextMenu, Menubar, Accordion } from "radix-ui";
@@ -5,9 +6,9 @@ import { Button, Modal, ActionMenu } from "../shared/ui/primitives";
 import { Example } from "./example";
 import { OverlayExample } from "./overlays";
 import { componentCatalogue } from "./catalogue";
-const sections = ["Catalogue", "Bài viết", "Báo cáo"];
+const sections = ["Sản phẩm", "Bài viết", "Báo cáo"];
 export function NavigationExample({ name }: { name: string }) {
-  const [selected, setSelected] = useState("Catalogue");
+  const [selected, setSelected] = useState("Sản phẩm");
   const [page, setPage] = useState(1);
   const [open, setOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
@@ -68,7 +69,7 @@ export function NavigationExample({ name }: { name: string }) {
     );
   if (name === "Tabs")
     return (
-      <Tabs.Root defaultValue="Catalogue" style={{ width: "100%" }}>
+      <Tabs.Root defaultValue="Sản phẩm" style={{ width: "100%" }}>
         <Tabs.List aria-label="Module" className="a-actions">
           {sections.map((v) => (
             <Tabs.Trigger key={v} className="a-btn" value={v}>
@@ -255,8 +256,8 @@ export function NavigationExample({ name }: { name: string }) {
           Workspace
         </Button>{" "}
         /{" "}
-        <Button variant="link" onClick={() => setSelected("Catalogue")}>
-          Catalogue
+        <Button variant="link" onClick={() => setSelected("Sản phẩm")}>
+          Sản phẩm
         </Button>{" "}
         / <span aria-current="page">{selected}</span>
       </nav>

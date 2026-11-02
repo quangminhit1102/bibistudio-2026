@@ -21,15 +21,12 @@ export default function Dashboard() {
   const report = useAnalytics(range, true);
   return (
     <>
-      <PageTitle
-        title="Bảng điều khiển"
-        description="Một góc nhìn rõ ràng về hoạt động studio. Tất cả số liệu bên dưới đều là mô phỏng."
-      />
+      <PageTitle title="Bảng điều khiển" description="Một góc nhìn rõ ràng về hoạt động studio." />
       <DateFilter
         value={range}
         onChange={setRange}
         resolvePreset={(p) => businessRange(p, anchor)}
-        caption="Dữ liệu demo và phiếu đã nhập · Ngày theo giờ Việt Nam"
+        caption="Ngày theo giờ Việt Nam"
       />
       {report.isPending ? (
         <Skeleton rows={8} />
@@ -63,7 +60,7 @@ export default function Dashboard() {
                 <Kpi
                   title="Sản phẩm"
                   value={r.productCount}
-                  description="Số bản ghi sản phẩm demo đang có, không bao gồm sách."
+                  description="Số bản ghi sản phẩm đang có, không bao gồm sách."
                 />
                 <Kpi
                   title="Khách truy cập"
@@ -75,7 +72,7 @@ export default function Dashboard() {
                 <Kpi
                   title="Người dùng hoạt động"
                   value={active}
-                  description="Tài khoản quản trị demo hoạt động và có lastLogin trong kỳ."
+                  description="Tài khoản quản trị hoạt động và có lastLogin trong kỳ."
                 />
                 <Kpi
                   title="Tỷ lệ chuyển đổi"
@@ -132,7 +129,7 @@ export default function Dashboard() {
                 />
                 <ChartCard title="Nguồn truy cập" data={r.current.sources} kind="donut" />
                 <ChartCard
-                  title="Sản phẩm bán nhiều (demo)"
+                  title="Sản phẩm bán nhiều"
                   data={b.byProduct
                     .slice()
                     .sort((a, c) => c.quantity - a.quantity)

@@ -27,7 +27,7 @@ export default function GlobalSearch({ onClose }: { onClose: () => void }) {
         if (!open) onClose();
       }}
       title="Tìm trong workspace"
-      description="Tìm sản phẩm, khách mua hàng, phiếu mua hàng, bài viết và người dùng demo."
+      description="Tìm sản phẩm, khách mua hàng, phiếu mua hàng, bài viết và người dùng."
     >
       <div className="a-dialog-body">
         <input
@@ -57,7 +57,7 @@ export default function GlobalSearch({ onClose }: { onClose: () => void }) {
             ))
           ) : (
             <EmptyState
-              title="Tìm dữ liệu demo"
+              title="Tìm dữ liệu"
               description={
                 term.length > 1
                   ? "Không có kết quả phù hợp."

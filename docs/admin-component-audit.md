@@ -1,0 +1,102 @@
+# Kiểm chứng thư viện admin — 02/11/2026
+
+Inventory96 mục, key gồm nhóm/tên vì một primitive xuất hiện trong nhiều use case. Chỉ chuyển thành Đạt sau thao tác và kiểm tra trạng thái thực. Các bằng chứng sẽ ghi viewport/theme/steps/expected/observed; không dùng ảnh phác thảo làm kết quả.
+
+| Mục                                 | Trang                          | Trạng thái    | Thao tác / kỳ vọng | Quan sát | Bằng chứng |
+| ----------------------------------- | ------------------------------ | ------------- | ------------------ | -------- | ---------- |
+| actions/Button                      | /admin/components/actions      | Chưa kiểm tra | —                  | —        | —          |
+| actions/Icon Button                 | /admin/components/actions      | Chưa kiểm tra | —                  | —        | —          |
+| actions/Button Group                | /admin/components/actions      | Chưa kiểm tra | —                  | —        | —          |
+| actions/Split Button                | /admin/components/actions      | Chưa kiểm tra | —                  | —        | —          |
+| actions/Toggle Button               | /admin/components/actions      | Chưa kiểm tra | —                  | —        | —          |
+| actions/Copy Button                 | /admin/components/actions      | Chưa kiểm tra | —                  | —        | —          |
+| actions/Loading Button              | /admin/components/actions      | Chưa kiểm tra | —                  | —        | —          |
+| actions/Dropdown Button             | /admin/components/actions      | Chưa kiểm tra | —                  | —        | —          |
+| forms/Input                         | /admin/components/forms        | Chưa kiểm tra | —                  | —        | —          |
+| forms/Password Input                | /admin/components/forms        | Chưa kiểm tra | —                  | —        | —          |
+| forms/Search Input                  | /admin/components/forms        | Chưa kiểm tra | —                  | —        | —          |
+| forms/Textarea                      | /admin/components/forms        | Chưa kiểm tra | —                  | —        | —          |
+| forms/Number Input                  | /admin/components/forms        | Chưa kiểm tra | —                  | —        | —          |
+| forms/Checkbox                      | /admin/components/forms        | Chưa kiểm tra | —                  | —        | —          |
+| forms/Radio Group                   | /admin/components/forms        | Chưa kiểm tra | —                  | —        | —          |
+| forms/Switch / Toggle               | /admin/components/forms        | Chưa kiểm tra | —                  | —        | —          |
+| forms/Select                        | /admin/components/forms        | Chưa kiểm tra | —                  | —        | —          |
+| forms/Multi Select                  | /admin/components/forms        | Chưa kiểm tra | —                  | —        | —          |
+| forms/Combobox                      | /admin/components/forms        | Chưa kiểm tra | —                  | —        | —          |
+| forms/Autocomplete                  | /admin/components/forms        | Chưa kiểm tra | —                  | —        | —          |
+| forms/Date Picker                   | /admin/components/forms        | Chưa kiểm tra | —                  | —        | —          |
+| forms/Date Range Picker             | /admin/components/forms        | Chưa kiểm tra | —                  | —        | —          |
+| forms/Time Picker                   | /admin/components/forms        | Chưa kiểm tra | —                  | —        | —          |
+| forms/Slider                        | /admin/components/forms        | Chưa kiểm tra | —                  | —        | —          |
+| forms/File Upload                   | /admin/components/forms        | Chưa kiểm tra | —                  | —        | —          |
+| forms/Image Upload                  | /admin/components/forms        | Chưa kiểm tra | —                  | —        | —          |
+| forms/Form Field                    | /admin/components/forms        | Chưa kiểm tra | —                  | —        | —          |
+| forms/Form Label                    | /admin/components/forms        | Chưa kiểm tra | —                  | —        | —          |
+| forms/Form Description              | /admin/components/forms        | Chưa kiểm tra | —                  | —        | —          |
+| forms/Form Error                    | /admin/components/forms        | Chưa kiểm tra | —                  | —        | —          |
+| forms/Input Group                   | /admin/components/forms        | Chưa kiểm tra | —                  | —        | —          |
+| forms/Tag Input                     | /admin/components/forms        | Chưa kiểm tra | —                  | —        | —          |
+| data-display/Table                  | /admin/components/data-display | Chưa kiểm tra | —                  | —        | —          |
+| data-display/Data Table             | /admin/components/data-display | Chưa kiểm tra | —                  | —        | —          |
+| data-display/Card                   | /admin/components/data-display | Chưa kiểm tra | —                  | —        | —          |
+| data-display/Badge                  | /admin/components/data-display | Chưa kiểm tra | —                  | —        | —          |
+| data-display/Avatar                 | /admin/components/data-display | Chưa kiểm tra | —                  | —        | —          |
+| data-display/Avatar Group           | /admin/components/data-display | Chưa kiểm tra | —                  | —        | —          |
+| data-display/Tooltip                | /admin/components/data-display | Chưa kiểm tra | —                  | —        | —          |
+| data-display/Popover                | /admin/components/data-display | Chưa kiểm tra | —                  | —        | —          |
+| data-display/Separator              | /admin/components/data-display | Chưa kiểm tra | —                  | —        | —          |
+| data-display/Progress               | /admin/components/data-display | Chưa kiểm tra | —                  | —        | —          |
+| data-display/Skeleton               | /admin/components/data-display | Chưa kiểm tra | —                  | —        | —          |
+| data-display/Empty State            | /admin/components/data-display | Chưa kiểm tra | —                  | —        | —          |
+| data-display/Statistic Card         | /admin/components/data-display | Chưa kiểm tra | —                  | —        | —          |
+| data-display/Key-Value List         | /admin/components/data-display | Chưa kiểm tra | —                  | —        | —          |
+| data-display/Timeline               | /admin/components/data-display | Chưa kiểm tra | —                  | —        | —          |
+| data-display/Status Indicator       | /admin/components/data-display | Chưa kiểm tra | —                  | —        | —          |
+| data-display/Code Block             | /admin/components/data-display | Chưa kiểm tra | —                  | —        | —          |
+| data-display/Image Preview          | /admin/components/data-display | Chưa kiểm tra | —                  | —        | —          |
+| navigation/Sidebar                  | /admin/components/navigation   | Chưa kiểm tra | —                  | —        | —          |
+| navigation/Navigation Menu          | /admin/components/navigation   | Chưa kiểm tra | —                  | —        | —          |
+| navigation/Breadcrumb               | /admin/components/navigation   | Chưa kiểm tra | —                  | —        | —          |
+| navigation/Tabs                     | /admin/components/navigation   | Chưa kiểm tra | —                  | —        | —          |
+| navigation/Pagination               | /admin/components/navigation   | Chưa kiểm tra | —                  | —        | —          |
+| navigation/Dropdown Menu            | /admin/components/navigation   | Chưa kiểm tra | —                  | —        | —          |
+| navigation/Context Menu             | /admin/components/navigation   | Chưa kiểm tra | —                  | —        | —          |
+| navigation/Menubar                  | /admin/components/navigation   | Chưa kiểm tra | —                  | —        | —          |
+| navigation/Command Palette          | /admin/components/navigation   | Chưa kiểm tra | —                  | —        | —          |
+| navigation/Stepper                  | /admin/components/navigation   | Chưa kiểm tra | —                  | —        | —          |
+| navigation/Collapsible Navigation   | /admin/components/navigation   | Chưa kiểm tra | —                  | —        | —          |
+| navigation/Mobile Navigation Drawer | /admin/components/navigation   | Chưa kiểm tra | —                  | —        | —          |
+| navigation/Accordion                | /admin/components/navigation   | Chưa kiểm tra | —                  | —        | —          |
+| navigation/Collapsible              | /admin/components/navigation   | Chưa kiểm tra | —                  | —        | —          |
+| navigation/Expandable List          | /admin/components/navigation   | Chưa kiểm tra | —                  | —        | —          |
+| navigation/Tree View                | /admin/components/navigation   | Chưa kiểm tra | —                  | —        | —          |
+| navigation/Details Panel            | /admin/components/navigation   | Chưa kiểm tra | —                  | —        | —          |
+| overlays/Dialog                     | /admin/components/overlays     | Chưa kiểm tra | —                  | —        | —          |
+| overlays/Alert Dialog               | /admin/components/overlays     | Chưa kiểm tra | —                  | —        | —          |
+| overlays/Confirmation Dialog        | /admin/components/overlays     | Chưa kiểm tra | —                  | —        | —          |
+| overlays/Drawer                     | /admin/components/overlays     | Chưa kiểm tra | —                  | —        | —          |
+| overlays/Sheet                      | /admin/components/overlays     | Chưa kiểm tra | —                  | —        | —          |
+| overlays/Popover                    | /admin/components/overlays     | Chưa kiểm tra | —                  | —        | —          |
+| overlays/Hover Card                 | /admin/components/overlays     | Chưa kiểm tra | —                  | —        | —          |
+| overlays/Tooltip                    | /admin/components/overlays     | Chưa kiểm tra | —                  | —        | —          |
+| overlays/Dropdown Menu              | /admin/components/overlays     | Chưa kiểm tra | —                  | —        | —          |
+| overlays/Command Dialog             | /admin/components/overlays     | Chưa kiểm tra | —                  | —        | —          |
+| feedback/Toast                      | /admin/components/feedback     | Chưa kiểm tra | —                  | —        | —          |
+| feedback/Success Notification       | /admin/components/feedback     | Chưa kiểm tra | —                  | —        | —          |
+| feedback/Error Notification         | /admin/components/feedback     | Chưa kiểm tra | —                  | —        | —          |
+| feedback/Warning Notification       | /admin/components/feedback     | Chưa kiểm tra | —                  | —        | —          |
+| feedback/Alert                      | /admin/components/feedback     | Chưa kiểm tra | —                  | —        | —          |
+| feedback/Progress Bar               | /admin/components/feedback     | Chưa kiểm tra | —                  | —        | —          |
+| feedback/Spinner                    | /admin/components/feedback     | Chưa kiểm tra | —                  | —        | —          |
+| feedback/Skeleton Loading           | /admin/components/feedback     | Chưa kiểm tra | —                  | —        | —          |
+| feedback/Empty State                | /admin/components/feedback     | Chưa kiểm tra | —                  | —        | —          |
+| feedback/Error State                | /admin/components/feedback     | Chưa kiểm tra | —                  | —        | —          |
+| feedback/Retry State                | /admin/components/feedback     | Chưa kiểm tra | —                  | —        | —          |
+| feedback/Confirmation Feedback      | /admin/components/feedback     | Chưa kiểm tra | —                  | —        | —          |
+| charts/Line Chart                   | /admin/components/charts       | Chưa kiểm tra | —                  | —        | —          |
+| charts/Area Chart                   | /admin/components/charts       | Chưa kiểm tra | —                  | —        | —          |
+| charts/Bar Chart                    | /admin/components/charts       | Chưa kiểm tra | —                  | —        | —          |
+| charts/Pie Chart                    | /admin/components/charts       | Chưa kiểm tra | —                  | —        | —          |
+| charts/Donut Chart                  | /admin/components/charts       | Chưa kiểm tra | —                  | —        | —          |
+| charts/Multi-Series Chart           | /admin/components/charts       | Chưa kiểm tra | —                  | —        | —          |
+| charts/Mini Sparkline               | /admin/components/charts       | Chưa kiểm tra | —                  | —        | —          |

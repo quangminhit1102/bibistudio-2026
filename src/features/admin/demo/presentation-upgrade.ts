@@ -3,6 +3,8 @@ import { legacyPresentationBaseline } from "./legacy-presentation";
 const groups: Partial<Record<EntityKey, string>> = {
   products: "products",
   users: "accounts",
+  roles: "role-labels",
+  notifications: "notification-labels",
   customers: "business",
   posts: "content",
   visitors: "analytics",
@@ -21,14 +23,20 @@ export async function upgradePresentation(store: AdminStore, entity: EntityKey):
     media = batch.media ?? [];
     for (const p of batch.products ?? [])
       replacements[p.id] = p as unknown as Record<string, unknown>;
-  } else if (entity === "users") {
+  } else if (entity === "users" || entity === "roles") {
     const { seed } = await import("../accounts/seed");
     for (const u of seed().users ?? [])
       replacements[u.id] = u as unknown as Record<string, unknown>;
+    for (const role of seed().roles ?? [])
+      replacements[role.id] = role as unknown as Record<string, unknown>;
   } else if (entity === "customers") {
     const { seed } = await import("../sales/business-seed");
     for (const c of seed().customers ?? [])
       replacements[c.id] = c as unknown as Record<string, unknown>;
+  } else if (entity === "notifications") {
+    const { seed } = await import("../settings/seed");
+    for (const row of seed().notifications ?? [])
+      replacements[row.id] = row as unknown as Record<string, unknown>;
   } else if (entity === "visitors") {
     const { seed } = await import("../analytics/seed");
     for (const v of seed().visitors ?? [])

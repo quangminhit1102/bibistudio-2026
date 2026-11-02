@@ -1,3 +1,4 @@
+import { componentLabel } from "./labels";
 import { componentUsage } from "./usage";
 import { useState } from "react";
 import { Popover, HoverCard, AlertDialog } from "radix-ui";
@@ -12,7 +13,7 @@ export function OverlayExample({ name }: { name: string }) {
   const portal = typeof document !== "undefined" ? document.querySelector(".admin-root") : null;
   const body = (
     <div className="a-dialog-body">
-      <p>Xem lại nội dung rồi xác nhận thao tác demo.</p>
+      <p>Xem lại nội dung rồi xác nhận thao tác.</p>
       <label className="a-field">
         Tên bản nháp
         <input value={text} onChange={(e) => setText(e.target.value)} />
@@ -74,7 +75,7 @@ export function OverlayExample({ name }: { name: string }) {
           <HoverCard.Content className="a-popover" sideOffset={8}>
             <strong>Minh Nguyễn</strong>
             <p>Biên tập catalogue · BiBi Studio</p>
-            <span>Hồ sơ demo</span>
+            <span>Hồ sơ</span>
             <HoverCard.Arrow />
           </HoverCard.Content>
         </HoverCard.Portal>
@@ -84,7 +85,7 @@ export function OverlayExample({ name }: { name: string }) {
     content = (
       <AlertDialog.Root open={open} onOpenChange={setOpen}>
         <AlertDialog.Trigger asChild>
-          <Button variant="destructive">Xóa bản nháp demo</Button>
+          <Button variant="destructive">Xóa bản nháp</Button>
         </AlertDialog.Trigger>
         <AlertDialog.Portal container={portal}>
           <AlertDialog.Overlay className="a-overlay" />
@@ -96,7 +97,7 @@ export function OverlayExample({ name }: { name: string }) {
                 <Button>Hủy</Button>
               </AlertDialog.Cancel>
               <AlertDialog.Action asChild>
-                <Button variant="destructive" onClick={() => setResult("Đã xóa bản nháp demo")}>
+                <Button variant="destructive" onClick={() => setResult("Đã xóa bản nháp")}>
                   Xác nhận xóa
                 </Button>
               </AlertDialog.Action>
@@ -111,11 +112,11 @@ export function OverlayExample({ name }: { name: string }) {
         <Button onClick={() => setOpen(true)}>Xác nhận xuất bản</Button>
         <ConfirmDialog
           open={open}
-          title="Xuất bản bản nháp demo?"
+          title="Xuất bản bản nháp?"
           description="Không cập nhật nội dung website thật."
           onCancel={() => setOpen(false)}
           onConfirm={() => {
-            setResult("Đã xuất bản demo");
+            setResult("Đã xuất bản");
             setOpen(false);
           }}
         />
@@ -124,12 +125,12 @@ export function OverlayExample({ name }: { name: string }) {
   else
     content = (
       <>
-        <Button onClick={() => setOpen(true)}>Mở {name}</Button>
+        <Button onClick={() => setOpen(true)}>Mở {componentLabel(name)}</Button>
         <Modal
           placement={name === "Drawer" ? "left" : name === "Sheet" ? "right" : "center"}
           open={open}
           onOpenChange={setOpen}
-          title={name}
+          title={componentLabel(name)}
           description="Escape để đóng, Tab giữ focus trong hộp thoại."
         >
           {name === "Command Dialog" ? (

@@ -11,7 +11,7 @@ export function ActionExample({ name }: { name: string }) {
   const [message, setMessage] = useState("");
   const run = () => {
     setCount((c) => c + 1);
-    setMessage("Đã thực hiện hành động demo.");
+    setMessage("Đã thực hiện hành động.");
   };
   let preview;
   if (name === "Toggle Button")
@@ -47,7 +47,7 @@ export function ActionExample({ name }: { name: string }) {
           setBusy(false);
         }}
       >
-        Lưu demo
+        Lưu
       </Button>
     );
   else if (name === "Dropdown Button" || name === "Split Button")
@@ -56,7 +56,7 @@ export function ActionExample({ name }: { name: string }) {
         {name === "Split Button" && <Button onClick={run}>Tạo bản nháp</Button>}
         <ActionMenu
           label="Tùy chọn"
-          items={["Lưu bản nháp", "Xuất bản demo", "Xem trước"].map((label) => ({
+          items={["Lưu bản nháp", "Xuất bản", "Xem trước"].map((label) => ({
             label,
             onSelect: () => {
               setMessage(label);
@@ -68,7 +68,7 @@ export function ActionExample({ name }: { name: string }) {
     );
   else if (name === "Icon Button")
     preview = (
-      <Button size="icon" aria-label="Thêm mục demo" onClick={run}>
+      <Button size="icon" aria-label="Thêm mục" onClick={run}>
         <Plus size={17} />
       </Button>
     );
@@ -77,7 +77,16 @@ export function ActionExample({ name }: { name: string }) {
       <div className="a-actions" role="group" aria-label="Khoảng thời gian">
         {["Ngày", "Tuần", "Tháng"].map((v) => (
           <Button key={v} aria-pressed={message === v} onClick={() => setMessage(v)}>
-            {v}
+            {(
+              {
+                primary: "Chính",
+                secondary: "Phụ",
+                outline: "Viền",
+                ghost: "Tối giản",
+                destructive: "Nguy hiểm",
+                link: "Liên kết",
+              } as Record<string, string>
+            )[v] ?? v}
           </Button>
         ))}
       </div>
@@ -89,16 +98,25 @@ export function ActionExample({ name }: { name: string }) {
           ["primary", "secondary", "outline", "ghost", "destructive", "link"] as ButtonVariant[]
         ).map((v) => (
           <Button key={v} variant={v} onClick={run}>
-            {v}
+            {(
+              {
+                primary: "Chính",
+                secondary: "Phụ",
+                outline: "Viền",
+                ghost: "Tối giản",
+                destructive: "Nguy hiểm",
+                link: "Liên kết",
+              } as Record<string, string>
+            )[v] ?? v}
           </Button>
         ))}
         {(["sm", "md", "lg"] as const).map((size) => (
           <Button key={size} size={size} onClick={run}>
-            {size}
+            {{ sm: "Nhỏ", md: "Vừa", lg: "Lớn" }[size]}
           </Button>
         ))}
-        <Button disabled>Disabled</Button>
-        <Button loading>Loading</Button>
+        <Button disabled>Vô hiệu hóa</Button>
+        <Button loading>Đang xử lý</Button>
       </div>
     );
   return (

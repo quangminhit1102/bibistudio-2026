@@ -30,13 +30,13 @@ export const orderLabels: Record<OrderStatus, string> = {
   Shipped: "Đang giao",
   Delivered: "Đã giao",
   Cancelled: "Đã hủy",
-  Refunded: "Đã hoàn tiền demo",
+  Refunded: "Đã hoàn tiền",
 };
 export const paymentLabels: Record<PaymentStatus, string> = {
   Pending: "Chưa thanh toán",
   Paid: "Đã thanh toán",
   Failed: "Thất bại",
-  Refunded: "Đã hoàn tiền demo",
+  Refunded: "Đã hoàn tiền",
 };
 export const totalOrder = (order: Pick<Order, "items" | "shipping" | "discount">) =>
   order.items.reduce((n, i) => n + i.quantity * i.unitPrice, 0) + order.shipping - order.discount;

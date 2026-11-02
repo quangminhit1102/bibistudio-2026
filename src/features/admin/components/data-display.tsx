@@ -25,7 +25,7 @@ export function TableExample() {
   return (
     <div style={{ width: "100%", minWidth: 0 }}>
       <div className="a-actions">
-        <Button onClick={() => setLoading(!loading)}>Bật/tắt loading</Button>
+        <Button onClick={() => setLoading(!loading)}>Bật/tắt đang tải</Button>
         <Button onClick={() => setError(!error)}>Bật/tắt lỗi</Button>
         <Button onClick={() => setRows(rows.length ? [] : initialRows)}>Bật/tắt rỗng</Button>
         <Button
@@ -93,7 +93,7 @@ export function DataExample({ name }: { name: string }) {
       <>
         {(["neutral", "success", "warning", "error"] as const).map((t) => (
           <Badge key={t} tone={t}>
-            {t}
+            {{ neutral: "Trung tính", success: "Thành công", warning: "Cảnh báo", error: "Lỗi" }[t]}
           </Badge>
         ))}
       </>
@@ -112,7 +112,7 @@ export function DataExample({ name }: { name: string }) {
   if (name === "Separator")
     return (
       <div style={{ width: "100%" }}>
-        Catalogue
+        Sản phẩm
         <hr />
         Nội dung
       </div>
@@ -143,7 +143,7 @@ export function DataExample({ name }: { name: string }) {
   if (name === "Statistic Card")
     return (
       <div>
-        <small>Sản phẩm demo</small>
+        <small>Sản phẩm</small>
         <h3>50</h3>
         <Badge tone="success">+5 trong tháng</Badge>
       </div>
@@ -160,7 +160,7 @@ export function DataExample({ name }: { name: string }) {
   if (name === "Timeline")
     return (
       <ol className="a-timeline">
-        {["Tạo bản nháp", "Duyệt nội dung", "Xuất bản demo"].map((v) => (
+        {["Tạo bản nháp", "Duyệt nội dung", "Xuất bản"].map((v) => (
           <li key={v}>{v}</li>
         ))}
       </ol>
@@ -197,7 +197,7 @@ export function DataExample({ name }: { name: string }) {
     );
   return (
     <Card>
-      <h3>Catalogue BiBi</h3>
+      <h3>Sản phẩm BiBi</h3>
       <p>Khối nội dung dùng chung giữa các module.</p>
       <Button onClick={() => setLoaded(!loaded)}>{loaded ? "Đã theo dõi" : "Theo dõi khối"}</Button>
     </Card>
