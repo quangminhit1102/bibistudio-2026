@@ -187,7 +187,11 @@ export function filterNavigation(session: DemoSession | null, role?: Role): Navi
   return navigation
     .map((g) => ({
       ...g,
-      items: g.items.filter((i) => can(session, i.resource, i.action ?? "view", role)),
+      items: g.items.filter(
+        (i) =>
+          can(session, i.resource, "view", role) &&
+          can(session, i.resource, i.action ?? "view", role),
+      ),
     }))
     .filter((g) => g.items.length > 0);
 }

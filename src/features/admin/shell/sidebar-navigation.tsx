@@ -44,7 +44,7 @@ export function SidebarNavigation({
                 <Link
                   key={item.path}
                   to={item.path as "/admin"}
-              activeOptions={{ exact: true }}
+                  activeOptions={{ exact: true }}
                   title={item.label}
                   className={`a-nav-link ${active?.path === item.path ? "active" : ""}`}
                   aria-current={active?.path === item.path ? "page" : undefined}

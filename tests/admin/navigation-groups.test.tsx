@@ -41,6 +41,18 @@ it("has exactly five flat groups and each destination has an icon and no nested 
   expect(paths).not.toContain("/admin/content/posts/create");
   expect(groups.every((g) => g.items.length)).toBe(true);
 });
+it("does not expose dead create links when a custom role lacks module view permission", () => {
+  const role = {
+    id: "create-only",
+    name: "Custom",
+    permissions: { products: ["create"], content: ["create"] },
+    revision: 1,
+    createdAt: "",
+    updatedAt: "",
+  } as Parameters<typeof filterNavigation>[1];
+  const groups = filterNavigation({ userId: "custom-user", roleId: "create-only" }, role);
+  expect(groups.some((g) => g.id === "content" || g.id === "products")).toBe(false);
+});
 it.each([
   ["/admin/products/product-1/edit", "/admin/products/list"],
   ["/~vhplasti/admin/content/posts/post-2/edit", "/admin/content/posts"],
