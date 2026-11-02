@@ -10,7 +10,7 @@ Trạng thái website hiện tại phải đọc từ [API version](https://bibi
 
 ## 1. Ba lệnh local
 
-Admin demo local nằm tại `/admin`, dùng cùng lệnh dev/check/build. Đợt nghiệp vụ 02/11 đã kiểm chứng local: khách mua hàng, phiếu VAT có/không, báo cáo, visitors và popup thông báo; chưa push/deploy production. Xem [hướng dẫn admin](admin.md) và [biên bản kiểm chứng](admin-acceptance.md). Dữ liệu/ảnh admin lưu trong trình duyệt, chưa nối Express/MySQL và chưa làm thay đổi catalogue public.
+Admin demo local nằm tại `/admin`, dùng cùng lệnh dev/check/build. Đợt nghiệp vụ 02/11 đã kiểm chứng local và phát hành production tại commit `4c6e070`: khách mua hàng, phiếu VAT có/không, báo cáo, visitors và popup thông báo. Xem [biên bản production](superpowers/reports/2026-11-02-admin-production-release.md). Xem [hướng dẫn admin](admin.md) và [biên bản kiểm chứng](admin-acceptance.md). Dữ liệu/ảnh admin lưu trong trình duyệt, chưa nối Express/MySQL và chưa làm thay đổi catalogue public.
 
 Dùng **Node 24**; cài dependencies lần đầu hoặc sau đổi lockfile bằng `npm ci`. Hook cài cả backend và deploy tools theo lockfile riêng. Không cần secret hosting, MySQL hoặc Docker để chạy API demo.
 
@@ -111,15 +111,16 @@ Không xóa domain, key, secret hoặc các run cũ chỉ để làm sạch side
 - Production-only đã nghiệm thu bằng [CI main41188480787](https://github.com/quangminhit1102/bibistudio-2026/actions/runs/41188480787) và [manual production41188651522](https://github.com/quangminhit1102/bibistudio-2026/actions/runs/41188651522), release `0bc74538db34e673123370cfc422f449e7823533-41188480787`, không có staging deployment cho SHA này. HTTP/browser/images/old-client đạt; kiểm tra độc lập FE/BE khớp, www/API200. Receipt giữ bản trước20f9f2a để rollback. Đây không phải một lần diễn tập rollback mới.
 - Bộ13 mockup sổ bản đồ đã phát hành ngày01/11/2026 bằng [CI main41255894313](https://github.com/quangminhit1102/bibistudio-2026/actions/runs/41255894313) và [production41261096084](https://github.com/quangminhit1102/bibistudio-2026/actions/runs/41261096084), release `e1df4d2348eb9e06426afd7584c86a982c8f3278-41255894313`. Workflow và kiểm tra độc lập đạt:13 detail đúng tên/ảnh,13 WebP khớp bytes/SHA256, FE/BE khớp, www và node-test200, tab cũ tải2 assets không dùng cache. Receipt giữ bản trước0bc7453; không diễn tập rollback mới.
 
-| Lỗi                 | Kiểm tra đầu tiên                                                           |
-| ------------------- | --------------------------------------------------------------------------- |
-| Local không chạy    | Node24, npm ci, cổng5173/3001/9230                                          |
-| API trả HTML        | Passenger mount/routing, content-type, `/api-test`                          |
-| Ảnh lỗi             | URL catalogue, file/signature và browser decode                             |
-| Artifact bị từ chối | CI main push/repository/SHA, artifact name/ID/expiry, sidecar SHA256        |
-| SSH lỗi             | Environment secret, key scope, host pin, preflight; không mở shell rộng hơn |
-| FE/BE lệch          | `/api/version`, `/version.json`, HTML script và mtime thực tế, log rollback |
-| Deploy lỗi          | Đọc lỗi đầu tiên và kết quả recovery; `ROLLBACK FAILED` cần xử lý ngay      |
+- Admin và các chỉnh sửa responsive đã phát hành ngày02/11/2026 qua [CI main41388721286](https://github.com/quangminhit1102/bibistudio-2026/actions/runs/41388721286) và [production41388994773](https://github.com/quangminhit1102/bibistudio-2026/actions/runs/41388994773), release `4c6e07014824cb8d1020875439cba3d153077d8e-41388721286`. CI Linux98 admin +55 tooling/API đạt, build/artifact chính thức đạt. Workflow và kiểm chứng độc lập đạt: FE/BE/www khớp, API JSON404, ảnh Đà Lạt khớp SHA256/source và browser decode, admin/pages/popup/mobile hoạt động, old-client asset khớp bytes/hash, `/node-test`200. Receipt giữ bản trước `4c791499859ea42bbb7214c7bd3e222b2a6a4a57-41274633689`; không diễn tập rollback mới. Admin vẫn là demo IndexedDB, Express chưa nhận nghiệp vụ quản trị. [Biên bản chi tiết](superpowers/reports/2026-11-02-admin-production-release.md).
+  | Lỗi | Kiểm tra đầu tiên |
+  | ------------------- | --------------------------------------------------------------------------- |
+  | Local không chạy | Node24, npm ci, cổng5173/3001/9230 |
+  | API trả HTML | Passenger mount/routing, content-type, `/api-test` |
+  | Ảnh lỗi | URL catalogue, file/signature và browser decode |
+  | Artifact bị từ chối | CI main push/repository/SHA, artifact name/ID/expiry, sidecar SHA256 |
+  | SSH lỗi | Environment secret, key scope, host pin, preflight; không mở shell rộng hơn |
+  | FE/BE lệch | `/api/version`, `/version.json`, HTML script và mtime thực tế, log rollback |
+  | Deploy lỗi | Đọc lỗi đầu tiên và kết quả recovery; `ROLLBACK FAILED` cần xử lý ngay |
 
 Agent cần đọc tài liệu này trước khi đổi local/CI/deploy/rollback; xác định release/môi trường, kiểm tra trước/sau, báo rõ commit/build/run/live state và giới hạn chưa kiểm chứng. Lệnh package.json, workflow source, response HTTP và kết quả browser là bằng chứng vận hành.
 

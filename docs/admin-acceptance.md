@@ -1,3 +1,5 @@
+> Cập nhật phát hành 02/11/2026: bản admin đã lên production tại `4c6e070`. Xem [biên bản production](superpowers/reports/2026-11-02-admin-production-release.md). Các ghi chú “chưa push/deploy” dưới đây thuộc đợt nghiệm thu local trước phát hành.
+
 # Kết quả cuối sau review — 02/11/2026
 
 Source `9552afa` đã sửa các lỗi review bằng5 regressions RED→GREEN: nhầm snapshot giữa hai phiếu, mất draft khi refetch lỗi (phiếu/khách), link phiếu lỗi tải mãi, filter/export không theo URL và Back. Full check cuối đạt **98 admin tests +54 tooling/API**,1 ca POSIX bỏ qua trên Windows,0 lint errors/7 warnings đã có. Full build exit0.
