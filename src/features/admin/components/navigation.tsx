@@ -16,10 +16,13 @@ export function NavigationExample({ name }: { name: string }) {
   if (name === "Command Palette") return <OverlayExample name="Command Dialog" />;
   if (name === "Dropdown Menu")
     return (
-      <ActionMenu
-        label="Chọn module"
-        items={sections.map((label) => ({ label, onSelect: () => setSelected(label) }))}
-      />
+      <>
+        <ActionMenu
+          label="Chọn module"
+          items={sections.map((label) => ({ label, onSelect: () => setSelected(label) }))}
+        />
+        <p role="status">Đã chọn: {selected}</p>
+      </>
     );
   if (name === "Context Menu")
     return (
@@ -70,7 +73,7 @@ export function NavigationExample({ name }: { name: string }) {
   if (name === "Tabs")
     return (
       <Tabs.Root defaultValue="Sản phẩm" style={{ width: "100%" }}>
-        <Tabs.List aria-label="Module" className="a-actions">
+        <Tabs.List aria-label="Nhóm nội dung" className="a-actions">
           {sections.map((v) => (
             <Tabs.Trigger key={v} className="a-btn" value={v}>
               {v}
@@ -134,8 +137,8 @@ export function NavigationExample({ name }: { name: string }) {
   if (name === "Mobile Navigation Drawer")
     return (
       <>
-        <Button onClick={() => setOpen(true)}>Mở menu mobile</Button>
-        <Modal open={open} onOpenChange={setOpen} title="Module" placement="left">
+        <Button onClick={() => setOpen(true)}>Mở menu điện thoại</Button>
+        <Modal open={open} onOpenChange={setOpen} title="Nhóm nội dung" placement="left">
           <div className="a-dialog-body">
             {sections.map((v) => (
               <Button
@@ -192,7 +195,10 @@ export function NavigationExample({ name }: { name: string }) {
             ]?.focus();
           }
           if (e.key === "ArrowRight") setExpanded(true);
-          if (e.key === "ArrowLeft") setExpanded(false);
+          if (e.key === "ArrowLeft") {
+            setExpanded(false);
+            items[0]?.focus();
+          }
         }}
       >
         <button role="treeitem" aria-expanded={expanded} onClick={() => setExpanded(!expanded)}>
@@ -251,9 +257,9 @@ export function NavigationExample({ name }: { name: string }) {
     );
   if (name === "Breadcrumb")
     return (
-      <nav aria-label="Breadcrumb ví dụ">
-        <Button variant="link" onClick={() => setSelected("Workspace")}>
-          Workspace
+      <nav aria-label="Đường dẫn ví dụ">
+        <Button variant="link" onClick={() => setSelected("Quản trị")}>
+          Quản trị
         </Button>{" "}
         /{" "}
         <Button variant="link" onClick={() => setSelected("Sản phẩm")}>
@@ -264,7 +270,10 @@ export function NavigationExample({ name }: { name: string }) {
     );
   return (
     <div style={{ width: "100%" }}>
-      <nav aria-label={name} className={name === "Sidebar" ? "a-example-sidebar" : "a-actions"}>
+      <nav
+        aria-label={componentLabel(name)}
+        className={name === "Sidebar" ? "a-example-sidebar" : "a-actions"}
+      >
         {sections.map((v) => (
           <Button
             key={v}
