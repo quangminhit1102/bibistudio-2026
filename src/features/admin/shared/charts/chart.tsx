@@ -172,7 +172,18 @@ export default function Chart({
                   <Cell key={i} fill={colors[i % colors.length]} />
                 ))}
               </Pie>
-              <Tooltip />
+              <Tooltip
+                contentStyle={{
+                  background: "var(--a-surface)",
+                  border: "1px solid var(--a-border)",
+                  color: "var(--a-text)",
+                  borderRadius: 6,
+                  fontSize: 11,
+                }}
+                formatter={(value) =>
+                  unit === "VND" ? money(Number(value)) : Number(value).toLocaleString("vi-VN")
+                }
+              />
               <Legend wrapperStyle={{ fontSize: 10 }} />
             </PieChart>
           ) : kind === "bar" ? (

@@ -113,7 +113,7 @@ export function OverlayExample({ name }: { name: string }) {
         <ConfirmDialog
           open={open}
           title="Xuất bản bản nháp?"
-          description="Không cập nhật nội dung website thật."
+          description="Kiểm tra nội dung trước khi xuất bản."
           onCancel={() => setOpen(false)}
           onConfirm={() => {
             setResult("Đã xuất bản");

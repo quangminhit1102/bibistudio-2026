@@ -160,7 +160,7 @@ export function FormExample({ name }: { name: string }) {
             {file.name} · {Math.ceil(file.size / 1024)} KiB · chỉ xem trước
           </small>
         )}
-        {name === "Image Upload" && file?.type.startsWith("image/") && (
+        {name === "Image Upload" && file?.type.startsWith("image/") && url && (
           <img
             src={url}
             alt="Ảnh xem trước"

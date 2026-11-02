@@ -97,7 +97,7 @@ export function AdminLayout() {
                   <item.icon size={18} />
                   <span>{item.label}</span>
                 </Link>
-                {item.children && !collapsed && (
+                {item.children && (!collapsed || drawer) && (
                   <div className="a-nav-children">
                     {item.children
                       .filter(

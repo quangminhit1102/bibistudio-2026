@@ -241,7 +241,7 @@
 .a-collapsed .a-sidebar .a-nav-link span,
 .a-collapsed .a-sidebar details,
 .a-collapsed .a-sidebar .a-nav-group > p,
-.a-collapsed .a-sidebar-footer > div {
+.a-collapsed .a-sidebar-footer .a-account-label {
   display: none;
 }
 .a-collapsed .a-sidebar {
@@ -1147,8 +1147,10 @@
   .a-sidebar .a-wordmark span,
   .a-sidebar .a-nav-link span,
   .a-sidebar details,
+  .a-sidebar .a-nav-children,
+  .a-sidebar .a-account-menu > .a-btn > svg,
   .a-sidebar .a-nav-group > p,
-  .a-sidebar-footer > div {
+  .a-sidebar-footer .a-account-label {
     display: none;
   }
   .a-sidebar {
@@ -1768,7 +1770,7 @@
 .a-account-compact > .a-btn {
   width: 44px;
   min-height: 44px;
-  padding: 4px;
+  padding: 3px;
 }
 .a-sidebar-footer .a-account-menu {
   width: 100%;
@@ -1899,5 +1901,20 @@
   }
   .a-chart-horizontal {
     display: none;
+  }
+}
+.a-collapsed .a-sidebar-footer {
+  padding-inline: 0;
+}
+@media (min-width: 768px) and (max-width: 1023px) {
+  .a-sidebar .a-account-menu > .a-btn {
+    width: 44px;
+    min-height: 44px;
+    padding: 3px;
+    justify-content: center;
+  }
+  .a-sidebar-footer {
+    padding: 12px 0 0;
+    justify-content: center;
   }
 }

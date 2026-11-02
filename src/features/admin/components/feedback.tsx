@@ -1,4 +1,5 @@
 import { componentUsage } from "./usage";
+import { componentLabel } from "./labels";
 import { useState } from "react";
 import { LoaderCircle, CheckCircle, TriangleAlert, AlertCircle } from "lucide-react";
 import {
@@ -35,7 +36,7 @@ export function FeedbackExample({ name }: { name: string }) {
           )
         }
       >
-        Hiện {name}
+        Hiện {componentLabel(name)}
       </Button>
     );
   if (name === "Progress Bar")
