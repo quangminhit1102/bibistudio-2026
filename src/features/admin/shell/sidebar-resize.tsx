@@ -2,6 +2,11 @@ import { useEffect, useRef, useState } from "react";
 const key = "bibi-admin:sidebar-width";
 const viewport = () =>
   typeof window === "undefined" ? 1440 : document.documentElement.clientWidth || window.innerWidth;
+const desktop = () =>
+  typeof window === "undefined" ||
+  (typeof window.matchMedia === "function"
+    ? window.matchMedia("(min-width: 1024px)").matches
+    : window.innerWidth >= 1024);
 export function sidebarWidth(value: number, viewport: number) {
   return Math.min(Math.max(220, value), Math.max(220, Math.min(400, viewport - 640)));
 }
@@ -24,6 +29,7 @@ function save(n: number) {
 export function useSidebarResize(enabled = true) {
   const [preferred, setPreferred] = useState(restore),
     [screen, setScreen] = useState(viewport),
+    [isDesktop, setDesktop] = useState(desktop),
     [dragging, setDragging] = useState(false);
   const drag = useRef<{
     id: number;
@@ -31,24 +37,29 @@ export function useSidebarResize(enabled = true) {
     width: number;
     previous: number;
     current: number;
+    target: HTMLDivElement;
   } | null>(null);
   const cancel = () => {
     const d = drag.current;
     if (d) setPreferred(d.previous);
     drag.current = null;
+    if (d?.target.hasPointerCapture(d.id)) d.target.releasePointerCapture(d.id);
     setDragging(false);
   };
   useEffect(() => {
     const resize = () => {
       setScreen(viewport());
-      if (viewport() < 1024) cancel();
+      setDesktop(desktop());
+      if (!desktop()) cancel();
     };
     window.addEventListener("resize", resize);
     window.addEventListener("blur", cancel);
     return () => {
       window.removeEventListener("resize", resize);
       window.removeEventListener("blur", cancel);
+      const d = drag.current;
       drag.current = null;
+      if (d?.target.hasPointerCapture(d.id)) d.target.releasePointerCapture(d.id);
     };
   }, []);
   useEffect(() => {
@@ -60,7 +71,7 @@ export function useSidebarResize(enabled = true) {
     setPreferred(n);
     save(n);
   };
-  const active = enabled && screen >= 1024;
+  const active = enabled && isDesktop;
   const separator = (
     <div
       role="separator"
@@ -99,6 +110,7 @@ export function useSidebarResize(enabled = true) {
           width,
           previous: preferred,
           current: width,
+          target: e.currentTarget,
         };
         setDragging(true);
       }}
@@ -113,12 +125,17 @@ export function useSidebarResize(enabled = true) {
         if (!d || d.id !== e.pointerId) return;
         drag.current = null;
         setDragging(false);
-        commit(d.current);
+        if (d.current !== d.width) commit(d.current);
+        else setPreferred(d.previous);
         if (e.currentTarget.hasPointerCapture(e.pointerId))
           e.currentTarget.releasePointerCapture(e.pointerId);
       }}
-      onPointerCancel={cancel}
-      onLostPointerCapture={cancel}
+      onPointerCancel={(e) => {
+        if (drag.current?.id === e.pointerId) cancel();
+      }}
+      onLostPointerCapture={(e) => {
+        if (drag.current?.id === e.pointerId) cancel();
+      }}
     />
   );
   return { width, dragging, separator };

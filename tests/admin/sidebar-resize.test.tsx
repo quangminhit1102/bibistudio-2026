@@ -5,6 +5,36 @@ afterEach(() => {
   localStorage.clear();
   vi.restoreAllMocks();
 });
+it("desktop remains interactive when a page scrollbar reduces clientWidth below1024", () => {
+  window.innerWidth = 1024;
+  vi.spyOn(document.documentElement, "clientWidth", "get").mockReturnValue(1009);
+  render(<Demo />);
+  const s = screen.getByRole("separator");
+  expect(s).toHaveAttribute("tabindex", "0");
+  fireEvent.keyDown(s, { key: "End" });
+  expect(s).toHaveAttribute("aria-valuenow", "369");
+});
+it("a click without resize preserves a clamped preference and blur releases pointer capture", () => {
+  window.innerWidth = 1024;
+  localStorage.setItem("bibi-admin:sidebar-width", "400");
+  render(<Demo />);
+  const s = screen.getByRole("separator");
+  s.setPointerCapture = vi.fn();
+  s.releasePointerCapture = vi.fn();
+  s.hasPointerCapture = () => true;
+  const pointer = (type: string) => {
+    const e = new Event(type, { bubbles: true });
+    Object.assign(e, { pointerId: 1, button: 0, clientX: 384 });
+    fireEvent(s, e);
+  };
+  pointer("pointerdown");
+  pointer("pointerup");
+  expect(localStorage.getItem("bibi-admin:sidebar-width")).toBe("400");
+  vi.mocked(s.releasePointerCapture).mockClear();
+  pointer("pointerdown");
+  fireEvent(window, new Event("blur"));
+  expect(s.releasePointerCapture).toHaveBeenCalledWith(1);
+});
 function Demo({ enabled = true }: { enabled?: boolean }) {
   const r = useSidebarResize(enabled);
   return (
@@ -14,6 +44,19 @@ function Demo({ enabled = true }: { enabled?: boolean }) {
     </div>
   );
 }
+it("explicit cancel releases capture", () => {
+  window.innerWidth = 1440;
+  render(<Demo />);
+  const s = screen.getByRole("separator");
+  s.setPointerCapture = vi.fn();
+  s.releasePointerCapture = vi.fn();
+  s.hasPointerCapture = () => true;
+  const e = new Event("pointerdown", { bubbles: true });
+  Object.assign(e, { pointerId: 1, button: 0, clientX: 240 });
+  fireEvent(s, e);
+  fireEvent(window, new Event("blur"));
+  expect(s.releasePointerCapture).toHaveBeenCalledWith(1);
+});
 it("clamps against desktop workspace and absolute limits", () => {
   expect(sidebarWidth(500, 1440)).toBe(400);
   expect(sidebarWidth(400, 1024)).toBe(384);

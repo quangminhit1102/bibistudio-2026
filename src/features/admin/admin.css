@@ -138,7 +138,7 @@
   position: absolute;
   top: 0;
   bottom: 0;
-  right: -4px;
+  right: -8px;
   width: 8px;
   z-index: 25;
   cursor: col-resize;
