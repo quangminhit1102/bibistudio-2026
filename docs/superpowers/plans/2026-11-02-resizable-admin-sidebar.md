@@ -1,6 +1,6 @@
 # Resizable admin sidebar Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Resize the desktop sidebar and remember the preference without disrupting existing UI.
 **Architecture:** Isolated width hook and accessible pointer/keyboard separator; existing grid consumes a CSS variable. Sidebar scrolling stays inside its own wrapper.
@@ -24,11 +24,11 @@
 ### Task 1: Width controller, separator and integration
 
 **Files:** Create `src/features/admin/shell/sidebar-resize.tsx`, `tests/admin/sidebar-resize.test.tsx`; modify `shell/admin-layout.tsx`, `admin.css`.
-**Interfaces:** `sidebarWidth(value:number,viewport:number):number`; `useSidebarResize():{width:number;separator:ReactNode}`. Hook reads/writes `bibi-admin:sidebar-width`, exposes separator with aria controls `admin-sidebar`, ArrowLeft/Right10px, Home/End, double-click236px; pointer captures and preserves pointer start offset.
+**Interfaces:** `sidebarWidth(value:number,viewport:number):number`; `useSidebarResize(enabled?:boolean):{width:number;separator:ReactNode}`. Hook reads/writes `bibi-admin:sidebar-width`, exposes separator with aria controls `admin-sidebar`, ArrowLeft/Right10px, Home/End, double-click236px; pointer captures and preserves pointer start offset.
 
-- [ ] Write tests for bounds1024=>384max, preference restore/corrupt/storage throw, keyboard/reset, pointer move/cancel and viewport clamp/restoration. Run targeted test; expected missing module FAIL.
-- [ ] Implement controller/component; wire grid CSS variable, sticky wrapper and scrollable sidebar, hide separator below1024px and collapsed. Keep header/footer/avatar/menu untouched.
-- [ ] Targeted tests, TypeScript and scoped lint pass; browser drag/reload/reset/collapse/scroll/menu at desktop1024/1440 and tablet/mobile without global overflow. Build and preview actual artifact.
-- [ ] Commit local source and acceptance, final independent review; fix important findings with regression then hand over local preview. Preserve branch; no push/deploy.
+- [x] Write tests for bounds1024=>384max, preference restore/corrupt/storage throw, keyboard/reset, pointer move/cancel and viewport clamp/restoration. Run targeted test; expected missing module FAIL.
+- [x] Implement controller/component; wire grid CSS variable, sticky wrapper and scrollable sidebar, hide separator below1024px and collapsed. Keep header/footer/avatar/menu untouched.
+- [x] Targeted tests, TypeScript and scoped lint pass; browser drag/reload/reset/collapse/scroll/menu at desktop1024/1440 and tablet/mobile without global overflow. Build and preview actual artifact.
+- [x] Commit local source and acceptance, final independent review; fix important findings with regression then hand over local preview. Preserve branch; no push/deploy.
 
 Native execution retained from the existing session; user approved this exact design for implementation. No additional product choices are introduced by this plan.
