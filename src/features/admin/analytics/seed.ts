@@ -28,7 +28,7 @@ export function seed(): SeedBatch {
         .sort((a, b) => a.startedAt.localeCompare(b.startedAt));
       return {
         ...seedBase(`visitor-${i + 1}`),
-        anonymousId: `demo-visitor-${String(i + 1).padStart(3, "0")}`,
+        anonymousId: `VIS-${String(i + 1).padStart(3, "0")}`,
         ipAddress: `192.0.2.${i + 1}`.replace(/\.\d+$/, ".***"),
         country: ["Việt Nam", "Nhật Bản", "Hoa Kỳ"][i % 3],
         city: ["Hà Nội", "TP. Hồ Chí Minh", "Đà Nẵng"][i % 3],

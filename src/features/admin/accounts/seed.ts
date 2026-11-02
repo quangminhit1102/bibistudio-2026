@@ -13,7 +13,7 @@ export function seed(): SeedBatch {
       name:
         ["Minh Nguyễn", "An Trần", "Huy Lê", "Mai Phạm", "Linh Võ"][i % 5] +
         (i > 4 ? ` ${i + 1}` : ""),
-      email: `demo${i + 1}@example.test`,
+      email: `account${i + 1}@example.test`,
       roleId: i === 0 ? "super-admin" : Object.keys(roleNames)[1 + (i % 4)],
       active: true,
       lastLogin: "2026-10-31T08:00:00Z",

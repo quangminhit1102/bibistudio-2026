@@ -75,12 +75,18 @@ export async function ensureDataset(store: AdminStore, entity: EntityKey) {
   if (jobs.has(group)) return jobs.get(group);
   const job = (async () => {
     const marker = ["business", "stock"].includes(group) ? `seed:${group}:v2` : `seed:${group}`;
-    if (await store.getMeta(marker)) return;
+    if (await store.getMeta(marker)) {
+      const { upgradePresentation } = await import("./presentation-upgrade");
+      await upgradePresentation(store, entity);
+      return;
+    }
     for (const dep of dependencies[group]) await ensureGroup(dep);
     const { seed }: { seed: (context?: { products?: AdminProduct[] }) => SeedBatch } =
       await factories[group]();
     const batch = seed(
-      group === "business" ? { products: await store.list("products") } : undefined,
+      group === "business" || group === "sales"
+        ? { products: await store.list("products") }
+        : undefined,
     );
     const keys = Object.keys(batch) as EntityKey[];
     await store.transaction(keys, async (tx) => {

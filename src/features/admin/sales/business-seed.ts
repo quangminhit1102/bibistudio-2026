@@ -1,25 +1,35 @@
 import { seedBase, DEMO_NOW } from "../demo/clock";
 import type { SeedBatch } from "../demo/registry";
 import type { AdminProduct, Customer, PurchaseSlip } from "../services/contracts";
+import { seedProductIds } from "../products/seed";
 export function seed(context?: { products?: AdminProduct[] }): SeedBatch {
   const customers: Customer[] = Array.from({ length: 12 }, (_, i) => ({
     ...seedBase(`customer-${i + 1}`),
-    name: `${["Nhà sách", "Cá nhân", "Công ty"][i % 3]} demo ${i + 1}`,
+    name: [
+      "Nhà sách An Nhiên",
+      "Nguyễn Minh An",
+      "Công ty Giấy Mộc",
+      "Nhà sách Góc Nhỏ",
+      "Trần Thanh Mai",
+      "Công ty Sắc Việt",
+      "Nhà sách Ban Mai",
+      "Lê Hoài Nam",
+      "Công ty Mây Trắng",
+      "Nhà sách Trang Mới",
+      "Phạm Thu Hà",
+      "Công ty Nét Giấy",
+    ][i],
     kind: (["bookstore", "individual", "company"] as const)[i % 3],
-    address: "Địa chỉ mô phỏng — Việt Nam",
+    address: "",
     vatApplied: i % 2 === 0,
-    notes: "Khách mua hàng mô phỏng",
+    notes: "",
     active: i !== 11,
     phone: "",
     email: "",
   }));
   const products = (context?.products ?? []).filter(
     (p) =>
-      /^product-([1-9]|[1-4][0-9]|50)$/.test(p.id) &&
-      p.sku &&
-      p.name &&
-      Number.isSafeInteger(p.price) &&
-      p.price >= 0,
+      seedProductIds.has(p.id) && p.sku && p.name && Number.isSafeInteger(p.price) && p.price >= 0,
   );
   const counts = new Map<number, number>();
   const purchaseSlips: PurchaseSlip[] = products.length
@@ -53,10 +63,10 @@ export function seed(context?: { products?: AdminProduct[] }): SeedBatch {
           vatApplied: customer.vatApplied,
           items,
           total: items.reduce((n, row) => n + row.quantity * row.unitPrice, 0),
-          notes: "Phiếu mô phỏng — không trừ kho",
+          notes: "",
           status: i % 9 === 8 ? "void" : "saved",
           voidedAt: i % 9 === 8 ? DEMO_NOW : null,
-          voidReason: i % 9 === 8 ? "Hủy phiếu demo" : "",
+          voidReason: i % 9 === 8 ? "Điều chỉnh yêu cầu" : "",
         };
       })
     : [];

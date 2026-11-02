@@ -1,0 +1,1039 @@
+{
+  "products": {
+    "product-1": {
+      "name": "Sổ tay bản đồ Đà Nẵng",
+      "slug": "bibi-demo-1",
+      "description": "Ấn phẩm giấy được thiết kế từ những câu chuyện và cảm hứng Việt Nam.",
+      "shortDescription": "Một món quà nhỏ, lưu giữ câu chuyện của bạn.",
+      "imageIds": []
+    },
+    "product-2": {
+      "name": "Sổ tay bản đồ Hà Giang",
+      "slug": "bibi-demo-2",
+      "description": "Ấn phẩm giấy được thiết kế từ những câu chuyện và cảm hứng Việt Nam.",
+      "shortDescription": "Một món quà nhỏ, lưu giữ câu chuyện của bạn.",
+      "imageIds": []
+    },
+    "product-3": {
+      "name": "Sổ tay bản đồ Sài Gòn",
+      "slug": "bibi-demo-3",
+      "description": "Ấn phẩm giấy được thiết kế từ những câu chuyện và cảm hứng Việt Nam.",
+      "shortDescription": "Một món quà nhỏ, lưu giữ câu chuyện của bạn.",
+      "imageIds": []
+    },
+    "product-4": {
+      "name": "Sổ tay bản đồ Cà Mau",
+      "slug": "bibi-demo-4",
+      "description": "Ấn phẩm giấy được thiết kế từ những câu chuyện và cảm hứng Việt Nam.",
+      "shortDescription": "Một món quà nhỏ, lưu giữ câu chuyện của bạn.",
+      "imageIds": []
+    },
+    "product-5": {
+      "name": "Sổ tay bản đồ Đà Lạt",
+      "slug": "bibi-demo-5",
+      "description": "Ấn phẩm giấy được thiết kế từ những câu chuyện và cảm hứng Việt Nam.",
+      "shortDescription": "Một món quà nhỏ, lưu giữ câu chuyện của bạn.",
+      "imageIds": []
+    },
+    "product-6": {
+      "name": "Sổ tay bản đồ Hà Nội",
+      "slug": "bibi-demo-6",
+      "description": "Ấn phẩm giấy được thiết kế từ những câu chuyện và cảm hứng Việt Nam.",
+      "shortDescription": "Một món quà nhỏ, lưu giữ câu chuyện của bạn.",
+      "imageIds": []
+    },
+    "product-7": {
+      "name": "Sổ tay bản đồ Hội An",
+      "slug": "bibi-demo-7",
+      "description": "Ấn phẩm giấy được thiết kế từ những câu chuyện và cảm hứng Việt Nam.",
+      "shortDescription": "Một món quà nhỏ, lưu giữ câu chuyện của bạn.",
+      "imageIds": []
+    },
+    "product-8": {
+      "name": "Sổ tay bản đồ Huế",
+      "slug": "bibi-demo-8",
+      "description": "Ấn phẩm giấy được thiết kế từ những câu chuyện và cảm hứng Việt Nam.",
+      "shortDescription": "Một món quà nhỏ, lưu giữ câu chuyện của bạn.",
+      "imageIds": []
+    },
+    "product-9": {
+      "name": "Sổ tay bản đồ Nha Trang",
+      "slug": "bibi-demo-9",
+      "description": "Ấn phẩm giấy được thiết kế từ những câu chuyện và cảm hứng Việt Nam.",
+      "shortDescription": "Một món quà nhỏ, lưu giữ câu chuyện của bạn.",
+      "imageIds": []
+    },
+    "product-10": {
+      "name": "Sổ tay bản đồ Sa Pa",
+      "slug": "bibi-demo-10",
+      "description": "Ấn phẩm giấy được thiết kế từ những câu chuyện và cảm hứng Việt Nam.",
+      "shortDescription": "Một món quà nhỏ, lưu giữ câu chuyện của bạn.",
+      "imageIds": []
+    },
+    "product-11": {
+      "name": "Sổ tay bản đồ Đà Nẵng — mẫu 2",
+      "slug": "bibi-demo-11",
+      "description": "Ấn phẩm giấy được thiết kế từ những câu chuyện và cảm hứng Việt Nam.",
+      "shortDescription": "Một món quà nhỏ, lưu giữ câu chuyện của bạn.",
+      "imageIds": []
+    },
+    "product-12": {
+      "name": "Sổ tay bản đồ Hà Giang — mẫu 2",
+      "slug": "bibi-demo-12",
+      "description": "Ấn phẩm giấy được thiết kế từ những câu chuyện và cảm hứng Việt Nam.",
+      "shortDescription": "Một món quà nhỏ, lưu giữ câu chuyện của bạn.",
+      "imageIds": []
+    },
+    "product-13": {
+      "name": "Sổ tay bản đồ Sài Gòn — mẫu 2",
+      "slug": "bibi-demo-13",
+      "description": "Ấn phẩm giấy được thiết kế từ những câu chuyện và cảm hứng Việt Nam.",
+      "shortDescription": "Một món quà nhỏ, lưu giữ câu chuyện của bạn.",
+      "imageIds": []
+    },
+    "product-14": {
+      "name": "Sổ tay bản đồ Cà Mau — mẫu 2",
+      "slug": "bibi-demo-14",
+      "description": "Ấn phẩm giấy được thiết kế từ những câu chuyện và cảm hứng Việt Nam.",
+      "shortDescription": "Một món quà nhỏ, lưu giữ câu chuyện của bạn.",
+      "imageIds": []
+    },
+    "product-15": {
+      "name": "Sổ tay bản đồ Đà Lạt — mẫu 2",
+      "slug": "bibi-demo-15",
+      "description": "Ấn phẩm giấy được thiết kế từ những câu chuyện và cảm hứng Việt Nam.",
+      "shortDescription": "Một món quà nhỏ, lưu giữ câu chuyện của bạn.",
+      "imageIds": []
+    },
+    "product-16": {
+      "name": "Sổ tay bản đồ Hà Nội — mẫu 2",
+      "slug": "bibi-demo-16",
+      "description": "Ấn phẩm giấy được thiết kế từ những câu chuyện và cảm hứng Việt Nam.",
+      "shortDescription": "Một món quà nhỏ, lưu giữ câu chuyện của bạn.",
+      "imageIds": []
+    },
+    "product-17": {
+      "name": "Sổ tay bản đồ Hội An — mẫu 2",
+      "slug": "bibi-demo-17",
+      "description": "Ấn phẩm giấy được thiết kế từ những câu chuyện và cảm hứng Việt Nam.",
+      "shortDescription": "Một món quà nhỏ, lưu giữ câu chuyện của bạn.",
+      "imageIds": []
+    },
+    "product-18": {
+      "name": "Sổ tay bản đồ Huế — mẫu 2",
+      "slug": "bibi-demo-18",
+      "description": "Ấn phẩm giấy được thiết kế từ những câu chuyện và cảm hứng Việt Nam.",
+      "shortDescription": "Một món quà nhỏ, lưu giữ câu chuyện của bạn.",
+      "imageIds": []
+    },
+    "product-19": {
+      "name": "Sổ tay bản đồ Nha Trang — mẫu 2",
+      "slug": "bibi-demo-19",
+      "description": "Ấn phẩm giấy được thiết kế từ những câu chuyện và cảm hứng Việt Nam.",
+      "shortDescription": "Một món quà nhỏ, lưu giữ câu chuyện của bạn.",
+      "imageIds": []
+    },
+    "product-20": {
+      "name": "Sổ tay bản đồ Sa Pa — mẫu 2",
+      "slug": "bibi-demo-20",
+      "description": "Ấn phẩm giấy được thiết kế từ những câu chuyện và cảm hứng Việt Nam.",
+      "shortDescription": "Một món quà nhỏ, lưu giữ câu chuyện của bạn.",
+      "imageIds": []
+    },
+    "product-21": {
+      "name": "Sổ tay bản đồ Đà Nẵng — mẫu 3",
+      "slug": "bibi-demo-21",
+      "description": "Ấn phẩm giấy được thiết kế từ những câu chuyện và cảm hứng Việt Nam.",
+      "shortDescription": "Một món quà nhỏ, lưu giữ câu chuyện của bạn.",
+      "imageIds": []
+    },
+    "product-22": {
+      "name": "Sổ tay bản đồ Hà Giang — mẫu 3",
+      "slug": "bibi-demo-22",
+      "description": "Ấn phẩm giấy được thiết kế từ những câu chuyện và cảm hứng Việt Nam.",
+      "shortDescription": "Một món quà nhỏ, lưu giữ câu chuyện của bạn.",
+      "imageIds": []
+    },
+    "product-23": {
+      "name": "Sổ tay bản đồ Sài Gòn — mẫu 3",
+      "slug": "bibi-demo-23",
+      "description": "Ấn phẩm giấy được thiết kế từ những câu chuyện và cảm hứng Việt Nam.",
+      "shortDescription": "Một món quà nhỏ, lưu giữ câu chuyện của bạn.",
+      "imageIds": []
+    },
+    "product-24": {
+      "name": "Sổ tay bản đồ Cà Mau — mẫu 3",
+      "slug": "bibi-demo-24",
+      "description": "Ấn phẩm giấy được thiết kế từ những câu chuyện và cảm hứng Việt Nam.",
+      "shortDescription": "Một món quà nhỏ, lưu giữ câu chuyện của bạn.",
+      "imageIds": []
+    },
+    "product-25": {
+      "name": "Sổ tay bản đồ Đà Lạt — mẫu 3",
+      "slug": "bibi-demo-25",
+      "description": "Ấn phẩm giấy được thiết kế từ những câu chuyện và cảm hứng Việt Nam.",
+      "shortDescription": "Một món quà nhỏ, lưu giữ câu chuyện của bạn.",
+      "imageIds": []
+    },
+    "product-26": {
+      "name": "Sổ tay bản đồ Hà Nội — mẫu 3",
+      "slug": "bibi-demo-26",
+      "description": "Ấn phẩm giấy được thiết kế từ những câu chuyện và cảm hứng Việt Nam.",
+      "shortDescription": "Một món quà nhỏ, lưu giữ câu chuyện của bạn.",
+      "imageIds": []
+    },
+    "product-27": {
+      "name": "Sổ tay bản đồ Hội An — mẫu 3",
+      "slug": "bibi-demo-27",
+      "description": "Ấn phẩm giấy được thiết kế từ những câu chuyện và cảm hứng Việt Nam.",
+      "shortDescription": "Một món quà nhỏ, lưu giữ câu chuyện của bạn.",
+      "imageIds": []
+    },
+    "product-28": {
+      "name": "Sổ tay bản đồ Huế — mẫu 3",
+      "slug": "bibi-demo-28",
+      "description": "Ấn phẩm giấy được thiết kế từ những câu chuyện và cảm hứng Việt Nam.",
+      "shortDescription": "Một món quà nhỏ, lưu giữ câu chuyện của bạn.",
+      "imageIds": []
+    },
+    "product-29": {
+      "name": "Sổ tay bản đồ Nha Trang — mẫu 3",
+      "slug": "bibi-demo-29",
+      "description": "Ấn phẩm giấy được thiết kế từ những câu chuyện và cảm hứng Việt Nam.",
+      "shortDescription": "Một món quà nhỏ, lưu giữ câu chuyện của bạn.",
+      "imageIds": []
+    },
+    "product-30": {
+      "name": "Sổ tay bản đồ Sa Pa — mẫu 3",
+      "slug": "bibi-demo-30",
+      "description": "Ấn phẩm giấy được thiết kế từ những câu chuyện và cảm hứng Việt Nam.",
+      "shortDescription": "Một món quà nhỏ, lưu giữ câu chuyện của bạn.",
+      "imageIds": []
+    },
+    "product-31": {
+      "name": "Thiệp Việt Nam 1",
+      "slug": "bibi-demo-31",
+      "description": "Ấn phẩm giấy được thiết kế từ những câu chuyện và cảm hứng Việt Nam.",
+      "shortDescription": "Một món quà nhỏ, lưu giữ câu chuyện của bạn.",
+      "imageIds": []
+    },
+    "product-32": {
+      "name": "Thiệp Việt Nam 2",
+      "slug": "bibi-demo-32",
+      "description": "Ấn phẩm giấy được thiết kế từ những câu chuyện và cảm hứng Việt Nam.",
+      "shortDescription": "Một món quà nhỏ, lưu giữ câu chuyện của bạn.",
+      "imageIds": []
+    },
+    "product-33": {
+      "name": "Thiệp Việt Nam 3",
+      "slug": "bibi-demo-33",
+      "description": "Ấn phẩm giấy được thiết kế từ những câu chuyện và cảm hứng Việt Nam.",
+      "shortDescription": "Một món quà nhỏ, lưu giữ câu chuyện của bạn.",
+      "imageIds": []
+    },
+    "product-34": {
+      "name": "Thiệp Việt Nam 4",
+      "slug": "bibi-demo-34",
+      "description": "Ấn phẩm giấy được thiết kế từ những câu chuyện và cảm hứng Việt Nam.",
+      "shortDescription": "Một món quà nhỏ, lưu giữ câu chuyện của bạn.",
+      "imageIds": []
+    },
+    "product-35": {
+      "name": "Thiệp Việt Nam 5",
+      "slug": "bibi-demo-35",
+      "description": "Ấn phẩm giấy được thiết kế từ những câu chuyện và cảm hứng Việt Nam.",
+      "shortDescription": "Một món quà nhỏ, lưu giữ câu chuyện của bạn.",
+      "imageIds": []
+    },
+    "product-36": {
+      "name": "Thiệp Việt Nam 6",
+      "slug": "bibi-demo-36",
+      "description": "Ấn phẩm giấy được thiết kế từ những câu chuyện và cảm hứng Việt Nam.",
+      "shortDescription": "Một món quà nhỏ, lưu giữ câu chuyện của bạn.",
+      "imageIds": []
+    },
+    "product-37": {
+      "name": "Thiệp Việt Nam 7",
+      "slug": "bibi-demo-37",
+      "description": "Ấn phẩm giấy được thiết kế từ những câu chuyện và cảm hứng Việt Nam.",
+      "shortDescription": "Một món quà nhỏ, lưu giữ câu chuyện của bạn.",
+      "imageIds": []
+    },
+    "product-38": {
+      "name": "Thiệp Việt Nam 8",
+      "slug": "bibi-demo-38",
+      "description": "Ấn phẩm giấy được thiết kế từ những câu chuyện và cảm hứng Việt Nam.",
+      "shortDescription": "Một món quà nhỏ, lưu giữ câu chuyện của bạn.",
+      "imageIds": []
+    },
+    "product-39": {
+      "name": "Thiệp Việt Nam 9",
+      "slug": "bibi-demo-39",
+      "description": "Ấn phẩm giấy được thiết kế từ những câu chuyện và cảm hứng Việt Nam.",
+      "shortDescription": "Một món quà nhỏ, lưu giữ câu chuyện của bạn.",
+      "imageIds": []
+    },
+    "product-40": {
+      "name": "Thiệp Việt Nam 10",
+      "slug": "bibi-demo-40",
+      "description": "Ấn phẩm giấy được thiết kế từ những câu chuyện và cảm hứng Việt Nam.",
+      "shortDescription": "Một món quà nhỏ, lưu giữ câu chuyện của bạn.",
+      "imageIds": []
+    },
+    "product-41": {
+      "name": "Thiệp Việt Nam 11",
+      "slug": "bibi-demo-41",
+      "description": "Ấn phẩm giấy được thiết kế từ những câu chuyện và cảm hứng Việt Nam.",
+      "shortDescription": "Một món quà nhỏ, lưu giữ câu chuyện của bạn.",
+      "imageIds": []
+    },
+    "product-42": {
+      "name": "Thiệp Việt Nam 12",
+      "slug": "bibi-demo-42",
+      "description": "Ấn phẩm giấy được thiết kế từ những câu chuyện và cảm hứng Việt Nam.",
+      "shortDescription": "Một món quà nhỏ, lưu giữ câu chuyện của bạn.",
+      "imageIds": []
+    },
+    "product-43": {
+      "name": "Thiệp Việt Nam 13",
+      "slug": "bibi-demo-43",
+      "description": "Ấn phẩm giấy được thiết kế từ những câu chuyện và cảm hứng Việt Nam.",
+      "shortDescription": "Một món quà nhỏ, lưu giữ câu chuyện của bạn.",
+      "imageIds": []
+    },
+    "product-44": {
+      "name": "Thiệp Việt Nam 14",
+      "slug": "bibi-demo-44",
+      "description": "Ấn phẩm giấy được thiết kế từ những câu chuyện và cảm hứng Việt Nam.",
+      "shortDescription": "Một món quà nhỏ, lưu giữ câu chuyện của bạn.",
+      "imageIds": []
+    },
+    "product-45": {
+      "name": "Thiệp Việt Nam 15",
+      "slug": "bibi-demo-45",
+      "description": "Ấn phẩm giấy được thiết kế từ những câu chuyện và cảm hứng Việt Nam.",
+      "shortDescription": "Một món quà nhỏ, lưu giữ câu chuyện của bạn.",
+      "imageIds": []
+    },
+    "product-46": {
+      "name": "Thiệp Việt Nam 16",
+      "slug": "bibi-demo-46",
+      "description": "Ấn phẩm giấy được thiết kế từ những câu chuyện và cảm hứng Việt Nam.",
+      "shortDescription": "Một món quà nhỏ, lưu giữ câu chuyện của bạn.",
+      "imageIds": []
+    },
+    "product-47": {
+      "name": "Thiệp Việt Nam 17",
+      "slug": "bibi-demo-47",
+      "description": "Ấn phẩm giấy được thiết kế từ những câu chuyện và cảm hứng Việt Nam.",
+      "shortDescription": "Một món quà nhỏ, lưu giữ câu chuyện của bạn.",
+      "imageIds": []
+    },
+    "product-48": {
+      "name": "Thiệp Việt Nam 18",
+      "slug": "bibi-demo-48",
+      "description": "Ấn phẩm giấy được thiết kế từ những câu chuyện và cảm hứng Việt Nam.",
+      "shortDescription": "Một món quà nhỏ, lưu giữ câu chuyện của bạn.",
+      "imageIds": []
+    },
+    "product-49": {
+      "name": "Thiệp Việt Nam 19",
+      "slug": "bibi-demo-49",
+      "description": "Ấn phẩm giấy được thiết kế từ những câu chuyện và cảm hứng Việt Nam.",
+      "shortDescription": "Một món quà nhỏ, lưu giữ câu chuyện của bạn.",
+      "imageIds": []
+    },
+    "product-50": {
+      "name": "Thiệp Việt Nam 20",
+      "slug": "bibi-demo-50",
+      "description": "Ấn phẩm giấy được thiết kế từ những câu chuyện và cảm hứng Việt Nam.",
+      "shortDescription": "Một món quà nhỏ, lưu giữ câu chuyện của bạn.",
+      "imageIds": []
+    }
+  },
+  "users": {
+    "user-1": {
+      "name": "Minh Nguyễn",
+      "email": "demo1@example.test"
+    },
+    "user-2": {
+      "name": "An Trần",
+      "email": "demo2@example.test"
+    },
+    "user-3": {
+      "name": "Huy Lê",
+      "email": "demo3@example.test"
+    },
+    "user-4": {
+      "name": "Mai Phạm",
+      "email": "demo4@example.test"
+    },
+    "user-5": {
+      "name": "Linh Võ",
+      "email": "demo5@example.test"
+    },
+    "user-6": {
+      "name": "Minh Nguyễn 6",
+      "email": "demo6@example.test"
+    },
+    "user-7": {
+      "name": "An Trần 7",
+      "email": "demo7@example.test"
+    },
+    "user-8": {
+      "name": "Huy Lê 8",
+      "email": "demo8@example.test"
+    },
+    "user-9": {
+      "name": "Mai Phạm 9",
+      "email": "demo9@example.test"
+    },
+    "user-10": {
+      "name": "Linh Võ 10",
+      "email": "demo10@example.test"
+    },
+    "user-11": {
+      "name": "Minh Nguyễn 11",
+      "email": "demo11@example.test"
+    },
+    "user-12": {
+      "name": "An Trần 12",
+      "email": "demo12@example.test"
+    },
+    "user-13": {
+      "name": "Huy Lê 13",
+      "email": "demo13@example.test"
+    },
+    "user-14": {
+      "name": "Mai Phạm 14",
+      "email": "demo14@example.test"
+    },
+    "user-15": {
+      "name": "Linh Võ 15",
+      "email": "demo15@example.test"
+    },
+    "user-16": {
+      "name": "Minh Nguyễn 16",
+      "email": "demo16@example.test"
+    },
+    "user-17": {
+      "name": "An Trần 17",
+      "email": "demo17@example.test"
+    },
+    "user-18": {
+      "name": "Huy Lê 18",
+      "email": "demo18@example.test"
+    },
+    "user-19": {
+      "name": "Mai Phạm 19",
+      "email": "demo19@example.test"
+    },
+    "user-20": {
+      "name": "Linh Võ 20",
+      "email": "demo20@example.test"
+    },
+    "user-21": {
+      "name": "Minh Nguyễn 21",
+      "email": "demo21@example.test"
+    },
+    "user-22": {
+      "name": "An Trần 22",
+      "email": "demo22@example.test"
+    },
+    "user-23": {
+      "name": "Huy Lê 23",
+      "email": "demo23@example.test"
+    },
+    "user-24": {
+      "name": "Mai Phạm 24",
+      "email": "demo24@example.test"
+    },
+    "user-25": {
+      "name": "Linh Võ 25",
+      "email": "demo25@example.test"
+    },
+    "user-26": {
+      "name": "Minh Nguyễn 26",
+      "email": "demo26@example.test"
+    },
+    "user-27": {
+      "name": "An Trần 27",
+      "email": "demo27@example.test"
+    },
+    "user-28": {
+      "name": "Huy Lê 28",
+      "email": "demo28@example.test"
+    },
+    "user-29": {
+      "name": "Mai Phạm 29",
+      "email": "demo29@example.test"
+    },
+    "user-30": {
+      "name": "Linh Võ 30",
+      "email": "demo30@example.test"
+    }
+  },
+  "posts": {
+    "post-1": {
+      "slug": "demo-journal-1",
+      "title": "Gói một món quà nhỏ — 1",
+      "excerpt": "Những ý tưởng nhỏ để lưu giữ cảm hứng trong cuộc sống thường ngày.",
+      "content": "{\"type\":\"doc\",\"content\":[{\"type\":\"heading\",\"attrs\":{\"level\":2},\"content\":[{\"type\":\"text\",\"text\":\"Một câu chuyện của BiBi\"}]},{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Đây là nội dung demo. Bạn có thể chỉnh sửa và lưu trên trình duyệt này.\"}]}]}"
+    },
+    "post-2": {
+      "slug": "demo-journal-2",
+      "title": "Những câu chuyện từ giấy — 2",
+      "excerpt": "Những ý tưởng nhỏ để lưu giữ cảm hứng trong cuộc sống thường ngày.",
+      "content": "{\"type\":\"doc\",\"content\":[{\"type\":\"heading\",\"attrs\":{\"level\":2},\"content\":[{\"type\":\"text\",\"text\":\"Một câu chuyện của BiBi\"}]},{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Đây là nội dung demo. Bạn có thể chỉnh sửa và lưu trên trình duyệt này.\"}]}]}"
+    },
+    "post-3": {
+      "slug": "demo-journal-3",
+      "title": "Một ngày ở Đường sách — 3",
+      "excerpt": "Những ý tưởng nhỏ để lưu giữ cảm hứng trong cuộc sống thường ngày.",
+      "content": "{\"type\":\"doc\",\"content\":[{\"type\":\"heading\",\"attrs\":{\"level\":2},\"content\":[{\"type\":\"text\",\"text\":\"Một câu chuyện của BiBi\"}]},{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Đây là nội dung demo. Bạn có thể chỉnh sửa và lưu trên trình duyệt này.\"}]}]}"
+    },
+    "post-4": {
+      "slug": "demo-journal-4",
+      "title": "Sổ tay và những chuyến đi — 4",
+      "excerpt": "Những ý tưởng nhỏ để lưu giữ cảm hứng trong cuộc sống thường ngày.",
+      "content": "{\"type\":\"doc\",\"content\":[{\"type\":\"heading\",\"attrs\":{\"level\":2},\"content\":[{\"type\":\"text\",\"text\":\"Một câu chuyện của BiBi\"}]},{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Đây là nội dung demo. Bạn có thể chỉnh sửa và lưu trên trình duyệt này.\"}]}]}"
+    },
+    "post-5": {
+      "slug": "demo-journal-5",
+      "title": "Gói một món quà nhỏ — 5",
+      "excerpt": "Những ý tưởng nhỏ để lưu giữ cảm hứng trong cuộc sống thường ngày.",
+      "content": "{\"type\":\"doc\",\"content\":[{\"type\":\"heading\",\"attrs\":{\"level\":2},\"content\":[{\"type\":\"text\",\"text\":\"Một câu chuyện của BiBi\"}]},{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Đây là nội dung demo. Bạn có thể chỉnh sửa và lưu trên trình duyệt này.\"}]}]}"
+    },
+    "post-6": {
+      "slug": "demo-journal-6",
+      "title": "Những câu chuyện từ giấy — 6",
+      "excerpt": "Những ý tưởng nhỏ để lưu giữ cảm hứng trong cuộc sống thường ngày.",
+      "content": "{\"type\":\"doc\",\"content\":[{\"type\":\"heading\",\"attrs\":{\"level\":2},\"content\":[{\"type\":\"text\",\"text\":\"Một câu chuyện của BiBi\"}]},{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Đây là nội dung demo. Bạn có thể chỉnh sửa và lưu trên trình duyệt này.\"}]}]}"
+    },
+    "post-7": {
+      "slug": "demo-journal-7",
+      "title": "Một ngày ở Đường sách — 7",
+      "excerpt": "Những ý tưởng nhỏ để lưu giữ cảm hứng trong cuộc sống thường ngày.",
+      "content": "{\"type\":\"doc\",\"content\":[{\"type\":\"heading\",\"attrs\":{\"level\":2},\"content\":[{\"type\":\"text\",\"text\":\"Một câu chuyện của BiBi\"}]},{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Đây là nội dung demo. Bạn có thể chỉnh sửa và lưu trên trình duyệt này.\"}]}]}"
+    },
+    "post-8": {
+      "slug": "demo-journal-8",
+      "title": "Sổ tay và những chuyến đi — 8",
+      "excerpt": "Những ý tưởng nhỏ để lưu giữ cảm hứng trong cuộc sống thường ngày.",
+      "content": "{\"type\":\"doc\",\"content\":[{\"type\":\"heading\",\"attrs\":{\"level\":2},\"content\":[{\"type\":\"text\",\"text\":\"Một câu chuyện của BiBi\"}]},{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Đây là nội dung demo. Bạn có thể chỉnh sửa và lưu trên trình duyệt này.\"}]}]}"
+    },
+    "post-9": {
+      "slug": "demo-journal-9",
+      "title": "Gói một món quà nhỏ — 9",
+      "excerpt": "Những ý tưởng nhỏ để lưu giữ cảm hứng trong cuộc sống thường ngày.",
+      "content": "{\"type\":\"doc\",\"content\":[{\"type\":\"heading\",\"attrs\":{\"level\":2},\"content\":[{\"type\":\"text\",\"text\":\"Một câu chuyện của BiBi\"}]},{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Đây là nội dung demo. Bạn có thể chỉnh sửa và lưu trên trình duyệt này.\"}]}]}"
+    },
+    "post-10": {
+      "slug": "demo-journal-10",
+      "title": "Những câu chuyện từ giấy — 10",
+      "excerpt": "Những ý tưởng nhỏ để lưu giữ cảm hứng trong cuộc sống thường ngày.",
+      "content": "{\"type\":\"doc\",\"content\":[{\"type\":\"heading\",\"attrs\":{\"level\":2},\"content\":[{\"type\":\"text\",\"text\":\"Một câu chuyện của BiBi\"}]},{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Đây là nội dung demo. Bạn có thể chỉnh sửa và lưu trên trình duyệt này.\"}]}]}"
+    },
+    "post-11": {
+      "slug": "demo-journal-11",
+      "title": "Một ngày ở Đường sách — 11",
+      "excerpt": "Những ý tưởng nhỏ để lưu giữ cảm hứng trong cuộc sống thường ngày.",
+      "content": "{\"type\":\"doc\",\"content\":[{\"type\":\"heading\",\"attrs\":{\"level\":2},\"content\":[{\"type\":\"text\",\"text\":\"Một câu chuyện của BiBi\"}]},{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Đây là nội dung demo. Bạn có thể chỉnh sửa và lưu trên trình duyệt này.\"}]}]}"
+    },
+    "post-12": {
+      "slug": "demo-journal-12",
+      "title": "Sổ tay và những chuyến đi — 12",
+      "excerpt": "Những ý tưởng nhỏ để lưu giữ cảm hứng trong cuộc sống thường ngày.",
+      "content": "{\"type\":\"doc\",\"content\":[{\"type\":\"heading\",\"attrs\":{\"level\":2},\"content\":[{\"type\":\"text\",\"text\":\"Một câu chuyện của BiBi\"}]},{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Đây là nội dung demo. Bạn có thể chỉnh sửa và lưu trên trình duyệt này.\"}]}]}"
+    },
+    "post-13": {
+      "slug": "demo-journal-13",
+      "title": "Gói một món quà nhỏ — 13",
+      "excerpt": "Những ý tưởng nhỏ để lưu giữ cảm hứng trong cuộc sống thường ngày.",
+      "content": "{\"type\":\"doc\",\"content\":[{\"type\":\"heading\",\"attrs\":{\"level\":2},\"content\":[{\"type\":\"text\",\"text\":\"Một câu chuyện của BiBi\"}]},{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Đây là nội dung demo. Bạn có thể chỉnh sửa và lưu trên trình duyệt này.\"}]}]}"
+    },
+    "post-14": {
+      "slug": "demo-journal-14",
+      "title": "Những câu chuyện từ giấy — 14",
+      "excerpt": "Những ý tưởng nhỏ để lưu giữ cảm hứng trong cuộc sống thường ngày.",
+      "content": "{\"type\":\"doc\",\"content\":[{\"type\":\"heading\",\"attrs\":{\"level\":2},\"content\":[{\"type\":\"text\",\"text\":\"Một câu chuyện của BiBi\"}]},{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Đây là nội dung demo. Bạn có thể chỉnh sửa và lưu trên trình duyệt này.\"}]}]}"
+    },
+    "post-15": {
+      "slug": "demo-journal-15",
+      "title": "Một ngày ở Đường sách — 15",
+      "excerpt": "Những ý tưởng nhỏ để lưu giữ cảm hứng trong cuộc sống thường ngày.",
+      "content": "{\"type\":\"doc\",\"content\":[{\"type\":\"heading\",\"attrs\":{\"level\":2},\"content\":[{\"type\":\"text\",\"text\":\"Một câu chuyện của BiBi\"}]},{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Đây là nội dung demo. Bạn có thể chỉnh sửa và lưu trên trình duyệt này.\"}]}]}"
+    },
+    "post-16": {
+      "slug": "demo-journal-16",
+      "title": "Sổ tay và những chuyến đi — 16",
+      "excerpt": "Những ý tưởng nhỏ để lưu giữ cảm hứng trong cuộc sống thường ngày.",
+      "content": "{\"type\":\"doc\",\"content\":[{\"type\":\"heading\",\"attrs\":{\"level\":2},\"content\":[{\"type\":\"text\",\"text\":\"Một câu chuyện của BiBi\"}]},{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Đây là nội dung demo. Bạn có thể chỉnh sửa và lưu trên trình duyệt này.\"}]}]}"
+    },
+    "post-17": {
+      "slug": "demo-journal-17",
+      "title": "Gói một món quà nhỏ — 17",
+      "excerpt": "Những ý tưởng nhỏ để lưu giữ cảm hứng trong cuộc sống thường ngày.",
+      "content": "{\"type\":\"doc\",\"content\":[{\"type\":\"heading\",\"attrs\":{\"level\":2},\"content\":[{\"type\":\"text\",\"text\":\"Một câu chuyện của BiBi\"}]},{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Đây là nội dung demo. Bạn có thể chỉnh sửa và lưu trên trình duyệt này.\"}]}]}"
+    },
+    "post-18": {
+      "slug": "demo-journal-18",
+      "title": "Những câu chuyện từ giấy — 18",
+      "excerpt": "Những ý tưởng nhỏ để lưu giữ cảm hứng trong cuộc sống thường ngày.",
+      "content": "{\"type\":\"doc\",\"content\":[{\"type\":\"heading\",\"attrs\":{\"level\":2},\"content\":[{\"type\":\"text\",\"text\":\"Một câu chuyện của BiBi\"}]},{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Đây là nội dung demo. Bạn có thể chỉnh sửa và lưu trên trình duyệt này.\"}]}]}"
+    },
+    "post-19": {
+      "slug": "demo-journal-19",
+      "title": "Một ngày ở Đường sách — 19",
+      "excerpt": "Những ý tưởng nhỏ để lưu giữ cảm hứng trong cuộc sống thường ngày.",
+      "content": "{\"type\":\"doc\",\"content\":[{\"type\":\"heading\",\"attrs\":{\"level\":2},\"content\":[{\"type\":\"text\",\"text\":\"Một câu chuyện của BiBi\"}]},{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Đây là nội dung demo. Bạn có thể chỉnh sửa và lưu trên trình duyệt này.\"}]}]}"
+    },
+    "post-20": {
+      "slug": "demo-journal-20",
+      "title": "Sổ tay và những chuyến đi — 20",
+      "excerpt": "Những ý tưởng nhỏ để lưu giữ cảm hứng trong cuộc sống thường ngày.",
+      "content": "{\"type\":\"doc\",\"content\":[{\"type\":\"heading\",\"attrs\":{\"level\":2},\"content\":[{\"type\":\"text\",\"text\":\"Một câu chuyện của BiBi\"}]},{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Đây là nội dung demo. Bạn có thể chỉnh sửa và lưu trên trình duyệt này.\"}]}]}"
+    },
+    "post-21": {
+      "slug": "demo-journal-21",
+      "title": "Gói một món quà nhỏ — 21",
+      "excerpt": "Những ý tưởng nhỏ để lưu giữ cảm hứng trong cuộc sống thường ngày.",
+      "content": "{\"type\":\"doc\",\"content\":[{\"type\":\"heading\",\"attrs\":{\"level\":2},\"content\":[{\"type\":\"text\",\"text\":\"Một câu chuyện của BiBi\"}]},{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Đây là nội dung demo. Bạn có thể chỉnh sửa và lưu trên trình duyệt này.\"}]}]}"
+    },
+    "post-22": {
+      "slug": "demo-journal-22",
+      "title": "Những câu chuyện từ giấy — 22",
+      "excerpt": "Những ý tưởng nhỏ để lưu giữ cảm hứng trong cuộc sống thường ngày.",
+      "content": "{\"type\":\"doc\",\"content\":[{\"type\":\"heading\",\"attrs\":{\"level\":2},\"content\":[{\"type\":\"text\",\"text\":\"Một câu chuyện của BiBi\"}]},{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Đây là nội dung demo. Bạn có thể chỉnh sửa và lưu trên trình duyệt này.\"}]}]}"
+    },
+    "post-23": {
+      "slug": "demo-journal-23",
+      "title": "Một ngày ở Đường sách — 23",
+      "excerpt": "Những ý tưởng nhỏ để lưu giữ cảm hứng trong cuộc sống thường ngày.",
+      "content": "{\"type\":\"doc\",\"content\":[{\"type\":\"heading\",\"attrs\":{\"level\":2},\"content\":[{\"type\":\"text\",\"text\":\"Một câu chuyện của BiBi\"}]},{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Đây là nội dung demo. Bạn có thể chỉnh sửa và lưu trên trình duyệt này.\"}]}]}"
+    },
+    "post-24": {
+      "slug": "demo-journal-24",
+      "title": "Sổ tay và những chuyến đi — 24",
+      "excerpt": "Những ý tưởng nhỏ để lưu giữ cảm hứng trong cuộc sống thường ngày.",
+      "content": "{\"type\":\"doc\",\"content\":[{\"type\":\"heading\",\"attrs\":{\"level\":2},\"content\":[{\"type\":\"text\",\"text\":\"Một câu chuyện của BiBi\"}]},{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Đây là nội dung demo. Bạn có thể chỉnh sửa và lưu trên trình duyệt này.\"}]}]}"
+    },
+    "post-25": {
+      "slug": "demo-journal-25",
+      "title": "Gói một món quà nhỏ — 25",
+      "excerpt": "Những ý tưởng nhỏ để lưu giữ cảm hứng trong cuộc sống thường ngày.",
+      "content": "{\"type\":\"doc\",\"content\":[{\"type\":\"heading\",\"attrs\":{\"level\":2},\"content\":[{\"type\":\"text\",\"text\":\"Một câu chuyện của BiBi\"}]},{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Đây là nội dung demo. Bạn có thể chỉnh sửa và lưu trên trình duyệt này.\"}]}]}"
+    },
+    "post-26": {
+      "slug": "demo-journal-26",
+      "title": "Những câu chuyện từ giấy — 26",
+      "excerpt": "Những ý tưởng nhỏ để lưu giữ cảm hứng trong cuộc sống thường ngày.",
+      "content": "{\"type\":\"doc\",\"content\":[{\"type\":\"heading\",\"attrs\":{\"level\":2},\"content\":[{\"type\":\"text\",\"text\":\"Một câu chuyện của BiBi\"}]},{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Đây là nội dung demo. Bạn có thể chỉnh sửa và lưu trên trình duyệt này.\"}]}]}"
+    },
+    "post-27": {
+      "slug": "demo-journal-27",
+      "title": "Một ngày ở Đường sách — 27",
+      "excerpt": "Những ý tưởng nhỏ để lưu giữ cảm hứng trong cuộc sống thường ngày.",
+      "content": "{\"type\":\"doc\",\"content\":[{\"type\":\"heading\",\"attrs\":{\"level\":2},\"content\":[{\"type\":\"text\",\"text\":\"Một câu chuyện của BiBi\"}]},{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Đây là nội dung demo. Bạn có thể chỉnh sửa và lưu trên trình duyệt này.\"}]}]}"
+    },
+    "post-28": {
+      "slug": "demo-journal-28",
+      "title": "Sổ tay và những chuyến đi — 28",
+      "excerpt": "Những ý tưởng nhỏ để lưu giữ cảm hứng trong cuộc sống thường ngày.",
+      "content": "{\"type\":\"doc\",\"content\":[{\"type\":\"heading\",\"attrs\":{\"level\":2},\"content\":[{\"type\":\"text\",\"text\":\"Một câu chuyện của BiBi\"}]},{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Đây là nội dung demo. Bạn có thể chỉnh sửa và lưu trên trình duyệt này.\"}]}]}"
+    },
+    "post-29": {
+      "slug": "demo-journal-29",
+      "title": "Gói một món quà nhỏ — 29",
+      "excerpt": "Những ý tưởng nhỏ để lưu giữ cảm hứng trong cuộc sống thường ngày.",
+      "content": "{\"type\":\"doc\",\"content\":[{\"type\":\"heading\",\"attrs\":{\"level\":2},\"content\":[{\"type\":\"text\",\"text\":\"Một câu chuyện của BiBi\"}]},{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Đây là nội dung demo. Bạn có thể chỉnh sửa và lưu trên trình duyệt này.\"}]}]}"
+    },
+    "post-30": {
+      "slug": "demo-journal-30",
+      "title": "Những câu chuyện từ giấy — 30",
+      "excerpt": "Những ý tưởng nhỏ để lưu giữ cảm hứng trong cuộc sống thường ngày.",
+      "content": "{\"type\":\"doc\",\"content\":[{\"type\":\"heading\",\"attrs\":{\"level\":2},\"content\":[{\"type\":\"text\",\"text\":\"Một câu chuyện của BiBi\"}]},{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Đây là nội dung demo. Bạn có thể chỉnh sửa và lưu trên trình duyệt này.\"}]}]}"
+    },
+    "post-31": {
+      "slug": "demo-journal-31",
+      "title": "Một ngày ở Đường sách — 31",
+      "excerpt": "Những ý tưởng nhỏ để lưu giữ cảm hứng trong cuộc sống thường ngày.",
+      "content": "{\"type\":\"doc\",\"content\":[{\"type\":\"heading\",\"attrs\":{\"level\":2},\"content\":[{\"type\":\"text\",\"text\":\"Một câu chuyện của BiBi\"}]},{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Đây là nội dung demo. Bạn có thể chỉnh sửa và lưu trên trình duyệt này.\"}]}]}"
+    },
+    "post-32": {
+      "slug": "demo-journal-32",
+      "title": "Sổ tay và những chuyến đi — 32",
+      "excerpt": "Những ý tưởng nhỏ để lưu giữ cảm hứng trong cuộc sống thường ngày.",
+      "content": "{\"type\":\"doc\",\"content\":[{\"type\":\"heading\",\"attrs\":{\"level\":2},\"content\":[{\"type\":\"text\",\"text\":\"Một câu chuyện của BiBi\"}]},{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Đây là nội dung demo. Bạn có thể chỉnh sửa và lưu trên trình duyệt này.\"}]}]}"
+    },
+    "post-33": {
+      "slug": "demo-journal-33",
+      "title": "Gói một món quà nhỏ — 33",
+      "excerpt": "Những ý tưởng nhỏ để lưu giữ cảm hứng trong cuộc sống thường ngày.",
+      "content": "{\"type\":\"doc\",\"content\":[{\"type\":\"heading\",\"attrs\":{\"level\":2},\"content\":[{\"type\":\"text\",\"text\":\"Một câu chuyện của BiBi\"}]},{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Đây là nội dung demo. Bạn có thể chỉnh sửa và lưu trên trình duyệt này.\"}]}]}"
+    },
+    "post-34": {
+      "slug": "demo-journal-34",
+      "title": "Những câu chuyện từ giấy — 34",
+      "excerpt": "Những ý tưởng nhỏ để lưu giữ cảm hứng trong cuộc sống thường ngày.",
+      "content": "{\"type\":\"doc\",\"content\":[{\"type\":\"heading\",\"attrs\":{\"level\":2},\"content\":[{\"type\":\"text\",\"text\":\"Một câu chuyện của BiBi\"}]},{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Đây là nội dung demo. Bạn có thể chỉnh sửa và lưu trên trình duyệt này.\"}]}]}"
+    },
+    "post-35": {
+      "slug": "demo-journal-35",
+      "title": "Một ngày ở Đường sách — 35",
+      "excerpt": "Những ý tưởng nhỏ để lưu giữ cảm hứng trong cuộc sống thường ngày.",
+      "content": "{\"type\":\"doc\",\"content\":[{\"type\":\"heading\",\"attrs\":{\"level\":2},\"content\":[{\"type\":\"text\",\"text\":\"Một câu chuyện của BiBi\"}]},{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Đây là nội dung demo. Bạn có thể chỉnh sửa và lưu trên trình duyệt này.\"}]}]}"
+    },
+    "post-36": {
+      "slug": "demo-journal-36",
+      "title": "Sổ tay và những chuyến đi — 36",
+      "excerpt": "Những ý tưởng nhỏ để lưu giữ cảm hứng trong cuộc sống thường ngày.",
+      "content": "{\"type\":\"doc\",\"content\":[{\"type\":\"heading\",\"attrs\":{\"level\":2},\"content\":[{\"type\":\"text\",\"text\":\"Một câu chuyện của BiBi\"}]},{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Đây là nội dung demo. Bạn có thể chỉnh sửa và lưu trên trình duyệt này.\"}]}]}"
+    },
+    "post-37": {
+      "slug": "demo-journal-37",
+      "title": "Gói một món quà nhỏ — 37",
+      "excerpt": "Những ý tưởng nhỏ để lưu giữ cảm hứng trong cuộc sống thường ngày.",
+      "content": "{\"type\":\"doc\",\"content\":[{\"type\":\"heading\",\"attrs\":{\"level\":2},\"content\":[{\"type\":\"text\",\"text\":\"Một câu chuyện của BiBi\"}]},{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Đây là nội dung demo. Bạn có thể chỉnh sửa và lưu trên trình duyệt này.\"}]}]}"
+    },
+    "post-38": {
+      "slug": "demo-journal-38",
+      "title": "Những câu chuyện từ giấy — 38",
+      "excerpt": "Những ý tưởng nhỏ để lưu giữ cảm hứng trong cuộc sống thường ngày.",
+      "content": "{\"type\":\"doc\",\"content\":[{\"type\":\"heading\",\"attrs\":{\"level\":2},\"content\":[{\"type\":\"text\",\"text\":\"Một câu chuyện của BiBi\"}]},{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Đây là nội dung demo. Bạn có thể chỉnh sửa và lưu trên trình duyệt này.\"}]}]}"
+    },
+    "post-39": {
+      "slug": "demo-journal-39",
+      "title": "Một ngày ở Đường sách — 39",
+      "excerpt": "Những ý tưởng nhỏ để lưu giữ cảm hứng trong cuộc sống thường ngày.",
+      "content": "{\"type\":\"doc\",\"content\":[{\"type\":\"heading\",\"attrs\":{\"level\":2},\"content\":[{\"type\":\"text\",\"text\":\"Một câu chuyện của BiBi\"}]},{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Đây là nội dung demo. Bạn có thể chỉnh sửa và lưu trên trình duyệt này.\"}]}]}"
+    },
+    "post-40": {
+      "slug": "demo-journal-40",
+      "title": "Sổ tay và những chuyến đi — 40",
+      "excerpt": "Những ý tưởng nhỏ để lưu giữ cảm hứng trong cuộc sống thường ngày.",
+      "content": "{\"type\":\"doc\",\"content\":[{\"type\":\"heading\",\"attrs\":{\"level\":2},\"content\":[{\"type\":\"text\",\"text\":\"Một câu chuyện của BiBi\"}]},{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Đây là nội dung demo. Bạn có thể chỉnh sửa và lưu trên trình duyệt này.\"}]}]}"
+    }
+  },
+  "media": {},
+  "customers": {
+    "customer-1": {
+      "name": "Nhà sách demo 1",
+      "email": "",
+      "address": "Địa chỉ mô phỏng — Việt Nam",
+      "notes": "Khách mua hàng mô phỏng"
+    },
+    "customer-2": {
+      "name": "Cá nhân demo 2",
+      "email": "",
+      "address": "Địa chỉ mô phỏng — Việt Nam",
+      "notes": "Khách mua hàng mô phỏng"
+    },
+    "customer-3": {
+      "name": "Công ty demo 3",
+      "email": "",
+      "address": "Địa chỉ mô phỏng — Việt Nam",
+      "notes": "Khách mua hàng mô phỏng"
+    },
+    "customer-4": {
+      "name": "Nhà sách demo 4",
+      "email": "",
+      "address": "Địa chỉ mô phỏng — Việt Nam",
+      "notes": "Khách mua hàng mô phỏng"
+    },
+    "customer-5": {
+      "name": "Cá nhân demo 5",
+      "email": "",
+      "address": "Địa chỉ mô phỏng — Việt Nam",
+      "notes": "Khách mua hàng mô phỏng"
+    },
+    "customer-6": {
+      "name": "Công ty demo 6",
+      "email": "",
+      "address": "Địa chỉ mô phỏng — Việt Nam",
+      "notes": "Khách mua hàng mô phỏng"
+    },
+    "customer-7": {
+      "name": "Nhà sách demo 7",
+      "email": "",
+      "address": "Địa chỉ mô phỏng — Việt Nam",
+      "notes": "Khách mua hàng mô phỏng"
+    },
+    "customer-8": {
+      "name": "Cá nhân demo 8",
+      "email": "",
+      "address": "Địa chỉ mô phỏng — Việt Nam",
+      "notes": "Khách mua hàng mô phỏng"
+    },
+    "customer-9": {
+      "name": "Công ty demo 9",
+      "email": "",
+      "address": "Địa chỉ mô phỏng — Việt Nam",
+      "notes": "Khách mua hàng mô phỏng"
+    },
+    "customer-10": {
+      "name": "Nhà sách demo 10",
+      "email": "",
+      "address": "Địa chỉ mô phỏng — Việt Nam",
+      "notes": "Khách mua hàng mô phỏng"
+    },
+    "customer-11": {
+      "name": "Cá nhân demo 11",
+      "email": "",
+      "address": "Địa chỉ mô phỏng — Việt Nam",
+      "notes": "Khách mua hàng mô phỏng"
+    },
+    "customer-12": {
+      "name": "Công ty demo 12",
+      "email": "",
+      "address": "Địa chỉ mô phỏng — Việt Nam",
+      "notes": "Khách mua hàng mô phỏng"
+    }
+  },
+  "settings": {
+    "purchase-slip-counter:2026": {},
+    "purchase-slip-counter:2025": {}
+  },
+  "visitors": {
+    "visitor-1": {
+      "anonymousId": "demo-visitor-001"
+    },
+    "visitor-2": {
+      "anonymousId": "demo-visitor-002"
+    },
+    "visitor-3": {
+      "anonymousId": "demo-visitor-003"
+    },
+    "visitor-4": {
+      "anonymousId": "demo-visitor-004"
+    },
+    "visitor-5": {
+      "anonymousId": "demo-visitor-005"
+    },
+    "visitor-6": {
+      "anonymousId": "demo-visitor-006"
+    },
+    "visitor-7": {
+      "anonymousId": "demo-visitor-007"
+    },
+    "visitor-8": {
+      "anonymousId": "demo-visitor-008"
+    },
+    "visitor-9": {
+      "anonymousId": "demo-visitor-009"
+    },
+    "visitor-10": {
+      "anonymousId": "demo-visitor-010"
+    },
+    "visitor-11": {
+      "anonymousId": "demo-visitor-011"
+    },
+    "visitor-12": {
+      "anonymousId": "demo-visitor-012"
+    },
+    "visitor-13": {
+      "anonymousId": "demo-visitor-013"
+    },
+    "visitor-14": {
+      "anonymousId": "demo-visitor-014"
+    },
+    "visitor-15": {
+      "anonymousId": "demo-visitor-015"
+    },
+    "visitor-16": {
+      "anonymousId": "demo-visitor-016"
+    },
+    "visitor-17": {
+      "anonymousId": "demo-visitor-017"
+    },
+    "visitor-18": {
+      "anonymousId": "demo-visitor-018"
+    },
+    "visitor-19": {
+      "anonymousId": "demo-visitor-019"
+    },
+    "visitor-20": {
+      "anonymousId": "demo-visitor-020"
+    },
+    "visitor-21": {
+      "anonymousId": "demo-visitor-021"
+    },
+    "visitor-22": {
+      "anonymousId": "demo-visitor-022"
+    },
+    "visitor-23": {
+      "anonymousId": "demo-visitor-023"
+    },
+    "visitor-24": {
+      "anonymousId": "demo-visitor-024"
+    },
+    "visitor-25": {
+      "anonymousId": "demo-visitor-025"
+    },
+    "visitor-26": {
+      "anonymousId": "demo-visitor-026"
+    },
+    "visitor-27": {
+      "anonymousId": "demo-visitor-027"
+    },
+    "visitor-28": {
+      "anonymousId": "demo-visitor-028"
+    },
+    "visitor-29": {
+      "anonymousId": "demo-visitor-029"
+    },
+    "visitor-30": {
+      "anonymousId": "demo-visitor-030"
+    },
+    "visitor-31": {
+      "anonymousId": "demo-visitor-031"
+    },
+    "visitor-32": {
+      "anonymousId": "demo-visitor-032"
+    },
+    "visitor-33": {
+      "anonymousId": "demo-visitor-033"
+    },
+    "visitor-34": {
+      "anonymousId": "demo-visitor-034"
+    },
+    "visitor-35": {
+      "anonymousId": "demo-visitor-035"
+    },
+    "visitor-36": {
+      "anonymousId": "demo-visitor-036"
+    },
+    "visitor-37": {
+      "anonymousId": "demo-visitor-037"
+    },
+    "visitor-38": {
+      "anonymousId": "demo-visitor-038"
+    },
+    "visitor-39": {
+      "anonymousId": "demo-visitor-039"
+    },
+    "visitor-40": {
+      "anonymousId": "demo-visitor-040"
+    },
+    "visitor-41": {
+      "anonymousId": "demo-visitor-041"
+    },
+    "visitor-42": {
+      "anonymousId": "demo-visitor-042"
+    },
+    "visitor-43": {
+      "anonymousId": "demo-visitor-043"
+    },
+    "visitor-44": {
+      "anonymousId": "demo-visitor-044"
+    },
+    "visitor-45": {
+      "anonymousId": "demo-visitor-045"
+    },
+    "visitor-46": {
+      "anonymousId": "demo-visitor-046"
+    },
+    "visitor-47": {
+      "anonymousId": "demo-visitor-047"
+    },
+    "visitor-48": {
+      "anonymousId": "demo-visitor-048"
+    },
+    "visitor-49": {
+      "anonymousId": "demo-visitor-049"
+    },
+    "visitor-50": {
+      "anonymousId": "demo-visitor-050"
+    },
+    "visitor-51": {
+      "anonymousId": "demo-visitor-051"
+    },
+    "visitor-52": {
+      "anonymousId": "demo-visitor-052"
+    },
+    "visitor-53": {
+      "anonymousId": "demo-visitor-053"
+    },
+    "visitor-54": {
+      "anonymousId": "demo-visitor-054"
+    },
+    "visitor-55": {
+      "anonymousId": "demo-visitor-055"
+    },
+    "visitor-56": {
+      "anonymousId": "demo-visitor-056"
+    },
+    "visitor-57": {
+      "anonymousId": "demo-visitor-057"
+    },
+    "visitor-58": {
+      "anonymousId": "demo-visitor-058"
+    },
+    "visitor-59": {
+      "anonymousId": "demo-visitor-059"
+    },
+    "visitor-60": {
+      "anonymousId": "demo-visitor-060"
+    },
+    "visitor-61": {
+      "anonymousId": "demo-visitor-061"
+    },
+    "visitor-62": {
+      "anonymousId": "demo-visitor-062"
+    },
+    "visitor-63": {
+      "anonymousId": "demo-visitor-063"
+    },
+    "visitor-64": {
+      "anonymousId": "demo-visitor-064"
+    },
+    "visitor-65": {
+      "anonymousId": "demo-visitor-065"
+    },
+    "visitor-66": {
+      "anonymousId": "demo-visitor-066"
+    },
+    "visitor-67": {
+      "anonymousId": "demo-visitor-067"
+    },
+    "visitor-68": {
+      "anonymousId": "demo-visitor-068"
+    },
+    "visitor-69": {
+      "anonymousId": "demo-visitor-069"
+    },
+    "visitor-70": {
+      "anonymousId": "demo-visitor-070"
+    },
+    "visitor-71": {
+      "anonymousId": "demo-visitor-071"
+    },
+    "visitor-72": {
+      "anonymousId": "demo-visitor-072"
+    },
+    "visitor-73": {
+      "anonymousId": "demo-visitor-073"
+    },
+    "visitor-74": {
+      "anonymousId": "demo-visitor-074"
+    },
+    "visitor-75": {
+      "anonymousId": "demo-visitor-075"
+    },
+    "visitor-76": {
+      "anonymousId": "demo-visitor-076"
+    },
+    "visitor-77": {
+      "anonymousId": "demo-visitor-077"
+    },
+    "visitor-78": {
+      "anonymousId": "demo-visitor-078"
+    },
+    "visitor-79": {
+      "anonymousId": "demo-visitor-079"
+    },
+    "visitor-80": {
+      "anonymousId": "demo-visitor-080"
+    }
+  }
+}
