@@ -1,6 +1,6 @@
 # BiBi Admin Business Workflow Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Chỉnh admin demo thành quản lý khách mua hàng/phiếu/báo cáo đúng nghiệp vụ, một trang khách truy cập và popup thông báo sát chuông; giữ dữ liệu cũ và kiểm chứng local thực tế.
 
@@ -47,8 +47,8 @@ Giữ resource key `bookstore` cho customers, sales cho purchaseSlips, notificat
 
 ## Execution preflight
 
-- [ ] Reuse managed worktree `C:/Users/Admin/.codex/worktrees/fullstack-cicd/bibistudio-2026`, branch `codex/admin-dashboard`; inspect status and applicable worktree skill before execution, without resetting existing changes or creating another unnecessary checkout.
-- [ ] Preserve existing uncommitted table fix: `src/features/admin/shared/tables/data-table.tsx`, `tests/admin/history-responsiveness.test.tsx`, `docs/superpowers/reports/2026-11-01-admin-history-freeze-repro.md`. Prior report contains actual red/green and browser evidence. Run `npm run test:admin -- tests/admin/history-responsiveness.test.tsx tests/admin/data-table.test.tsx`, expect both pass; then commit only these three files as `fix(admin): prevent client table sorting update loops` before task commits depend on the fix. Do not revert the working fix merely to repeat a known browser hang.
+- [x] Reuse managed worktree `C:/Users/Admin/.codex/worktrees/fullstack-cicd/bibistudio-2026`, branch `codex/admin-dashboard`; inspect status and applicable worktree skill before execution, without resetting existing changes or creating another unnecessary checkout.
+- [x] Preserve existing uncommitted table fix: `src/features/admin/shared/tables/data-table.tsx`, `tests/admin/history-responsiveness.test.tsx`, `docs/superpowers/reports/2026-11-01-admin-history-freeze-repro.md`. Prior report contains actual red/green and browser evidence. Run `npm run test:admin -- tests/admin/history-responsiveness.test.tsx tests/admin/data-table.test.tsx`, expect both pass; then commit only these three files as `fix(admin): prevent client table sorting update loops` before task commits depend on the fix. Do not revert the working fix merely to repeat a known browser hang.
 
 ## Task 1: Nâng cấp DB và bộ dữ liệu business không mất dữ liệu
 
@@ -56,7 +56,7 @@ Giữ resource key `bookstore` cho customers, sales cho purchaseSlips, notificat
 
 **Interfaces:** Preserve AdminStore API. Extend `createAdminStore(name?: string, options?: {onBlocked?: () => void}): AdminStore`; callback exposes upgrade-blocked state to AdminProvider. New seed `seed(context?: {products?: AdminProduct[]}): SeedBatch`; registry supplies products only to business. Test helper `businessFixture(name: string): Promise<{store:AdminStore, session:DemoSession, customerId:string, productId:string}>` opens isolated DB, ensures users/products/business and returns existing active IDs. Close/destroy only isolated test DB in cleanup.
 
-- [ ] **1. Write red tests:** `upgrades v1 without losing custom product/post/blob/profile/roles/legacy orders` compares exact old records and Blob bytes after reopening v2; `blocked upgrade is visible and resumes after old connection closes`; `seed retry keeps 12 customers and 30 slips without duplicates`; `stock access never initializes legacy books/orders`; reset tests confirm full demo reset remains explicit, and quota abort leaves no success marker. Use idb `openDB` to create actual v1 fixture, not a mock of upgrade logic.
+- [x] **1. Write red tests:** `upgrades v1 without losing custom product/post/blob/profile/roles/legacy orders` compares exact old records and Blob bytes after reopening v2; `blocked upgrade is visible and resumes after old connection closes`; `seed retry keeps 12 customers and 30 slips without duplicates`; `stock access never initializes legacy books/orders`; reset tests confirm full demo reset remains explicit, and quota abort leaves no success marker. Use idb `openDB` to create actual v1 fixture, not a mock of upgrade logic.
 
   Core assertions after opening the upgraded fixture and retrying business seed:
 
@@ -66,11 +66,11 @@ Giữ resource key `bookstore` cho customers, sales cho purchaseSlips, notificat
   expect(await store.list("purchaseSlips")).toHaveLength(30);
   ```
 
-- [ ] **2. Run red:** `npm run test:admin -- tests/admin/business-upgrade.test.ts`. Expected missing new stores/contracts or new assertions failing, not a configuration/import typo.
-- [ ] **3. Implement upgrade/models:** version 2 creates only missing stores, preserves meta/blobs and legacy stores. Add schemas/entity permission maps and deny generic writes for slips/receipts. Bridge blocked callback to visible admin storage message. Keep custom roles unchanged. Optional customer email validates format without importing the global users-email uniqueness restriction.
-- [ ] **4. Implement seed groups:** business depends on products, creates 12 synthetic customers/30 saved-or-void slips over several months/years with VAT both ways and correct snapshots/totals. Seed counter in settings with key `purchase-slip-counter:<year>` and numeric `values.next`. Give business its own `seed:business:v2` marker; lazy factory imports only when needed. Add independent stock seed group; active stock/product-delete flows must not ensure legacy orders/books. Seed writes idempotent, marker only after successful records; retries do not overwrite user edits. Receipts start empty, mapped to system seed safely. Legacy groups remain readable but not active dependencies.
-- [ ] **5. Run green:** targeted upgrade/seed/reset tests plus `node node_modules/typescript/bin/tsc --noEmit`; expect all pass, no manual DB reset. Check inventory existing tests because stock bootstrap changed.
-- [ ] **6. Commit:** stage this task's source/tests only; `git commit -m "feat(admin): upgrade business data without resetting legacy records"`.
+- [x] **2. Run red:** `npm run test:admin -- tests/admin/business-upgrade.test.ts`. Expected missing new stores/contracts or new assertions failing, not a configuration/import typo.
+- [x] **3. Implement upgrade/models:** version 2 creates only missing stores, preserves meta/blobs and legacy stores. Add schemas/entity permission maps and deny generic writes for slips/receipts. Bridge blocked callback to visible admin storage message. Keep custom roles unchanged. Optional customer email validates format without importing the global users-email uniqueness restriction.
+- [x] **4. Implement seed groups:** business depends on products, creates 12 synthetic customers/30 saved-or-void slips over several months/years with VAT both ways and correct snapshots/totals. Seed counter in settings with key `purchase-slip-counter:<year>` and numeric `values.next`. Give business its own `seed:business:v2` marker; lazy factory imports only when needed. Add independent stock seed group; active stock/product-delete flows must not ensure legacy orders/books. Seed writes idempotent, marker only after successful records; retries do not overwrite user edits. Receipts start empty, mapped to system seed safely. Legacy groups remain readable but not active dependencies.
+- [x] **5. Run green:** targeted upgrade/seed/reset tests plus `node node_modules/typescript/bin/tsc --noEmit`; expect all pass, no manual DB reset. Check inventory existing tests because stock bootstrap changed.
+- [x] **6. Commit:** stage this task's source/tests only; `git commit -m "feat(admin): upgrade business data without resetting legacy records"`.
 
 ## Task 2: Khách mua hàng và form riêng
 
@@ -78,7 +78,7 @@ Giữ resource key `bookstore` cho customers, sales cho purchaseSlips, notificat
 
 **Interfaces:** Export `customerConfig: EntityConfig<"customers">` consumed by customer pages. Generic customer service via `runtime.service("customers")`; `active=false` replaces destructive delete UI. Return URL search type `returnTo?: string`, accepted only if it resolves to the customers list under admin; never use an arbitrary/external return URL. Editor uses `RecordEditor` snapshot/unsaved guard, `listHref` includes validated return query.
 
-- [ ] **1. Write red:** `creates edits and deactivates a customer via dedicated pages`; `same name and same optional contact email do not merge records`; `referenced customer cannot be deleted`; `viewer cannot write and inactive customer remains filterable`; `Back/Cancel preserves q/kind/VAT/page`. Assert form kind has three choices, VAT checkbox persists and cancel leaves record unchanged.
+- [x] **1. Write red:** `creates edits and deactivates a customer via dedicated pages`; `same name and same optional contact email do not merge records`; `referenced customer cannot be deleted`; `viewer cannot write and inactive customer remains filterable`; `Back/Cancel preserves q/kind/VAT/page`. Assert form kind has three choices, VAT checkbox persists and cancel leaves record unchanged.
 
   Core assertions after creating two same-named customers and opening the first customer's form:
 
@@ -87,10 +87,10 @@ Giữ resource key `bookstore` cho customers, sales cho purchaseSlips, notificat
   expect(screen.getByRole("checkbox", { name: "Áp dụng VAT" })).toBeChecked();
   ```
 
-- [ ] **2. Run red:** `npm run test:admin -- tests/admin/customers.test.tsx tests/admin/nested-routes.test.tsx`.
-- [ ] **3. Implement:** config fields name/kind/address/VAT/notes/phone/email/active; list ID/name/kind/address/VAT/status and dedicated create/detail/edit links. Name/kind required, address optional. Hide Delete/bulk-delete for customers; offer Ngừng sử dụng/Đang sử dụng via validated active updates; service blocks hard delete when referenced by a slip. Detail includes filtered customerId slip links. Use RouteLeaf/Outlet to avoid swallowed nested forms. Keep data operations typed, no handwritten localStorage CRUD.
-- [ ] **4. Verify green:** targeted tests and TypeScript. Customer label in new module is “Khách mua hàng”; old sidebar removal waits Task 8. Keyboard labels, loading/error and no-write Cancel included in UI tests.
-- [ ] **5. Commit:** `feat(admin): manage customer accounts with dedicated forms`.
+- [x] **2. Run red:** `npm run test:admin -- tests/admin/customers.test.tsx tests/admin/nested-routes.test.tsx`.
+- [x] **3. Implement:** config fields name/kind/address/VAT/notes/phone/email/active; list ID/name/kind/address/VAT/status and dedicated create/detail/edit links. Name/kind required, address optional. Hide Delete/bulk-delete for customers; offer Ngừng sử dụng/Đang sử dụng via validated active updates; service blocks hard delete when referenced by a slip. Detail includes filtered customerId slip links. Use RouteLeaf/Outlet to avoid swallowed nested forms. Keep data operations typed, no handwritten localStorage CRUD.
+- [x] **4. Verify green:** targeted tests and TypeScript. Customer label in new module is “Khách mua hàng”; old sidebar removal waits Task 8. Keyboard labels, loading/error and no-write Cancel included in UI tests.
+- [x] **5. Commit:** `feat(admin): manage customer accounts with dedicated forms`.
 
 ## Task 3: Service phiếu atomic, snapshot và số phiếu
 
@@ -98,7 +98,7 @@ Giữ resource key `bookstore` cho customers, sales cho purchaseSlips, notificat
 
 **Interfaces:** `SlipDraft = {customerId:string; vatApplied:boolean; notes:string; items:{lineId:string;productId:string;quantity:number;unitPrice:number}[]}`; export `calculateSlipTotal(items: Pick<SlipItem,"quantity"|"unitPrice">[]): number`; `createSlipService(store,session,clock?:()=>Date)` returns `{create(input:SlipDraft):Promise<PurchaseSlip>; update(id:string,input:SlipDraft,revision:number):Promise<PurchaseSlip>; void(id:string,reason:string,revision:number):Promise<PurchaseSlip>}`. Read/list/export uses generic read service. Counter uses settings record from Task 1 inside the same purchaseSlips/settings/audit/customers/products transaction, with format `PMH-<Vietnam year>-<4-or-more digits>` and no reuse.
 
-- [ ] **1. Write red:** qty 2 × 10000 + qty 3 × 5000 gives total 35000 with VAT either true/false; reject empty, NaN, negative/fraction qty, duplicate productId and unsafe multiplication/sum. Reject inactive customer on create and missing products. Test two service instances concurrently create distinct numbers, failed audit/counter transaction creates neither slip nor consumed number, void excludes edits and never reuses number. Assert stock/reserved and legacy payments unchanged.
+- [x] **1. Write red:** qty 2 × 10000 + qty 3 × 5000 gives total 35000 with VAT either true/false; reject empty, NaN, negative/fraction qty, duplicate productId and unsafe multiplication/sum. Reject inactive customer on create and missing products. Test two service instances concurrently create distinct numbers, failed audit/counter transaction creates neither slip nor consumed number, void excludes edits and never reuses number. Assert stock/reserved and legacy payments unchanged.
 
   Core arithmetic and concurrent create assertions (service instances share the same isolated DB):
 
@@ -112,10 +112,10 @@ Giữ resource key `bookstore` cho customers, sales cho purchaseSlips, notificat
   expect(new Set(created.map((slip) => slip.number)).size).toBe(2);
   ```
 
-- [ ] **2. Run red:** `npm run test:admin -- tests/admin/purchase-slips.test.ts tests/admin/integrity.test.ts`.
-- [ ] **3. Implement service:** validate draft, active session/grants, current revision, load referenced records in transaction, calculate total, generate number/snapshot/audit and commit atomically. On update keep number/createdAt; keep snapshots for same customer/lineId+productId, refresh only when customer/product selection explicitly changes. Existing inactive references are allowed unchanged when editing an old slip, new inactive selections rejected. Void requires reason/update permission and saved status; no restore/hard-delete route. Block deleting referenced products in generic integrity checks without lazy-seeding legacy orders.
-- [ ] **4. Pin snapshot races:** `rename customer/change VAT/product price after creating slip keeps old snapshots`; `switch customer refreshes snapshot and submitted VAT`; `stale revision rejects without audit/counter side effect`; `session generation change aborts`; same-named products aggregate separately later. Run targeted services/inventory/reset tests; expect pass and TypeScript clean.
-- [ ] **5. Commit:** `feat(admin): save purchase slips atomically with historical snapshots`.
+- [x] **2. Run red:** `npm run test:admin -- tests/admin/purchase-slips.test.ts tests/admin/integrity.test.ts`.
+- [x] **3. Implement service:** validate draft, active session/grants, current revision, load referenced records in transaction, calculate total, generate number/snapshot/audit and commit atomically. On update keep number/createdAt; keep snapshots for same customer/lineId+productId, refresh only when customer/product selection explicitly changes. Existing inactive references are allowed unchanged when editing an old slip, new inactive selections rejected. Void requires reason/update permission and saved status; no restore/hard-delete route. Block deleting referenced products in generic integrity checks without lazy-seeding legacy orders.
+- [x] **4. Pin snapshot races:** `rename customer/change VAT/product price after creating slip keeps old snapshots`; `switch customer refreshes snapshot and submitted VAT`; `stale revision rejects without audit/counter side effect`; `session generation change aborts`; same-named products aggregate separately later. Run targeted services/inventory/reset tests; expect pass and TypeScript clean.
+- [x] **5. Commit:** `feat(admin): save purchase slips atomically with historical snapshots`.
 
 ## Task 4: Trang danh sách, tạo/sửa và chi tiết phiếu
 
@@ -123,7 +123,7 @@ Giữ resource key `bookstore` cho customers, sales cho purchaseSlips, notificat
 
 **Interfaces:** `SlipForm({initial?:PurchaseSlip; customers:Customer[]; products:AdminProduct[]; onSave:(draft:SlipDraft)=>Promise<void>; onCancel:()=>void})`. Editor calls Task 3 service; initial snapshot captured once per record ID/revision, refetch does not rewrite dirty form. List supports customer/date/VAT/status/search and generic readonly service data, but own Xem/Sửa/Hủy actions (never generic mutation).
 
-- [ ] **1. Write red:** selecting customer sets VAT once; manual override survives refetch; explicit switch customer changes VAT; adding existing product focuses its current row; two products/save yields 35000, refresh/detail matches snapshots; invalid qty and save failure retain edits; dirty Cancel asks confirmation; read-only/void hides edit actions. Verify safe return URL and list filters after Save/Cancel.
+- [x] **1. Write red:** selecting customer sets VAT once; manual override survives refetch; explicit switch customer changes VAT; adding existing product focuses its current row; two products/save yields 35000, refresh/detail matches snapshots; invalid qty and save failure retain edits; dirty Cancel asks confirmation; read-only/void hides edit actions. Verify safe return URL and list filters after Save/Cancel.
 
   Core assertions after entering the Task 3 quantities/prices and saving:
 
@@ -133,10 +133,10 @@ Giữ resource key `bookstore` cho customers, sales cho purchaseSlips, notificat
   expect(saved.customerSnapshot.name).toBe(originalCustomerName);
   ```
 
-- [ ] **2. Run red:** `npm run test:admin -- tests/admin/purchase-slip-form.test.tsx tests/admin/edit-snapshot.test.tsx`.
-- [ ] **3. Implement UI:** date/time readonly, searchable customer/product pickers, default admin price only for new lines, VAT override label/reset, quantity/price editable and line/total readonly. Separate Cancel form from Hủy phiếu confirmation/reason; show pending/error/retry, prevent double save. Desktop table and mobile cards with numeric keyboards, 44px delete target; do not obstruct inputs with sticky summary when keyboard appears. Use current unsaved guard, optimistic revision and query invalidations (slips/customer detail/report/dashboard). No shipping/payment/discount controls.
-- [ ] **4. Verify green:** targeted UI tests and TypeScript; test draft cancellation versus saved-slip void as separate actions. Test dedicated nested routes through RouteLeaf; saved/void detail remains reloadable. Print with browser print styles/CSV using existing utilities only.
-- [ ] **5. Commit:** `feat(admin): add responsive purchase slip pages`.
+- [x] **2. Run red:** `npm run test:admin -- tests/admin/purchase-slip-form.test.tsx tests/admin/edit-snapshot.test.tsx`.
+- [x] **3. Implement UI:** date/time readonly, searchable customer/product pickers, default admin price only for new lines, VAT override label/reset, quantity/price editable and line/total readonly. Separate Cancel form from Hủy phiếu confirmation/reason; show pending/error/retry, prevent double save. Desktop table and mobile cards with numeric keyboards, 44px delete target; do not obstruct inputs with sticky summary when keyboard appears. Use current unsaved guard, optimistic revision and query invalidations (slips/customer detail/report/dashboard). No shipping/payment/discount controls.
+- [x] **4. Verify green:** targeted UI tests and TypeScript; test draft cancellation versus saved-slip void as separate actions. Test dedicated nested routes through RouteLeaf; saved/void detail remains reloadable. Print with browser print styles/CSV using existing utilities only.
+- [x] **5. Commit:** `feat(admin): add responsive purchase slip pages`.
 
 ## Task 5: Báo cáo theo khách/sản phẩm và dashboard cùng dữ liệu
 
@@ -144,7 +144,7 @@ Giữ resource key `bookstore` cho customers, sales cho purchaseSlips, notificat
 
 **Interfaces:** `SlipReportFilter={year:number;customerId?:string}`; `SlipSummary={count:number;voidCount:number;total:number;byCustomer:{id:string;name:string;count:number;value:number}[];byProduct:{id:string;sku:string;name:string;quantity:number;value:number}[];trend:{name:string;value:number}[]}`. Export `yearRange(year:number):DateRange`, `summarizeSlips(slips:PurchaseSlip[],range:DateRange,customers:Customer[],products:AdminProduct[],customerId?:string):SlipSummary`, `loadSlipReport(store,session:DemoSession|null,filter:SlipReportFilter):Promise<SlipSummary>`. `total/count/by*` exclude void; voidCount reports excluded slips in the selected scope. Labels use current entity name with snapshot fallback, grouping always by ID.
 
-- [ ] **1. Write red:** include timestamp `2026-12-31T17:00:00Z` in Vietnam year 2027, exclude from 2026; include `2026-12-31T16:59:59Z` in 2026; void ignored; same product name with two IDs stays two rows; same product at different prices sums quantity/value; multiple pages (>200 slips) still sum all; expect sum(byCustomer.value) = sum(byProduct.value) = total, VAT unchanged. Filter customer including inactive and unknown ID (empty result).
+- [x] **1. Write red:** include timestamp `2026-12-31T17:00:00Z` in Vietnam year 2027, exclude from 2026; include `2026-12-31T16:59:59Z` in 2026; void ignored; same product name with two IDs stays two rows; same product at different prices sums quantity/value; multiple pages (>200 slips) still sum all; expect sum(byCustomer.value) = sum(byProduct.value) = total, VAT unchanged. Filter customer including inactive and unknown ID (empty result).
 
   Core range and full-dataset total assertions:
 
@@ -153,11 +153,11 @@ Giữ resource key `bookstore` cho customers, sales cho purchaseSlips, notificat
   expect(report.byProduct.reduce((total, row) => total + row.value, 0)).toBe(report.total);
   ```
 
-- [ ] **2. Run red:** `npm run test:admin -- tests/admin/slip-reports.test.ts tests/admin/slip-report-ui.test.tsx tests/admin/dashboard-access.test.ts`.
-- [ ] **3. Implement aggregate and UI:** read all permitted rows (store list in service, not UI table page), shared year/customer query validation, default actual Vietnam current year; available years include data/current. Two report sections, horizontal Top 10 charts clearly labeled and full paged tables/CSV; product chart metric switch quantity/value. One filtered dataset for chart/table/KPI/export, no random seed KPIs. Non-numeric/unsupported query year falls back safely, no NaN date range.
-- [ ] **4. Replace dashboard dependencies:** use summarizeSlips for sales cards/trend/recent/bestsellers, show Phiếu mua hàng and Doanh thu ghi nhận, omit fake paid/shipping state panels; conversion displays “Chưa có dữ liệu liên kết”. Preserve other panels and permission gating of raw data. Keep DateRange dashboard interface; no ensure orders/books. Shared notification read display is integrated in Task 7.
-- [ ] **5. Run green:** targeted report/access tests and TypeScript. Test CSV uses entire filtered set and Top 10 never truncates exported rows; URL year/customer survives reload, no global viewport overflow.
-- [ ] **6. Commit:** `feat(admin): report recorded sales by customer and product`.
+- [x] **2. Run red:** `npm run test:admin -- tests/admin/slip-reports.test.ts tests/admin/slip-report-ui.test.tsx tests/admin/dashboard-access.test.ts`.
+- [x] **3. Implement aggregate and UI:** read all permitted rows (store list in service, not UI table page), shared year/customer query validation, default actual Vietnam current year; available years include data/current. Two report sections, horizontal Top 10 charts clearly labeled and full paged tables/CSV; product chart metric switch quantity/value. One filtered dataset for chart/table/KPI/export, no random seed KPIs. Non-numeric/unsupported query year falls back safely, no NaN date range.
+- [x] **4. Replace dashboard dependencies:** use summarizeSlips for sales cards/trend/recent/bestsellers, show Phiếu mua hàng and Doanh thu ghi nhận, omit fake paid/shipping state panels; conversion displays “Chưa có dữ liệu liên kết”. Preserve other panels and permission gating of raw data. Keep DateRange dashboard interface; no ensure orders/books. Shared notification read display is integrated in Task 7.
+- [x] **5. Run green:** targeted report/access tests and TypeScript. Test CSV uses entire filtered set and Top 10 never truncates exported rows; URL year/customer survives reload, no global viewport overflow.
+- [x] **6. Commit:** `feat(admin): report recorded sales by customer and product`.
 
 ## Task 6: Một trang khách truy cập và chi tiết phiên cùng trang
 
@@ -165,7 +165,7 @@ Giữ resource key `bookstore` cho customers, sales cho purchaseSlips, notificat
 
 **Interfaces:** `listVisitorSessions(store,session,visitorId:string,input:ListInput):Promise<ListResult<VisitorSession>>` checks analytics:view and filters visitorId before paging. `VisitorDialog({visitorId:string;onClose:()=>void})`. Visitors route validates optional `visitor` search; old `/visitors/$id` replaces URL with `/visitors?visitor=<id>` under router basepath.
 
-- [ ] **1. Write red:** desktop columns include ID/IP/location/device–OS/browser/sessions; select visitor opens same-page dialog, Back/Escape closes; 250 sessions page correctly with no >200 truncation; invalid/deleted visitor shows a recoverable dialog error without breaking list; Viewer read is allowed only with analytics:view. No click tracking or geo requests.
+- [x] **1. Write red:** desktop columns include ID/IP/location/device–OS/browser/sessions; select visitor opens same-page dialog, Back/Escape closes; 250 sessions page correctly with no >200 truncation; invalid/deleted visitor shows a recoverable dialog error without breaking list; Viewer read is allowed only with analytics:view. No click tracking or geo requests.
 
   Core assertions for an isolated visitor fixture with 250 sessions, request page 2 of size 100:
 
@@ -175,10 +175,10 @@ Giữ resource key `bookstore` cho customers, sales cho purchaseSlips, notificat
   expect(screen.getByRole("dialog")).toBeVisible();
   ```
 
-- [ ] **2. Run red:** `npm run test:admin -- tests/admin/visitors-page.test.tsx tests/admin/routing.test.ts`.
-- [ ] **3. Implement:** preserve current fake/masked IP and dataset label; combine device–OS and city/country; mobile cards expose remaining fields in dialog. Show session timestamps/entry/exit/source/page count, not click timeline. Derive optional “Sản phẩm đã xem” only from existing demo session product paths resolving actual catalogue slugs; deduplicate and label viewed, never create events or infer customer identity. All other analytics routes redirect visitors, retaining only supported search parameters; no menu page for sessions.
-- [ ] **4. Verify green:** targeted tests and TypeScript. Test 375px accessible detail trigger, loading/empty/error and reopen dialog without stale visitor data. Confirm query `visitor` isn't dropped by table search/page updates.
-- [ ] **5. Commit:** `feat(admin): consolidate visitor analytics into one page`.
+- [x] **2. Run red:** `npm run test:admin -- tests/admin/visitors-page.test.tsx tests/admin/routing.test.ts`.
+- [x] **3. Implement:** preserve current fake/masked IP and dataset label; combine device–OS and city/country; mobile cards expose remaining fields in dialog. Show session timestamps/entry/exit/source/page count, not click timeline. Derive optional “Sản phẩm đã xem” only from existing demo session product paths resolving actual catalogue slugs; deduplicate and label viewed, never create events or infer customer identity. All other analytics routes redirect visitors, retaining only supported search parameters; no menu page for sessions.
+- [x] **4. Verify green:** targeted tests and TypeScript. Test 375px accessible detail trigger, loading/empty/error and reopen dialog without stale visitor data. Confirm query `visitor` isn't dropped by table search/page updates.
+- [x] **5. Commit:** `feat(admin): consolidate visitor analytics into one page`.
 
 ## Task 7: Thông báo popup và read receipts theo tài khoản
 
@@ -186,7 +186,7 @@ Giữ resource key `bookstore` cho customers, sales cho purchaseSlips, notificat
 
 **Interfaces:** `NotificationView=Notification & {isRead:boolean}`; `loadNotifications(store,session:DemoSession|null,input:{page:number;pageSize:number}):Promise<ListResult<NotificationView>&{unreadCount:number}>`; `markNotificationsRead(store,session:DemoSession|null,ids:string[]|"all"):Promise<void>`. Receipt ID encodes the userId/notificationId pair unambiguously; `isRead = notification.read || receiptExistsForUser`. `useNotifications()` returns paged data/count and pending/read/read-all handlers; keys start `['bibi-admin','notifications',session.userId,...]`.
 
-- [ ] **1. Write red:** A reads false-default notification → A read/B unread after reopen; legacy true default stays read for both; Viewer with view but no update can read own receipt and cannot mutate content/href/another user. Mark-all affects every row, not page; duplicate calls idempotent; session/generation changed mid-flight writes nothing for stale user.
+- [x] **1. Write red:** A reads false-default notification → A read/B unread after reopen; legacy true default stays read for both; Viewer with view but no update can read own receipt and cannot mutate content/href/another user. Mark-all affects every row, not page; duplicate calls idempotent; session/generation changed mid-flight writes nothing for stale user.
 
   Core assertions after markNotificationsRead for user A and independent reloads for A/B:
 
@@ -195,11 +195,11 @@ Giữ resource key `bookstore` cho customers, sales cho purchaseSlips, notificat
   expect(forB.items.find((n) => n.id === notificationId)?.isRead).toBe(false);
   ```
 
-- [ ] **2. Run red:** `npm run test:admin -- tests/admin/notification-service.test.ts tests/admin/notification-popup.test.tsx tests/admin/session-sync.test.tsx`.
-- [ ] **3. Implement service/hooks:** authorize active user, use notificationReads transaction, immutable notification.read fallback, optimistic list+badge/read-all using cancel/snapshot/invalidate. On failure restore snapshots, keep popup/error/retry; navigation only after successful persistence, no-href remains open. Pending IDs block double click; session change cancels queries and ignores stale mutation updates.
-- [ ] **4. Implement anchored Radix Popover:** icon/read accessible labels, title/body/time, max width min(360px, viewport minus 24px), max-height and internal scroll/load-more, badge full unread count. Both desktop and mobile anchored to bell, collision detection. Safe href helper accepts app-relative paths or http(s), rejects protocol-relative/javascript/data and external return injection; internal router respects basepath and aliases. Esc/outside closes, focus returns bell; no nested interactive elements.
-- [ ] **5. UI assertions:** click immediately updates icon/badge before deferred write resolves; failed write rolls both back and does not navigate; no href stays open; success href closes and navigates; mark-all/full list loading/error/retry; 375px popup within viewport and keyboard focus. Update dashboard notification panel to same read data/actions, no link to removed notification page.
-- [ ] **6. Run green:** targeted tests and TypeScript; ensure no import of report/editor from header. Commit `feat(admin): show per-user notifications beside the bell`.
+- [x] **2. Run red:** `npm run test:admin -- tests/admin/notification-service.test.ts tests/admin/notification-popup.test.tsx tests/admin/session-sync.test.tsx`.
+- [x] **3. Implement service/hooks:** authorize active user, use notificationReads transaction, immutable notification.read fallback, optimistic list+badge/read-all using cancel/snapshot/invalidate. On failure restore snapshots, keep popup/error/retry; navigation only after successful persistence, no-href remains open. Pending IDs block double click; session change cancels queries and ignores stale mutation updates.
+- [x] **4. Implement anchored Radix Popover:** icon/read accessible labels, title/body/time, max width min(360px, viewport minus 24px), max-height and internal scroll/load-more, badge full unread count. Both desktop and mobile anchored to bell, collision detection. Safe href helper accepts app-relative paths or http(s), rejects protocol-relative/javascript/data and external return injection; internal router respects basepath and aliases. Esc/outside closes, focus returns bell; no nested interactive elements.
+- [x] **5. UI assertions:** click immediately updates icon/badge before deferred write resolves; failed write rolls both back and does not navigate; no href stays open; success href closes and navigates; mark-all/full list loading/error/retry; 375px popup within viewport and keyboard focus. Update dashboard notification panel to same read data/actions, no link to removed notification page.
+- [x] **6. Run green:** targeted tests and TypeScript; ensure no import of report/editor from header. Commit `feat(admin): show per-user notifications beside the bell`.
 
 ## Task 8: Hoàn thiện sidebar/search và các URL cũ
 
@@ -207,7 +207,7 @@ Giữ resource key `bookstore` cho customers, sales cho purchaseSlips, notificat
 
 **Interfaces:** `legacyDestination(pathname:string):{to:string;search?:Record<string,string>}|null` returns app-relative typed destination; alias components use TanStack replace redirect/validated search and do not import old pages. Search entities become products/customers/purchaseSlips/posts/users; labels use name/title/number as appropriate, paths new detail routes.
 
-- [ ] **1. Write red:** nav exposes Khách truy cập, Khách mua hàng, Phiếu mua hàng, Báo cáo and bell; no books/authors/publishers/order-history/transactions/notification page item. Search finds new customer/slip with proper permissions and never ensures legacy books/orders. Every old route in Files redirects once to the spec destination; visitor aliases preserve ID via query; old order/book IDs never become new slip/customer IDs. Test root and `/~vhplasti`, deep create/edit/detail and Back.
+- [x] **1. Write red:** nav exposes Khách truy cập, Khách mua hàng, Phiếu mua hàng, Báo cáo and bell; no books/authors/publishers/order-history/transactions/notification page item. Search finds new customer/slip with proper permissions and never ensures legacy books/orders. Every old route in Files redirects once to the spec destination; visitor aliases preserve ID via query; old order/book IDs never become new slip/customer IDs. Test root and `/~vhplasti`, deep create/edit/detail and Back.
 
   Core alias assertions:
 
@@ -216,9 +216,9 @@ Giữ resource key `bookstore` cho customers, sales cho purchaseSlips, notificat
   expect(legacyDestination("/admin/bookstore/books/book-1")).toEqual({ to: "/admin/customers" });
   ```
 
-- [ ] **2. Run red:** `npm run test:admin -- tests/admin/business-navigation.test.tsx tests/admin/nested-routes.test.tsx tests/admin/routing.test.ts`.
-- [ ] **3. Implement integration:** remove active imports of old UI/seed groups; keep legacy typed stores/service code only where needed for preservation/tests. Sales index → slips, bookstore aliases → customers, notifications alias → dashboard. Replace seeded hrefs and breadcrumbs/action links, resource display labels only (no custom-role grant rewrite). Re-check generic product delete/stock initialization does not wake old modules.
-- [ ] **4. Run green:** navigation/access/search tests and TypeScript; build route generator and assert route replacements render child form rather than parent list. Commit `refactor(admin): retire legacy business pages safely`.
+- [x] **2. Run red:** `npm run test:admin -- tests/admin/business-navigation.test.tsx tests/admin/nested-routes.test.tsx tests/admin/routing.test.ts`.
+- [x] **3. Implement integration:** remove active imports of old UI/seed groups; keep legacy typed stores/service code only where needed for preservation/tests. Sales index → slips, bookstore aliases → customers, notifications alias → dashboard. Replace seeded hrefs and breadcrumbs/action links, resource display labels only (no custom-role grant rewrite). Re-check generic product delete/stock initialization does not wake old modules.
+- [x] **4. Run green:** navigation/access/search tests and TypeScript; build route generator and assert route replacements render child form rather than parent list. Commit `refactor(admin): retire legacy business pages safely`.
 
 ## Task 9: Browser acceptance, lightweight boundary và tài liệu
 
@@ -226,13 +226,13 @@ Giữ resource key `bookstore` cho customers, sales cho purchaseSlips, notificat
 
 **Interfaces:** Run contract is still `npm run dev`, `npm run check`, `npm run build`, `node scripts/preview.mjs <actual-bundle-path>`. Acceptance report records actual branch/commit/dirty state, artifact/checksum, exact counts and screenshots. No new test runner/CI/deploy workflow.
 
-- [ ] **1. Check regression coverage:** run `npm run test:admin -- tests/admin/history-responsiveness.test.tsx tests/admin/data-table.test.tsx`; expected pass. Old history URL is now an alias; shared-table regression still exercises actual client sorting/pagination and settlement before navigation.
-- [ ] **2. Run full checks:** `npm run check`, then `npm run build`, expected exit 0. Record real counts/warnings/skips; do not use old 50/54 counts as new evidence. If a test fails, reproduce and fix before claiming success. Validate actual archive/version output, not a guessed bundle filename.
-- [ ] **3. Preview with actual artifact:** serve on an available documented port, prefer existing localhost:4181 if the owned preview can be stopped safely. Preserve browser data; do not remove junctions recursively or overwrite a running bundle. When uncommitted changes are built, label that fact instead of equating HEAD with artifact content.
-- [ ] **4. Browser business flow:** desktop then 375px: create named test customer → create two-line slip → reload → change customer's name/VAT and product price → old slip unchanged → report same totals → void with reason → totals reduce. Review empty/error/dirty-cancel and no stock change. Use isolated test DB for destructive reset tests; never reset user's review dataset.
-- [ ] **5. Browser interaction flow:** 375/768/1024/1440 widths: one visitor page/dialog paging, anchored bell read/no-link/read-all/failure behavior, session switch isolation, form numeric input/focus and popup Escape/return focus. Revisit aliases and new table sorting/filtering/pagination; no hangs, uncaught console errors or page overflow. Save actual screenshots after transitions finish; reset viewport override.
-- [ ] **6. Public boundary:** network on home and a real product detail must not load admin/chart/editor/seed chunks; compare public initial gzip against original baseline limits in Global Constraints; customer/slip list must not load chart/editor. Smoke public images/zoom/bidiary links/footer and `/api-test`; FE/BE version match on preview. Keep any test failures/unrun items explicit.
-- [ ] **7. Documentation and final commit:** document new model, legacy preservation, VAT/no-stock/revenue semantics, demo limitations, notification read behavior and actual acceptance; mark task checkboxes only after evidence. Commit appropriate source fixes separately from acceptance docs, no automatic push/deploy. Report URL/screenshots, local commits and remaining limitations to user.
+- [x] **1. Check regression coverage:** run `npm run test:admin -- tests/admin/history-responsiveness.test.tsx tests/admin/data-table.test.tsx`; expected pass. Old history URL is now an alias; shared-table regression still exercises actual client sorting/pagination and settlement before navigation.
+- [x] **2. Run full checks:** `npm run check`, then `npm run build`, expected exit 0. Record real counts/warnings/skips; do not use old 50/54 counts as new evidence. If a test fails, reproduce and fix before claiming success. Validate actual archive/version output, not a guessed bundle filename.
+- [x] **3. Preview with actual artifact:** serve on an available documented port, prefer existing localhost:4181 if the owned preview can be stopped safely. Preserve browser data; do not remove junctions recursively or overwrite a running bundle. When uncommitted changes are built, label that fact instead of equating HEAD with artifact content.
+- [x] **4. Browser business flow:** desktop then 375px: create named test customer → create two-line slip → reload → change customer's name/VAT and product price → old slip unchanged → report same totals → void with reason → totals reduce. Review empty/error/dirty-cancel and no stock change. Use isolated test DB for destructive reset tests; never reset user's review dataset.
+- [x] **5. Browser interaction flow:** 375/768/1024/1440 widths: one visitor page/dialog paging, anchored bell read/no-link/read-all/failure behavior, session switch isolation, form numeric input/focus and popup Escape/return focus. Revisit aliases and new table sorting/filtering/pagination; no hangs, uncaught console errors or page overflow. Save actual screenshots after transitions finish; reset viewport override.
+- [x] **6. Public boundary:** network on home and a real product detail must not load admin/chart/editor/seed chunks; compare public initial gzip against original baseline limits in Global Constraints; customer/slip list must not load chart/editor. Smoke public images/zoom/bidiary links/footer and `/api-test`; FE/BE version match on preview. Keep any test failures/unrun items explicit.
+- [x] **7. Documentation and final commit:** document new model, legacy preservation, VAT/no-stock/revenue semantics, demo limitations, notification read behavior and actual acceptance; mark task checkboxes only after evidence. Commit appropriate source fixes separately from acceptance docs, no automatic push/deploy. Report URL/screenshots, local commits and remaining limitations to user.
 
 ## Self-review and execution handoff
 

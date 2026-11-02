@@ -1,16 +1,51 @@
+# Admin business workflow — nghiệm thu local 02/11/2026
+
+Bản hiện tại trên nhánh `codex/admin-dashboard`, source commit `90244f3`. Không push/deploy. Giao diện vẫn là demo IndexedDB, chưa nối Express/MySQL cho nghiệp vụ.
+
+| Kiểm tra mới    | Kết quả quan sát                                                                                                                                     |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run check` | Exit 0; 42 files/93 admin tests đạt; 54 tooling/API tests đạt, 1 POSIX permission test bỏ qua trên Windows; lint 0 lỗi/7 Fast Refresh warnings đã có |
+| `npm run build` | Exit 0; SSR + cPanel CSR + BE + archive/checksum; cảnh báo chunk public >500kB và vite-tsconfig-paths vẫn còn                                        |
+| Budget gốc      | Public JS closure gzip 174289 → 181753 (+7464 ≤10240); CSS 11206 →11265 (+59 ≤2048)                                                                  |
+| Preview         | `http://127.0.0.1:4181`; FE/BE cùng `local-90244f3ec59d9fa4940b0ed09af83ec64442e390` tại `/api-test`                                                 |
+| Basepath        | Build cpanel-temp thật, `/~vhplasti/admin/bookstore/books/book-1/edit` → customers; deep slip edit/reload/cancel giữ tiền tố                         |
+
+Artifact `.releases/local-90244f3ec59d9fa4940b0ed09af83ec64442e390.tgz`; SHA256 `dc1fcbee02f5adeac8d03e8c494d7d448a82c2777c7eed7ce274284ccc694255`. Khi build, source sạch, tài liệu đang sửa; không gọi đây là artifact production.
+
+Thử nghiệm trình duyệt thật:
+
+- Tạo khách `LOCAL QA 02-11`, VAT Có. Lập `PMH-2026-0015`: 2×10000 +1×15000 =35000. Reload giữ nguyên. Đổi tên khách/VAT, đổi giá sản phẩm 45000→46000: phiếu cũ vẫn tên/nhãn/giá ban đầu. Giá sản phẩm sau đó được trả về45000.
+- Báo cáo lọc đúng khách cho35000; hủy có lý do thì về0. Tồn kho sản phẩm1 vẫn30/reserved0. Không reset dữ liệu người dùng.
+- 375px tạo tiếp phiếu `PMH-2026-0016`, hai dòng tổng25000, Không VAT, reload còn; báo cáo25000, hủy trên mobile rồi về0. Hai phiếu kiểm thử được giữ với trạng thái đã hủy.
+- Form phiếu, reports và visitors tại375/768/1024/1440: scrollWidth bằng clientWidth sau ổn định. Bảng phiếu cuộn bên trong. Dirty cancel hiện xác nhận trước khi rời.
+- Visitor mobile hiển thị card và dialog cùng trang: IP/location/thiết bị–OS/browser/3 phiên; Escape đóng. 250 phiên/phân trang, Back và lỗi ID được kiểm thử tự động.
+- Popup thông báo375px có x12,width351,right363 trong viewport375; desktop x943,width360; sát chuông, cuộn bên trong. Đọc tất cả cập nhật badge3→0; Escape trả focus chuông. Viewer vẫn3 chưa đọc, Super Admin vẫn0 sau đăng nhập lại. Popup dark nhận đúng theme.
+- `/admin/sales/order-history` và `/admin/sales/transactions` đều chuyển về phiếu, thao tác không treo. Alias ID sách không được đổi thành ID khách.
+- Assets quan sát trên home/product chỉ gồm bốn script public, không admin/chart/editor/seed. Customers/slips list không có chart hoặc rich-editor. Ảnh Đà Lạt chính/gallery tải được; ảnh related ngoài viewport còn lazy. Link Facebook/Messenger dùng bidiary. `/api-test` kết nối thật tới Express preview và FE/BE khớp.
+
+Các lỗi quota, mutation pending/session switch, thông báo không link, đọc tất cả ngoài trang và250 phiên được thử bằng fake-indexeddb/Query/UI integration tests; không cố tình làm hỏng DB review để ép lỗi trên browser. Zoom geometry có automated regression, không ghi nhận một phép đo hover mới trong đợt admin này. Một watcher fixture timeout ở lượt full check đầu; chạy riêng và full check sau đó đều đạt, không sửa tooling để che lỗi.
+
+Bằng chứng và phạm vi review cuối nằm trong [execution report](superpowers/reports/2026-11-02-admin-business-execution.md). Ảnh/log JSON local trong thư mục visualizations của chat, tiền tố `admin-business-`.
+
+---
+
+## Biên bản 01/11 dưới đây là lịch sử trước đợt đổi nghiệp vụ
+
+Các đường dẫn/quy tắc đơn hàng và số đo cũ dưới đây không mô tả giao diện hiện tại.
+
 # Biên bản kiểm chứng admin local
 
 Ngày 01/11/2026, Windows, Node24. Source ứng dụng đã kiểm chứng: `a751c59f807607c7dca71e8fbe06790f508af2a4`, nhánh `codex/admin-dashboard`. Chỉ triển khai local; không push, merge hoặc deploy production.
 
 ## Kết quả lệnh
 
-| Kiểm tra | Kết quả thực tế |
-|---|---|
-| `npm run check` | Exit0: TypeScript đạt, lint0 errors/7 cảnh báo Fast Refresh, ảnh catalogue đạt,49 admin tests đạt;54 tooling/API tests đạt và1 test POSIX permissions bỏ qua trên Windows |
-| `npm run build` | Exit0: FE SSR + cPanel CSR, backend TypeScript, archive và SHA256 sidecar đã tạo |
-| `node scripts/admin-bundle-report.mjs` | Exit0; closure JS public174289→181432 byte gzip (+7143, ngưỡng10240); CSS11206→11265 (+59, ngưỡng2048) |
-| Build `cpanel-temp` và deep reload | Form `/~vhplasti/admin/products/product-2/edit` mở đúng; links giữ tiền tố; ảnh public dưới `/~vhplasti/catalogue/` đã tải thật |
-| Preview FE/Express | `http://127.0.0.1:4181/api-test` báo kết nối thành công; FE/BE cùng release `local-a751c59f807607c7dca71e8fbe06790f508af2a4` |
+| Kiểm tra                               | Kết quả thực tế                                                                                                                                                           |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run check`                        | Exit0: TypeScript đạt, lint0 errors/7 cảnh báo Fast Refresh, ảnh catalogue đạt,49 admin tests đạt;54 tooling/API tests đạt và1 test POSIX permissions bỏ qua trên Windows |
+| `npm run build`                        | Exit0: FE SSR + cPanel CSR, backend TypeScript, archive và SHA256 sidecar đã tạo                                                                                          |
+| `node scripts/admin-bundle-report.mjs` | Exit0; closure JS public174289→181432 byte gzip (+7143, ngưỡng10240); CSS11206→11265 (+59, ngưỡng2048)                                                                    |
+| Build `cpanel-temp` và deep reload     | Form `/~vhplasti/admin/products/product-2/edit` mở đúng; links giữ tiền tố; ảnh public dưới `/~vhplasti/catalogue/` đã tải thật                                           |
+| Preview FE/Express                     | `http://127.0.0.1:4181/api-test` báo kết nối thành công; FE/BE cùng release `local-a751c59f807607c7dca71e8fbe06790f508af2a4`                                              |
 
 Artifact local: `.releases/local-a751c59f807607c7dca71e8fbe06790f508af2a4.tgz` cùng `.sha256`. Preview chính: `http://127.0.0.1:4181/admin/dashboard`. Đây không phải nghiệm thu trên cPanel/production thật.
 

@@ -7,27 +7,25 @@
     "cssBytes": 60682,
     "cssGzip": 11206,
     "initialGzip": 174289,
-    "initialFiles": [
-      "cpanel-CRscWoOi.js"
-    ]
+    "initialFiles": ["cpanel-CRscWoOi.js"]
   },
   "after": {
-    "entry": "cpanel-B3GnHqNw.js",
+    "entry": "cpanel-BEmnOM_4.js",
     "css": "styles-BLGPVI_0.css",
-    "jsBytes": 582312,
-    "jsGzip": 172913,
+    "jsBytes": 584025,
+    "jsGzip": 173234,
     "cssBytes": 60954,
     "cssGzip": 11265,
-    "initialGzip": 181432,
+    "initialGzip": 181753,
     "initialFiles": [
-      "cpanel-B3GnHqNw.js",
+      "cpanel-BEmnOM_4.js",
       "dist-FdiGGiVE.js",
       "useSelector-HKuzJ9gn.js",
       "with-selector-DzGLJtWi.js"
     ]
   },
   "delta": {
-    "jsGzip": 7143,
+    "jsGzip": 7464,
     "cssGzip": 59
   },
   "limits": {
