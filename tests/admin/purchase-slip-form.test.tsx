@@ -19,7 +19,7 @@ let f: Awaited<ReturnType<typeof businessFixture>>;
 let client: QueryClient | undefined;
 beforeEach(async () => {
   f = await businessFixture("bibi-admin-demo");
-  localStorage.setItem("bibi-admin:session", JSON.stringify(f.session));
+  localStorage.setItem("bibi-admin:session", JSON.stringify({ version: 2, session: f.session }));
 });
 afterEach(async () => {
   cleanup();

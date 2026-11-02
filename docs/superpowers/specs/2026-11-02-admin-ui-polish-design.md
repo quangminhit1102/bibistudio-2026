@@ -1,6 +1,6 @@
 # BiBi Admin — hoàn thiện giao diện và trải nghiệm quản trị
 
-Trạng thái: thiết kế chờ người dùng duyệt. Chưa triển khai source ứng dụng hoặc phát hành. Bản phác thảo là tài liệu thảo luận, không phải giao diện đã hoàn thành.
+Trạng thái: người dùng đã duyệt hướng chính và chọn bổ sung E — đổi ảnh đại diện. A–D chưa chọn. Chưa triển khai source ứng dụng hoặc phát hành; tiếp theo là review implementation plan. Bản phác thảo là tài liệu thảo luận, không phải giao diện đã hoàn thành.
 
 ## 1. Ý định và quyết định đã được người dùng chốt
 
@@ -87,7 +87,7 @@ Khách hàng thuộc nhóm Kinh doanh cùng Phiếu mua hàng/Báo cáo; đây l
 
 Footer sidebar là một trigger đầy hàng: avatar, **tên tài khoản đang dùng**, vai trò tiếng Việt; không hardcode MN hoặc dùng role thay tên. Avatar ưu tiên ảnh nếu profile/config có, thiếu ảnh thì lấy initials từ tên hiện tại, có tên truy cập được. Không tự dùng ảnh người thật/remote placeholder. Dropdown chỉ **Hồ sơ**, **Đăng xuất**, bám trigger và xử lý va chạm viewport; Escape trả focus, click ngoài đóng. Sidebar thu gọn vẫn mở menu được.
 
-Không để hai menu tài khoản trùng nhau trên desktop. Trên mobile cần nút tài khoản dễ truy cập khi sidebar đang đóng; dùng cùng component/menu/footer logic, hai lựa chọn giống nhau. Chức năng tải/đổi ảnh hồ sơ là bổ sung riêng, chưa tự triển khai.
+Không để hai menu tài khoản trùng nhau trên desktop. Trên mobile cần nút tài khoản dễ truy cập khi sidebar đang đóng; dùng cùng component/menu/footer logic, hai lựa chọn giống nhau. Đổi ảnh hồ sơ thuộc bổ sung E đã chọn, chi tiết ở mục16.
 
 ## 8. Trạng thái thống nhất
 
@@ -148,7 +148,7 @@ Full `npm run check`, `npm run build`, artifact preview thật; không suy thàn
 
 Migration/auth tests bao gồm DB cũ đã sửa dữ liệu, partial/quota/retry, snapshot/number/Blob/custom role được giữ, URL legacy/canonical, login sai/đúng/reload/logout/session đổi giữa mutation, role inactive, safe returnTo và basepath `/~vhplasti`.
 
-## 13. Bổ sung có ích — mặc định CHƯA làm
+## 13. Bổ sung có ích — đã chọn E
 
 Các mục sau không thuộc sửa lỗi bắt buộc và cần người dùng chọn riêng; không đề xuất thêm lại Dialog/Empty State/Skeleton/Combobox/Unsaved Guard vốn đã có.
 
@@ -160,21 +160,31 @@ Các mục sau không thuộc sửa lỗi bắt buộc và cần người dùng 
 | D   | Luồng nhập CSV có xem trước          | Nhập nhiều khách/sản phẩm, kiểm tra cột/lỗi trước khi lưu; scope lớn hơn component đơn lẻ |
 | E   | Đổi ảnh đại diện trong Hồ sơ         | Có ảnh cá nhân thật thay initials; cần validation/lưu ảnh và quyền cá nhân                |
 
-Mặc định không chọn A–E. Avatar hiển thị/fallback và định dạng tiền đang có vẫn được sửa trong scope chính; không tự mở rộng thành upload/import mới.
+Người dùng đã chọn E. A–D chưa chọn; không tự mở rộng thành luồng crop ảnh, import CSV hoặc backend upload.
 
 ## 14. Những lựa chọn của builder để người dùng duyệt
 
 - Tên nhóm Quản lý sản phẩm; đưa Khách hàng sang Kinh doanh; desktop chỉ một menu tài khoản, mobile có trigger dễ chạm dùng chung menu.
-- Avatar thiếu ảnh dùng initials từ tên; chưa có tính năng tải/đổi ảnh nếu E chưa được chọn.
+- Avatar thiếu ảnh dùng initials từ tên; thêm đổi/xóa ảnh trong Hồ sơ theo bổ sung E.
 - Credential fixture, file/type names và adapter injection cụ thể do builder chọn, ghi rõ trong tài liệu; không đưa credential người thật vào source.
 - Chuẩn hóa seed an toàn theo field, không reset hoặc sửa lịch sử nghiệp vụ; link phiếu dùng số phiếu làm canonical và nhận alias ID cũ.
 - Nút Hủy phiếu phụ viền/nền nhẹ, xác nhận hủy đỏ đặc; nhịp section32/24px; nhãn chart căn trái và có đầy đủ metadata.
-- Không thêm bất kỳ mục A–E, dependency, backend hoặc phát hành production khi chưa được yêu cầu.
+- Chỉ thêm E; không thêm A–D, dependency, backend hoặc phát hành production khi chưa được yêu cầu.
 
-Sau khi người dùng duyệt tài liệu này mới viết implementation plan bằng `superpowers:writing-plans`. Nếu họ chọn bổ sung A–E hoặc thay các lựa chọn trên, cập nhật thiết kế trước khi lập plan.
+Người dùng đã duyệt thiết kế và chọn E. Viết implementation plan bằng `superpowers:writing-plans`, đợi review plan trước khi triển khai.
 
 ## 15. Builder check và phác thảo
 
 Builder check độc lập, read-only, đã đọc thiết kế sau khi người dùng chọn hướng1; kết quả: “nothing important left”. Không thay thế bước người dùng duyệt thiết kế.
 
 Phác thảo riêng có ba tab Login, Sidebar & Báo cáo, Chấm slider. Đã mở và chuyển tab trên browser để xác nhận bản phác thảo hoạt động. Các tên/giá trị/biểu đồ trong phác thảo minh họa cách trình bày, không phải số liệu đã tích hợp hay lời hứa thêm KPI mới. Ảnh phác thảo trong thư mục visualizations của chat: `admin-polish-login-mockup.jpg`, `admin-polish-report-mockup.jpg`.
+
+## 16. E — đổi ảnh đại diện trong Hồ sơ
+
+- Chọn một JPEG/PNG/WebP, không rỗng, tối đa5MiB, tối đa40.000.000pixel; kiểm tra MIME, chữ ký và decode. Không SVG/GIF, không thêm crop/editor/dependency. Tái dùng kiểm tra ảnh hiện có.
+- Xem trước ảnh tròn với object-fit cover; có Xóa ảnh để về initials. Chọn/xóa chỉ thay draft. Một nút Lưu chung cho tên, email và ảnh; giữ unsaved guard, không autosave ảnh riêng gây xung đột revision.
+- Lưu Blob trong kho hiện có cùng reference riêng theo chủ tài khoản; không base64/localStorage, không đưa ảnh cá nhân vào thư viện media chung. Audit chỉ lưu metadata, không bytes ảnh.
+- Cập nhật hồ sơ/reference/Blob/audit trong cùng transaction. Quota, revision cũ, logout hoặc đổi session lúc decode/lưu phải giữ ảnh cũ và draft; retry không tạo Blob mồ côi. Chỉ dọn Blob thuộc đúng chủ tài khoản khi thay/xóa ảnh hoặc xóa tài khoản.
+- Đây là quyền sửa hồ sơ cá nhân; Viewer được đổi ảnh mình mà không được cấp thêm quyền Content hoặc Accounts:update. CRUD tài khoản chung không được nhận reference ảnh giả từ form/input.
+- Footer sidebar và trigger mobile cập nhật sau khi Lưu thành công, refresh vẫn có ảnh. Thu hồi ObjectURL khi đổi ảnh/cancel/unmount/logout; thiếu hoặc lỗi ảnh có fallback initials truy cập được.
+- Giữ seam để adapter sau này trả URL ảnh từ server, chưa tạo endpoint upload hoặc nối hosting trong đợt này.

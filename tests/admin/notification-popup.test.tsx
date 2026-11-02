@@ -19,7 +19,7 @@ let f: Awaited<ReturnType<typeof businessFixture>>, client: QueryClient;
 beforeEach(async () => {
   f = await businessFixture("bibi-admin-demo");
   await ensureDataset(f.store, "notifications");
-  localStorage.setItem("bibi-admin:session", JSON.stringify(f.session));
+  localStorage.setItem("bibi-admin:session", JSON.stringify({ version: 2, session: f.session }));
   client = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
@@ -143,7 +143,7 @@ it("does not restore old-user cache after a pending failure and a session switch
   );
   await screen.findByRole("button", { name: "Thông báo (2 chưa đọc)" });
   await act(async () => {
-    const next = JSON.stringify({ userId: "user-4", roleId: "viewer" });
+    const next = JSON.stringify({ version: 2, session: { userId: "user-4", roleId: "viewer" } });
     localStorage.setItem("bibi-admin:session", next);
     window.dispatchEvent(
       new StorageEvent("storage", { key: "bibi-admin:session", newValue: next }),

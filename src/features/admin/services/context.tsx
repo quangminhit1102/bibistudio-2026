@@ -1,4 +1,12 @@
-import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { createAdminStore } from "../demo/store";
 import { ensureDataset } from "../demo/registry";
@@ -15,13 +23,16 @@ import type {
 import { resourceForEntity } from "../accounts/permissions";
 import { ServiceError } from "./errors";
 import { resetDemoData } from "../settings/service";
+import type { AuthCredentials, AuthService } from "../accounts/auth/contracts";
+import { createLocalAuthService } from "../accounts/auth/local-service";
 type Theme = "light" | "dark" | "system";
 interface Runtime {
   store: AdminStore;
   session: DemoSession | null;
+  sessionLoading: boolean;
   theme: Theme;
   setTheme: (t: Theme) => void;
-  login: (id: string) => Promise<void>;
+  login: (credentials: AuthCredentials) => Promise<void>;
   logout: () => Promise<void>;
   reset: () => Promise<void>;
   service: <K extends EntityKey>(entity: K, resource?: Resource) => EntityService<K>;
@@ -35,12 +46,58 @@ function preference<T>(key: string, fallback: T): T {
     return fallback;
   }
 }
-export function AdminProvider({ children }: { children: ReactNode }) {
+export function AdminProvider({
+  children,
+  authFactory,
+}: {
+  children: ReactNode;
+  authFactory?: (store: AdminStore) => AuthService;
+}) {
   const query = useQueryClient();
   const [storageBlocked, setStorageBlocked] = useState(false);
   const [store] = useState(() =>
     createAdminStore(undefined, { onBlocked: () => setStorageBlocked(true) }),
   );
+  const [auth] = useState(
+    () =>
+      authFactory?.(store) ?? createLocalAuthService(store, () => ensureDataset(store, "users")),
+  );
+  const [session, setSession] = useState<DemoSession | null>(null);
+  const [sessionLoading, setSessionLoading] = useState(true);
+  const [theme, themeState] = useState<Theme>(() => preference("theme", "light"));
+  const epoch = useRef(0);
+  const clear = useCallback(() => {
+    store.invalidateOperations();
+    void query.cancelQueries({ queryKey: ["bibi-admin"] });
+    query.removeQueries({ queryKey: ["bibi-admin"] });
+  }, [store, query]);
+  useEffect(() => {
+    let alive = true;
+    const restore = async () => {
+      const ticket = ++epoch.current;
+      setSessionLoading(true);
+      setSession(null);
+      clear();
+      try {
+        const next = await auth.getSession();
+        if (alive && ticket === epoch.current) setSession(next);
+      } catch {
+        if (alive && ticket === epoch.current) setSession(null);
+      } finally {
+        if (alive && ticket === epoch.current) setSessionLoading(false);
+      }
+    };
+    void restore();
+    const sync = (event: StorageEvent) => {
+      if (event.key === "bibi-admin:session" || event.key === null) void restore();
+    };
+    window.addEventListener("storage", sync);
+    return () => {
+      alive = false;
+      epoch.current++;
+      window.removeEventListener("storage", sync);
+    };
+  }, [auth, clear]);
   useEffect(() => {
     let active = true;
     void store
@@ -53,27 +110,6 @@ export function AdminProvider({ children }: { children: ReactNode }) {
       active = false;
     };
   }, [store]);
-  const [session, setSession] = useState<DemoSession | null>(() => preference("session", null));
-  const [theme, themeState] = useState<Theme>(() => preference("theme", "light"));
-  useEffect(() => {
-    const sync = (event: StorageEvent) => {
-      if (event.key !== "bibi-admin:session") return;
-      store.invalidateOperations();
-      void query.cancelQueries({ queryKey: ["bibi-admin"] });
-      query.removeQueries({ queryKey: ["bibi-admin"] });
-      let next: DemoSession | null = null;
-      try {
-        const value = JSON.parse(event.newValue ?? "null");
-        if (value && typeof value.userId === "string" && typeof value.roleId === "string")
-          next = value;
-      } catch {
-        /* Invalid external preference expires the demo session. */
-      }
-      setSession(next);
-    };
-    window.addEventListener("storage", sync);
-    return () => window.removeEventListener("storage", sync);
-  }, [store, query]);
   const ensure = useCallback((entity: EntityKey) => ensureDataset(store, entity), [store]);
   const service = useCallback(
     <K extends EntityKey>(entity: K, resource?: Resource) =>
@@ -81,22 +117,19 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     [store, session],
   );
   const logout = useCallback(async () => {
-    store.invalidateOperations();
-    await query.cancelQueries({ queryKey: ["bibi-admin"] });
-    query.removeQueries({ queryKey: ["bibi-admin"] });
-    localStorage.removeItem("bibi-admin:session");
+    ++epoch.current;
+    clear();
     setSession(null);
-  }, [query, store]);
-  const login = async (id: string) => {
-    store.invalidateOperations();
-    await ensure("users");
-    const user = await store.get("users", id);
-    if (!user?.active) throw new ServiceError("forbidden", "Tài khoản demo không hoạt động.");
-    await query.cancelQueries({ queryKey: ["bibi-admin"] });
-    query.removeQueries({ queryKey: ["bibi-admin"] });
-    const next = { userId: user.id, roleId: user.roleId };
-    localStorage.setItem("bibi-admin:session", JSON.stringify(next));
+    setSessionLoading(false);
+    await auth.logout();
+  }, [auth, clear]);
+  const login = async (credentials: AuthCredentials) => {
+    const ticket = ++epoch.current;
+    clear();
+    const next = await auth.login(credentials);
+    if (ticket !== epoch.current) throw new ServiceError("aborted", "Phiên đã thay đổi.");
     setSession(next);
+    setSessionLoading(false);
   };
   const setTheme = (value: Theme) => {
     localStorage.setItem("bibi-admin:theme", JSON.stringify(value));
@@ -104,15 +137,26 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   };
   const reset = async () => {
     if (query.isMutating({ mutationKey: ["bibi-admin"] }))
-      throw new ServiceError("conflict", "Đợi thao tác đang lưu hoàn tất trước khi reset.");
+      throw new ServiceError("conflict", "Đợi thao tác đang lưu hoàn tất.");
     await query.cancelQueries({ queryKey: ["bibi-admin"] });
     await resetDemoData(store, session);
-    query.removeQueries({ queryKey: ["bibi-admin"] });
     await logout();
   };
-  const value = { store, session, theme, setTheme, service, ensure, logout, login, reset };
   return (
-    <RuntimeContext.Provider value={value}>
+    <RuntimeContext.Provider
+      value={{
+        store,
+        session,
+        sessionLoading,
+        theme,
+        setTheme,
+        login,
+        logout,
+        reset,
+        service,
+        ensure,
+      }}
+    >
       {storageBlocked && (
         <p role="alert" className="a-banner">
           Đang chờ nâng cấp dữ liệu. Hãy đóng hoặc tải lại các tab admin cũ; dữ liệu hiện có được

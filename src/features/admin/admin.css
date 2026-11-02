@@ -1648,3 +1648,18 @@
 .admin-root .a-notification-item[data-unread="true"] > span:first-child {
   color: var(--a-accent);
 }
+.a-password-control {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+.a-password-control input {
+  width: 100%;
+  padding-right: 48px;
+}
+.a-password-control > .a-btn {
+  position: absolute;
+  right: 2px;
+  min-width: 44px;
+  min-height: 44px;
+}

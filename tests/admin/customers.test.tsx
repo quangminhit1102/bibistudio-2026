@@ -32,7 +32,10 @@ let client: QueryClient;
 beforeEach(async () => {
   fixture = await businessFixture("customer-ui-test");
   runtime.store = fixture.store;
-  localStorage.setItem("bibi-admin:session", JSON.stringify(fixture.session));
+  localStorage.setItem(
+    "bibi-admin:session",
+    JSON.stringify({ version: 2, session: fixture.session }),
+  );
   client = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });

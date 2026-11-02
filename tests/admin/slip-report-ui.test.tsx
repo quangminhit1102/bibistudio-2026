@@ -34,7 +34,7 @@ afterEach(() => {
 it("falls back to the current year for a malformed URL without NaN totals", async () => {
   const f = await businessFixture("bibi-admin-demo");
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  localStorage.setItem("bibi-admin:session", JSON.stringify(f.session));
+  localStorage.setItem("bibi-admin:session", JSON.stringify({ version: 2, session: f.session }));
   const root = createRootRoute({ component: Outlet });
   const page = createRoute({
     getParentRoute: () => root,
@@ -83,7 +83,7 @@ it("shares year/customer filters across full totals charts tables and CSV", asyn
       notes: "",
       items: [{ lineId: "b", productId: "product-2", quantity: 3, unitPrice: 5000 }],
     });
-    localStorage.setItem("bibi-admin:session", JSON.stringify(f.session));
+    localStorage.setItem("bibi-admin:session", JSON.stringify({ version: 2, session: f.session }));
     const root = createRootRoute({ component: Outlet });
     const report = createRoute({
       getParentRoute: () => root,

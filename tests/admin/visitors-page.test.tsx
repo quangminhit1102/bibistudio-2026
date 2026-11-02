@@ -22,7 +22,7 @@ let f: Awaited<ReturnType<typeof businessFixture>>, client: QueryClient;
 beforeEach(async () => {
   f = await businessFixture("bibi-admin-demo");
   await ensureDataset(f.store, "visitors");
-  localStorage.setItem("bibi-admin:session", JSON.stringify(f.session));
+  localStorage.setItem("bibi-admin:session", JSON.stringify({ version: 2, session: f.session }));
   client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
 });
 afterEach(async () => {

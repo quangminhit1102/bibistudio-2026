@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { useAdmin, useRole, useEntity } from "../services/context";
 import { can, roleNames } from "../accounts/permissions";
-import { DemoLogin } from "../accounts/pages/login";
+import { Login } from "../accounts/pages/login";
 import { navigation } from "./navigation";
 import { HeaderNotifications } from "../notifications/header-menu";
 import { ErrorState } from "../shared/ui/primitives";
@@ -149,8 +149,10 @@ export function AdminLayout() {
   return (
     <div className={`admin-root ${dark ? "dark" : ""}`}>
       <NoticeProvider>
-        {!runtime.session ? (
-          <DemoLogin />
+        {runtime.sessionLoading ? (
+          <Skeleton />
+        ) : !runtime.session ? (
+          <Login />
         ) : (
           <div className={`a-app ${collapsed ? "a-collapsed" : ""}`}>
             <aside className="a-sidebar">{nav}</aside>
