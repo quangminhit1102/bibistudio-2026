@@ -155,6 +155,8 @@ export function createEntityService<K extends EntityKey>(
       return row;
     },
     async create(input) {
+      if (entity === "users" && "avatar" in input)
+        throw new ServiceError("validation", "Đổi ảnh qua Hồ sơ cá nhân.");
       await authorize("create");
       if (
         entity === "users" &&
@@ -196,6 +198,8 @@ export function createEntityService<K extends EntityKey>(
       });
     },
     async update(id, input, revision) {
+      if (entity === "users" && "avatar" in input)
+        throw new ServiceError("validation", "Đổi ảnh qua Hồ sơ cá nhân.");
       await authorize("update");
       if (
         ["audit", "stock", "orders", "payments", "purchaseSlips", "notificationReads"].includes(

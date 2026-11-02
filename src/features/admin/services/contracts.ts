@@ -105,7 +105,16 @@ export interface AdminUser extends NamedRecord {
   roleId: string;
   active: boolean;
   lastLogin: string | null;
+  avatar?: ProfileAvatar | null;
 }
+export interface ProfileAvatar {
+  blobKey: string;
+  mime: string;
+  size: number;
+  width: number;
+  height: number;
+}
+export type AvatarChange = { kind: "keep" } | { kind: "replace"; file: File } | { kind: "remove" };
 export interface Post extends BaseRecord {
   title: string;
   slug: string;
@@ -281,6 +290,10 @@ export interface AdminStore extends Pick<AdminTransaction, "get" | "list"> {
   readonly generation: number;
   invalidateOperations(): void;
   transaction<T>(entities: EntityKey[], work: (tx: AdminTransaction) => Promise<T>): Promise<T>;
+  transactionWithBlobs<T>(
+    entities: EntityKey[],
+    work: (tx: AdminBlobTransaction) => Promise<T>,
+  ): Promise<T>;
   reset(): Promise<void>;
   close(): Promise<void>;
   destroy(): Promise<void>;
@@ -290,6 +303,11 @@ export interface AdminStore extends Pick<AdminTransaction, "get" | "list"> {
   getBlob(key: string): Promise<Blob | undefined>;
   removeBlob(key: string): Promise<void>;
   importMedia(records: { asset: MediaAsset; blob: Blob }[], actor?: string): Promise<void>;
+}
+export interface AdminBlobTransaction extends AdminTransaction {
+  getBlob(key: string): Promise<Blob | undefined>;
+  putBlob(key: string, value: Blob): Promise<void>;
+  removeBlob(key: string): Promise<void>;
 }
 export interface EntityService<K extends EntityKey> {
   export(input: ListInput): Promise<AdminModels[K][]>;

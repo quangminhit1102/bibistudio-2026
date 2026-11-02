@@ -1663,3 +1663,36 @@
   min-width: 44px;
   min-height: 44px;
 }
+.a-profile-avatar {
+  overflow: hidden;
+  border-radius: 50%;
+}
+.a-profile-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.a-profile-form {
+  max-width: 640px;
+  display: grid;
+  gap: 24px;
+}
+.a-profile-photo {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.a-profile-photo > img {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.a-profile-photo > div {
+  min-width: 0;
+  flex: 1;
+}
+.a-profile-photo input {
+  max-width: 100%;
+}

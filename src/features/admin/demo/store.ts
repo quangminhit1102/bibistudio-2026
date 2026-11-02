@@ -3,6 +3,7 @@ import {
   entityKeys,
   type AdminStore,
   type AdminTransaction,
+  type AdminBlobTransaction,
   type AdminModels,
   type EntityKey,
 } from "../services/contracts";
@@ -42,6 +43,63 @@ export function createAdminStore(
       connection = undefined;
     }
   }
+  async function runTransaction<T>(
+    entities: EntityKey[],
+    work: (tx: AdminBlobTransaction) => Promise<T>,
+    blobs: boolean,
+  ) {
+    const operationGeneration = generation;
+    const tx = (await db()).transaction(
+      [
+        ...new Set([
+          ...entities,
+          ...(blobs || entities.includes("media") || entities.includes("users") ? ["blobs"] : []),
+        ]),
+      ],
+      "readwrite",
+    );
+    const api: AdminBlobTransaction = {
+      getBlob: async (key) => await tx.objectStore("blobs").get(key),
+      putBlob: async (key, value) => {
+        await tx.objectStore("blobs").put(value, key);
+      },
+      removeBlob: async (key) => {
+        await tx.objectStore("blobs").delete(key);
+      },
+      get: async (e, id) => await tx.objectStore(e).get(id),
+      list: async (e) => await tx.objectStore(e).getAll(),
+      put: async (e, r) => {
+        await tx.objectStore(e).put(r);
+      },
+      remove: async (e, id) => {
+        if (e === "media") {
+          const asset = await tx.objectStore(e).get(id);
+          if (asset?.blobKey) await tx.objectStore("blobs").delete(asset.blobKey);
+        }
+        if (e === "users") {
+          const user = await tx.objectStore(e).get(id);
+          if (user?.avatar?.blobKey?.startsWith("profile-avatar:" + id + ":"))
+            await tx.objectStore("blobs").delete(user.avatar.blobKey);
+        }
+        await tx.objectStore(e).delete(id);
+      },
+    };
+    try {
+      const result = await work(api);
+      if (operationGeneration !== generation)
+        throw new ServiceError("aborted", "Phiên thay đổi trong khi lưu.");
+      await tx.done;
+      return result;
+    } catch (e) {
+      try {
+        tx.abort();
+      } catch {
+        /* already aborted */
+      }
+      await tx.done.catch(() => {});
+      throw storageError(e);
+    }
+  }
   return {
     get generation() {
       return generation;
@@ -63,42 +121,8 @@ export function createAdminStore(
         throw storageError(e);
       }
     },
-    async transaction<T>(entities: EntityKey[], work: (tx: AdminTransaction) => Promise<T>) {
-      const operationGeneration = generation;
-      const tx = (await db()).transaction(
-        [...new Set([...entities, ...(entities.includes("media") ? ["blobs"] : [])])],
-        "readwrite",
-      );
-      const api: AdminTransaction = {
-        get: async (e, id) => await tx.objectStore(e).get(id),
-        list: async (e) => await tx.objectStore(e).getAll(),
-        put: async (e, r) => {
-          await tx.objectStore(e).put(r);
-        },
-        remove: async (e, id) => {
-          if (e === "media") {
-            const asset = await tx.objectStore(e).get(id);
-            if (asset?.blobKey) await tx.objectStore("blobs").delete(asset.blobKey);
-          }
-          await tx.objectStore(e).delete(id);
-        },
-      };
-      try {
-        const result = await work(api);
-        if (operationGeneration !== generation)
-          throw new ServiceError("aborted", "Phiên thay đổi trong khi lưu.");
-        await tx.done;
-        return result;
-      } catch (e) {
-        try {
-          tx.abort();
-        } catch {
-          /* already aborted */
-        }
-        await tx.done.catch(() => {});
-        throw storageError(e);
-      }
-    },
+    transaction: (entities, work) => runTransaction(entities, work, false),
+    transactionWithBlobs: (entities, work) => runTransaction(entities, work, true),
     async reset() {
       generation++;
       await close();
