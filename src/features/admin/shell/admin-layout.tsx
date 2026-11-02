@@ -184,7 +184,7 @@ export function AdminLayout() {
                     >
                       {dark ? <Sun size={18} /> : <Moon size={18} />}
                     </Button>
-                    <div className="a-mobile-account">
+                    <div className="a-header-account">
                       {account.data && <AccountMenu user={account.data} compact />}
                     </div>
                   </div>

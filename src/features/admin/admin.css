@@ -947,7 +947,14 @@
 }
 .a-login-form form > .a-btn {
   width: 100%;
-  margin-top: 20px;
+  margin-top: 0;
+}
+.a-login-form form {
+  display: grid;
+  gap: 20px;
+}
+.a-login-form .a-field {
+  gap: 8px;
 }
 .a-demo-disclosure {
   border-top: 1px solid var(--a-border);
@@ -1761,11 +1768,17 @@
 .a-account-label strong {
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 155px;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 600;
 }
 .a-account-label small {
   color: var(--a-muted);
   font-size: 11px;
+  font-weight: 400;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .a-account-compact > .a-btn {
   width: 44px;
@@ -1790,8 +1803,9 @@
   background: var(--a-hover);
   color: var(--a-text);
 }
-.a-mobile-account {
-  display: none;
+.a-header-account {
+  display: flex;
+  flex: none;
 }
 @media (max-width: 767px) {
   .admin-root .a-btn {
@@ -1799,9 +1813,6 @@
   }
   .admin-root .a-btn-icon {
     min-width: 44px;
-  }
-  .a-mobile-account {
-    display: block;
   }
   .a-top-actions {
     gap: 2px;
@@ -1882,12 +1893,14 @@
   border-radius: 3px;
 }
 .a-sidebar {
-  overflow: hidden;
+  overflow-y: auto;
 }
 .a-sidebar > nav {
-  flex: 1;
-  overflow-y: auto;
-  min-height: 0;
+  flex: 0 0 auto;
+  overflow: visible;
+}
+.a-sidebar > .a-wordmark {
+  flex-shrink: 0;
 }
 .a-sidebar-footer {
   flex-shrink: 0;

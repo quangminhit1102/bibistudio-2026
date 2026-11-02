@@ -14,7 +14,7 @@ export function AccountMenu({ user, compact = false }: { user: AdminUser; compac
         label={`Tài khoản ${user.name}`}
         trigger={
           <>
-            <ProfileAvatar user={user} />
+            <ProfileAvatar user={user} size={compact ? 32 : 36} />
             {!compact && (
               <span className="a-account-label">
                 <strong>{user.name}</strong>
