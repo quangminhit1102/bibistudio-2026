@@ -10,43 +10,9 @@ import { collections, getAllProducts, productTypes, productsByCollection, tx, ty
 import { FilmStrip, Parallax, ScrollExpand, SplitWords } from "@/components/brand/motion";
 import { buildOrganizationSchema } from "@/lib/seo";
 import heroImg from "@/assets/hero-desk.jpg";
-import { useEffect, useState } from "react";
+import { HeroSlides, type HeroSlide as Slide } from "@/components/brand/hero-slides";
 import { occasions, productsByOccasion } from "@/data/catalogue";
-import { prefersReducedMotion } from "@/components/brand/motion";
 
-type Slide = { src: string; alt: string; label?: string; slug?: string };
-
-function HeroSlides({ slides }: { slides: Slide[] }) {
-  const [i, setI] = useState(0);
-  useEffect(() => {
-    if (prefersReducedMotion() || slides.length < 2) return;
-    const t = setInterval(() => setI((v) => (v + 1) % slides.length), 5500);
-    return () => clearInterval(t);
-  }, [slides.length]);
-  return (
-    <div className="absolute inset-0 animate-unveil">
-      {slides.map((s, k) => (
-        <img
-          key={s.src}
-          src={s.src}
-          alt={k === i ? s.alt : ""}
-          aria-hidden={k !== i}
-          loading={k === 0 ? "eager" : "lazy"}
-          className={`absolute inset-0 h-full w-full object-cover transition-[opacity,transform] duration-[1800ms] ease-out ${k === i ? "scale-100 opacity-100" : "scale-[1.05] opacity-0"}`}
-        />
-      ))}
-      <div role="group" aria-label="Chọn ảnh" className="absolute inset-x-0 bottom-5 flex justify-center sm:bottom-6">
-        <div className="flex rounded-full bg-foreground/20 px-1 backdrop-blur-sm">
-          {slides.map((s, k) => (
-            <button key={s.src} type="button" onClick={() => setI(k)} aria-label={`Ảnh ${k + 1}`} aria-current={k === i ? "true" : undefined} className="grid size-11 place-items-center rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-background">
-              <span className={`block rounded-full border border-background transition-[width,height,background-color] duration-300 motion-reduce:transition-none ${k === i ? "size-2 bg-background" : "size-1.5 bg-transparent"}`} />
-            </button>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
 
 const title = "BiBi Studio — Little things, made to touch your heart";
 const description =
@@ -128,9 +94,8 @@ function Home() {
               </Link>
             </div>
           </div>
-          <Parallax strength={90} className="relative min-h-[50vh]">
-            <HeroSlides slides={heroSlides} />
-          </Parallax>
+          <HeroSlides slides={heroSlides} />
+
         </div>
       </section>
 
