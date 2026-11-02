@@ -84,6 +84,10 @@ export function createEntityService<K extends EntityKey>(
       await authorize("view");
       assertNotAborted(input.signal);
       let rows = await store.list(entity);
+      if (entity === "notificationReads")
+        rows = rows.filter(
+          (row) => (row as AdminModels["notificationReads"]).userId === session()?.userId,
+        );
       const search = normalizeSearch(input.search ?? "");
       if (search) rows = rows.filter((r) => normalizeSearch(JSON.stringify(r)).includes(search));
       const filters = input.filters ?? {};
@@ -143,6 +147,11 @@ export function createEntityService<K extends EntityKey>(
       assertNotAborted(signal);
       const row = await store.get(entity, id);
       if (!row) throw new ServiceError("not-found", "Không tìm thấy dữ liệu.");
+      if (
+        entity === "notificationReads" &&
+        (row as AdminModels["notificationReads"]).userId !== session()?.userId
+      )
+        throw new ServiceError("forbidden", "Không được xem trạng thái đọc của tài khoản khác.");
       return row;
     },
     async create(input) {

@@ -1,3 +1,4 @@
+import { NotificationSummary } from "../../notifications/header-menu";
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useAnalytics } from "../../analytics/hooks";
@@ -185,24 +186,7 @@ export default function Dashboard() {
                   </Card>
                 </Access>
                 <Access resource="notifications">
-                  <Card>
-                    <h2>Thông báo hệ thống</h2>
-                    {r.notifications.slice(0, 4).map((n) => (
-                      <Link
-                        key={n.id}
-                        to={n.href as "/admin"}
-                        className="a-search-results"
-                        style={{
-                          display: "block",
-                          padding: "12px 0",
-                          borderBottom: "1px solid var(--a-border)",
-                        }}
-                      >
-                        <strong>{n.name}</strong>
-                        <small style={{ display: "block" }}>{n.description}</small>
-                      </Link>
-                    ))}
-                  </Card>
+                  <NotificationSummary />
                 </Access>
                 <Access resource="analytics">
                   <Card>
