@@ -123,3 +123,16 @@ it("explicit workspace reset clears new and legacy stores and can reseed", async
   await ensureDataset(s, "customers");
   expect(await s.list("customers")).toHaveLength(12);
 });
+it("business seed never claims a newly created custom product and handles a single surviving seed product", async () => {
+  const { seed } = await import("../../src/features/admin/sales/business-seed");
+  const s = fresh("business-seed-custom");
+  await ensureDataset(s, "products");
+  const p = (await s.get("products", "product-1"))!;
+  const batch = seed({ products: [{ ...p, id: "000-custom-user" }, p] });
+  expect(batch.purchaseSlips).toHaveLength(30);
+  for (const slip of batch.purchaseSlips!) {
+    expect(slip.items).toHaveLength(1);
+    expect(slip.items[0].productId).toBe("product-1");
+  }
+  expect(seed({ products: [{ ...p, id: "custom-only" }] }).purchaseSlips).toEqual([]);
+});

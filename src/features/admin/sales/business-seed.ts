@@ -14,7 +14,12 @@ export function seed(context?: { products?: AdminProduct[] }): SeedBatch {
     email: "",
   }));
   const products = (context?.products ?? []).filter(
-    (p) => p.sku && p.name && Number.isSafeInteger(p.price) && p.price >= 0,
+    (p) =>
+      /^product-([1-9]|[1-4][0-9]|50)$/.test(p.id) &&
+      p.sku &&
+      p.name &&
+      Number.isSafeInteger(p.price) &&
+      p.price >= 0,
   );
   const counts = new Map<number, number>();
   const purchaseSlips: PurchaseSlip[] = products.length
@@ -29,7 +34,7 @@ export function seed(context?: { products?: AdminProduct[] }): SeedBatch {
         );
         const seq = (counts.get(year) ?? 0) + 1;
         counts.set(year, seq);
-        const items = [0, 1].map((offset) => {
+        const items = Array.from({ length: Math.min(2, products.length) }, (_, offset) => {
           const p = products[(i + offset) % products.length];
           return {
             lineId: `${base.id}-${offset}`,

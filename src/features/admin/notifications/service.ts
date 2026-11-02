@@ -101,7 +101,13 @@ export function safeNotificationLink(
   raw: string,
 ): { kind: "internal" | "external"; href: string } | null {
   const href = raw.trim();
-  if (!href || /[\u0000-\u001f\u007f\\]/.test(href) || href.startsWith("//")) return null;
+  if (
+    !href ||
+    [...href].some((c) => c.charCodeAt(0) < 32 || c.charCodeAt(0) === 127) ||
+    href.includes("\\") ||
+    href.startsWith("//")
+  )
+    return null;
   try {
     const url = new URL(href, "https://admin.local");
     if (url.username || url.password) return null;
