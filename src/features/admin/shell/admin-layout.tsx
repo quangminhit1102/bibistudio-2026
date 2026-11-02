@@ -9,7 +9,9 @@ import { can } from "../accounts/permissions";
 import { Login } from "../accounts/pages/login";
 import { AccountMenu } from "./account-menu";
 import { AdminThemeContext } from "../shared/ui/admin-theme";
-import { navigation } from "./navigation";
+import { navigation, filterNavigation, activeNavigationItem } from "./navigation";
+import { useNavigationGroups } from "./navigation-groups";
+import { SidebarNavigation } from "./sidebar-navigation";
 import { HeaderNotifications } from "../notifications/header-menu";
 import { ErrorState } from "../shared/ui/primitives";
 import { Button, Modal, NoticeProvider, Skeleton } from "../shared/ui/primitives";
@@ -36,6 +38,7 @@ export function AdminLayout() {
   const [search, setSearch] = useState(false);
   const [systemDark, setSystemDark] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const navGroups = useNavigationGroups(pathname);
   useEffect(() => {
     const q = matchMedia("(prefers-color-scheme: dark)");
     setSystemDark(q.matches);
@@ -57,17 +60,8 @@ export function AdminLayout() {
     return () => document.removeEventListener("keydown", key);
   }, []);
   const dark = runtime.theme === "dark" || (runtime.theme === "system" && systemDark);
-  const allowed = navigation
-    .map((g) => ({
-      ...g,
-      items: g.items.filter((i) => can(runtime.session, i.resource, i.action ?? "view", role.data)),
-    }))
-    .filter((g) => g.items.length);
-  const active = allowed
-    .flatMap((g) =>
-      g.items.flatMap((i) => [{ label: i.label, path: i.path }, ...(i.children ?? [])]),
-    )
-    .find((i) => pathname.endsWith(i.path));
+  const allowed = filterNavigation(runtime.session, role.data);
+  const active = activeNavigationItem(allowed, pathname);
   const routeGroup = navigation
     .flatMap((g) => g.items)
     .find((i) => {
@@ -86,44 +80,7 @@ export function AdminLayout() {
           BiBi Admin<small>KHÔNG GIAN QUẢN TRỊ</small>
         </span>
       </Link>
-      <nav aria-label="Điều hướng quản trị">
-        {allowed.map((g) => (
-          <div className="a-nav-group" key={g.label}>
-            <p>{g.label}</p>
-            {g.items.map((item) => (
-              <div key={item.path}>
-                <Link
-                  to={item.path as "/admin"}
-                  title={item.label}
-                  className={`a-nav-link ${pathname.endsWith(item.path) || (item.path === "/admin/products/list" && /\/admin\/products\/(?!create|categories|inventory|list)[^/]+/.test(pathname)) ? "active" : ""}`}
-                >
-                  <item.icon size={18} />
-                  <span>{item.label}</span>
-                </Link>
-                {item.children && (!collapsed || drawer) && (
-                  <div className="a-nav-children">
-                    {item.children
-                      .filter(
-                        (c) =>
-                          !c.path.endsWith("/create") ||
-                          can(runtime.session, item.resource, "create", role.data),
-                      )
-                      .map((c) => (
-                        <Link
-                          key={c.path}
-                          to={c.path as "/admin"}
-                          className={pathname.endsWith(c.path) ? "active" : ""}
-                        >
-                          {c.label}
-                        </Link>
-                      ))}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        ))}
-      </nav>
+      <SidebarNavigation groups={allowed} pathname={pathname} {...navGroups} />
       <div className="a-sidebar-footer">
         {account.data && <AccountMenu user={account.data} compact={collapsed && !drawer} />}
       </div>

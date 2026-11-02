@@ -10,7 +10,7 @@ it("has a flat product group with exactly four direct destinations", () => {
     "Danh mục",
     "Tồn kho",
   ]);
-  expect(group.items.every((i) => !i.children)).toBe(true);
+  expect(group.items.every((i) => !("children" in i))).toBe(true);
 });
 import { searchAdmin } from "../../src/features/admin/shell/search-service";
 import { businessFixture } from "./business-fixtures";
