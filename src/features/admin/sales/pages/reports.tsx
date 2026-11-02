@@ -150,7 +150,7 @@ export default function Reports() {
               ))}
             </select>
           </label>
-          <small>Dữ liệu demo · Năm theo giờ Việt Nam</small>
+          <small>Dữ liệu · Năm theo giờ Việt Nam</small>
         </div>
       )}
       {result.isPending ? (
@@ -185,7 +185,7 @@ export default function Reports() {
                 description="Chọn năm/khách khác hoặc lập phiếu mua hàng."
               />
             )}
-            <section aria-label="Doanh thu theo khách">
+            <section className="a-report-section" aria-label="Doanh thu theo khách">
               <h2>Doanh thu theo khách hàng trong năm {year}</h2>
               <p>Biểu đồ Top 10 · Bảng và CSV gồm toàn bộ khách trong bộ lọc.</p>
               <div className="a-grid-2">
@@ -195,14 +195,14 @@ export default function Reports() {
                   unit="VND"
                   data={result.data.byCustomer
                     .slice(0, 10)
-                    .map((c) => ({ name: `${c.name} · ${c.id.slice(0, 12)}`, value: c.value }))}
+                    .map((c) => ({ name: c.name, reference: c.id, value: c.value }))}
                 />
                 <Card>
                   <SummaryTable key={key} rows={result.data.byCustomer} columns={customerColumns} />
                 </Card>
               </div>
             </section>
-            <section aria-label="Tổng kết sản phẩm">
+            <section className="a-report-section" aria-label="Tổng kết sản phẩm">
               <h2>Tổng kết sản phẩm</h2>
               <div className="a-toolbar">
                 <label className="a-field">
@@ -233,7 +233,8 @@ export default function Reports() {
                     )
                     .slice(0, 10)
                     .map((p) => ({
-                      name: `${p.sku} · ${p.name}`,
+                      name: p.name,
+                      reference: p.sku,
                       value: metric === "quantity" ? p.quantity : p.value,
                     }))}
                 />

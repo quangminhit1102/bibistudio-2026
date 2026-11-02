@@ -20,7 +20,6 @@ export function ChartCard({
     <Card>
       <div className="a-card-head">
         <h2>{title}</h2>
-        <small>DEMO</small>
       </div>
       <Suspense fallback={<Skeleton rows={5} />}>
         <Chart data={data} kind={kind} label={title} unit={unit} />
@@ -65,7 +64,7 @@ export function Kpi({
             {change.toFixed(1)}%
           </b>
         )}{" "}
-        so với kỳ trước · demo
+        so với kỳ trước
       </div>
     </Card>
   );
@@ -74,7 +73,7 @@ export function DateFilter({
   value,
   onChange,
   resolvePreset = presetRange,
-  caption = "Mốc dữ liệu demo:01/11/2026 · múi giờ Việt Nam",
+  caption = "Ngày theo giờ Việt Nam",
 }: {
   value: DateRange;
   onChange: (r: DateRange) => void;
@@ -100,7 +99,7 @@ export function DateFilter({
           }
         }}
       >
-        <option value="today">Hôm nay (demo)</option>
+        <option value="today">Hôm nay</option>
         <option value="yesterday">Hôm qua</option>
         <option value="7">7 ngày</option>
         <option value="30">30 ngày</option>
