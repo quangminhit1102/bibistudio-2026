@@ -25,9 +25,9 @@ Files: modify `shell/navigation.ts`, `shell/admin-layout.tsx`, `admin.css`; crea
 
 Interfaces: `activeNavigationItem(groups,pathname)` returns a unique item; `filterNavigation(session,role)` returns allowed groups; `useNavigationGroups(pathname)` exposes open group IDs and toggle; `SidebarNavigation({groups,pathname,open,toggle})` renders buttons/panels with unique IDs.
 
-- [ ] RED: tests flat group icons/order/create permissions; route matches details/basepath; multiple groups toggle and restore; active group auto-opens only on route change; corrupt/blocked storage; unique IDs and keyboard Enter/Space.
-- [ ] Implement flattening and shared renderer/state. Replace old nested CSS; add compact/tablet overrides scoped to sidebar, not mobile drawer.
-- [ ] GREEN targeted tests, TypeScript/scoped lint. Browser desktop/mobile light/dark: groups, reload, route links, compact, resizing, scroll/accounts, overflow. Build and verify actual artifact preview.
-- [ ] Local commit, fresh independent final review, regression-backed important fixes and full suite. Record acceptance; preserve branch without push/deploy.
+- [x] RED: tests flat group icons/order/create permissions; route matches details/basepath; multiple groups toggle and restore; active group auto-opens only on route change; corrupt/blocked storage; unique IDs and keyboard Enter/Space.
+- [x] Implement flattening and shared renderer/state. Replace old nested CSS; add compact/tablet overrides scoped to sidebar, not mobile drawer.
+- [x] GREEN targeted tests, TypeScript/scoped lint. Browser desktop/mobile light/dark: groups, reload, route links, compact, resizing, scroll/accounts, overflow. Build and verify actual artifact preview.
+- [x] Local commit, fresh independent final review, regression-backed important fixes and full suite. Record acceptance; preserve branch without push/deploy.
 
 Native retained from the ongoing session. User approved the design for implementation; this plan adds no new product choices.
