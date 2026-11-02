@@ -121,3 +121,8 @@ export const resourceForEntity = (entity: EntityKey): Resource =>
       settings: "settings",
     }) as const
   )[entity];
+export const resourceLabels: Partial<Record<Resource, string>> = {
+  bookstore: "Khách mua hàng",
+  sales: "Phiếu mua hàng",
+  analytics: "Khách truy cập",
+};

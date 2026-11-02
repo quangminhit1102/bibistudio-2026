@@ -1,6 +1,6 @@
-import { createFileRoute, lazyRouteComponent } from "@tanstack/react-router";
-import { RouteLeaf } from "@/lib/route-leaf";
-const Page = lazyRouteComponent(() => import("@/features/admin/sales/pages/orders"));
+import { createFileRoute, redirect } from "@tanstack/react-router";
 export const Route = createFileRoute("/admin/sales/orders")({
-  component: () => <RouteLeaf routeId={Route.id} page={Page} />,
+  beforeLoad: () => {
+    throw redirect({ to: "/admin/sales/slips", replace: true });
+  },
 });

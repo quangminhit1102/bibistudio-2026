@@ -1,4 +1,6 @@
-import { createFileRoute, lazyRouteComponent } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 export const Route = createFileRoute("/admin/notifications")({
-  component: lazyRouteComponent(() => import("@/features/admin/notifications/pages/notifications")),
+  beforeLoad: () => {
+    throw redirect({ to: "/admin/dashboard", replace: true });
+  },
 });

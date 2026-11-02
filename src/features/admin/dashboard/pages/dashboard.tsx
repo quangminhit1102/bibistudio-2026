@@ -201,7 +201,7 @@ export default function Dashboard() {
                             .map((v) => (
                               <tr key={v.id}>
                                 <td>
-                                  <Link to={("/admin/analytics/visitors/" + v.id) as "/admin"}>
+                                  <Link to="/admin/analytics/visitors" search={{ visitor: v.id }}>
                                     {v.anonymousId}
                                   </Link>
                                 </td>

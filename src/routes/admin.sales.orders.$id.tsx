@@ -1,4 +1,6 @@
-import { createFileRoute, lazyRouteComponent } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 export const Route = createFileRoute("/admin/sales/orders/$id")({
-  component: lazyRouteComponent(() => import("@/features/admin/sales/pages/order-detail")),
+  beforeLoad: () => {
+    throw redirect({ to: "/admin/sales/slips", replace: true });
+  },
 });

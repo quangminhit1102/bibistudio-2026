@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAdmin, useEntity, useRole } from "../../services/context";
-import { actions, resources, can } from "../permissions";
+import { actions, resources, can, resourceLabels } from "../permissions";
 import type { Role, Resource, Action } from "../../services/contracts";
 import {
   PageTitle,
@@ -70,7 +70,7 @@ export default function Permissions() {
                 actions.map((action) => (
                   <tr key={resource + action}>
                     <td>
-                      <strong>{resource}</strong> / {action}
+                      <strong>{resourceLabels[resource] ?? resource}</strong> / {action}
                     </td>
                     {roles.data?.items.map((role) => (
                       <td key={role.id}>
