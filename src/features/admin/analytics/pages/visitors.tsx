@@ -1,11 +1,19 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { EntityManager, type EntityConfig } from "../../shared/entity-manager";
-import { date } from "../../shared/lib/text";
+import { internalTarget } from "../../shared/lib/navigation";
+import { dateTime } from "../../shared/lib/text";
+import { VisitorDialog } from "../components/visitor-dialog";
+function visitorHref(id: string) {
+  const q = new URLSearchParams(typeof location !== "undefined" ? location.search : "");
+  q.set("visitor", id);
+  return "/admin/analytics/visitors?" + q;
+}
 const config: EntityConfig<"visitors"> = {
   entity: "visitors",
   title: "Khách truy cập",
-  description: "Danh tính ẩn danh và vị trí đều mô phỏng. IP được che; không xác định người thật.",
+  description: "Thông tin và phiên truy cập mô phỏng. IP được che; không theo dõi khách thật.",
   readOnly: true,
+  allowDelete: false,
   dateField: "lastSeenAt",
   defaultSort: { field: "lastSeenAt", direction: "desc" },
   fields: [],
@@ -22,11 +30,11 @@ const config: EntityConfig<"visitors"> = {
     sessionCount: 0,
     pageViewCount: 0,
   },
-  detailHref: (id) => `/admin/analytics/visitors/${id}`,
+  detailHref: visitorHref,
   filters: [
     {
       field: "country",
-      label: "Quốc gia",
+      label: "Vị trí",
       options: ["Việt Nam", "Nhật Bản", "Hoa Kỳ"].map((v) => ({ value: v, label: v })),
     },
     {
@@ -44,28 +52,71 @@ const config: EntityConfig<"visitors"> = {
     {
       accessorKey: "anonymousId",
       header: "Visitor ID",
-      size: 220,
       cell: ({ row }) => (
-        <Link to={("/admin/analytics/visitors/" + row.id) as "/admin"}>
+        <Link {...internalTarget(visitorHref(row.id))}>
           <strong>{row.original.anonymousId}</strong>
-          <small>{row.original.ipAddress}</small>
         </Link>
       ),
     },
-    { accessorKey: "country", header: "Quốc gia" },
-    { accessorKey: "city", header: "Thành phố demo" },
-    { accessorKey: "deviceType", header: "Thiết bị" },
+    { accessorKey: "ipAddress", header: "IP" },
+    {
+      id: "location",
+      header: "Vị trí",
+      enableSorting: false,
+      cell: ({ row }) => [row.original.city, row.original.country].filter(Boolean).join(", "),
+    },
+    {
+      id: "device",
+      header: "Thiết bị–Hệ điều hành",
+      enableSorting: false,
+      cell: ({ row }) => `${row.original.deviceType}–${row.original.operatingSystem}`,
+    },
     { accessorKey: "browser", header: "Trình duyệt" },
-    { accessorKey: "operatingSystem", header: "Hệ điều hành" },
     { accessorKey: "sessionCount", header: "Phiên" },
-    { accessorKey: "pageViewCount", header: "Trang xem" },
     {
       accessorKey: "lastSeenAt",
       header: "Lần cuối",
-      cell: ({ getValue }) => date(String(getValue())),
+      cell: ({ getValue }) => dateTime(String(getValue())),
     },
   ],
+  mobileRow: (v) => (
+    <article className="a-visitor-card">
+      <strong>{v.anonymousId}</strong>
+      <p>{[v.city, v.country].filter(Boolean).join(", ")}</p>
+      <p>
+        {v.deviceType}–{v.operatingSystem} · {v.sessionCount} phiên
+      </p>
+      <small>{dateTime(v.lastSeenAt)}</small>
+      <Link
+        {...internalTarget(visitorHref(v.id))}
+        className="a-btn"
+        aria-label={`Xem thông tin ${v.anonymousId}`}
+      >
+        Xem thông tin
+      </Link>
+    </article>
+  ),
 };
 export default function Visitors() {
-  return <EntityManager config={config} />;
+  const navigate = useNavigate(),
+    search = useSearch({ strict: false }) as Record<string, unknown>;
+  const id = typeof search.visitor === "string" ? search.visitor : undefined;
+  return (
+    <>
+      <EntityManager config={config} />
+      {id && (
+        <VisitorDialog
+          key={id}
+          visitorId={id}
+          onClose={() =>
+            void navigate({
+              to: "/admin/analytics/visitors",
+              search: { ...search, visitor: undefined } as never,
+              replace: true,
+            })
+          }
+        />
+      )}
+    </>
+  );
 }

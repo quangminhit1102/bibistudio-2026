@@ -1449,10 +1449,9 @@
 }
 .admin-root .a-slip-row {
   display: grid;
-  grid-template-columns: minmax(140px, 2fr) minmax(70px, 0.65fr) minmax(100px, 1fr) minmax(
-      110px,
-      1fr
-    ) 44px;
+  grid-template-columns:
+    minmax(140px, 2fr) minmax(70px, 0.65fr) minmax(100px, 1fr) minmax(110px, 1fr)
+    44px;
   gap: 12px;
   align-items: center;
   border-bottom: 1px solid var(--a-border);
@@ -1504,7 +1503,41 @@
   overflow-wrap: anywhere;
   margin-top: 20px;
 }
+.admin-root .a-mobile-cards {
+  display: none;
+}
+.admin-root .a-visitor-card {
+  border: 1px solid var(--a-border);
+  border-radius: 8px;
+  padding: 18px;
+  background: var(--a-surface);
+  margin-block: 12px;
+}
+.admin-root .a-visitor-card p,
+.admin-root .a-visitor-card small {
+  display: block;
+  margin-block: 8px;
+  overflow-wrap: anywhere;
+}
+.admin-root .a-visitor-card .a-btn {
+  min-height: 44px;
+  margin-top: 8px;
+}
+.admin-root .a-visitor-session {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--a-border);
+  overflow-wrap: anywhere;
+}
+.admin-root .a-dialog-body > h2 {
+  margin-block: 20px 12px;
+}
 @media (max-width: 767px) {
+  .admin-root .a-responsive-table {
+    display: none;
+  }
+  .admin-root .a-mobile-cards {
+    display: block;
+  }
   .admin-root .a-slip-form .a-form-grid {
     grid-template-columns: minmax(0, 1fr);
     gap: 8px;

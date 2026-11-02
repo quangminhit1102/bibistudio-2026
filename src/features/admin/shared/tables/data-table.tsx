@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   useReactTable,
   getCoreRowModel,
@@ -43,6 +43,7 @@ export function DataTable<T extends { id: string }>({
   selection,
   onSelectionChange,
   selectable = true,
+  mobileRow,
 }: {
   columns: ColumnDef<T, unknown>[];
   result: ListResult<T>;
@@ -56,6 +57,7 @@ export function DataTable<T extends { id: string }>({
   selection?: RowSelectionState;
   onSelectionChange?: (s: RowSelectionState) => void;
   selectable?: boolean;
+  mobileRow?: (row: T) => ReactNode;
 }) {
   const [localSelection, setLocalSelection] = useState<RowSelectionState>({});
   const [showColumns, setShowColumns] = useState(false);
@@ -179,7 +181,11 @@ export function DataTable<T extends { id: string }>({
       ) : !table.getRowModel().rows.length ? (
         <EmptyState />
       ) : (
-        <div className="a-table-wrap" tabIndex={0} aria-label="Bảng dữ liệu có thể cuộn ngang">
+        <div
+          className={`a-table-wrap${mobileRow ? " a-responsive-table" : ""}`}
+          tabIndex={0}
+          aria-label="Bảng dữ liệu có thể cuộn ngang"
+        >
           <table className="a-table">
             <thead>
               {table.getHeaderGroups().map((hg) => (
@@ -254,6 +260,15 @@ export function DataTable<T extends { id: string }>({
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+      {!error && !loading && mobileRow && table.getRowModel().rows.length > 0 && (
+        <div className="a-mobile-cards" role="list">
+          {table.getRowModel().rows.map((row) => (
+            <div key={row.id} role="listitem">
+              {mobileRow(row.original)}
+            </div>
+          ))}
         </div>
       )}
       <div className="a-pagination">

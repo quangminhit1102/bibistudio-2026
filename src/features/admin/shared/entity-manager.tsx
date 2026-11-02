@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, type ReactNode } from "react";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Plus, Trash2 } from "lucide-react";
@@ -36,6 +36,7 @@ export interface EntityConfig<K extends EntityKey> {
   allowCreate?: boolean;
   allowDelete?: boolean;
   returnPath?: string;
+  mobileRow?: (row: AdminModels[K]) => ReactNode;
   readOnly?: boolean;
   duplicate?: boolean;
   dateField?: "createdAt" | "lastSeenAt" | "startedAt";
@@ -365,6 +366,8 @@ export function EntityManager<K extends EntityKey>({ config }: { config: EntityC
         onRetry={() => void result.refetch()}
         selection={selected}
         onSelectionChange={setSelected}
+        selectable={!config.readOnly}
+        mobileRow={config.mobileRow}
         onExport={
           can(runtime.session, resource, "export", role.data) ? () => void exportRows() : undefined
         }
