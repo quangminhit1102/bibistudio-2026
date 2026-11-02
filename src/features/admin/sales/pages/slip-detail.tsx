@@ -1,14 +1,15 @@
 import { Link, useSearch } from "@tanstack/react-router";
-import { useAdmin, useRecord, useRole } from "../../services/context";
+import { useAdmin, useRole } from "../../services/context";
 import { can } from "../../accounts/permissions";
 import { useRecordId } from "../../shared/record-editor";
 import { internalTarget, safeListReturn } from "../../shared/lib/navigation";
 import { money, dateTime } from "../../shared/lib/text";
 import { Card, PageTitle, Badge, Button, ErrorState, Skeleton } from "../../shared/ui/primitives";
+import { useSlipRoute } from "../use-slip-route";
 import { VoidSlip } from "../components/void-slip";
 export default function SlipDetail() {
   const id = useRecordId(),
-    record = useRecord("purchaseSlips", id),
+    record = useSlipRoute(id),
     runtime = useAdmin(),
     role = useRole();
   const search = useSearch({ strict: false }) as { returnTo?: unknown };
@@ -31,7 +32,7 @@ export default function SlipDetail() {
             {editable && (
               <>
                 <Link
-                  to={`/admin/sales/slips/${id}/edit` as "/admin"}
+                  to={`/admin/sales/slips/${s.number}/edit` as "/admin"}
                   search={{ returnTo: back } as never}
                   className="a-btn a-btn-primary"
                 >

@@ -50,7 +50,7 @@ export async function searchAdmin(
                 : "",
         entity,
         kind: labels[entity],
-        path: paths[entity] + row.id,
+        path: paths[entity] + (entity === "purchaseSlips" && "number" in row ? row.number : row.id),
       });
   }
   return matches;

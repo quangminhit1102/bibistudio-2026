@@ -103,7 +103,7 @@ export default function Dashboard() {
                             .map((o) => (
                               <tr key={o.id}>
                                 <td>
-                                  <Link to={("/admin/sales/slips/" + o.id) as "/admin"}>
+                                  <Link to={("/admin/sales/slips/" + o.number) as "/admin"}>
                                     <strong>{o.number}</strong>
                                     <small>{o.customerSnapshot.name}</small>
                                   </Link>

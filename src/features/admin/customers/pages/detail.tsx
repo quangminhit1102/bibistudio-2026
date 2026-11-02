@@ -28,7 +28,7 @@ function CustomerSlips({ id }: { id: string }) {
       </Link>
       {result.data.items.map((slip) => (
         <p key={slip.id}>
-          <Link to={`/admin/sales/slips/${slip.id}` as "/admin"}>{slip.number}</Link> ·{" "}
+          <Link to={`/admin/sales/slips/${slip.number}` as "/admin"}>{slip.number}</Link> ·{" "}
           {date(slip.createdAt)} · {money(slip.total)} ·{" "}
           {slip.status === "void" ? "Đã hủy" : "Đã lưu"}
         </p>

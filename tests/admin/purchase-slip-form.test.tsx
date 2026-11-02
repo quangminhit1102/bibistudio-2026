@@ -163,7 +163,9 @@ it("voided slip detail remains readable without edit or void actions", async () 
       </AdminProvider>
     </QueryClientProvider>,
   );
-  expect(await screen.findByText("Hủy phiếu demo")).toBeInTheDocument();
+  const number = (await f.store.get("purchaseSlips", "slip-demo-9"))!.number;
+  await waitFor(() => expect(router.state.location.pathname).toBe("/admin/sales/slips/" + number));
+  expect(await screen.findByText("Điều chỉnh yêu cầu")).toBeInTheDocument();
   expect(screen.queryByRole("link", { name: "Chỉnh sửa", exact: true })).not.toBeInTheDocument();
   expect(screen.queryByRole("button", { name: "Hủy phiếu", exact: true })).not.toBeInTheDocument();
 });

@@ -19,9 +19,15 @@ import {
 import { useSlipOptions } from "../hooks";
 import { SlipForm } from "../components/slip-form";
 import { createSlipService } from "../slip-service";
+import { useSlipRoute } from "../use-slip-route";
 export default function SlipEditor() {
   const id = useRecordId();
-  return <SlipEditorSession key={id || "new"} id={id} />;
+  const record = useSlipRoute(id);
+  if (id && record.isPending) return <Skeleton />;
+  if (id && (record.error || !record.data))
+    return <ErrorState error={record.error} onRetry={() => void record.refetch()} />;
+  const primaryId = record.data?.id ?? "";
+  return <SlipEditorSession key={primaryId || "new"} id={primaryId} />;
 }
 function SlipEditorSession({ id }: { id: string }) {
   const record = useRecord("purchaseSlips", id),

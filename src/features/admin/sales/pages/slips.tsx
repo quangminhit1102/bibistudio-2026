@@ -67,7 +67,10 @@ export default function Slips() {
       accessorKey: "number",
       header: "Phiếu",
       cell: ({ row }) => (
-        <Link to={`/admin/sales/slips/${row.id}` as "/admin"} search={{ returnTo } as never}>
+        <Link
+          to={`/admin/sales/slips/${row.original.number}` as "/admin"}
+          search={{ returnTo } as never}
+        >
           <strong>{row.original.number}</strong>
         </Link>
       ),
@@ -112,7 +115,7 @@ export default function Slips() {
         <div className="a-actions">
           <Link
             className="a-btn a-btn-sm"
-            to={`/admin/sales/slips/${row.id}` as "/admin"}
+            to={`/admin/sales/slips/${row.original.number}` as "/admin"}
             search={{ returnTo } as never}
           >
             Xem
@@ -122,7 +125,7 @@ export default function Slips() {
               <>
                 <Link
                   className="a-btn a-btn-sm"
-                  to={`/admin/sales/slips/${row.id}/edit` as "/admin"}
+                  to={`/admin/sales/slips/${row.original.number}/edit` as "/admin"}
                   search={{ returnTo } as never}
                 >
                   Sửa

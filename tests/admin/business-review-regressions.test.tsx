@@ -176,8 +176,8 @@ it("synchronizes same-route filters, search input, export scope and Back from th
   await u.click(screen.getByRole("button", { name: "Xuất CSV", exact: true }));
   await waitFor(() => expect(capture).toHaveBeenCalledOnce());
   const csv = await capture.mock.calls[0][0].text();
-  expect(csv).toContain("Cá nhân demo 2");
-  expect(csv).not.toContain("Nhà sách demo 1");
+  expect(csv).toContain("Nguyễn Minh An");
+  expect(csv).not.toContain("Nhà sách An Nhiên");
   await act(async () => {
     router.history.back();
   });
