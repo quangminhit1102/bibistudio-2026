@@ -1,11 +1,10 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useAnalytics } from "../../analytics/hooks";
-import { presetRange } from "../../analytics/aggregate";
+import { businessRange } from "../../sales/slip-aggregate";
 import { PageTitle, Card, Badge, ErrorState, Skeleton } from "../../shared/ui/primitives";
 import { Kpi, ChartCard, DateFilter } from "../../shared/charts/blocks";
 import { money, date } from "../../shared/lib/text";
-import { orderLabels } from "../../sales/service";
 import { useAdmin, useRole } from "../../services/context";
 import { can } from "../../accounts/permissions";
 import type { Resource } from "../../services/contracts";
@@ -16,7 +15,8 @@ function Access({ resource, children }: { resource: Resource; children: ReactNod
   return can(runtime.session, resource, "view", role.data) ? children : null;
 }
 export default function Dashboard() {
-  const [range, setRange] = useState(presetRange("30"));
+  const [anchor] = useState(() => new Date());
+  const [range, setRange] = useState(() => businessRange("30", anchor));
   const report = useAnalytics(range, true);
   return (
     <>
@@ -24,7 +24,12 @@ export default function Dashboard() {
         title="Bảng điều khiển"
         description="Một góc nhìn rõ ràng về hoạt động studio. Tất cả số liệu bên dưới đều là mô phỏng."
       />
-      <DateFilter value={range} onChange={setRange} />
+      <DateFilter
+        value={range}
+        onChange={setRange}
+        resolvePreset={(p) => businessRange(p, anchor)}
+        caption="Dữ liệu demo và phiếu đã nhập · Ngày theo giờ Việt Nam"
+      />
       {report.isPending ? (
         <Skeleton rows={8} />
       ) : report.error ? (
@@ -35,26 +40,24 @@ export default function Dashboard() {
           const r = report.data,
             b = r.business!,
             prev = r.previousBusiness!,
-            conversion = r.rates.current,
-            prevConversion = r.rates.previous,
             active = r.activeUsers;
           const categories = r.categorySales;
           return (
             <>
               <div className="a-kpis">
                 <Kpi
-                  title="Doanh thu demo"
-                  value={money(b.revenue)}
-                  raw={b.revenue}
-                  previous={prev.revenue}
-                  description="Tổng đơn trong kỳ đang thanh toán Paid, loại đơn hủy/hoàn tiền. Không phải tiền thu thật."
+                  title="Doanh thu ghi nhận"
+                  value={money(b.total)}
+                  raw={b.total}
+                  previous={prev.total}
+                  description="Tổng phiếu đã lưu, chưa hủy trong kỳ. Không phải tiền đã thu; không tự tính thuế."
                 />
                 <Kpi
-                  title="Đơn hàng"
-                  value={b.orders}
-                  raw={b.orders}
-                  previous={prev.orders}
-                  description="Đơn tạo trong khoảng ngày được chọn."
+                  title="Phiếu mua hàng"
+                  value={b.count}
+                  raw={b.count}
+                  previous={prev.count}
+                  description="Phiếu đã lưu và chưa hủy trong khoảng ngày được chọn."
                 />
                 <Kpi
                   title="Sản phẩm"
@@ -75,19 +78,17 @@ export default function Dashboard() {
                 />
                 <Kpi
                   title="Tỷ lệ chuyển đổi"
-                  value={conversion.toFixed(1) + "%"}
-                  raw={conversion}
-                  previous={prevConversion}
-                  description="Visitor có đơn không hủy/hoàn tiền chia visitor có phiên trong kỳ; mỗi người tính một lần. Chỉ mô phỏng."
+                  value="—"
+                  description="Chưa có dữ liệu liên kết giữa khách truy cập và phiếu mua hàng."
                 />
               </div>
               <div className="a-dashboard-grid">
-                <ChartCard title="Doanh thu theo ngày" data={b.revenueTrend} />
+                <ChartCard title="Doanh thu ghi nhận theo ngày" data={b.trend} />
                 <Access resource="sales">
                   <Card>
                     <div className="a-card-head">
-                      <h2>Đơn hàng gần đây</h2>
-                      <Link className="a-btn a-btn-sm a-btn-ghost" to="/admin/sales/orders">
+                      <h2>Phiếu mua hàng gần đây</h2>
+                      <Link className="a-btn a-btn-sm a-btn-ghost" to="/admin/sales/slips">
                         Xem tất cả →
                       </Link>
                     </div>
@@ -101,15 +102,15 @@ export default function Dashboard() {
                             .map((o) => (
                               <tr key={o.id}>
                                 <td>
-                                  <Link to={("/admin/sales/orders/" + o.id) as "/admin"}>
+                                  <Link to={("/admin/sales/slips/" + o.id) as "/admin"}>
                                     <strong>{o.number}</strong>
-                                    <small>{o.customer.name}</small>
+                                    <small>{o.customerSnapshot.name}</small>
                                   </Link>
                                 </td>
                                 <td>{money(o.total)}</td>
                                 <td>
-                                  <Badge tone={o.status === "Delivered" ? "success" : "neutral"}>
-                                    {orderLabels[o.status]}
+                                  <Badge tone={o.status === "saved" ? "success" : "neutral"}>
+                                    {o.status === "saved" ? "Đã lưu" : "Đã hủy"}
                                   </Badge>
                                 </td>
                               </tr>
@@ -121,15 +122,23 @@ export default function Dashboard() {
                 </Access>
               </div>
               <div className="a-grid-2">
-                <ChartCard title="Đơn hàng theo thời gian" data={b.orderTrend} kind="bar" />
+                <ChartCard title="Phiếu mua hàng theo thời gian" data={b.countTrend} kind="bar" />
                 <ChartCard title="Khách truy cập theo ngày" data={r.current.trend} kind="line" />
                 <ChartCard
-                  title="Giá trị sản phẩm đã thanh toán theo nhóm"
+                  title="Giá trị sản phẩm ghi nhận theo nhóm"
                   data={categories}
                   kind="donut"
                 />
                 <ChartCard title="Nguồn truy cập" data={r.current.sources} kind="donut" />
-                <ChartCard title="Sản phẩm bán nhiều (demo)" data={b.topProducts} kind="bar" />
+                <ChartCard
+                  title="Sản phẩm bán nhiều (demo)"
+                  data={b.byProduct
+                    .slice()
+                    .sort((a, c) => c.quantity - a.quantity)
+                    .slice(0, 8)
+                    .map((p) => ({ name: p.name, value: p.quantity }))}
+                  kind="bar"
+                />
                 <Access resource="products">
                   <Card>
                     <h2>Sản phẩm sắp hết hàng</h2>

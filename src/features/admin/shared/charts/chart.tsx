@@ -16,21 +16,25 @@ import {
   Legend,
 } from "recharts";
 import { EmptyState } from "../ui/primitives";
+import { money } from "../lib/text";
 export interface ChartPoint {
   name: string;
   value: number;
   secondary?: number;
 }
-export type ChartKind = "line" | "area" | "bar" | "pie" | "donut" | "multi-series" | "sparkline";
+export type ChartKind =
+  "line" | "area" | "bar" | "horizontal-bar" | "pie" | "donut" | "multi-series" | "sparkline";
 const colors = ["#687b6b", "#c7ad85", "#8d9aaa", "#a192aa", "#b4b4a6"];
 export default function Chart({
   data,
   kind = "area",
   label,
+  unit,
 }: {
   data: ChartPoint[];
   kind?: ChartKind;
   label: string;
+  unit?: "VND" | "quantity";
 }) {
   if (!data.length) return <EmptyState title="Chưa có dữ liệu trong khoảng thời gian này" />;
   const axes = (
@@ -66,7 +70,52 @@ export default function Chart({
     <figure style={{ margin: 0 }} aria-label={label}>
       <div className="a-chart">
         <ResponsiveContainer width="100%" height="100%">
-          {kind === "pie" || kind === "donut" ? (
+          {kind === "horizontal-bar" ? (
+            <BarChart data={data} layout="vertical" margin={{ left: 4, right: 12 }}>
+              <CartesianGrid horizontal={false} stroke="var(--a-border)" />
+              <XAxis
+                type="number"
+                axisLine={false}
+                tickLine={false}
+                fontSize={10}
+                tick={{ fill: "var(--a-muted)" }}
+                tickFormatter={(v: number) =>
+                  new Intl.NumberFormat("vi-VN", {
+                    notation: "compact",
+                    maximumFractionDigits: 1,
+                  }).format(v)
+                }
+              />
+              <YAxis
+                type="category"
+                dataKey="name"
+                width={120}
+                axisLine={false}
+                tickLine={false}
+                fontSize={10}
+                tick={{ fill: "var(--a-muted)" }}
+                tickFormatter={(v: string) => (v.length > 20 ? v.slice(0, 19) + "…" : v)}
+              />
+              <Tooltip
+                formatter={(v) =>
+                  unit === "VND" ? money(Number(v)) : Number(v).toLocaleString("vi-VN")
+                }
+                contentStyle={{
+                  background: "var(--a-surface)",
+                  border: "1px solid var(--a-border)",
+                  color: "var(--a-text)",
+                  fontSize: 11,
+                }}
+              />
+              <Bar
+                dataKey="value"
+                name={unit === "VND" ? "Giá trị (VND)" : "Số lượng"}
+                fill={colors[0]}
+                radius={[0, 3, 3, 0]}
+                isAnimationActive={false}
+              />
+            </BarChart>
+          ) : kind === "pie" || kind === "donut" ? (
             <PieChart>
               <Pie
                 data={data}
@@ -135,7 +184,10 @@ export default function Chart({
       </div>
       <figcaption className="a-chart-summary">
         {label} · {data.length} nhóm · Tổng{" "}
-        {data.reduce((n, p) => n + p.value, 0).toLocaleString("vi-VN")} (demo)
+        {unit === "VND"
+          ? money(data.reduce((n, p) => n + p.value, 0))
+          : data.reduce((n, p) => n + p.value, 0).toLocaleString("vi-VN")}{" "}
+        (demo)
       </figcaption>
     </figure>
   );

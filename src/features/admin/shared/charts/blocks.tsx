@@ -9,10 +9,12 @@ export function ChartCard({
   title,
   data,
   kind = "area",
+  unit,
 }: {
   title: string;
   data: ChartPoint[];
   kind?: ChartKind;
+  unit?: "VND" | "quantity";
 }) {
   return (
     <Card>
@@ -21,7 +23,7 @@ export function ChartCard({
         <small>DEMO</small>
       </div>
       <Suspense fallback={<Skeleton rows={5} />}>
-        <Chart data={data} kind={kind} label={title} />
+        <Chart data={data} kind={kind} label={title} unit={unit} />
       </Suspense>
     </Card>
   );
@@ -71,9 +73,13 @@ export function Kpi({
 export function DateFilter({
   value,
   onChange,
+  resolvePreset = presetRange,
+  caption = "Mốc dữ liệu demo:01/11/2026 · múi giờ Việt Nam",
 }: {
   value: DateRange;
   onChange: (r: DateRange) => void;
+  resolvePreset?: (preset: string) => DateRange;
+  caption?: string;
 }) {
   const [preset, setPreset] = useState("30");
   const [start, setStart] = useState(day(value.start));
@@ -87,7 +93,7 @@ export function DateFilter({
           const p = e.target.value;
           setPreset(p);
           if (p !== "custom") {
-            const next = presetRange(p);
+            const next = resolvePreset(p);
             onChange(next);
             setStart(day(next.start));
             setEnd(day(new Date(Date.parse(next.end) - 1).toISOString()));
@@ -128,7 +134,7 @@ export function DateFilter({
           </Button>
         </>
       )}
-      <small>Mốc dữ liệu demo:01/11/2026 · múi giờ Việt Nam</small>
+      <small>{caption}</small>
     </div>
   );
 }
