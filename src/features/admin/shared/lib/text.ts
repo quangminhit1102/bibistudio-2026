@@ -43,6 +43,13 @@ export function calendarDate(value: unknown) {
     day: "2-digit",
   }).format(new Date(value));
 }
+export function dateTime(value: string) {
+  return new Intl.DateTimeFormat("vi-VN", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone: "Asia/Ho_Chi_Minh",
+  }).format(new Date(value));
+}
 export function downloadBlob(blob: Blob, name: string) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");

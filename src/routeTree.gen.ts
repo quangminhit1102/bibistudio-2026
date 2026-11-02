@@ -68,6 +68,7 @@ import { Route as AdminSalesIndexRouteImport } from './routes/admin.sales.index'
 import { Route as AdminSalesOrderHistoryRouteImport } from './routes/admin.sales.order-history'
 import { Route as AdminSalesOrdersRouteImport } from './routes/admin.sales.orders'
 import { Route as AdminSalesReportsRouteImport } from './routes/admin.sales.reports'
+import { Route as AdminSalesSlipsRouteImport } from './routes/admin.sales.slips'
 import { Route as AdminSalesTransactionsRouteImport } from './routes/admin.sales.transactions'
 import { Route as AdminSettingsIndexRouteImport } from './routes/admin.settings.index'
 import { Route as AdminSettingsAppearanceRouteImport } from './routes/admin.settings.appearance'
@@ -83,8 +84,11 @@ import { Route as AdminContentPostsCreateRouteImport } from './routes/admin.cont
 import { Route as AdminCustomersIdEditRouteImport } from './routes/admin.customers.$id.edit'
 import { Route as AdminProductsIdEditRouteImport } from './routes/admin.products.$id.edit'
 import { Route as AdminSalesOrdersIdRouteImport } from './routes/admin.sales.orders.$id'
+import { Route as AdminSalesSlipsIdRouteImport } from './routes/admin.sales.slips.$id'
+import { Route as AdminSalesSlipsCreateRouteImport } from './routes/admin.sales.slips.create'
 import { Route as AdminBookstoreBooksIdEditRouteImport } from './routes/admin.bookstore.books.$id.edit'
 import { Route as AdminContentPostsIdEditRouteImport } from './routes/admin.content.posts.$id.edit'
+import { Route as AdminSalesSlipsIdEditRouteImport } from './routes/admin.sales.slips.$id.edit'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -386,6 +390,11 @@ const AdminSalesReportsRoute = AdminSalesReportsRouteImport.update({
   path: '/sales/reports',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminSalesSlipsRoute = AdminSalesSlipsRouteImport.update({
+  id: '/sales/slips',
+  path: '/sales/slips',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminSalesTransactionsRoute = AdminSalesTransactionsRouteImport.update({
   id: '/sales/transactions',
   path: '/sales/transactions',
@@ -463,6 +472,16 @@ const AdminSalesOrdersIdRoute = AdminSalesOrdersIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => AdminSalesOrdersRoute,
 } as any)
+const AdminSalesSlipsIdRoute = AdminSalesSlipsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AdminSalesSlipsRoute,
+} as any)
+const AdminSalesSlipsCreateRoute = AdminSalesSlipsCreateRouteImport.update({
+  id: '/create',
+  path: '/create',
+  getParentRoute: () => AdminSalesSlipsRoute,
+} as any)
 const AdminBookstoreBooksIdEditRoute =
   AdminBookstoreBooksIdEditRouteImport.update({
     id: '/edit',
@@ -473,6 +492,11 @@ const AdminContentPostsIdEditRoute = AdminContentPostsIdEditRouteImport.update({
   id: '/edit',
   path: '/edit',
   getParentRoute: () => AdminContentPostsIdRoute,
+} as any)
+const AdminSalesSlipsIdEditRoute = AdminSalesSlipsIdEditRouteImport.update({
+  id: '/edit',
+  path: '/edit',
+  getParentRoute: () => AdminSalesSlipsIdRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -528,6 +552,7 @@ export interface FileRoutesByFullPath {
   '/admin/sales/order-history': typeof AdminSalesOrderHistoryRoute
   '/admin/sales/orders': typeof AdminSalesOrdersRouteWithChildren
   '/admin/sales/reports': typeof AdminSalesReportsRoute
+  '/admin/sales/slips': typeof AdminSalesSlipsRouteWithChildren
   '/admin/sales/transactions': typeof AdminSalesTransactionsRoute
   '/admin/settings/appearance': typeof AdminSettingsAppearanceRoute
   '/admin/settings/general': typeof AdminSettingsGeneralRoute
@@ -550,8 +575,11 @@ export interface FileRoutesByFullPath {
   '/admin/customers/$id/edit': typeof AdminCustomersIdEditRoute
   '/admin/products/$id/edit': typeof AdminProductsIdEditRoute
   '/admin/sales/orders/$id': typeof AdminSalesOrdersIdRoute
+  '/admin/sales/slips/$id': typeof AdminSalesSlipsIdRouteWithChildren
+  '/admin/sales/slips/create': typeof AdminSalesSlipsCreateRoute
   '/admin/bookstore/books/$id/edit': typeof AdminBookstoreBooksIdEditRoute
   '/admin/content/posts/$id/edit': typeof AdminContentPostsIdEditRoute
+  '/admin/sales/slips/$id/edit': typeof AdminSalesSlipsIdEditRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -605,6 +633,7 @@ export interface FileRoutesByTo {
   '/admin/sales/order-history': typeof AdminSalesOrderHistoryRoute
   '/admin/sales/orders': typeof AdminSalesOrdersRouteWithChildren
   '/admin/sales/reports': typeof AdminSalesReportsRoute
+  '/admin/sales/slips': typeof AdminSalesSlipsRouteWithChildren
   '/admin/sales/transactions': typeof AdminSalesTransactionsRoute
   '/admin/settings/appearance': typeof AdminSettingsAppearanceRoute
   '/admin/settings/general': typeof AdminSettingsGeneralRoute
@@ -627,8 +656,11 @@ export interface FileRoutesByTo {
   '/admin/customers/$id/edit': typeof AdminCustomersIdEditRoute
   '/admin/products/$id/edit': typeof AdminProductsIdEditRoute
   '/admin/sales/orders/$id': typeof AdminSalesOrdersIdRoute
+  '/admin/sales/slips/$id': typeof AdminSalesSlipsIdRouteWithChildren
+  '/admin/sales/slips/create': typeof AdminSalesSlipsCreateRoute
   '/admin/bookstore/books/$id/edit': typeof AdminBookstoreBooksIdEditRoute
   '/admin/content/posts/$id/edit': typeof AdminContentPostsIdEditRoute
+  '/admin/sales/slips/$id/edit': typeof AdminSalesSlipsIdEditRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -684,6 +716,7 @@ export interface FileRoutesById {
   '/admin/sales/order-history': typeof AdminSalesOrderHistoryRoute
   '/admin/sales/orders': typeof AdminSalesOrdersRouteWithChildren
   '/admin/sales/reports': typeof AdminSalesReportsRoute
+  '/admin/sales/slips': typeof AdminSalesSlipsRouteWithChildren
   '/admin/sales/transactions': typeof AdminSalesTransactionsRoute
   '/admin/settings/appearance': typeof AdminSettingsAppearanceRoute
   '/admin/settings/general': typeof AdminSettingsGeneralRoute
@@ -706,8 +739,11 @@ export interface FileRoutesById {
   '/admin/customers/$id/edit': typeof AdminCustomersIdEditRoute
   '/admin/products/$id/edit': typeof AdminProductsIdEditRoute
   '/admin/sales/orders/$id': typeof AdminSalesOrdersIdRoute
+  '/admin/sales/slips/$id': typeof AdminSalesSlipsIdRouteWithChildren
+  '/admin/sales/slips/create': typeof AdminSalesSlipsCreateRoute
   '/admin/bookstore/books/$id/edit': typeof AdminBookstoreBooksIdEditRoute
   '/admin/content/posts/$id/edit': typeof AdminContentPostsIdEditRoute
+  '/admin/sales/slips/$id/edit': typeof AdminSalesSlipsIdEditRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -764,6 +800,7 @@ export interface FileRouteTypes {
     | '/admin/sales/order-history'
     | '/admin/sales/orders'
     | '/admin/sales/reports'
+    | '/admin/sales/slips'
     | '/admin/sales/transactions'
     | '/admin/settings/appearance'
     | '/admin/settings/general'
@@ -786,8 +823,11 @@ export interface FileRouteTypes {
     | '/admin/customers/$id/edit'
     | '/admin/products/$id/edit'
     | '/admin/sales/orders/$id'
+    | '/admin/sales/slips/$id'
+    | '/admin/sales/slips/create'
     | '/admin/bookstore/books/$id/edit'
     | '/admin/content/posts/$id/edit'
+    | '/admin/sales/slips/$id/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -841,6 +881,7 @@ export interface FileRouteTypes {
     | '/admin/sales/order-history'
     | '/admin/sales/orders'
     | '/admin/sales/reports'
+    | '/admin/sales/slips'
     | '/admin/sales/transactions'
     | '/admin/settings/appearance'
     | '/admin/settings/general'
@@ -863,8 +904,11 @@ export interface FileRouteTypes {
     | '/admin/customers/$id/edit'
     | '/admin/products/$id/edit'
     | '/admin/sales/orders/$id'
+    | '/admin/sales/slips/$id'
+    | '/admin/sales/slips/create'
     | '/admin/bookstore/books/$id/edit'
     | '/admin/content/posts/$id/edit'
+    | '/admin/sales/slips/$id/edit'
   id:
     | '__root__'
     | '/'
@@ -919,6 +963,7 @@ export interface FileRouteTypes {
     | '/admin/sales/order-history'
     | '/admin/sales/orders'
     | '/admin/sales/reports'
+    | '/admin/sales/slips'
     | '/admin/sales/transactions'
     | '/admin/settings/appearance'
     | '/admin/settings/general'
@@ -941,8 +986,11 @@ export interface FileRouteTypes {
     | '/admin/customers/$id/edit'
     | '/admin/products/$id/edit'
     | '/admin/sales/orders/$id'
+    | '/admin/sales/slips/$id'
+    | '/admin/sales/slips/create'
     | '/admin/bookstore/books/$id/edit'
     | '/admin/content/posts/$id/edit'
+    | '/admin/sales/slips/$id/edit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -1374,6 +1422,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSalesReportsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/sales/slips': {
+      id: '/admin/sales/slips'
+      path: '/sales/slips'
+      fullPath: '/admin/sales/slips'
+      preLoaderRoute: typeof AdminSalesSlipsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/sales/transactions': {
       id: '/admin/sales/transactions'
       path: '/sales/transactions'
@@ -1479,6 +1534,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSalesOrdersIdRouteImport
       parentRoute: typeof AdminSalesOrdersRoute
     }
+    '/admin/sales/slips/$id': {
+      id: '/admin/sales/slips/$id'
+      path: '/$id'
+      fullPath: '/admin/sales/slips/$id'
+      preLoaderRoute: typeof AdminSalesSlipsIdRouteImport
+      parentRoute: typeof AdminSalesSlipsRoute
+    }
+    '/admin/sales/slips/create': {
+      id: '/admin/sales/slips/create'
+      path: '/create'
+      fullPath: '/admin/sales/slips/create'
+      preLoaderRoute: typeof AdminSalesSlipsCreateRouteImport
+      parentRoute: typeof AdminSalesSlipsRoute
+    }
     '/admin/bookstore/books/$id/edit': {
       id: '/admin/bookstore/books/$id/edit'
       path: '/edit'
@@ -1492,6 +1561,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/content/posts/$id/edit'
       preLoaderRoute: typeof AdminContentPostsIdEditRouteImport
       parentRoute: typeof AdminContentPostsIdRoute
+    }
+    '/admin/sales/slips/$id/edit': {
+      id: '/admin/sales/slips/$id/edit'
+      path: '/edit'
+      fullPath: '/admin/sales/slips/$id/edit'
+      preLoaderRoute: typeof AdminSalesSlipsIdEditRouteImport
+      parentRoute: typeof AdminSalesSlipsIdRoute
     }
   }
 }
@@ -1619,6 +1695,31 @@ const AdminSalesOrdersRouteChildren: AdminSalesOrdersRouteChildren = {
 const AdminSalesOrdersRouteWithChildren =
   AdminSalesOrdersRoute._addFileChildren(AdminSalesOrdersRouteChildren)
 
+interface AdminSalesSlipsIdRouteChildren {
+  AdminSalesSlipsIdEditRoute: typeof AdminSalesSlipsIdEditRoute
+}
+
+const AdminSalesSlipsIdRouteChildren: AdminSalesSlipsIdRouteChildren = {
+  AdminSalesSlipsIdEditRoute: AdminSalesSlipsIdEditRoute,
+}
+
+const AdminSalesSlipsIdRouteWithChildren =
+  AdminSalesSlipsIdRoute._addFileChildren(AdminSalesSlipsIdRouteChildren)
+
+interface AdminSalesSlipsRouteChildren {
+  AdminSalesSlipsIdRoute: typeof AdminSalesSlipsIdRouteWithChildren
+  AdminSalesSlipsCreateRoute: typeof AdminSalesSlipsCreateRoute
+}
+
+const AdminSalesSlipsRouteChildren: AdminSalesSlipsRouteChildren = {
+  AdminSalesSlipsIdRoute: AdminSalesSlipsIdRouteWithChildren,
+  AdminSalesSlipsCreateRoute: AdminSalesSlipsCreateRoute,
+}
+
+const AdminSalesSlipsRouteWithChildren = AdminSalesSlipsRoute._addFileChildren(
+  AdminSalesSlipsRouteChildren,
+)
+
 interface AdminRouteChildren {
   AdminAuditLogsRoute: typeof AdminAuditLogsRoute
   AdminCustomersRoute: typeof AdminCustomersRouteWithChildren
@@ -1659,6 +1760,7 @@ interface AdminRouteChildren {
   AdminSalesOrderHistoryRoute: typeof AdminSalesOrderHistoryRoute
   AdminSalesOrdersRoute: typeof AdminSalesOrdersRouteWithChildren
   AdminSalesReportsRoute: typeof AdminSalesReportsRoute
+  AdminSalesSlipsRoute: typeof AdminSalesSlipsRouteWithChildren
   AdminSalesTransactionsRoute: typeof AdminSalesTransactionsRoute
   AdminSettingsAppearanceRoute: typeof AdminSettingsAppearanceRoute
   AdminSettingsGeneralRoute: typeof AdminSettingsGeneralRoute
@@ -1714,6 +1816,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminSalesOrderHistoryRoute: AdminSalesOrderHistoryRoute,
   AdminSalesOrdersRoute: AdminSalesOrdersRouteWithChildren,
   AdminSalesReportsRoute: AdminSalesReportsRoute,
+  AdminSalesSlipsRoute: AdminSalesSlipsRouteWithChildren,
   AdminSalesTransactionsRoute: AdminSalesTransactionsRoute,
   AdminSettingsAppearanceRoute: AdminSettingsAppearanceRoute,
   AdminSettingsGeneralRoute: AdminSettingsGeneralRoute,
