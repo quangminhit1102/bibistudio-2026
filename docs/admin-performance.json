@@ -10,22 +10,22 @@
     "initialFiles": ["cpanel-CRscWoOi.js"]
   },
   "after": {
-    "entry": "cpanel-BEmnOM_4.js",
+    "entry": "cpanel-B-PAS0ym.js",
     "css": "styles-BLGPVI_0.css",
     "jsBytes": 584025,
-    "jsGzip": 173234,
+    "jsGzip": 173219,
     "cssBytes": 60954,
     "cssGzip": 11265,
-    "initialGzip": 181753,
+    "initialGzip": 181738,
     "initialFiles": [
-      "cpanel-BEmnOM_4.js",
+      "cpanel-B-PAS0ym.js",
       "dist-FdiGGiVE.js",
       "useSelector-HKuzJ9gn.js",
       "with-selector-DzGLJtWi.js"
     ]
   },
   "delta": {
-    "jsGzip": 7464,
+    "jsGzip": 7449,
     "cssGzip": 59
   },
   "limits": {

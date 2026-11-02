@@ -1,3 +1,15 @@
+# Kết quả cuối sau review — 02/11/2026
+
+Source `9552afa` đã sửa các lỗi review bằng5 regressions RED→GREEN: nhầm snapshot giữa hai phiếu, mất draft khi refetch lỗi (phiếu/khách), link phiếu lỗi tải mãi, filter/export không theo URL và Back. Full check cuối đạt **98 admin tests +54 tooling/API**,1 ca POSIX bỏ qua trên Windows,0 lint errors/7 warnings đã có. Full build exit0.
+
+Preview hiện tại4181 phục vụ `local-9552afa36d9005f69212e1015795eecb629dcc79`; `/api-test` xác nhận FE/BE khớp; browser missing-ID có lỗi/retry, editor đúng khách, trang visitors hiển thị và console error logs rỗng. Artifact SHA256 `c48a7bc7f11d99ab90b396df6a51d9aed3d638e3af68615f9c43ff11168f9fac`. JS public tăng7449 byte gzip/CSS59, trong budget gốc. Tài liệu được commit sau artifact, không đổi source chạy.
+
+Một review độc lập và một fix pass đã xong; không có review lần hai. Ba điểm nhỏ mới để sau: badge chuông còn dạng chấm; filter phiếu chưa phân biệt khách trùng tên bằng ID; bảng báo cáo chưa có footer tổng đối chiếu. Các minor baseline được giữ nguyên và ghi đủ trong [execution report](superpowers/reports/2026-11-02-admin-business-execution.md).
+
+Không push, merge hoặc deploy. Worktree/nhánh giữ để review. Phần dưới là bằng chứng trình duyệt đầy đủ trước fix pass tại90244f3; không ghi đè lịch sử quan sát đó.
+
+---
+
 # Admin business workflow — nghiệm thu local 02/11/2026
 
 Bản hiện tại trên nhánh `codex/admin-dashboard`, source commit `90244f3`. Không push/deploy. Giao diện vẫn là demo IndexedDB, chưa nối Express/MySQL cho nghiệp vụ.
