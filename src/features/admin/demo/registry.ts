@@ -59,48 +59,65 @@ export const groupForEntity: Record<EntityKey, Group> = {
   settings: "system",
 };
 const pending = new WeakMap<AdminStore, Map<Group, Promise<void>>>();
+const active = new WeakMap<AdminStore, Set<Promise<void>>>();
 export function clearSeedCache(store: AdminStore) {
   pending.delete(store);
 }
 export async function drainSeedJobs(store: AdminStore) {
-  await Promise.allSettled([...(pending.get(store)?.values() ?? [])]);
+  while (active.get(store)?.size) await Promise.allSettled([...active.get(store)!]);
 }
-export async function ensureDataset(store: AdminStore, entity: EntityKey) {
+export function ensureDataset(store: AdminStore, entity: EntityKey): Promise<void> {
+  let jobs = active.get(store);
+  if (!jobs) {
+    jobs = new Set();
+    active.set(store, jobs);
+  }
+  const job = ensureEntityDataset(store, entity);
+  jobs.add(job);
+  void job.then(
+    () => jobs.delete(job),
+    () => jobs.delete(job),
+  );
+  return job;
+}
+async function ensureEntityDataset(store: AdminStore, entity: EntityKey) {
   const group = groupForEntity[entity];
   let jobs = pending.get(store);
   if (!jobs) {
     jobs = new Map();
     pending.set(store, jobs);
   }
-  if (jobs.has(group)) return jobs.get(group);
-  const job = (async () => {
-    const marker = ["business", "stock"].includes(group) ? `seed:${group}:v2` : `seed:${group}`;
-    if (await store.getMeta(marker)) {
-      const { upgradePresentation } = await import("./presentation-upgrade");
-      await upgradePresentation(store, entity);
-      return;
-    }
-    for (const dep of dependencies[group]) await ensureGroup(dep);
-    const { seed }: { seed: (context?: { products?: AdminProduct[] }) => SeedBatch } =
-      await factories[group]();
-    const batch = seed(
-      group === "business" || group === "sales"
-        ? { products: await store.list("products") }
-        : undefined,
-    );
-    const keys = Object.keys(batch) as EntityKey[];
-    await store.transaction(keys, async (tx) => {
-      for (const key of keys)
-        for (const row of batch[key] ?? [])
-          if (!(await tx.get(key, row.id))) await tx.put(key, row);
-    });
-    await store.setMeta(marker, true);
-  })();
-  jobs.set(group, job);
+  let job = jobs.get(group);
+  if (!job) {
+    job = (async () => {
+      const marker = ["business", "stock"].includes(group) ? `seed:${group}:v2` : `seed:${group}`;
+      if (await store.getMeta(marker)) {
+        return;
+      }
+      for (const dep of dependencies[group]) await ensureGroup(dep);
+      const { seed }: { seed: (context?: { products?: AdminProduct[] }) => SeedBatch } =
+        await factories[group]();
+      const batch = seed(
+        group === "business" || group === "sales"
+          ? { products: await store.list("products") }
+          : undefined,
+      );
+      const keys = Object.keys(batch) as EntityKey[];
+      await store.transaction(keys, async (tx) => {
+        for (const key of keys)
+          for (const row of batch[key] ?? [])
+            if (!(await tx.get(key, row.id))) await tx.put(key, row);
+      });
+      await store.setMeta(marker, true);
+    })();
+    jobs.set(group, job);
+  }
   try {
     await job;
+    const { upgradePresentation } = await import("./presentation-upgrade");
+    await upgradePresentation(store, entity);
   } finally {
-    jobs.delete(group);
+    if (jobs.get(group) === job) jobs.delete(group);
   }
   async function ensureGroup(g: Group) {
     const key = Object.entries(groupForEntity).find(([, value]) => value === g)?.[0] as EntityKey;

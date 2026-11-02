@@ -121,6 +121,34 @@ it("keeps dirty slip notes mounted through failed options refetch and successful
     "Bản nháp không mất",
   );
 });
+it("keeps dirty slip notes through a failed route resolver refetch", async () => {
+  const slip = (await f.store.get("purchaseSlips", "slip-demo-1"))!;
+  mount("/admin/sales/slips/" + slip.number + "/edit");
+  const u = userEvent.setup();
+  const notes = await screen.findByRole("textbox", { name: "Ghi chú", exact: true });
+  await u.clear(notes);
+  await u.type(notes, "Bản nháp route cần giữ");
+  await act(async () => {
+    await client
+      .fetchQuery({
+        queryKey: ["bibi-admin", "purchaseSlips", "route", slip.number, "user-1"],
+        queryFn: async () => {
+          throw new Error("Route unavailable");
+        },
+        retry: false,
+      })
+      .catch(() => {});
+  });
+  expect(screen.getByRole("textbox", { name: "Ghi chú", exact: true })).toHaveValue(
+    "Bản nháp route cần giữ",
+  );
+  expect(await screen.findByText("Route unavailable")).toBeInTheDocument();
+  await u.click(screen.getByRole("button", { name: "Thử lại", exact: true }));
+  await waitFor(() => expect(screen.queryByText("Route unavailable")).not.toBeInTheDocument());
+  expect(screen.getByRole("textbox", { name: "Ghi chú", exact: true })).toHaveValue(
+    "Bản nháp route cần giữ",
+  );
+});
 it("keeps a dirty customer form on a failed background record refetch", async () => {
   mount("/admin/customers/customer-1/edit");
   const u = userEvent.setup();

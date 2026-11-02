@@ -6,7 +6,7 @@ export const userConfig: EntityConfig<"users"> = {
   entity: "users",
   detailHref: (id) => "/admin/accounts/users/" + id,
   title: "Người dùng",
-  description: "Tài khoản giả lập dùng để thử vai trò. Không phải quản lý tài khoản production.",
+  description: "Quản lý thông tin người dùng, vai trò và trạng thái hoạt động.",
   defaults: { name: "", email: "", roleId: "viewer", active: true, lastLogin: null },
   fields: [
     { key: "name", label: "Họ tên", type: "text", required: true },
@@ -25,7 +25,7 @@ export const userConfig: EntityConfig<"users"> = {
       label: "Trạng thái",
       options: [
         { value: "true", label: "Hoạt động" },
-        { value: "false", label: "Vô hiệu hóa" },
+        { value: "false", label: "Ngừng hoạt động" },
       ],
     },
   ],
@@ -51,7 +51,7 @@ export const userConfig: EntityConfig<"users"> = {
       header: "Trạng thái",
       cell: ({ getValue }) => (
         <Badge tone={getValue() ? "success" : "neutral"}>
-          {getValue() ? "Hoạt động" : "Vô hiệu hóa"}
+          {getValue() ? "Hoạt động" : "Ngừng hoạt động"}
         </Badge>
       ),
     },

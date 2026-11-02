@@ -58,7 +58,7 @@ export default function VisitorDetail() {
               ))}
           </dl>
           <p style={{ marginTop: 20, fontSize: 11, color: "var(--a-muted)" }}>
-            Vị trí là dữ liệu giả lập; không suy luận danh tính từ địa chỉ IP.
+            Vị trí theo địa chỉ IP chỉ mang tính tham khảo.
           </p>
         </Card>
       </div>

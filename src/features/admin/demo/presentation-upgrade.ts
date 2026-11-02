@@ -67,6 +67,19 @@ export async function upgradePresentation(store: AdminStore, entity: EntityKey):
               },
             ],
           });
+        const unique =
+          ["sku", "slug", "isbn", "email"].includes(field) &&
+          !(entity === "customers" && field === "email");
+        if (
+          unique &&
+          replacement &&
+          (await tx.list(entity)).some(
+            (other) =>
+              other.id !== row.id &&
+              (other as unknown as Record<string, unknown>)[field] === replacement,
+          )
+        )
+          continue;
         if (replacement !== undefined && JSON.stringify(replacement) !== JSON.stringify(old))
           changed[field] = replacement;
       }

@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
+import { AdminThemeContext } from "../shared/ui/admin-theme";
 import { useNavigate } from "@tanstack/react-router";
 import { Popover } from "radix-ui";
 import { Bell, Check, Circle, X } from "lucide-react";
@@ -79,6 +80,7 @@ function NotificationItems({
   );
 }
 export function HeaderNotifications() {
+  const dark = useContext(AdminThemeContext);
   const [open, setOpen] = useState(false);
   const feed = useNotifications();
   if (!feed.allowed) return null;
@@ -96,7 +98,7 @@ export function HeaderNotifications() {
           align="end"
           sideOffset={8}
           collisionPadding={12}
-          className={`admin-root a-notification-popover ${typeof document !== "undefined" && document.querySelector(".admin-root.dark") ? "dark" : ""}`}
+          className={`admin-root a-notification-popover ${dark ? "dark" : ""}`}
         >
           <header>
             <h2>Thông báo</h2>

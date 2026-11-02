@@ -7,6 +7,7 @@ import { useAdmin, useRole } from "../services/context";
 import { can } from "../accounts/permissions";
 import { Login } from "../accounts/pages/login";
 import { AccountMenu } from "./account-menu";
+import { AdminThemeContext } from "../shared/ui/admin-theme";
 import { navigation } from "./navigation";
 import { HeaderNotifications } from "../notifications/header-menu";
 import { ErrorState } from "../shared/ui/primitives";
@@ -127,97 +128,99 @@ export function AdminLayout() {
     </>
   );
   return (
-    <div className={`admin-root ${dark ? "dark" : ""}`}>
-      <NoticeProvider>
-        {runtime.sessionLoading ? (
-          <Skeleton />
-        ) : !runtime.session ? (
-          <Login />
-        ) : (
-          <div className={`a-app ${collapsed ? "a-collapsed" : ""}`}>
-            <aside className="a-sidebar">{nav}</aside>
-            <div className="a-workspace">
-              <header className="a-topbar">
-                <Button
-                  className="a-mobile-menu"
-                  size="icon"
-                  variant="ghost"
-                  aria-label="Mở menu quản trị"
-                  onClick={() => setDrawer(true)}
-                >
-                  <Menu size={19} />
-                </Button>
-                <Button
-                  className="a-desktop-collapse"
-                  size="icon"
-                  variant="ghost"
-                  aria-label={collapsed ? "Mở rộng thanh bên" : "Thu gọn thanh bên"}
-                  onClick={() => setCollapsed((v) => !v)}
-                >
-                  {collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
-                </Button>
-                <div className="a-breadcrumb">
-                  <span>Quản trị</span>
-                  <span>/</span>
-                  <strong>{active?.label ?? "BiBi Admin"}</strong>
-                </div>
-                <div className="a-top-actions">
+    <AdminThemeContext.Provider value={dark}>
+      <div className={`admin-root ${dark ? "dark" : ""}`}>
+        <NoticeProvider>
+          {runtime.sessionLoading ? (
+            <Skeleton />
+          ) : !runtime.session ? (
+            <Login />
+          ) : (
+            <div className={`a-app ${collapsed ? "a-collapsed" : ""}`}>
+              <aside className="a-sidebar">{nav}</aside>
+              <div className="a-workspace">
+                <header className="a-topbar">
                   <Button
-                    variant="ghost"
-                    className="a-search-trigger"
-                    onClick={() => setSearch(true)}
-                  >
-                    <Search size={16} />
-                    <span>Tìm kiếm</span>
-                    <kbd>⌘ K</kbd>
-                  </Button>
-                  {can(runtime.session, "notifications", "view", role.data) && (
-                    <HeaderNotifications />
-                  )}
-                  <Button
+                    className="a-mobile-menu"
                     size="icon"
                     variant="ghost"
-                    aria-label="Đổi giao diện sáng tối"
-                    onClick={() => runtime.setTheme(dark ? "light" : "dark")}
+                    aria-label="Mở menu quản trị"
+                    onClick={() => setDrawer(true)}
                   >
-                    {dark ? <Sun size={18} /> : <Moon size={18} />}
+                    <Menu size={19} />
                   </Button>
-                  <div className="a-mobile-account">
-                    {account.data && <AccountMenu user={account.data} compact />}
+                  <Button
+                    className="a-desktop-collapse"
+                    size="icon"
+                    variant="ghost"
+                    aria-label={collapsed ? "Mở rộng thanh bên" : "Thu gọn thanh bên"}
+                    onClick={() => setCollapsed((v) => !v)}
+                  >
+                    {collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
+                  </Button>
+                  <div className="a-breadcrumb">
+                    <span>Quản trị</span>
+                    <span>/</span>
+                    <strong>{active?.label ?? "BiBi Admin"}</strong>
                   </div>
-                </div>
-              </header>
-              <main className="a-main">
-                {role.isPending || account.isPending ? (
-                  <Skeleton />
-                ) : forbidden ? (
-                  <ErrorState
-                    error={new Error("Vai trò hiện tại không có quyền truy cập module này.")}
-                  />
-                ) : (
-                  <Outlet />
-                )}
-              </main>
-              <footer className="a-app-footer">
-                BiBi Studio <span>Quản trị nội dung</span>
-              </footer>
+                  <div className="a-top-actions">
+                    <Button
+                      variant="ghost"
+                      className="a-search-trigger"
+                      onClick={() => setSearch(true)}
+                    >
+                      <Search size={16} />
+                      <span>Tìm kiếm</span>
+                      <kbd>⌘ K</kbd>
+                    </Button>
+                    {can(runtime.session, "notifications", "view", role.data) && (
+                      <HeaderNotifications />
+                    )}
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      aria-label="Đổi giao diện sáng tối"
+                      onClick={() => runtime.setTheme(dark ? "light" : "dark")}
+                    >
+                      {dark ? <Sun size={18} /> : <Moon size={18} />}
+                    </Button>
+                    <div className="a-mobile-account">
+                      {account.data && <AccountMenu user={account.data} compact />}
+                    </div>
+                  </div>
+                </header>
+                <main className="a-main">
+                  {role.isPending || account.isPending ? (
+                    <Skeleton />
+                  ) : forbidden ? (
+                    <ErrorState
+                      error={new Error("Vai trò hiện tại không có quyền truy cập module này.")}
+                    />
+                  ) : (
+                    <Outlet />
+                  )}
+                </main>
+                <footer className="a-app-footer">
+                  BiBi Studio <span>Quản trị nội dung</span>
+                </footer>
+              </div>
+              <Modal
+                open={drawer}
+                onOpenChange={setDrawer}
+                title="Điều hướng"
+                description="Chọn module quản trị"
+              >
+                <div className="a-drawer-nav">{nav}</div>
+              </Modal>
+              {search && (
+                <Suspense fallback={<Skeleton />}>
+                  <GlobalSearch onClose={() => setSearch(false)} />
+                </Suspense>
+              )}
             </div>
-            <Modal
-              open={drawer}
-              onOpenChange={setDrawer}
-              title="Điều hướng"
-              description="Chọn module quản trị"
-            >
-              <div className="a-drawer-nav">{nav}</div>
-            </Modal>
-            {search && (
-              <Suspense fallback={<Skeleton />}>
-                <GlobalSearch onClose={() => setSearch(false)} />
-              </Suspense>
-            )}
-          </div>
-        )}
-      </NoticeProvider>
-    </div>
+          )}
+        </NoticeProvider>
+      </div>
+    </AdminThemeContext.Provider>
   );
 }

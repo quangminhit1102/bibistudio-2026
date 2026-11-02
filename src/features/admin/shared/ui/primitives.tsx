@@ -9,6 +9,7 @@ import {
 } from "react";
 import { Dialog, DropdownMenu, Tooltip as RadixTooltip } from "radix-ui";
 import { X, LoaderCircle, MoreHorizontal, Check, AlertCircle } from "lucide-react";
+import { AdminThemeContext } from "./admin-theme";
 export type ButtonVariant = "primary" | "secondary" | "outline" | "ghost" | "destructive" | "link";
 export const Button = forwardRef<
   HTMLButtonElement,
@@ -120,12 +121,11 @@ export function Modal({
   placement?: "center" | "right" | "left";
 }) {
   const opener = useRef<HTMLElement | null>(null);
+  const dark = useContext(AdminThemeContext);
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
-        <div
-          className={`admin-root a-portal ${typeof document !== "undefined" && document.querySelector(".admin-root.dark") ? "dark" : ""}`}
-        >
+        <div className={`admin-root a-portal ${dark ? "dark" : ""}`}>
           <Dialog.Overlay className="a-overlay" />
           <Dialog.Content
             onOpenAutoFocus={() => {
@@ -226,6 +226,7 @@ export function ActionMenu({
   trigger?: ReactNode;
   items: { label: string; onSelect: () => void; disabled?: boolean; danger?: boolean }[];
 }) {
+  const dark = useContext(AdminThemeContext);
   return (
     <DropdownMenu.Root>
       <DropdownMenu.Trigger asChild>
@@ -234,10 +235,7 @@ export function ActionMenu({
         </Button>
       </DropdownMenu.Trigger>
       <DropdownMenu.Portal>
-        <DropdownMenu.Content
-          className={`admin-root a-menu ${typeof document !== "undefined" && document.querySelector(".admin-root.dark") ? "dark" : ""}`}
-          sideOffset={5}
-        >
+        <DropdownMenu.Content className={`admin-root a-menu ${dark ? "dark" : ""}`} sideOffset={5}>
           {items.map((item) => (
             <DropdownMenu.Item
               key={item.label}
@@ -254,13 +252,14 @@ export function ActionMenu({
   );
 }
 export function Tooltip({ label, children }: { label: string; children: ReactNode }) {
+  const dark = useContext(AdminThemeContext);
   return (
     <RadixTooltip.Provider delayDuration={150}>
       <RadixTooltip.Root>
         <RadixTooltip.Trigger asChild>{children}</RadixTooltip.Trigger>
         <RadixTooltip.Portal>
           <RadixTooltip.Content
-            className={`admin-root a-tooltip ${typeof document !== "undefined" && document.querySelector(".admin-root.dark") ? "dark" : ""}`}
+            className={`admin-root a-tooltip ${dark ? "dark" : ""}`}
             sideOffset={5}
           >
             {label}

@@ -24,10 +24,19 @@ export default function SlipEditor() {
   const id = useRecordId();
   const record = useSlipRoute(id);
   if (id && record.isPending) return <Skeleton />;
-  if (id && (record.error || !record.data))
+  if (id && !record.data)
     return <ErrorState error={record.error} onRetry={() => void record.refetch()} />;
   const primaryId = record.data?.id ?? "";
-  return <SlipEditorSession key={primaryId || "new"} id={primaryId} />;
+  return (
+    <>
+      <>
+        {id && record.error && (
+          <ErrorState error={record.error} onRetry={() => void record.refetch()} />
+        )}
+      </>
+      <SlipEditorSession key={primaryId || "new"} id={primaryId} />
+    </>
+  );
 }
 function SlipEditorSession({ id }: { id: string }) {
   const record = useRecord("purchaseSlips", id),

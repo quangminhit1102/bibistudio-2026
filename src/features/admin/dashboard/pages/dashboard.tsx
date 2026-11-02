@@ -187,7 +187,7 @@ export default function Dashboard() {
                 </Access>
                 <Access resource="analytics">
                   <Card>
-                    <h2>Khách truy cập gần đây (mô phỏng)</h2>
+                    <h2>Khách truy cập gần đây</h2>
                     <div className="a-table-wrap" style={{ marginTop: 16 }}>
                       <table className="a-table" style={{ minWidth: 300 }}>
                         <tbody>
