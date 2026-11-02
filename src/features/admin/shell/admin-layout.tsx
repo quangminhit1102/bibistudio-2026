@@ -1,4 +1,5 @@
-import { useEffect, useState, lazy, Suspense } from "react";
+import { useEffect, useState, lazy, Suspense, type CSSProperties } from "react";
+import { useSidebarResize } from "./sidebar-resize";
 import { useQuery } from "@tanstack/react-query";
 import { getProfile } from "../accounts/profile-service";
 import { Outlet, Link, useRouterState } from "@tanstack/react-router";
@@ -30,6 +31,7 @@ export function AdminLayout() {
       void logout();
   }, [account.error, account.data, session, logout]);
   const [collapsed, setCollapsed] = useState(false);
+  const sidebar = useSidebarResize(!collapsed);
   const [drawer, setDrawer] = useState(false);
   const [search, setSearch] = useState(false);
   const [systemDark, setSystemDark] = useState(false);
@@ -136,8 +138,16 @@ export function AdminLayout() {
           ) : !runtime.session ? (
             <Login />
           ) : (
-            <div className={`a-app ${collapsed ? "a-collapsed" : ""}`}>
-              <aside className="a-sidebar">{nav}</aside>
+            <div
+              className={`a-app ${collapsed ? "a-collapsed" : ""} ${sidebar.dragging ? "a-resizing" : ""}`}
+              style={{ "--a-sidebar-width": `${sidebar.width}px` } as CSSProperties}
+            >
+              <div className="a-sidebar-frame">
+                <aside id="admin-sidebar" className="a-sidebar">
+                  {nav}
+                </aside>
+                {sidebar.separator}
+              </div>
               <div className="a-workspace">
                 <header className="a-topbar">
                   <Button

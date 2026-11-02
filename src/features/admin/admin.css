@@ -113,15 +113,13 @@
 }
 .a-app {
   display: grid;
-  grid-template-columns: 236px minmax(0, 1fr);
+  grid-template-columns: var(--a-sidebar-width, 236px) minmax(0, 1fr);
   min-height: 100svh;
 }
 .a-app.a-collapsed {
   grid-template-columns: 72px minmax(0, 1fr);
 }
 .a-sidebar {
-  position: sticky;
-  top: 0;
   height: 100svh;
   overflow: auto;
   display: flex;
@@ -129,6 +127,52 @@
   background: var(--a-surface);
   border-right: 1px solid var(--a-border);
   padding: 20px 12px 12px;
+}
+.a-sidebar-frame {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  min-width: 0;
+}
+.a-sidebar-resizer {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: -4px;
+  width: 8px;
+  z-index: 25;
+  cursor: col-resize;
+  touch-action: none;
+}
+.a-sidebar-resizer::after {
+  content: "";
+  position: absolute;
+  inset: 0 3px;
+  background: transparent;
+  transition: background-color 0.15s;
+}
+.a-sidebar-resizer:hover::after,
+.a-sidebar-resizer:focus-visible::after,
+.a-resizing .a-sidebar-resizer::after {
+  background: var(--a-muted);
+}
+.a-resizing,
+.a-resizing * {
+  cursor: col-resize !important;
+  user-select: none !important;
+}
+.a-collapsed .a-sidebar-resizer {
+  display: none;
+}
+@media (max-width: 1023px) {
+  .a-sidebar-resizer {
+    display: none;
+  }
+}
+@media (max-width: 767px) {
+  .a-sidebar-frame {
+    display: none;
+  }
 }
 .a-wordmark {
   display: flex;
@@ -1403,6 +1447,9 @@
   margin-top: 18px;
 }
 @media print {
+  .a-sidebar-frame {
+    display: none;
+  }
   .a-sidebar,
   .a-topbar,
   .a-demo-strip,
