@@ -9,11 +9,13 @@ export default function MediaPicker({
   onChange,
   max = 10,
   scope = "content",
+  showSelection = true,
 }: {
   value: string[];
   onChange: (ids: string[]) => void;
   max?: number;
   scope?: "content" | "products" | "bookstore";
+  showSelection?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -61,20 +63,22 @@ export default function MediaPicker({
         />
       </div>
       <small>JPEG, PNG, WebP · tối đa5MiB/ảnh · lưu trong trình duyệt, không upload server.</small>
-      <div className="a-demo-gallery">
-        {value.map((id) => (
-          <div key={id}>
-            <MediaImage id={id} alt="Ảnh đã chọn" />
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => onChange(value.filter((v) => v !== id))}
-            >
-              Bỏ ảnh
-            </Button>
-          </div>
-        ))}
-      </div>
+      {showSelection && (
+        <div className="a-demo-gallery">
+          {value.map((id) => (
+            <div key={id}>
+              <MediaImage id={id} alt="Ảnh đã chọn" />
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => onChange(value.filter((v) => v !== id))}
+              >
+                Bỏ ảnh
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
       <Modal open={open} onOpenChange={setOpen} title="Thư viện ảnh" wide>
         <div className="a-dialog-body">
           {media.isPending ? (

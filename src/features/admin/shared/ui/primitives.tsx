@@ -111,6 +111,7 @@ export function Modal({
   children,
   wide = false,
   placement = "center",
+  className = "",
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -119,6 +120,7 @@ export function Modal({
   children: ReactNode;
   wide?: boolean;
   placement?: "center" | "right" | "left";
+  className?: string;
 }) {
   const opener = useRef<HTMLElement | null>(null);
   const dark = useContext(AdminThemeContext);
@@ -138,7 +140,7 @@ export function Modal({
                 opener.current.focus();
               }
             }}
-            className={`a-modal ${wide ? "a-modal-wide" : ""} ${placement !== "center" ? "a-modal-" + placement : ""}`}
+            className={`a-modal ${wide ? "a-modal-wide" : ""} ${placement !== "center" ? "a-modal-" + placement : ""} ${className}`}
           >
             <header>
               <div>

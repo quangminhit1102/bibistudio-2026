@@ -1,6 +1,6 @@
-import { RecordEditor, useRecordId } from "../../shared/record-editor";
-import { postConfig } from "../config";
+import { useRecordId } from "../../shared/record-editor";
+import ComposeEditor from "../../shared/forms/compose-editor";
 export default function Editor() {
   const id = useRecordId();
-  return <RecordEditor config={postConfig} id={id || undefined} listHref="/admin/content/posts" />;
+  return <ComposeEditor entity="posts" id={id || undefined} />;
 }
