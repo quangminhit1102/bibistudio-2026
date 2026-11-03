@@ -1,6 +1,9 @@
 import tinyPackage from "tinymce/package.json";
 export const tinyAssetBase = `${import.meta.env.BASE_URL}vendor/tinymce-${tinyPackage.version}/`;
 
+export const tinyPlugins =
+  "lists link wordcount table searchreplace charmap fullscreen advlist autolink visualblocks";
+
 export interface TinyAssetRegistry {
   PluginManager: { get: (name: string) => unknown; remove: (name: string) => void };
   ThemeManager: { get: (name: string) => unknown; remove: (name: string) => void };
@@ -15,7 +18,7 @@ export function resetFailedTinyAssets(tiny: TinyAssetRegistry): void {
       tiny.ScriptLoader.remove(tiny.baseURI.toAbsolute(path));
     }
   };
-  for (const plugin of ["lists", "link", "wordcount"])
+  for (const plugin of tinyPlugins.split(" "))
     reset(tiny.PluginManager, plugin, `plugins/${plugin}/plugin.min.js`);
   reset(tiny.ThemeManager, "silver", "themes/silver/theme.min.js");
   reset(tiny.ModelManager, "dom", "models/dom/model.min.js");

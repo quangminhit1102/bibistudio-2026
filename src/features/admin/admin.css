@@ -170,7 +170,8 @@
 }
 .admin-root .a-rich-content h1,
 .admin-root .a-rich-content h2,
-.admin-root .a-rich-content h3 {
+.admin-root .a-rich-content h3,
+.admin-root .a-rich-content h4 {
   margin: 1.5em 0 0.7em;
   line-height: 1.45;
 }
@@ -179,6 +180,51 @@
 }
 .admin-root .a-rich-content h3 {
   font-size: 20px;
+}
+.admin-root .a-rich-content h4 {
+  font-size: 18px;
+  font-weight: 600;
+}
+.admin-root .a-rich-content {
+  overflow-x: auto;
+}
+.admin-root .a-rich-content ul {
+  list-style-type: disc;
+}
+.admin-root .a-rich-content ol {
+  list-style-type: decimal;
+}
+.admin-root .a-rich-content table {
+  border-collapse: collapse;
+  max-width: 100%;
+  margin: 24px 0;
+}
+.admin-root .a-rich-content th,
+.admin-root .a-rich-content td {
+  border: 1px solid #a1a1aa;
+  padding: 10px 12px;
+  vertical-align: top;
+}
+.admin-root .a-rich-content th {
+  font-weight: 600;
+}
+.admin-root .a-rich-content sub,
+.admin-root .a-rich-content sup {
+  font-size: 75%;
+  line-height: 0;
+  position: relative;
+  vertical-align: baseline;
+}
+.admin-root .a-rich-content sub {
+  bottom: -0.25em;
+}
+.admin-root .a-rich-content sup {
+  top: -0.5em;
+}
+.admin-root .a-rich-content hr {
+  border: 0;
+  border-top: 1px solid #a1a1aa;
+  margin: 28px 0;
 }
 .admin-root .a-rich-content ul,
 .admin-root .a-rich-content ol {

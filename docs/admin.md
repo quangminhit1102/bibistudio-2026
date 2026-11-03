@@ -93,3 +93,11 @@ Chuông mở popup bám nút trên desktop/mobile. Mỗi tài khoản có read r
 Các URL bookstore cũ về danh sách khách; orders/history/transactions về danh sách phiếu, không chuyển ID sách/đơn cũ thành ID khách/phiếu. Analytics cũ về Khách truy cập, visitor ID cũ giữ qua query; notifications về dashboard. Quyền key `bookstore` vẫn giữ cho custom role nhưng nhãn là Khách mua hàng.
 
 Link phiếu mới dùng số `PMH-2026-0001`; URL primary ID cũ vẫn resolve rồi replace canonical, giữ query/hash. Service luôn cập nhật primary ID, không dùng số phiếu làm ID DB. Số trùng báo conflict; không chọn ngẫu nhiên record.
+
+### Công cụ biên tập blog mở rộng — 03/11/2026
+
+Editor bài viết và mô tả sản phẩm có menu tiếng Việt Sửa/Chèn/Định dạng/Bảng/Công cụ/Xem. Hỗ trợ H2–H4, gạch ngang, chỉ số trên/dưới, màu chữ/nền, bảng, ký tự đặc biệt, đường phân cách, thụt lề (tối đa240px khi lưu), tìm/thay thế, đếm từ và toàn màn hình. Xem trước của biểu mẫu dùng cả nội dung chưa lưu và không nạp editor.
+
+Chèn/sửa ảnh qua thư viện hiện có; ô chiều rộng nhận16–4096px hoặc để trống. Kích thước kéo trong editor được lưu thành chiều rộng; chiều cao luôn tự động để giữ tỉ lệ và ảnh co lại trên mobile. Bảng, màu và các định dạng được lọc theo whitelist khi lưu, không cho CSS vị trí tùy ý hoặc ảnh/iframe bên ngoài. Màu/định dạng dán từ phần mềm khác có thể được TinyMCE chuẩn hóa; dùng công cụ Định dạng để áp dụng lại.
+
+Chỉ nạp plugin cộng đồng từ package TinyMCE đã cài, không thêm dependency, CDN hoặc API key. Thư mục vendor và mã nguồn TinyMCE có version, giấy phép và thông báo đi kèm như hướng dẫn build/deploy. Dữ liệu admin vẫn nằm trong trình duyệt; đưa UI lên hosting không biến nó thành CMS dùng chung hay cập nhật bài public.

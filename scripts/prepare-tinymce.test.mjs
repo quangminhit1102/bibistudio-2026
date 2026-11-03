@@ -25,6 +25,13 @@ test("prepares only local runtime, selected plugins, translation and license not
       "plugins/lists/plugin.min.js",
       "plugins/link/plugin.min.js",
       "plugins/wordcount/plugin.min.js",
+      "plugins/table/plugin.min.js",
+      "plugins/searchreplace/plugin.min.js",
+      "plugins/charmap/plugin.min.js",
+      "plugins/fullscreen/plugin.min.js",
+      "plugins/advlist/plugin.min.js",
+      "plugins/autolink/plugin.min.js",
+      "plugins/visualblocks/plugin.min.js",
     ];
     for (const f of files) {
       const p = join(root, "node_modules/tinymce", f);
@@ -38,6 +45,10 @@ test("prepares only local runtime, selected plugins, translation and license not
     }
     const target = await prepareTinyMce(root);
     assert.equal(await readFile(join(target, "tinymce.min.js"), "utf8"), "fixture-tinymce.min.js");
+    assert.equal(
+      await readFile(join(target, "plugins/table/plugin.min.js"), "utf8"),
+      "fixture-plugins/table/plugin.min.js",
+    );
     assert.equal(await readFile(join(target, "license.md"), "utf8"), "fixture-license.md");
     assert.equal(await readFile(join(target, "langs/vi.js"), "utf8"), "translation-langs8/vi.js");
     await assert.rejects(readFile(join(target, "plugins/ai/plugin.min.js")));

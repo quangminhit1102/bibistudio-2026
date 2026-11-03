@@ -72,6 +72,19 @@ export function sanitizeRichHtml(html: string): string {
       "h1",
       "h2",
       "h3",
+      "h4",
+      "sub",
+      "sup",
+      "table",
+      "caption",
+      "colgroup",
+      "col",
+      "thead",
+      "tbody",
+      "tfoot",
+      "tr",
+      "th",
+      "td",
       "strong",
       "b",
       "em",
@@ -92,12 +105,36 @@ export function sanitizeRichHtml(html: string): string {
       "figcaption",
       "span",
     ],
-    ALLOWED_ATTR: ["href", "target", "rel", "alt", "title", "data-media-id", "style", "start"],
+    ALLOWED_ATTR: [
+      "href",
+      "target",
+      "rel",
+      "alt",
+      "title",
+      "data-media-id",
+      "style",
+      "start",
+      "width",
+      "colspan",
+      "rowspan",
+      "scope",
+      "border",
+    ],
     ALLOW_DATA_ATTR: false,
     RETURN_DOM_FRAGMENT: true,
   });
   for (const element of fragment.querySelectorAll("*")) {
-    const alignment = (element as HTMLElement).style.textAlign;
+    const style = (element as HTMLElement).style;
+    const alignment = style.textAlign;
+    const styles: string[] = [];
+    // Preserve only editor formatting; never arbitrary CSS or resource URLs.
+    for (const property of ["color", "background-color"]) {
+      const color = style.getPropertyValue(property).trim();
+      if (/^(#[\da-f]{3,8}|rgba?\([\d\s.,%]+\)|hsla?\([\d\s.,%]+\)|[a-z]+)$/i.test(color))
+        styles.push(`${property}: ${color};`);
+    }
+    if (/^(0|[1-9]\d{0,2})px$/.test(style.paddingLeft) && parseFloat(style.paddingLeft) <= 240)
+      styles.push(`padding-left: ${style.paddingLeft};`);
     const decoration =
       (element as HTMLElement).style.textDecorationLine ||
       (element as HTMLElement).style.textDecoration;
@@ -106,9 +143,45 @@ export function sanitizeRichHtml(html: string): string {
       underline.append(...element.childNodes);
       element.append(underline);
     }
+    if (decoration.includes("line-through") && !["S", "STRIKE"].includes(element.tagName)) {
+      const strike = document.createElement("s");
+      strike.append(...element.childNodes);
+      element.append(strike);
+    }
+    const width = style.width;
+    const verticalAlign = style.verticalAlign;
     element.removeAttribute("style");
     if (["left", "center", "right", "justify"].includes(alignment))
-      element.setAttribute("style", `text-align: ${alignment};`);
+      styles.push(`text-align: ${alignment};`);
+    const tableElement = ["TABLE", "COL", "TH", "TD"].includes(element.tagName);
+    if (tableElement) {
+      if (
+        (/^\d+(\.\d+)?%$/.test(width) && parseFloat(width) > 0 && parseFloat(width) <= 100) ||
+        (/^\d+(\.\d+)?px$/.test(width) && parseFloat(width) > 0 && parseFloat(width) <= 1600)
+      )
+        styles.push(`width: ${width};`);
+      if (["top", "middle", "bottom"].includes(verticalAlign))
+        styles.push(`vertical-align: ${verticalAlign};`);
+    }
+    if (styles.length) element.setAttribute("style", styles.join(" "));
+    for (const attribute of ["colspan", "rowspan"]) {
+      const count = Number(element.getAttribute(attribute));
+      if (
+        !["TH", "TD"].includes(element.tagName) ||
+        !Number.isInteger(count) ||
+        count < 1 ||
+        count > 100
+      )
+        element.removeAttribute(attribute);
+    }
+    if (
+      element.tagName !== "TH" ||
+      !["row", "col", "rowgroup", "colgroup"].includes(element.getAttribute("scope") ?? "")
+    )
+      element.removeAttribute("scope");
+    if (element.tagName !== "TABLE" || !/^[0-5]$/.test(element.getAttribute("border") ?? ""))
+      element.removeAttribute("border");
+    if (element.tagName !== "IMG") element.removeAttribute("width");
     if (element.tagName === "A") {
       if (!safeLink(element.getAttribute("href") ?? "")) element.removeAttribute("href");
       if (element.getAttribute("target") === "_blank")
@@ -116,6 +189,12 @@ export function sanitizeRichHtml(html: string): string {
       else element.removeAttribute("target");
     }
     if (element.tagName === "IMG") {
+      const size = /^\d+(\.\d+)?px$/.test(width)
+        ? parseFloat(width)
+        : Number(element.getAttribute("width"));
+      if (Number.isFinite(size) && size >= 16 && size <= 4096)
+        element.setAttribute("width", String(Math.round(size)));
+      else element.removeAttribute("width");
       const id = element.getAttribute("data-media-id") ?? "";
       if (!validMediaId(id)) element.remove();
       else element.setAttribute("src", `bibi-media:${id}`);
@@ -147,7 +226,7 @@ export function writeRichContent(html: string): string {
 export function richContentText(raw: string): string {
   const holder = document.createElement("div");
   holder.innerHTML = readRichContent(raw);
-  for (const block of holder.querySelectorAll("p,h1,h2,h3,li,blockquote,br,figcaption"))
+  for (const block of holder.querySelectorAll("p,h1,h2,h3,h4,li,blockquote,br,figcaption,th,td"))
     block.append(" ");
   return (holder.textContent ?? "").replace(/\s+/g, " ").trim();
 }

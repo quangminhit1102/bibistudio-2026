@@ -28,7 +28,7 @@ vi.mock("@tinymce/tinymce-react", () => ({
           const events: Record<string, () => void> = {};
           const editor = {
             initialized: true,
-            ui: { registry: { addButton: () => {} } },
+            ui: { registry: { addButton: () => {}, addMenuItem: () => {} } },
             on: (names: string, fn: () => void) => {
               names.split(" ").forEach((name) => (events[name] = fn));
             },

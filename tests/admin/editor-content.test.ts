@@ -13,7 +13,7 @@ describe("durable editor content", () => {
       ),
     );
     expect(html).toContain("<u>Gạch chân</u>");
-    expect(html).not.toContain("color");
+    expect(html).toContain("color: red");
   });
   it("treats legacy plain text and malformed JSON as text, not HTML", () => {
     expect(readRichContent("<script>literal</script>")).toBe(
@@ -60,7 +60,7 @@ describe("durable editor content", () => {
     expect(JSON.parse(raw).format).toBe("html-v1");
     const html = readRichContent(raw);
     expect(html).toContain("text-align: center");
-    expect(html).not.toContain("color");
+    expect(html).toContain("color: red");
     expect(html).not.toContain("blob:");
     expect(html).toContain('src="bibi-media:asset-1"');
     expect(html).toContain("<figcaption>Chú thích</figcaption>");

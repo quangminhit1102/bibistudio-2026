@@ -10,7 +10,7 @@ it("persists HTML body and image captions through the real post service", async 
     const p = (await store.list("posts"))[0],
       media = (await store.list("media"))[0];
     const content = writeRichContent(
-      `<h2>Giữ nội dung</h2><figure><img data-media-id="${media.id}" alt="Sổ"><figcaption>Chú thích</figcaption></figure>`,
+      `<h2>Giữ nội dung</h2><h4>Thông số</h4><p><span style="color: #ab1234">Màu chữ</span></p><table><tbody><tr><td>120 trang</td></tr></tbody></table><figure><img data-media-id="${media.id}" alt="Sổ" width="320"><figcaption>Chú thích</figcaption></figure>`,
     );
     const updated = await createEntityService(store, "posts", () => ({
       userId: "user-1",
@@ -18,6 +18,10 @@ it("persists HTML body and image captions through the real post service", async 
     })).update(p.id, { content }, p.revision);
     expect(readRichContent(updated.content)).toContain("<h2>Giữ nội dung</h2>");
     expect(readRichContent(updated.content)).toContain("<figcaption>Chú thích</figcaption>");
+    expect(readRichContent(updated.content)).toContain("<h4>Thông số</h4>");
+    expect(readRichContent(updated.content)).toContain("<td>120 trang</td>");
+    expect(readRichContent(updated.content)).toContain('width="320"');
+    expect(readRichContent(updated.content)).toContain("color: rgb(171, 18, 52)");
     await store.close();
     expect((await store.get("posts", p.id))?.content).toBe(content);
     await expect(
