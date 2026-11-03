@@ -1,6 +1,6 @@
 # Admin Article and Product Editors Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Deliver real self-hosted GPL TinyMCE editing, local persistence and unsaved-content previews for Vietnamese article/product forms matching the approved mockup.
 
@@ -40,7 +40,7 @@
 - `content/components/post-form.tsx`, `products/components/product-form.tsx`: module-specific compositions.
 - `products/components/product-gallery.tsx`: ordered media selection and primary-image controls.
 - Existing editor/detail routes, configs, registry/seed, admin styles and local documentation updated only where needed.
-- New regression tests in `tests/admin/editor-*.test.{ts,tsx}`; acceptance evidence in `docs/superpowers/reports/2026-11-02-admin-editor.md`.
+- New regression tests in `tests/admin/editor-*.test.{ts,tsx}`; acceptance evidence in `docs/superpowers/reports/2026-11-03-admin-editor-acceptance.md`.
 
 ### Task 1: Durable rich content and compatibility
 
@@ -48,11 +48,11 @@
 
 **Interfaces:** `readRichContent(raw: string): string` returns sanitized durable HTML; `writeRichContent(html: string): string` returns JSON `{format:'html-v1',html:string}`; `richContentText(raw: string): string` supports summaries. Media HTML uses `data-media-id` and `src='bibi-media:<id>'`; no runtime URLs.
 
-- [ ] Write failing tests: plain text `'<script>literal</script>'` renders as text; Tiptap document preserves heading/list/quote/marks/link/mediaId; HTML envelope round-trips caption/alignment; malformed JSON is safe readable text, not a crash. Sanitizer removes script, onerror, iframe, javascript links, unknown image src, arbitrary CSS; keeps supported alignment only.
-- [ ] Run `npm run test:admin -- tests/admin/editor-content.test.ts`; verify failure is missing adapter/behavior.
-- [ ] Implement local structural legacy JSON types, traversal/escaping and DOMPurify allowlist. Images without valid media ID become safe fallback text rather than external requests. Link new-window rel is normalized. No Tiptap import.
-- [ ] Run the focused test; expect PASS. Verify `readRichContent(writeRichContent(html))` is stable for supported fixtures.
-- [ ] Commit only adapter/tests with `feat: preserve rich content across editor migration`.
+- [x] Write failing tests: plain text `'<script>literal</script>'` renders as text; Tiptap document preserves heading/list/quote/marks/link/mediaId; HTML envelope round-trips caption/alignment; malformed JSON is safe readable text, not a crash. Sanitizer removes script, onerror, iframe, javascript links, unknown image src, arbitrary CSS; keeps supported alignment only.
+- [x] Run `npm run test:admin -- tests/admin/editor-content.test.ts`; verify failure is missing adapter/behavior.
+- [x] Implement local structural legacy JSON types, traversal/escaping and DOMPurify allowlist. Images without valid media ID become safe fallback text rather than external requests. Link new-window rel is normalized. No Tiptap import.
+- [x] Run the focused test; expect PASS. Verify `readRichContent(writeRichContent(html))` is stable for supported fixtures.
+- [x] Commit only adapter/tests with `feat: preserve rich content across editor migration`.
 
 ### Task 2: Stable media display and renderer
 
@@ -60,11 +60,11 @@
 
 **Interfaces:** `resolveMedia(store: AdminStore, id: string): Promise<{url:string;release:()=>void}>`; `RichContentView({value,className?}:{value:string;className?:string})`. Consume Task 1 adapter. Resolver rejects arbitrary external URLs; permit bundled root-relative asset URLs from seeds and Blob-backed imports, not protocol-relative URLs.
 
-- [ ] Write failing tests for asset.url, blobKey different from id, missing blob, A→B navigation resolving A last, release after unmount, mediaId retained in serialization; no arbitrary external fetch.
-- [ ] Run `npm run test:admin -- tests/admin/editor-media.test.tsx`; confirm intended failures.
-- [ ] Implement lease cleanup with cancellation/generation protection. Render sanitized content and resolve inline media IDs; missing images get a labeled fallback. Update MediaImage to share resolver and clear stale URL when id changes.
-- [ ] Focused tests PASS; renderer does not import/init TinyMCE and never writes IndexedDB.
-- [ ] Commit `feat: resolve local editor media without transient saved URLs`.
+- [x] Write failing tests for asset.url, blobKey different from id, missing blob, A→B navigation resolving A last, release after unmount, mediaId retained in serialization; no arbitrary external fetch.
+- [x] Run `npm run test:admin -- tests/admin/editor-media.test.tsx`; confirm intended failures.
+- [x] Implement lease cleanup with cancellation/generation protection. Render sanitized content and resolve inline media IDs; missing images get a labeled fallback. Update MediaImage to share resolver and clear stale URL when id changes.
+- [x] Focused tests PASS; renderer does not import/init TinyMCE and never writes IndexedDB.
+- [x] Commit `feat: resolve local editor media without transient saved URLs`.
 
 ### Task 3: Self-hosted GPL editor and generated local assets
 
@@ -74,13 +74,13 @@
 
 **Interfaces:** `RichEditor({value,onChange,scope?,label?,onReadyChange?})` where value/onChange are durable strings, scope is `'content'|'products'|'bookstore'`, readiness is boolean. Tiny config derives a base-aware local asset path from installed version. Do not use RichEditor for read-only views.
 
-- [ ] Write failing tests with a mocked vendor boundary for asset error/retry, local GPL config, editor initial value converted from legacy content, no onChange on initialization, current unsaved content survives theme changes, editing emits sanitized envelope, runtime blob src normalized to mediaId, readiness false blocks unsafe save, record switching does not retain old callbacks.
-- [ ] Run `npm run test:admin -- tests/admin/editor-selfhost.test.tsx`; confirm intended failures.
-- [ ] Install pinned official core/wrapper and language package after GPL confirmation. Confirm React compatibility using package metadata/docs; prepare local assets and retain license notices. Remove the obsolete Cloud key entry from local configuration without printing its value.
-- [ ] Implement editor with Task 1/2 adapters; pinned local script and `licenseKey='gpl'`, record-keyed instance, Vietnamese language, theme-aware skin/content styling, only lists/link/wordcount and custom media picker. Toolbar: undo redo, blocks paragraph/H2/H3, bold italic underline, lists, align, blockquote, link, media picker, removeformat. No AI/media-upload service.
-- [ ] Wire existing MediaPicker through a custom toolbar dialog, retain selection, insert figure/image/alt/caption; prevent arbitrary pasted/dropped base64/remote images from bypassing picker. Use runtime media leases without persisting src; no normalization loop/caret jumps on each keystroke. Error/retry preserves body and fields; reset readiness on teardown.
-- [ ] Focused tests PASS; manually verify local runtime/language/skins load without Cloud (final acceptance in Task 7).
-- [ ] Commit `feat: integrate lazy self-hosted GPL rich editor`.
+- [x] Write failing tests with a mocked vendor boundary for asset error/retry, local GPL config, editor initial value converted from legacy content, no onChange on initialization, current unsaved content survives theme changes, editing emits sanitized envelope, runtime blob src normalized to mediaId, readiness false blocks unsafe save, record switching does not retain old callbacks.
+- [x] Run `npm run test:admin -- tests/admin/editor-selfhost.test.tsx`; confirm intended failures.
+- [x] Install pinned official core/wrapper and language package after GPL confirmation. Confirm React compatibility using package metadata/docs; prepare local assets and retain license notices. Remove the obsolete Cloud key entry from local configuration without printing its value.
+- [x] Implement editor with Task 1/2 adapters; pinned local script and `licenseKey='gpl'`, record-keyed instance, Vietnamese language, theme-aware skin/content styling, only lists/link/wordcount and custom media picker. Toolbar: undo redo, blocks paragraph/H2/H3, bold italic underline, lists, align, blockquote, link, media picker, removeformat. No AI/media-upload service.
+- [x] Wire existing MediaPicker through a custom toolbar dialog, retain selection, insert figure/image/alt/caption; prevent arbitrary pasted/dropped base64/remote images from bypassing picker. Use runtime media leases without persisting src; no normalization loop/caret jumps on each keystroke. Error/retry preserves body and fields; reset readiness on teardown.
+- [x] Focused tests PASS; manually verify local runtime/language/skins load without Cloud (final acceptance in Task 7).
+- [x] Commit `feat: integrate lazy self-hosted GPL rich editor`.
 
 ### Task 4: Shared lifecycle and article form
 
@@ -88,12 +88,12 @@
 
 **Interfaces:** `useEditorSession(entity: 'posts'|'products', id?:string)` returns `{initial,loading,error,canEdit,busy,save(values:FormValues):Promise<void>,dirtyChanged(dirty:boolean):void,blocker}`; saves via existing runtime.service, snapshot revision and editable field allowlist. `PostForm({initial,onSave,onDirtyChange,onCancel})` consumes the same durable values contract. Field primitives consume RHF control/register and existing FormField definitions, with resource-scoped relation queries.
 
-- [ ] Write failing lifecycle tests: create/update permission, stale snapshot guard, failed save/revision conflict retains edited values, no navigation on error, dirty remains until successful save, missing editor readiness does not overwrite body. Article tests cover required title/slug/author, slug generation stops after manual editing and never overwrites existing slug; save draft vs selected status; hidden optional fields preserved.
-- [ ] Run `npm run test:admin -- tests/admin/editor-session.test.tsx tests/admin/editor-post.test.tsx`; confirm intended failures.
-- [ ] Extract only reusable field controls, preserve generic RecordForm consumers. Implement session with loading/error retry, role guard, revision-aware save, query invalidation, success dirty reset and existing unsaved guard. Do not create a new generic form framework.
-- [ ] Compose approved two-column article layout: title/slug/excerpt/editor/SEO, metadata and cover; one column at narrow widths. Scope content media permissions. Use real category/tag/author relations, not hardcoded sample options. Header actions support local create/update/draft without implying public publication.
-- [ ] Route article create/edit to focused form; tests PASS, existing forms/edit-snapshot tests stay green.
-- [ ] Commit `feat: add article editing workflow and local draft lifecycle`.
+- [x] Write failing lifecycle tests: create/update permission, stale snapshot guard, failed save/revision conflict retains edited values, no navigation on error, dirty remains until successful save, missing editor readiness does not overwrite body. Article tests cover required title/slug/author, slug generation stops after manual editing and never overwrites existing slug; save draft vs selected status; hidden optional fields preserved.
+- [x] Run `npm run test:admin -- tests/admin/editor-session.test.tsx tests/admin/editor-post.test.tsx`; confirm intended failures.
+- [x] Extract only reusable field controls, preserve generic RecordForm consumers. Implement session with loading/error retry, role guard, revision-aware save, query invalidation, success dirty reset and existing unsaved guard. Do not create a new generic form framework.
+- [x] Compose approved two-column article layout: title/slug/excerpt/editor/SEO, metadata and cover; one column at narrow widths. Scope content media permissions. Use real category/tag/author relations, not hardcoded sample options. Header actions support local create/update/draft without implying public publication.
+- [x] Route article create/edit to focused form; tests PASS, existing forms/edit-snapshot tests stay green.
+- [x] Commit `feat: add article editing workflow and local draft lifecycle`.
 
 ### Task 5: Product form and unsaved-content previews
 
@@ -101,12 +101,12 @@
 
 **Interfaces:** `ProductForm` same lifecycle props as PostForm; `ProductGallery({value,onChange,disabled?})` uses ordered string[] media IDs, first primary. `EditorPreview({open,onOpenChange,snapshot})` snapshot discriminated union `{kind:'post',record:FormValues}` or `{kind:'product',record:FormValues}`. Consume Task 2 renderer and Task 4 lifecycle.
 
-- [ ] Failing product tests: SKU/slug validation, gallery add/reorder/primary/remove with 10 limit, internal price/stock/reserved preserved, product type and collection independent. Failing preview tests: current unsaved title/body/images used, no save calls, no price/cart, focus return/Escape and desktop/mobile mode; detail renders content instead of envelope JSON.
-- [ ] Run `npm run test:admin -- tests/admin/editor-product.test.tsx tests/admin/editor-preview.test.tsx`; confirm intended failures.
-- [ ] Implement product layout per approved mockup and scoped media picker. Store rich description via adapter; audit all admin description consumers so no JSON leaks into detail/search summaries/exports meant for plain text. Keep generic modules functional.
-- [ ] Implement preview overlay using shared existing Modal/accessibility primitives, width modes and public typography/crops. Article preview includes cover/metadata/rich body; product includes gallery/type/collection/rich body/contact. Use contact links/settings consistent with public site, not a new sales flow. Do not import static data routes or initialize editor in preview.
-- [ ] Replace read-only RichEditor usage with RichContentView. Focused and existing form/detail tests PASS.
-- [ ] Commit `feat: add product editing and responsive content previews`.
+- [x] Failing product tests: SKU/slug validation, gallery add/reorder/primary/remove with 10 limit, internal price/stock/reserved preserved, product type and collection independent. Failing preview tests: current unsaved title/body/images used, no save calls, no price/cart, focus return/Escape and desktop/mobile mode; detail renders content instead of envelope JSON.
+- [x] Run `npm run test:admin -- tests/admin/editor-product.test.tsx tests/admin/editor-preview.test.tsx`; confirm intended failures.
+- [x] Implement product layout per approved mockup and scoped media picker. Store rich description via adapter; audit all admin description consumers so no JSON leaks into detail/search summaries/exports meant for plain text. Keep generic modules functional.
+- [x] Implement preview overlay using shared existing Modal/accessibility primitives, width modes and public typography/crops. Article preview includes cover/metadata/rich body; product includes gallery/type/collection/rich body/contact. Use contact links/settings consistent with public site, not a new sales flow. Do not import static data routes or initialize editor in preview.
+- [x] Replace read-only RichEditor usage with RichContentView. Focused and existing form/detail tests PASS.
+- [x] Commit `feat: add product editing and responsive content previews`.
 
 ### Task 6: Seed images, cleanup and developer documentation
 
@@ -114,25 +114,25 @@
 
 **Interfaces:** additive media upgrade `ensureContentMedia(store:AdminStore):Promise<void>` triggered by content ensure path when needed; deterministic IDs per article/image index. Never overwrite existing posts/products/media or reset storage.
 
-- [ ] Failing test: new seed retains inline image alt/caption and cover; repeated upgrade is idempotent; existing seed marker/user-edited post and custom gallery remain byte-for-byte unchanged; missing deterministic assets only are inserted. No fabricated product specs/images.
-- [ ] Run `npm run test:admin -- tests/admin/editor-seed.test.ts`; confirm intended failures.
-- [ ] Seed rich content from existing public blog blocks via adapter and stable media IDs; all product imagery references correspond to that product. Existing records are not rewritten automatically.
-- [ ] Search repository for all Tiptap imports/JSON types and replace consumers with local compatibility types. Uninstall unused Tiptap packages only once no runtime consumer remains. No changes to backend dependency lockfiles unless tooling requires them.
-- [ ] Document self-hosted GPL asset preparation, local startup, local-only saving and missing-asset retry. No API key required; retain vendor license/notices. Never promise production publishing.
-- [ ] Focused tests PASS; commit `refactor: complete editor media seeds and remove unused Tiptap runtime`.
+- [x] Failing test: new seed retains inline image alt/caption and cover; repeated upgrade is idempotent; existing seed marker/user-edited post and custom gallery remain byte-for-byte unchanged; missing deterministic assets only are inserted. No fabricated product specs/images.
+- [x] Run `npm run test:admin -- tests/admin/editor-seed.test.ts`; confirm intended failures.
+- [x] Seed rich content from existing public blog blocks via adapter and stable media IDs; all product imagery references correspond to that product. Existing records are not rewritten automatically.
+- [x] Search repository for all Tiptap imports/JSON types and replace consumers with local compatibility types. Uninstall unused Tiptap packages only once no runtime consumer remains. No changes to backend dependency lockfiles unless tooling requires them.
+- [x] Document self-hosted GPL asset preparation, local startup, local-only saving and missing-asset retry. No API key required; retain vendor license/notices. Never promise production publishing.
+- [x] Focused tests PASS; commit `refactor: complete editor media seeds and remove unused Tiptap runtime`.
 
 ### Task 7: Full verification and reviewable local handoff
 
-**Files:** Create `docs/superpowers/reports/2026-11-02-admin-editor.md`; update plan checkboxes with actual results. No production or workflow mutations.
+**Files:** Create `docs/superpowers/reports/2026-11-03-admin-editor-acceptance.md`; update plan checkboxes with actual results. No production or workflow mutations.
 
-- [ ] Run `npm run check` with Node24; inspect full result and fix failures, not only exit code/tail. Run `npm run build`; record artifact ID/checksum and actual bundle measurements. Use normal documented build/preview commands and explain tooling workarounds if required.
-- [ ] Verify local TinyMCE core/plugins/skins/language load from the generated versioned directory without API key. Do not report mocked vendor unit tests as live TinyMCE success.
-- [ ] On actual local app use browser UI to create/edit/save/reload article with formatted text, link, local image alt/caption and cover; preview current unsaved draft in both modes. Verify source string is durable, not blob URL, without exposing credentials.
-- [ ] Repeat for product: gallery reorder/primary/remove, detail description, internal fields preserved, public preview no prices/cart. Test asset error/denied readiness and switching between records/routes without stale images or crash. Do not mutate production settings.
-- [ ] Test 1440/768/390 widths and keyboard dialog interactions. Capture screenshots of the implemented forms and previews, inspect images, overflow, toolbar usability, dark theme and save buttons. Reset temporary viewport afterward.
-- [ ] Confirm public homepage/product/blog/dashboard/list routes do not request TinyMCE on a fresh page; inspect network/resource entries and compare build chunks. Preserve static data files, gallery, sidebar and business flows.
-- [ ] Record commands, pass counts, actual browser outcomes, screenshots and limitations in acceptance document. No unsupported claims if network/key prevents editor verification.
-- [ ] Request final code review under applicable skill; fix actionable findings and rerun checks justified by those changes. Commit verified source/docs and present local URL/screenshots. No push/deploy.
+- [x] Run `npm run check` with Node24; inspect full result and fix failures, not only exit code/tail. Run `npm run build`; record artifact ID/checksum and actual bundle measurements. Use normal documented build/preview commands and explain tooling workarounds if required.
+- [x] Verify local TinyMCE core/plugins/skins/language load from the generated versioned directory without API key. Do not report mocked vendor unit tests as live TinyMCE success.
+- [x] On actual local app use browser UI to create/edit/save/reload article with formatted text, link, local image alt/caption and cover; preview current unsaved draft in both modes. Verify source string is durable, not blob URL, without exposing credentials.
+- [x] Repeat for product: gallery reorder/primary/remove, detail description, internal fields preserved, public preview no prices/cart. Test asset error/denied readiness and switching between records/routes without stale images or crash. Do not mutate production settings.
+- [x] Test 1440/768/390 widths and keyboard dialog interactions. Capture screenshots of the implemented forms and previews, inspect images, overflow, toolbar usability, dark theme and save buttons. Reset temporary viewport afterward.
+- [x] Confirm public homepage/product/blog/dashboard/list routes do not request TinyMCE on a fresh page; inspect network/resource entries and compare build chunks. Preserve static data files, gallery, sidebar and business flows.
+- [x] Record commands, pass counts, actual browser outcomes, screenshots and limitations in acceptance document. No unsupported claims if network/key prevents editor verification.
+- [x] Request final code review under applicable skill; fix actionable findings and rerun checks justified by those changes. Commit verified source/docs and present local URL/screenshots. No push/deploy.
 
 ## Self-review
 

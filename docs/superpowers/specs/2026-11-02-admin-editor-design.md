@@ -1,6 +1,6 @@
 # BiBi — Biên tập Bài viết và Sản phẩm với TinyMCE
 
-Ngày thiết kế: 02/11/2026. Cập nhật 03/11: người dùng đổi từ Tiny Cloud sang TinyMCE tự host miễn phí và xác nhận rõ “Đồng ý dùng TinyMCE theo GPL”. Bố cục và phạm vi local giữ nguyên; kế hoạch đang được thực hiện trực tiếp.
+Ngày thiết kế: 02/11/2026. Cập nhật 03/11: người dùng đổi từ Tiny Cloud sang TinyMCE tự host miễn phí và xác nhận rõ “Đồng ý dùng TinyMCE theo GPL”. Đã triển khai và kiểm chứng local theo bố cục đã duyệt; xem [biên bản nghiệm thu](../reports/2026-11-03-admin-editor-acceptance.md). Chưa push/deploy.
 
 Builder check độc lập ngày 02/11: không còn câu hỏi quan trọng ngoài lựa chọn Tiny Cloud/self-host; người dùng sau đó chọn Tiny Cloud. Không tự tạo tài khoản hoặc chấp nhận điều khoản thay người dùng.
 
