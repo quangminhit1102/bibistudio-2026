@@ -2,17 +2,17 @@ import { z } from "zod";
 import type { AdminModels, AdminTransaction, EntityKey } from "./contracts";
 import { ServiceError } from "./errors";
 import { defaultPermissions } from "../accounts/permissions";
-import { safeDocument } from "../content/sanitize";
+import { readRichContent, writeRichContent } from "../content/rich-content";
 export function documentMediaIds(raw: string): string[] {
-  const doc = safeDocument(raw);
-  const ids: string[] = [];
-  const walk = (node: typeof doc) => {
-    if (node.type === "image" && typeof node.attrs?.mediaId === "string")
-      ids.push(node.attrs.mediaId);
-    node.content?.forEach(walk);
-  };
-  walk(doc);
-  return ids;
+  const template = document.createElement("template");
+  template.innerHTML = readRichContent(raw);
+  return [
+    ...new Set(
+      [...template.content.querySelectorAll("img[data-media-id]")].map((img) =>
+        img.getAttribute("data-media-id")!,
+      ),
+    ),
+  ];
 }
 const name = z.string().trim().min(1, "Vui lòng nhập tên").max(200);
 const amount = z.number().int().min(0, "Giá trị không được âm");
@@ -191,7 +191,7 @@ export async function validateRecord<K extends EntityKey>(
       throw new ServiceError("validation", "Chuyên mục không tồn tại.");
     for (const id of p.tagIds)
       if (!(await tx.get("tags", id))) throw new ServiceError("validation", "Thẻ không tồn tại.");
-    p.content = JSON.stringify(safeDocument(p.content));
+    p.content = writeRichContent(readRichContent(p.content));
     for (const id of [...documentMediaIds(p.content), ...(p.imageId ? [p.imageId] : [])])
       if (!(await tx.get("media", id)))
         throw new ServiceError("validation", "Ảnh bài viết không tồn tại.");
@@ -200,6 +200,12 @@ export async function validateRecord<K extends EntityKey>(
   }
   if (entity === "products" || entity === "books") {
     const p = row as AdminModels["products"];
+    if (entity === "products" && typeof p.description === "string") {
+      p.description = writeRichContent(readRichContent(p.description));
+      for (const id of documentMediaIds(p.description))
+        if (!(await tx.get("media", id)))
+          throw new ServiceError("validation", "Ảnh trong mô tả không tồn tại.");
+    }
     if (p.reserved > p.stock)
       throw new ServiceError("validation", "Tồn kho không thể thấp hơn lượng đã giữ.");
     if (
@@ -246,8 +252,10 @@ export async function assertDeletable(entity: EntityKey, id: string, tx: AdminTr
   for (const row of used) {
     if (
       entity === "media" &&
-      "content" in row &&
-      documentMediaIds(String(row.content)).includes(id)
+      (("content" in row && documentMediaIds(String(row.content)).includes(id)) ||
+        ("description" in row &&
+          typeof row.description === "string" &&
+          documentMediaIds(row.description).includes(id)))
     )
       throw new ServiceError("validation", "Ảnh đang được sử dụng trong nội dung bài viết.");
     if (entity === "users" && row.id === id) continue;

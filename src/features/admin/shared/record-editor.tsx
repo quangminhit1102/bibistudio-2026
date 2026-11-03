@@ -19,7 +19,7 @@ import {
 } from "./ui/primitives";
 import { date } from "./lib/text";
 import { internalTarget } from "./lib/navigation";
-const RichPreview = lazy(() => import("../content/components/rich-editor"));
+const RichPreview = lazy(() => import("../content/components/rich-content-view"));
 export function RecordEditor<K extends EntityKey>({
   config,
   id,
@@ -138,11 +138,19 @@ export function RecordDetail<K extends EntityKey>({
               <div key={key}>
                 <dt>{config.fields.find((f) => f.key === key)?.label ?? key}</dt>
                 <dd>
-                  {key.endsWith("At") && typeof value === "string"
-                    ? date(value)
-                    : typeof value === "object"
-                      ? JSON.stringify(value)
-                      : String(value ?? "—")}
+                  {key === "description" &&
+                  config.entity === "products" &&
+                  typeof value === "string" ? (
+                    <Suspense fallback={<Skeleton />}>
+                      <RichPreview value={value} />
+                    </Suspense>
+                  ) : key.endsWith("At") && typeof value === "string" ? (
+                    date(value)
+                  ) : typeof value === "object" ? (
+                    JSON.stringify(value)
+                  ) : (
+                    String(value ?? "—")
+                  )}
                 </dd>
               </div>
             ))}
@@ -150,7 +158,7 @@ export function RecordDetail<K extends EntityKey>({
         {typeof data.content === "string" && (
           <div style={{ marginTop: 24 }}>
             <Suspense fallback={<Skeleton />}>
-              <RichPreview value={data.content} onChange={() => {}} readOnly />
+              <RichPreview value={data.content} />
             </Suspense>
           </div>
         )}

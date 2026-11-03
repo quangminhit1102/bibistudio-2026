@@ -1,4 +1,4 @@
-import type { JSONContent } from "@tiptap/react";
+import type { LegacyNode as JSONContent } from "./rich-content";
 const allowed = new Set([
   "doc",
   "paragraph",

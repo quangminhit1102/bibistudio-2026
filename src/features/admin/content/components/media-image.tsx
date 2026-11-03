@@ -20,7 +20,10 @@ export function MediaImage({
     setUrl("");
     void resolveMedia(store, id)
       .then((lease) => {
-        if (!active) { lease.release(); return; }
+        if (!active) {
+          lease.release();
+          return;
+        }
         release = lease.release;
         setUrl(lease.url);
       })
