@@ -2,18 +2,18 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Deliver real Tiny Cloud editing, local persistence and unsaved-content previews for Vietnamese article/product forms matching the approved mockup.
+**Goal:** Deliver real self-hosted GPL TinyMCE editing, local persistence and unsaved-content previews for Vietnamese article/product forms matching the approved mockup.
 
 **Architecture:** Retain entity services, permissions, IndexedDB, revisions and unsaved guards. Add a shared durable rich-content adapter and media resolver, a lazy TinyMCE wrapper, two focused form compositions and an editor-free preview renderer. Keep public static data and routes untouched.
 
-**Tech Stack:** Existing React 19/TypeScript/Vite, react-hook-form, TanStack Query/Router, DOMPurify, IndexedDB, Vitest; add only `@tinymce/tinymce-react` for Tiny Cloud, locked by npm.
+**Tech Stack:** Existing React 19/TypeScript/Vite, react-hook-form, TanStack Query/Router, DOMPurify, IndexedDB, Vitest; `tinymce` 8.10.1, `@tinymce/tinymce-react` 6.3.1 and build-only `tinymce-i18n` 26.11.2, locked by npm.
 
 **Spec:** `docs/superpowers/specs/2026-11-02-admin-editor-design.md` (read first).
 
 ## Global Constraints
 
 - Chỉ UI, dữ liệu mẫu và lưu cục bộ trong trình duyệt; không kết nối backend/MySQL, không phát hành catalogue/blog public, không push/deploy.
-- Tiny Cloud with `VITE_TINYMCE_API_KEY`; no self-host runtime, GPL configuration, premium plugins or `no-api-key` fallback. Never print/commit actual key. Missing key blocks live-editor acceptance only, not independent tasks.
+- User superseded Tiny Cloud on 03/11 and explicitly accepted self-hosted GPL. Same-origin versioned vendor assets, `licenseKey='gpl'`, no API key/cloud/premium. Preserve license/notices and attribution. Never change BiBi's own license or repository visibility.
 - Public catalogue has no prices/cart. Admin internal price/compareAt/stock/reserved remain intact.
 - Stable media IDs in saved content, never persisted blob URLs/base64; JPEG/PNG/WebP, existing 5 MiB/40MP and 10-image limits remain.
 - Legacy content remains readable; merely opening/previewing a record does not write or convert it.
@@ -23,7 +23,7 @@
 ## Review Focus
 
 1. Quick record navigation while async images resolve must not show/save the previous record's image (Task 2 race test).
-2. Tiny Cloud missing/invalid key or load error must not erase stored body or allow saving an empty replacement (Task 3 readiness test and Task 7 browser error case).
+2. Missing/invalid self-hosted assets or load error must not erase stored body or allow saving an empty replacement (Task 3 readiness test and Task 7 browser error case).
 3. Pasted HTML with scripts/events or local blob URLs must not bypass content/media validation (Task 1 sanitizer test, Task 3 paste integration).
 4. Revision conflict, role change or failed save must retain current edits and not navigate away (Task 4 lifecycle test).
 5. Existing seed markers and user-edited content must survive inline-image seed upgrades (Task 6 preservation test).
@@ -33,7 +33,7 @@
 - `content/rich-content.ts`: pure durable format adapter and sanitization; no editor runtime dependency.
 - `content/media/resolve.ts`: asset URL/blob lease lifecycle shared by renderer/editor/MediaImage.
 - `content/components/rich-content-view.tsx`: sanitized, media-aware read-only content.
-- `content/components/rich-editor.tsx`: Tiny Cloud integration, toolbar and media dialog; replaces Tiptap implementation.
+- `content/components/rich-editor.tsx`: self-host integration, toolbar and media dialog; replaces Tiptap implementation.
 - `shared/forms/editor-session.tsx`: focused reusable load/snapshot/permission/save/dirty lifecycle for posts/products only.
 - `shared/forms/editor-fields.tsx`: reusable registered inputs, validation and scoped relation fields extracted without changing generic RecordForm behavior.
 - `shared/forms/editor-preview.tsx`: accessible desktop/mobile preview overlay using plain renderer.
@@ -66,19 +66,21 @@
 - [ ] Focused tests PASS; renderer does not import/init TinyMCE and never writes IndexedDB.
 - [ ] Commit `feat: resolve local editor media without transient saved URLs`.
 
-### Task 3: Tiny Cloud editor and local configuration
+### Task 3: Self-hosted GPL editor and generated local assets
 
-**Files:** Modify `package.json`, `package-lock.json`, `.env.example`, `src/features/admin/content/components/rich-editor.tsx`; create `src/features/admin/content/components/tiny-config.ts`, `tests/admin/editor-cloud.test.tsx`. Find existing Vite env typing before adding a declaration file if needed.
+**03/11 superseding delivery steps:** Install pinned core and wrapper plus build-only Vietnamese translation. `scripts/prepare-tinymce.mjs` copies selected runtime/plugins/skins, language and license notices from node_modules to ignored `public/vendor/tinymce-<version>`. Invoke it from existing postinstall/dev/prebuild hooks, preserving backend/ops setup. Test generated files against a disposable fixture root; verify the real editor uses same-origin scripts/styles and works without API key or Cloud requests. The remaining form/media/readiness requirements below still apply; all former Cloud-key prerequisites are replaced by presence of valid generated local assets.
 
-**Interfaces:** `RichEditor({value,onChange,scope?,label?,onReadyChange?})` where value/onChange are durable strings, scope is `'content'|'products'|'bookstore'`, readiness is boolean. Tiny config reads only `import.meta.env.VITE_TINYMCE_API_KEY`. Do not use RichEditor for read-only views.
+**Files:** Modify `package.json`, `package-lock.json`, `.env.example`, `src/features/admin/content/components/rich-editor.tsx`; create `src/features/admin/content/components/tiny-config.ts`, `tests/admin/editor-selfhost.test.tsx`. Find existing Vite env typing before adding a declaration file if needed.
 
-- [ ] Write failing tests with a mocked vendor boundary for missing key/error/retry, editor initial value converted from legacy content, no onChange on initialization, editing emits sanitized envelope, runtime blob src normalized to mediaId, readiness false blocks unsafe save, record switching does not retain old callbacks.
-- [ ] Run `npm run test:admin -- tests/admin/editor-cloud.test.tsx`; confirm intended failures.
-- [ ] Install official React wrapper with npm after plan approval. Confirm version React compatibility using package metadata/docs; do not install `tinymce` self-host runtime. Add blank documented `VITE_TINYMCE_API_KEY` example; never inspect actual key value in output.
-- [ ] Implement editor with Task 1/2 adapters; cloud channel pinned to supported major per current official docs, record-keyed instance, Vietnamese language, theme-aware skin/content styling, only lists/link/image and needed basic plugins. Toolbar: undo redo, blocks paragraph/H2/H3, bold italic underline, lists, align, blockquote, link, media picker, removeformat. No AI/media-upload service.
+**Interfaces:** `RichEditor({value,onChange,scope?,label?,onReadyChange?})` where value/onChange are durable strings, scope is `'content'|'products'|'bookstore'`, readiness is boolean. Tiny config derives a base-aware local asset path from installed version. Do not use RichEditor for read-only views.
+
+- [ ] Write failing tests with a mocked vendor boundary for asset error/retry, local GPL config, editor initial value converted from legacy content, no onChange on initialization, current unsaved content survives theme changes, editing emits sanitized envelope, runtime blob src normalized to mediaId, readiness false blocks unsafe save, record switching does not retain old callbacks.
+- [ ] Run `npm run test:admin -- tests/admin/editor-selfhost.test.tsx`; confirm intended failures.
+- [ ] Install pinned official core/wrapper and language package after GPL confirmation. Confirm React compatibility using package metadata/docs; prepare local assets and retain license notices. Remove the obsolete Cloud key entry from local configuration without printing its value.
+- [ ] Implement editor with Task 1/2 adapters; pinned local script and `licenseKey='gpl'`, record-keyed instance, Vietnamese language, theme-aware skin/content styling, only lists/link/wordcount and custom media picker. Toolbar: undo redo, blocks paragraph/H2/H3, bold italic underline, lists, align, blockquote, link, media picker, removeformat. No AI/media-upload service.
 - [ ] Wire existing MediaPicker through a custom toolbar dialog, retain selection, insert figure/image/alt/caption; prevent arbitrary pasted/dropped base64/remote images from bypassing picker. Use runtime media leases without persisting src; no normalization loop/caret jumps on each keystroke. Error/retry preserves body and fields; reset readiness on teardown.
-- [ ] Focused tests PASS; manually verify language asset/channel load once actual key is configured (final acceptance in Task 7).
-- [ ] Commit `feat: integrate lazy Tiny Cloud rich editor`.
+- [ ] Focused tests PASS; manually verify local runtime/language/skins load without Cloud (final acceptance in Task 7).
+- [ ] Commit `feat: integrate lazy self-hosted GPL rich editor`.
 
 ### Task 4: Shared lifecycle and article form
 
@@ -116,7 +118,7 @@
 - [ ] Run `npm run test:admin -- tests/admin/editor-seed.test.ts`; confirm intended failures.
 - [ ] Seed rich content from existing public blog blocks via adapter and stable media IDs; all product imagery references correspond to that product. Existing records are not rewritten automatically.
 - [ ] Search repository for all Tiptap imports/JSON types and replace consumers with local compatibility types. Uninstall unused Tiptap packages only once no runtime consumer remains. No changes to backend dependency lockfiles unless tooling requires them.
-- [ ] Document Tiny Cloud key/domain setup, local startup, local-only saving and missing-key behavior. `VITE_` key is frontend-visible by design; do not present it as a server secret. Never promise production publishing. Future CI key configuration is a documented follow-up, not a change in this task.
+- [ ] Document self-hosted GPL asset preparation, local startup, local-only saving and missing-asset retry. No API key required; retain vendor license/notices. Never promise production publishing.
 - [ ] Focused tests PASS; commit `refactor: complete editor media seeds and remove unused Tiptap runtime`.
 
 ### Task 7: Full verification and reviewable local handoff
@@ -124,9 +126,9 @@
 **Files:** Create `docs/superpowers/reports/2026-11-02-admin-editor.md`; update plan checkboxes with actual results. No production or workflow mutations.
 
 - [ ] Run `npm run check` with Node24; inspect full result and fix failures, not only exit code/tail. Run `npm run build`; record artifact ID/checksum and actual bundle measurements. Use normal documented build/preview commands and explain tooling workarounds if required.
-- [ ] Verify Tiny Cloud key is configured without printing it. If missing, ask user to configure `.env.local`; continue independent checks but keep real-editor acceptance pending. Do not report mocked vendor unit tests as live TinyMCE success.
+- [ ] Verify local TinyMCE core/plugins/skins/language load from the generated versioned directory without API key. Do not report mocked vendor unit tests as live TinyMCE success.
 - [ ] On actual local app use browser UI to create/edit/save/reload article with formatted text, link, local image alt/caption and cover; preview current unsaved draft in both modes. Verify source string is durable, not blob URL, without exposing credentials.
-- [ ] Repeat for product: gallery reorder/primary/remove, detail description, internal fields preserved, public preview no prices/cart. Test failure/denied readiness and switching between records/routes without stale images or crash. For missing/invalid key, use injected config in a unit test or separate disposable local configuration; never expose real key or mutate production settings.
+- [ ] Repeat for product: gallery reorder/primary/remove, detail description, internal fields preserved, public preview no prices/cart. Test asset error/denied readiness and switching between records/routes without stale images or crash. Do not mutate production settings.
 - [ ] Test 1440/768/390 widths and keyboard dialog interactions. Capture screenshots of the implemented forms and previews, inspect images, overflow, toolbar usability, dark theme and save buttons. Reset temporary viewport afterward.
 - [ ] Confirm public homepage/product/blog/dashboard/list routes do not request TinyMCE on a fresh page; inspect network/resource entries and compare build chunks. Preserve static data files, gallery, sidebar and business flows.
 - [ ] Record commands, pass counts, actual browser outcomes, screenshots and limitations in acceptance document. No unsupported claims if network/key prevents editor verification.
@@ -134,4 +136,4 @@
 
 ## Self-review
 
-All spec sections map to Tasks 1–7; all five Review Focus items have explicit test/browser cases. Adapter signatures and durable-string value contract are consistent across editor, form, renderer and preview. Delivery is Tiny Cloud only; user key is an external acceptance prerequisite, not a reason to skip implementation-independent tasks or silently select GPL. No product code or package installation is part of writing this plan.
+All spec sections map to Tasks 1–7; all five Review Focus items have explicit test/browser cases. Adapter signatures and durable-string value contract are consistent across editor, form, renderer and preview. Delivery changed to self-hosted GPL by explicit user instruction and GPL confirmation on 03/11; the Cloud key is no longer used. Implementation findings/rulings are retained in the execution ledger and final acceptance report.

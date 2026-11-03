@@ -1,6 +1,6 @@
 # BiBi — Biên tập Bài viết và Sản phẩm với TinyMCE
 
-Ngày: 02/11/2026. Trạng thái: người dùng đã duyệt bố cục và chọn Tiny Cloud dùng API key. Tiếp tục lập kế hoạch triển khai local; chưa triển khai source ứng dụng.
+Ngày thiết kế: 02/11/2026. Cập nhật 03/11: người dùng đổi từ Tiny Cloud sang TinyMCE tự host miễn phí và xác nhận rõ “Đồng ý dùng TinyMCE theo GPL”. Bố cục và phạm vi local giữ nguyên; kế hoạch đang được thực hiện trực tiếp.
 
 Builder check độc lập ngày 02/11: không còn câu hỏi quan trọng ngoài lựa chọn Tiny Cloud/self-host; người dùng sau đó chọn Tiny Cloud. Không tự tạo tài khoản hoặc chấp nhận điều khoản thay người dùng.
 
@@ -23,7 +23,9 @@ Cách tải/cấp phép được xem xét riêng sau khi duyệt mockup:
 1. Tiny Cloud: wrapper React tải editor khi mở form qua API key do người dùng cung cấp; không cần chép bộ editor vào artifact, cần mạng và cấu hình domain/plan theo tài khoản. Đề xuất khi muốn giữ source riêng và tích hợp ít công sức.
 2. Self-host: tải editor từ asset cùng ứng dụng, không phụ thuộc Tiny Cloud lúc chạy; cần chọn tuân thủ GPL hoặc giấy phép thương mại. Không tự đặt `licenseKey='gpl'`, không tự mua license hay đăng ký tài khoản thay người dùng.
 
-Người dùng chọn phương án 1 qua câu trả lời “Tiny Cloud — dùng API key”. Cài wrapper React, không cài runtime self-host, không dùng `licenseKey='gpl'`. API key đọc từ `VITE_TINYMCE_API_KEY` trong `.env.local`; chỉ kiểm tra có/không, không in giá trị. Đây là key được dùng phía client nên xuất hiện trong browser theo cơ chế Tiny Cloud; người dùng cấu hình domain phù hợp trong tài khoản Tiny. Không có chế độ `no-api-key` hay editor lỗi được coi là đã hoàn thành.
+Quyết định cuối ngày 03/11 là phương án 2 với GPL, thay thế lựa chọn Tiny Cloud ngày 02/11. Dùng TinyMCE 8.10.1 và React wrapper 6.3.1, tải từ đường dẫn cùng ứng dụng `/vendor/tinymce-8.10.1/`, `licenseKey='gpl'`. Không dùng API key, CDN Tiny Cloud hoặc plugin premium. Giữ thông báo bản quyền/giấy phép và attribution; không tự đổi license hoặc công khai repository BiBi. Phát hành production nằm ngoài đợt local này.
+
+Gói dịch `tinymce-i18n` 26.11.2 là devDependency dùng để chép duy nhất bản dịch tiếng Việt `langs8/vi.js` cùng license tương ứng. Script chuẩn bị asset chạy trong install/dev/build; thư mục vendor tạo tự động và bị Git bỏ qua. Asset có version trong đường dẫn để tránh lệch cache giữa các bản phát hành, chỉ chọn core/themes/model/icons/skins và plugins lists/link/wordcount cần dùng. Core chỉ tải khi mở form, renderer preview không tải editor.
 
 Nguồn chính thức kiểm tra ngày 02/11/2026: [License key](https://www.tiny.cloud/docs/tinymce/latest/license-key/), [React self-host](https://www.tiny.cloud/docs/tinymce/latest/react-pm-host/). Không coi tự host là mặc nhiên miễn phí cho mọi cách phân phối ứng dụng.
 

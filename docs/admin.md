@@ -8,6 +8,23 @@ Dùng Node24 và các lệnh ở [build-and-deploy.md](build-and-deploy.md): `np
 
 `npm run test:admin` chỉ chạy bộ test admin. `npm run check` còn kiểm tra TypeScript, lint, ảnh catalogue, tooling triển khai và API. Build release dùng nguyên pipeline cPanel hiện có; admin được phát hành cùng FE khi có yêu cầu phát hành riêng. Không tự push/deploy chỉ vì test hoặc build đạt.
 
+## Biên tập Bài viết và Sản phẩm — local
+
+Hai màn tạo/sửa dùng **TinyMCE 8.10.1 tự host theo GPL**, do người dùng chọn và xác nhận ngày 03/11/2026. Không cần Tiny Cloud, API key hoặc CDN. Attribution, `license.md`, `notices.txt` và thông tin nguồn đi cùng asset; không thay đổi license của chính repository BiBi.
+
+`npm ci` chuẩn bị asset sau khi cài backend/ops. `npm run dev` và các lệnh build cũng chuẩn bị lại asset; không có thêm lệnh thường ngày. `scripts/prepare-tinymce.mjs` lấy core, theme/model/icons, CSS sáng/tối, plugins lists/link/wordcount và bản dịch tiếng Việt từ dependencies đã khóa vào `public/vendor/tinymce-8.10.1/`. Thư mục sinh tự động bị Git bỏ qua nhưng được Vite đưa vào artifact. Không sửa asset vendor trực tiếp.
+
+Editor chỉ tải ở trang tạo/sửa. Trang chi tiết và preview dùng renderer nhẹ. Nếu asset tải lỗi, form có nút Thử lại và chặn lưu khi editor chưa sẵn sàng, không ghi rỗng nội dung cũ.
+
+- Bài viết: tiêu đề/slug/tóm tắt, nội dung có định dạng, ảnh với alt/chú thích, chuyên mục/tác giả/thẻ/ngày, ảnh bìa và SEO.
+- Sản phẩm: tên/SKU/slug, mô tả ngắn/chi tiết, gallery đổi thứ tự/ảnh chính, loại/bộ sưu tập/danh mục độc lập. Giá/tồn kho nằm trong Thông tin nội bộ, không xuất hiện trong preview catalogue.
+- Xem trước dùng nội dung đang nhập, không yêu cầu lưu; chọn Desktop/Mobile rồi Escape hoặc Đóng để quay lại. Lưu nháp đặt trạng thái Nháp. Mọi trạng thái chỉ áp dụng dữ liệu local, chưa xuất bản website.
+- Slug bản mới tự sinh đến khi người dùng tự sửa; bản có sẵn giữ slug cũ. Lỗi validation/revision giữ nội dung đang nhập.
+
+Nội dung mới lưu chuỗi JSON `{format:'html-v1',html:...}` đã sanitize. Adapter đọc JSON Tiptap/plain text cũ; mở trang không tự ghi record. Chỉ lưu media ID, URL Blob được tạo khi hiển thị và giải phóng theo vòng đời. Service dùng cùng adapter và chặn xóa ảnh đang được dùng trong bài viết/mô tả sản phẩm.
+
+Seed mới giữ ảnh inline/chú thích từ blog public; upgrade chỉ thêm media thiếu, không reset hoặc ghi đè record đã sửa. IndexedDB tách theo **origin**: đổi port/hostname local sẽ có thể mở kho khác. Không suy luận dữ liệu mất từ việc chưa thấy nó ở một port mới.
+
 ## Các module
 
 | Nhóm           | Đường dẫn chính                         | Thao tác demo                                                                    |

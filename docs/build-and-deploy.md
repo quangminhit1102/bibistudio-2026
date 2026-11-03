@@ -16,6 +16,8 @@ Admin demo local nằm tại `/admin`, dùng cùng lệnh dev/check/build. Đợ
 
 Dùng **Node 24**; cài dependencies lần đầu hoặc sau đổi lockfile bằng `npm ci`. Hook cài cả backend và deploy tools theo lockfile riêng. Không cần secret hosting, MySQL hoặc Docker để chạy API demo.
 
+Đợt biên tập 03/11 dùng TinyMCE GPL tự host và chỉ kiểm chứng local, chưa phát hành. `npm ci`, `npm run dev` và các prebuild chuẩn bị asset editor bằng `scripts/prepare-tinymce.mjs`; không cần API key Tiny Cloud hoặc secret CI mới. Asset vendor có version, kèm bản dịch tiếng Việt và giấy phép, được sinh từ dependencies vào `public/vendor/tinymce-<version>/` (Git bỏ qua) rồi đưa vào artifact FE. Cách biên tập/lưu local và tương thích nội dung cũ xem [hướng dẫn admin](admin.md#biên-tập-bài-viết-và-sản-phẩm--local). Không lấy UI local làm bằng chứng đã có CMS backend hay đã deploy production.
+
 | Việc                   | Lệnh            | Kết quả cần thấy                                    |
 | ---------------------- | --------------- | --------------------------------------------------- |
 | Develop/debug FE và BE | `npm run dev`   | FE/BE cùng READY, `/api-test` gọi API local         |

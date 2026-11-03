@@ -116,6 +116,10 @@ async function ensureEntityDataset(store: AdminStore, entity: EntityKey) {
     await job;
     const { upgradePresentation } = await import("./presentation-upgrade");
     await upgradePresentation(store, entity);
+    if (entity === "posts" || entity === "media") {
+      const { ensureContentMedia } = await import("../content/seed-upgrade");
+      await ensureContentMedia(store);
+    }
   } finally {
     if (jobs.get(group) === job) jobs.delete(group);
   }
