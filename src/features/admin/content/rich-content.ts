@@ -98,6 +98,14 @@ export function sanitizeRichHtml(html: string): string {
   });
   for (const element of fragment.querySelectorAll("*")) {
     const alignment = (element as HTMLElement).style.textAlign;
+    const decoration =
+      (element as HTMLElement).style.textDecorationLine ||
+      (element as HTMLElement).style.textDecoration;
+    if (decoration.includes("underline") && element.tagName !== "U") {
+      const underline = document.createElement("u");
+      underline.append(...element.childNodes);
+      element.append(underline);
+    }
     element.removeAttribute("style");
     if (["left", "center", "right", "justify"].includes(alignment))
       element.setAttribute("style", `text-align: ${alignment};`);

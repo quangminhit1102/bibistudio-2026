@@ -6,7 +6,7 @@ import { AdminThemeContext } from "../../shared/ui/admin-theme";
 import { Button, Modal, Skeleton } from "../../shared/ui/primitives";
 import { readRichContent, writeRichContent, escapeHtml } from "../rich-content";
 import { resolveMedia } from "../media/resolve";
-import { tinyAssetBase } from "./tiny-config";
+import { tinyAssetBase, resetFailedTinyAssets, type TinyAssetRegistry } from "./tiny-config";
 import MediaPicker from "./media-picker";
 
 export default function RichEditor({
@@ -15,12 +15,14 @@ export default function RichEditor({
   scope = "content",
   label = "Nội dung bài viết",
   onReadyChange,
+  disabled = false,
 }: {
   value: string;
   onChange: (value: string) => void;
   scope?: "content" | "products" | "bookstore";
   label?: string;
   onReadyChange?: (ready: boolean) => void;
+  disabled?: boolean;
 }) {
   const { store } = useAdmin();
   const dark = useContext(AdminThemeContext);
@@ -42,12 +44,16 @@ export default function RichEditor({
   const readyCallback = useRef(onReadyChange);
   readyCallback.current = onReadyChange;
   const active = useRef(true);
+  const assetFailed = useRef(false);
+  const cycle = useRef(0);
   const editingFigure = useRef<HTMLElement | null>(null);
   useEffect(() => {
     readyCallback.current?.(ready);
   }, [ready]);
   useEffect(() => {
     active.current = true;
+    assetFailed.current = false;
+    cycle.current++;
     setReady(false);
     setError("");
     setHtml(null);
@@ -104,6 +110,12 @@ export default function RichEditor({
     setImageError("");
     setImageOpen(true);
   };
+  const assetError = () => {
+    assetFailed.current = true;
+    setReady(false);
+    setError("Không tải được trình biên tập. Kiểm tra asset local rồi thử lại.");
+  };
+  const retrySuffix = attempt ? `?retry=${attempt}` : "";
   return (
     <div className="a-editor-wrap">
       {error && (
@@ -111,6 +123,8 @@ export default function RichEditor({
           <p>{error}</p>
           <Button
             onClick={() => {
+              const tiny = (window as Window & { tinymce?: TinyAssetRegistry }).tinymce;
+              if (tiny) resetFailedTinyAssets(tiny);
               setError("");
               setAttempt((a) => a + 1);
             }}
@@ -126,15 +140,13 @@ export default function RichEditor({
           <Editor
             key={`${attempt}-${dark}`}
             licenseKey="gpl"
-            tinymceScriptSrc={`${tinyAssetBase}tinymce.min.js`}
+            disabled={disabled}
+            tinymceScriptSrc={`${tinyAssetBase}tinymce.min.js${retrySuffix}`}
             initialValue={html}
-            onScriptsLoadError={() => {
-              setReady(false);
-              setError("Không tải được trình biên tập. Kiểm tra asset local rồi thử lại.");
-            }}
+            onScriptsLoadError={assetError}
             onInit={(_event, instance) => {
               editor.current = instance ?? null;
-              setReady(true);
+              if (!assetFailed.current) setReady(true);
             }}
             onEditorChange={(content) => {
               if (editor.current?.initialized) onChange(writeRichContent(content));
@@ -142,6 +154,7 @@ export default function RichEditor({
             init={{
               base_url: tinyAssetBase.replace(/\/$/, ""),
               suffix: ".min",
+              cache_suffix: retrySuffix,
               language: "vi",
               language_url: `${tinyAssetBase}langs/vi.js`,
               skin: dark ? "oxide-dark" : "oxide",
@@ -175,6 +188,13 @@ export default function RichEditor({
                 args.content = readRichContent(writeRichContent(draft.innerHTML));
               },
               setup: (ed) => {
+                const currentCycle = cycle.current;
+                ed.on(
+                  "PluginLoadError LanguageLoadError SkinLoadError ModelLoadError IconsLoadError ThemeLoadError ContentCSSLoadError",
+                  () => {
+                    if (currentCycle === cycle.current) assetError();
+                  },
+                );
                 ed.ui.registry.addButton("bibiimage", {
                   icon: "image",
                   tooltip: "Chèn hoặc sửa ảnh",

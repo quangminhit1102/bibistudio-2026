@@ -16,6 +16,7 @@ export interface ComposeFormProps {
   onSave: (values: FormValues) => Promise<unknown> | unknown;
   onCancel: () => void;
   onDirtyChange?: (dirty: boolean) => void;
+  writeBlocked?: boolean;
 }
 
 export default function ComposeForm({
@@ -24,6 +25,7 @@ export default function ComposeForm({
   onCancel,
   onDirtyChange,
   kind,
+  writeBlocked = false,
 }: { kind: "post" | "product" } & ComposeFormProps) {
   const post = kind === "post",
     config = post ? postConfig : productConfig;
@@ -66,6 +68,10 @@ export default function ComposeForm({
   );
   const save = (draft: boolean) =>
     handleSubmit(async (values) => {
+      if (writeBlocked) {
+        setError("Không thể lưu lúc này. Bản nháp vẫn được giữ trong form.");
+        return;
+      }
       if (!ready) {
         setError("Trình biên tập chưa sẵn sàng. Vui lòng thử lại.");
         return;
@@ -103,10 +109,15 @@ export default function ComposeForm({
                 <Eye size={16} />
                 Xem trước
               </Button>
-              <Button disabled={busy || !ready} onClick={() => void save(true)()}>
+              <Button disabled={busy || !ready || writeBlocked} onClick={() => void save(true)()}>
                 Lưu nháp
               </Button>
-              <Button type="submit" variant="primary" disabled={!ready} loading={busy}>
+              <Button
+                type="submit"
+                variant="primary"
+                disabled={!ready || writeBlocked}
+                loading={busy}
+              >
                 <Save size={16} />
                 {initial.id ? "Lưu thay đổi" : post ? "Tạo bài viết" : "Tạo sản phẩm"}
               </Button>
@@ -118,7 +129,7 @@ export default function ComposeForm({
             {error}
           </p>
         )}
-        <fieldset disabled={busy} className="a-compose-layout">
+        <fieldset disabled={busy || writeBlocked} className="a-compose-layout">
           <legend className="a-sr-only">{post ? "Biên tập bài viết" : "Biên tập sản phẩm"}</legend>
           <div className="a-compose-stack">
             <Card>
@@ -157,6 +168,7 @@ export default function ComposeForm({
                   render={({ field }) => (
                     <Suspense fallback={<Skeleton rows={5} />}>
                       <RichEditor
+                        disabled={busy || writeBlocked}
                         value={String(field.value ?? "")}
                         onChange={field.onChange}
                         scope={post ? "content" : "products"}

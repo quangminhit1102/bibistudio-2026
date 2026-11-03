@@ -1,9 +1,47 @@
 import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { Controller, useFormContext } from "react-hook-form";
 import { useAdmin } from "../../services/context";
 import { Field, Skeleton } from "../ui/primitives";
 import { calendarDate } from "../lib/text";
 import type { FormField, FormValues } from "./record-form";
+
+function TagInput({
+  value,
+  onChange,
+  onBlur,
+}: {
+  value: unknown;
+  onChange: (value: string[]) => void;
+  onBlur: () => void;
+}) {
+  const text = Array.isArray(value) ? value.join(", ") : "";
+  const [raw, setRaw] = useState(text),
+    [focused, setFocused] = useState(false);
+  useEffect(() => {
+    if (!focused) setRaw(text);
+  }, [text, focused]);
+  return (
+    <input
+      placeholder="Phân cách bằng dấu phẩy"
+      value={raw}
+      onFocus={() => setFocused(true)}
+      onBlur={() => {
+        setFocused(false);
+        onBlur();
+      }}
+      onChange={(e) => {
+        setRaw(e.target.value);
+        onChange(
+          e.target.value
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean),
+        );
+      }}
+    />
+  );
+}
 
 function RelationInput({
   field,
@@ -127,18 +165,7 @@ export function EditorFields({
                 name={key}
                 control={control}
                 render={({ field: f }) => (
-                  <input
-                    placeholder="Phân cách bằng dấu phẩy"
-                    value={Array.isArray(f.value) ? f.value.join(", ") : ""}
-                    onChange={(e) =>
-                      f.onChange(
-                        e.target.value
-                          .split(",")
-                          .map((s) => s.trim())
-                          .filter(Boolean),
-                      )
-                    }
-                  />
+                  <TagInput value={f.value} onChange={f.onChange} onBlur={f.onBlur} />
                 )}
               />
             ) : field.type === "date" ? (

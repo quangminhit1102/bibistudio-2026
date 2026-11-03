@@ -55,6 +55,21 @@ function mount(node: React.ReactNode) {
   render(<QueryClientProvider client={client}>{node}</QueryClientProvider>);
   return userEvent.setup();
 }
+it("accepts multiple product tags typed with commas without merging them", async () => {
+  const save = vi.fn();
+  const user = mount(
+    <ProductForm
+      initial={{ ...productConfig.defaults, id: "p", name: "Sổ", sku: "B-1", slug: "so" }}
+      onSave={save}
+      onCancel={() => {}}
+    />,
+  );
+  await user.type(screen.getByRole("textbox", { name: "Thẻ", exact: true }), "Bản đồ, Đà Lạt");
+  await user.click(screen.getByRole("button", { name: "Lưu thay đổi" }));
+  await waitFor(() =>
+    expect(save).toHaveBeenCalledWith(expect.objectContaining({ tags: ["Bản đồ", "Đà Lạt"] })),
+  );
+});
 it("generates a new article slug until manually edited, then saves draft with current values", async () => {
   const save = vi.fn();
   const user = mount(

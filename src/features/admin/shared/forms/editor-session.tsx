@@ -23,6 +23,7 @@ export function useEditorSession(entity: "posts" | "products", id?: string) {
   const resource = entity === "posts" ? "content" : "products";
   const canEdit = can(runtime.session, resource, id ? "update" : "create", role.data);
   return {
+    hasDraft: !id || snapshot?.id === id,
     initial: (id ? snapshot : config.defaults) as unknown as FormValues,
     loading: Boolean(id && (record.isPending || !snapshot || snapshot.id !== id)),
     error: record.error,

@@ -6,6 +6,15 @@ import {
 } from "../../src/features/admin/content/rich-content";
 
 describe("durable editor content", () => {
+  it("preserves underline markup emitted by the TinyMCE formatter", () => {
+    const html = readRichContent(
+      writeRichContent(
+        '<p><span style="text-decoration: underline; color:red">Gạch chân</span></p>',
+      ),
+    );
+    expect(html).toContain("<u>Gạch chân</u>");
+    expect(html).not.toContain("color");
+  });
   it("treats legacy plain text and malformed JSON as text, not HTML", () => {
     expect(readRichContent("<script>literal</script>")).toBe(
       "<p>&lt;script&gt;literal&lt;/script&gt;</p>",

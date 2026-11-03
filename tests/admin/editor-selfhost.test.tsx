@@ -1,21 +1,42 @@
-import { expect, it, vi } from "vitest";
+import { expect, it, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import RichEditor from "../../src/features/admin/content/components/rich-editor";
 import { tinyAssetBase } from "../../src/features/admin/content/components/tiny-config";
 import { AdminThemeContext } from "../../src/features/admin/shared/ui/admin-theme";
 import { writeRichContent } from "../../src/features/admin/content/rich-content";
-const vendor = vi.hoisted(() => ({ fail: false }));
+const vendor = vi.hoisted(() => ({ fail: false, assetFailure: "" }));
+beforeEach(() => {
+  vendor.fail = false;
+  vendor.assetFailure = "";
+});
 vi.mock("@tinymce/tinymce-react", () => ({
   Editor: (props: {
     tinymceScriptSrc: string;
     licenseKey: string;
     initialValue: string;
     onScriptsLoadError?: () => void;
-    onInit?: () => void;
+    onInit?: (event: unknown, editor: unknown) => void;
+    init: { setup?: (editor: unknown) => void };
   }) => {
     return (
       <button
-        onClick={() => (vendor.fail ? props.onScriptsLoadError?.() : props.onInit?.())}
+        onClick={() => {
+          if (vendor.fail) {
+            props.onScriptsLoadError?.();
+            return;
+          }
+          const events: Record<string, () => void> = {};
+          const editor = {
+            initialized: true,
+            ui: { registry: { addButton: () => {} } },
+            on: (names: string, fn: () => void) => {
+              names.split(" ").forEach((name) => (events[name] = fn));
+            },
+          };
+          props.init.setup?.(editor);
+          events[vendor.assetFailure]?.();
+          props.onInit?.({}, editor);
+        }}
         data-src={props.tinymceScriptSrc}
         data-license={props.licenseKey}
         data-html={props.initialValue}
@@ -29,6 +50,17 @@ vi.mock("../../src/features/admin/services/context", () => {
   const runtime = { store: { get: async () => undefined, getBlob: async () => undefined } };
   return { useAdmin: () => runtime };
 });
+it.each(["PluginLoadError", "LanguageLoadError", "SkinLoadError", "ContentCSSLoadError"])(
+  "does not become ready after %s even if init subsequently fires",
+  async (event) => {
+    vendor.assetFailure = event;
+    const ready = vi.fn();
+    render(<RichEditor value="Giữ nguyên" onChange={() => {}} onReadyChange={ready} />);
+    (await screen.findByRole("button", { name: "Khởi tạo editor" })).click();
+    expect(await screen.findByRole("alert")).toHaveTextContent("Không tải được");
+    expect(ready).toHaveBeenLastCalledWith(false);
+  },
+);
 it("keeps the current unsaved body when switching the editor theme", async () => {
   const { rerender } = render(
     <AdminThemeContext.Provider value={false}>
