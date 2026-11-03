@@ -1,45 +1,67 @@
-# Responsive audit — BiBi Studio catalogue (review only)
+# BiBi Admin + homepage — read-only audit and proposed rules (commit ddfdd4c)
 
-Scope: source review only for this pass. No browser test, edit, dependency update, commit or publish has been done. Every finding below comes from reading the source. Each one is marked **Source-confirmed** (the class or line is in the code) or **Inferred** (a likely effect that needs a check at real widths). Keep as-is: Lora headings, the 3x magnifier, bidiary social links, the removed footer wordmark, reduced-motion behaviour, and no shop/cart.
+This is an audit only. No browser was run. "Confirmed" means read in source; "Hypothesis" needs your browser check.
 
-## Findings
+## A. Source-confirmed root causes
 
-| # | Area / file | Finding | Evidence | Severity |
-|---|---|---|---|---|
-| 1 | Home, Explore Vietnam (`src/routes/index.tsx:103, 227-228`) | `productsByCollection("explore-vietnam").slice(0, 3)` puts 3 cards in `grid-cols-2 sm:grid-cols-3`. Below 640px the second row has one empty cell. | Source-confirmed | High (visible on every phone) |
-| 2 | Home, "What we make" rows (`index.tsx:207`) | `grid-cols-[3rem_1fr_auto] gap-6` on mobile: the `1fr` column has no `min-w-0`, so long Vietnamese type names can push the arrow column out at 360px. | Inferred | Medium |
-| 3 | Home hero (`index.tsx:114`) | `min-h-[calc(100svh-77px)]` hard-codes the header height. Header height changes between breakpoints (logo `h-10 sm:h-11`), so the hero may end slightly past the first screen on some sizes. | Inferred | Low |
-| 4 | Product detail (`products.$slug.tsx:75, 92, 114, 121`) | Uses `px-6`; other pages use `px-5 sm:px-6`. Gutters change between pages at 360/390. | Source-confirmed | Low |
-| 5 | Product detail, related strip (`products.$slug.tsx:164`) | Card widths `w-[62vw] sm:w-[40vw]` use the viewport, not the container. At 768–1023 (tablet, before `md` width calc) about 2.4 cards show. That works, but the outer padding is not counted, so the last card may sit under the edge. | Inferred | Low |
-| 6 | Product detail, mobile bottom bar (`product-contact-bar.tsx:17`) + floating contact (`floating-contact.tsx:76`) + back-to-top (`back-to-top.tsx:17`, `bottom-20 right-3`) | Three fixed bottom-area elements below `md`. On product pages the floating bar is supposed to hide. `bottom-20` for back-to-top may overlap the product bar, which is taller with safe-area padding on iPhone. | Inferred (the hide logic needs a runtime check) | Medium |
-| 7 | Product page bottom padding | `pb-28` on the content. Whether the last related card clears the fixed product bar on 360px with safe-area inset is unconfirmed. | Inferred | Low |
-| 8 | Products listing filter sheet (`products.index.tsx:148-150`) | `max-h-[85svh]` with safe-area padding looks correct. Need to check that body scroll locks and the sheet's sticky "Xem … sản phẩm" button is reachable at 360×640. | Inferred | Low |
-| 9 | Quick search (`quick-search.tsx:55`) | `grid-cols-2 sm:grid-cols-3 md:grid-cols-4`. Fine. An odd number of results leaves a gap, which is acceptable for search. | Source-confirmed | Info |
-| 10 | Journal listing (`blog.index.tsx:74, 88`) | Uses `px-4`; the site standard is `px-5 sm:px-6`, so gutters don't match. | Source-confirmed | Low |
-| 11 | Contact map (`contact.tsx:65-74`) | `md:grid-cols-[1.7fr_1fr]` at 768px leaves the address panel about 260px wide. The two buttons ("Chỉ đường", "Mở trong Google Maps") may wrap awkwardly. | Inferred | Medium |
-| 12 | Footer (`site-footer.tsx:27, 83, 96`) | `sm:grid-cols-2` between 640 and 1023, then 4 columns at `lg`. The map tile uses `h-[180%] -translate-y-[20%]` inside an overflow container; confirm the parent has `overflow-hidden`. Copyright `pb-24` clears the floating bar. | Inferred | Low |
-| 13 | Header nav (`site-header.tsx`) | 6 desktop items with `xl:gap-9`. Between `lg` and `xl` (1024–1279), 6 items plus the logo, search, language and call button may get crowded or wrap. | Inferred | Medium |
-| 14 | `/api-test` route | Dev/test page still in the routes. Check whether it should stay public; not a layout issue. | Source-confirmed (file exists) | Info |
+1. **Invisible "Sửa" link on slip detail (dark mode)** — `admin.css:67` `.admin-root a { color: inherit }` (specificity 0,1,1) beats `.a-btn-primary { color: var(--a-on) }` (0,1,0, line 362). A `<Link className="a-btn a-btn-primary">` inherits `--a-text` (#fafafa in dark) on `--a-accent` (#fafafa) → white on white. In light mode it happens to look right only because both are dark-on-dark… actually #18181b on #18181b, also invisible unless parent colour differs. Same applies to `.a-btn-destructive` (`#fff`) and any variant that sets `color` on an `<a>`.
+   - Rule: scope the reset to `.admin-root a:not(.a-btn)` or raise button selectors to `.admin-root .a-btn-*`. Add `:focus-visible`, `[aria-disabled]`, `[data-loading]` states for all variants; destructive hover needs its own darker token, not `opacity`.
+2. **Sidebar footer shows role, not account** — `admin-layout.tsx:141-144` hardcodes initials "MN", shows role name with fallback "Demo", subtitle "Dữ liệu trên trình duyệt". Profile query (`getProfile`, line 37-41) already exists but is not used there. Rule: footer = avatar(initials or image) + display name + role; whole block is a dropdown with only "Hồ sơ" and "Đăng xuất".
+3. **"Trang trong {label}" intermediary** — `admin-layout.tsx:118-122` renders a `<details>` summary for every item with children. Rule: render children as flat indented links under a group heading; keep `item.resource` permission filtering and existing paths; hub/index routes (`admin.products.index`, etc.) redirect to their first allowed child.
+4. **Report chart labels** — `chart.tsx:89-97` vertical bars use fixed `YAxis width={120}` and truncate at 20 chars; `reports.tsx:198` builds labels as `name · id.slice(0,12)`, so long Vietnamese names lose the ID or vice-versa, and tooltip receives the truncated composite string. Rule: pass `{label, fullLabel, id}`; axis shows short label, tooltip shows full name + ID; width computed from container (e.g. 35% clamp 96–220px); on <640px swap chart for a ranked list with bars inline.
+5. **Spacing above "Tổng kết sản phẩm"** — `reports.tsx:205` sibling `<section>`s have no shared vertical rhythm class; spacing depends on children. Rule: one `.a-section-stack` (gap 32px desktop / 24px mobile) wrapping all page sections, `h2` margin-bottom fixed.
+6. **Visible demo wording** — found in ≥40 admin files, e.g. `admin-layout.tsx:213,218-220,227,234` ("Đăng xuất demo", demo strip, footer "Admin demo"), `reports.tsx:153`, `slip-editor.tsx:62`, `transactions.tsx:7,25`, `orders.tsx:9`, `order-detail.tsx:46,143,158,216`, `global-search.tsx:30,60`, `navigation.ts:119` ("Bảo mật demo"). Code identifiers (`DemoSession`, `demo/registry`) are not visible and can stay.
+7. **Homepage dots** — `index.tsx:38` dot group lives inside `HeroSlides`, which is inside `animate-unveil` (`clip-path` inset 10%/14% at start, `styles.css:255`) and inside `<Parallax strength={90}>` (translated layer). The dots therefore move with parallax and are clipped by the unveil clip-path and any overflow of the parallax wrapper.
+   - Rule: render dots as a sibling of `<Parallax>` in the `relative` hero container (not transformed, not clipped), `z-10`, bottom-centre. Simplify: drop the blurred pill, keep 44px buttons, 6px ring / 8px filled active. Keep 5500ms autoplay and reduced-motion check.
 
-## Recommended scoped changes (approve per item)
+## B. Hypotheses needing browser verification
 
-1. **Explore Vietnam, 4 products (fixes #1).** In `index.tsx:103` change `.slice(0, 3)` to `.slice(0, 4)`. In line 227 change the grid to `grid-cols-2 gap-4 lg:grid-cols-4`, which gives 2×2 on phone and tablet and 4 in a row on wide desktop. Inside the 2-column `md` split, 4 columns at 1024 may be narrow; a safer option is `grid-cols-2` at every width (always 2×2). Recommended: always 2×2, because it fits the half-width text/product split.
-2. **Row overflow guard (#2).** Add `min-w-0` to the middle text cell of the "What we make" rows, and `shrink-0` to the arrow.
-3. **Consistent gutters (#4, #10).** Change `px-6` to `px-5 sm:px-6` on product detail, and `px-4` to `px-5 sm:px-6` on the journal listing.
-4. **Bottom stack on mobile (#6, #7).** On product pages, lift back-to-top above the product bar (for example `bottom-[calc(5rem+env(safe-area-inset-bottom))]` when the product bar is present). Confirm the floating contact hides there.
-5. **Contact panel at tablet (#11).** Move the 2-column map layout from `md:` to `lg:`, so tablet stacks the map above the address panel.
-6. **Header at 1024–1279 (#13).** Only if the check shows crowding: reduce the gap at `lg` (`lg:gap-6 xl:gap-9`), or move the language switcher into the utility area.
-7. Leave #3, #5, #8, #9, #12 and #14 unless the browser check shows a real problem.
+- Light-mode primary link-buttons may also lose contrast wherever a parent sets colour (item 1).
+- Parallax wrapper `overflow-hidden` clipping dots on scroll at 360/390 widths.
+- Recharts tooltip overflow off-screen on mobile.
+- Dark-mode contrast of `--a-muted` (#a1a1aa) on `--a-hover` for small 11px text.
+- Component catalogue (`components/catalogue.ts`, 34 `id:` entries found, not the 96 you cited — the rest may be nested examples): keyboard focus traps in overlays, Escape handling, disabled/loading states, mobile drawer focus return. Needs a per-example pass; I did not open each.
 
-## Verification (to run after approval)
+## C. Status semantics (proposal, not decided)
 
-Playwright at widths 360, 390, 768, 1024 and 1440 (height 1800; also 360×640 for the sheets). Pages: `/`, `/products` (filter sheet open, search open), `/products/notebooks`, one product detail (gallery, fullscreen viewer, related strip), `/collections`, `/collections/greeting-cards` (sticky occasion bar), `/collections/explore-vietnam`, `/blog`, one article, `/about`, `/contact`.
-Checks:
-- `document.documentElement.scrollWidth <= innerWidth` (no sideways scroll).
-- No broken images.
-- The Explore Vietnam grid shows 4 cards in 2×2 with no empty cell.
-- Fixed bottom elements don't overlap each other or the last content.
-- Header doesn't wrap at 1024.
-- Repeat with reduced motion turned on.
+- People (customers, accounts): **Active / Inactive** — reversible, record kept.
+- Content (products, articles): **Draft / Published / Hidden** — Hidden = was published, removed from public listing.
+- Purchase slips: **Saved / Void** — Void is terminal, excluded from reports, number never reused.
+- Badges: one colour per meaning across modules (green active/published/saved, neutral draft/inactive, amber hidden, red void).
+- Language: needs your decision — full Vietnamese, full English (Catalog/Products/Add Product/Categories/Product Inventory), or English nav + Vietnamese content. Mixing per screen should be avoided.
 
-Screenshot each viewport. Report observed results apart from what the source suggests.
+## D. Synthetic data rule (needs scope confirmation)
+
+- Remove visible demo labels and the "reset demo" control from UI; keep a non-destructive migration that only fills missing seed records and never overwrites user-edited ones; keep legacy IDs/links.
+- Seed names/links from the real catalogue and journal slugs.
+- Internal docs (`AGENTS.md`, README) keep stating data is stored in the browser. Not adding real auth, MySQL or tracking.
+- Open question: should the visitors page stay at all without a disclosure, since its data is not real tracking?
+
+## E. Verification matrix
+
+| Check | 360 | 390 | 768 | 1024 | 1440 | Dark | Keyboard |
+|---|---|---|---|---|---|---|---|
+| Slip "Sửa"/destructive buttons visible, hover/focus/disabled | x | | x | | x | x | x |
+| Sidebar footer name/avatar + menu (Hồ sơ, Đăng xuất) | drawer | drawer | x | x | x | x | x |
+| Flat catalog nav, permissions hide items | x | | x | | x | | x |
+| Report chart labels + full tooltip / mobile list | x | x | x | x | x | x | |
+| Section spacing reports | x | | x | | x | | |
+| No visible demo text (search "demo", "mô phỏng") | all | | | | | | |
+| Hero dots not clipped while scrolling, reduced motion | x | x | x | x | x | | x |
+
+## F. Optional missing components (do not build without confirmation)
+
+1. Combobox with search — customer/product pickers on slips; faster than long selects.
+2. Confirm dialog with typed reason — voiding slips; prevents accidental void.
+3. Empty state block — every list; consistent guidance.
+4. Status badge component — enforces section C colours.
+5. Mobile card list for tables — avoids horizontal scroll.
+6. Skeleton loaders — perceived speed.
+7. Unsaved-changes guard — forms.
+8. Date-range / year picker — reports filter.
+
+## Open decisions for you
+
+- Admin language (section C).
+- Whether the visitors page keeps any disclosure (section D).
+- Whether hub routes redirect or stay reachable by URL.
