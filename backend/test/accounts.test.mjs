@@ -95,3 +95,26 @@ test("password and role changes revoke access immediately; own role assignment a
     403,
   );
 });
+
+test("refresh racing deactivation cannot leave a usable descendant", async (t) => {
+  const { request, auth, pool } = await createAccountFixture(t);
+  const user = await auth.login({ username: "user01", password: "Only-test-Auth!88" });
+  const [refresh, disabled] = await Promise.allSettled([
+    auth.refresh(user.refreshToken),
+    request(`/api/accounts/${user.profile.id}/deactivate`, "PATCH", { revision: 1 }),
+  ]);
+  assert.equal(disabled.status, "fulfilled");
+  assert.equal(disabled.value.status, 200);
+  if (refresh.status === "fulfilled") {
+    await assert.rejects(
+      auth.authenticate(refresh.value.accessToken),
+      (error) => error.status === 401,
+    );
+    await assert.rejects(auth.refresh(refresh.value.refreshToken), (error) => error.status === 401);
+  }
+  const [[row]] = await pool.query(
+    "SELECT COUNT(*) n FROM refresh_token_sessions WHERE user_id=? AND revoked_at IS NULL",
+    [user.profile.id],
+  );
+  assert.equal(row.n, 0);
+});

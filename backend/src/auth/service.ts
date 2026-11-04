@@ -5,6 +5,7 @@ import type { PrincipalDto } from "../http/contracts";
 import { ApiError } from "../http/errors";
 import { withTransaction } from "../db/transaction";
 import { writeAudit } from "../audit/repository";
+import { lockAuthorizedUsers, withRbacWrite } from "../authorization/transaction";
 import { hashPassword, verifyPassword } from "./password";
 import { hashRefresh, newRefreshToken, signAccess, verifyAccess } from "./tokens";
 import { resolvePrincipal, sqlDate, type UserRow, type SessionRow } from "./repository";
@@ -236,11 +237,29 @@ export function createAuthService({
         });
       });
     },
-    async revoke(actor: AuthPrincipal, command: { all?: boolean }): Promise<void> {
-      await withTransaction(pool, async (connection) => {
-        await lockedUser(connection, actor.principal.id);
-        const predicate = command.all ? "user_id=?" : "user_id=? AND id=?";
-        const values = command.all ? [actor.principal.id] : [actor.principal.id, actor.sid];
+    async revoke(actor: AuthPrincipal, command: { all?: boolean; userId?: string }): Promise<void> {
+      const targetId = command.userId ?? actor.principal.id;
+      const other = targetId !== actor.principal.id;
+      await withRbacWrite(pool, async (connection) => {
+        const { users } = await lockAuthorizedUsers(
+          connection,
+          actor,
+          other ? "account.revoke_session" : undefined,
+          clock,
+          [targetId],
+        );
+        const target = users.get(targetId);
+        if (!target || target.deleted_at)
+          throw new ApiError(404, "NOT_FOUND", "Không tìm thấy tài khoản");
+        if (other && target.is_master)
+          throw new ApiError(
+            403,
+            "PROTECTED_ACCOUNT",
+            "Không thể thay đổi tài khoản quản trị chính",
+          );
+        const all = other || command.all;
+        const predicate = all ? "user_id=?" : "user_id=? AND id=?";
+        const values = all ? [targetId] : [targetId, actor.sid];
         await connection.execute(
           `UPDATE refresh_token_sessions SET revoked_at=?,revoke_reason='revoked' WHERE ${predicate} AND revoked_at IS NULL`,
           [clock.now(), ...values],
@@ -249,7 +268,7 @@ export function createAuthService({
           actorId: actor.principal.id,
           action: "auth.revoke",
           targetType: "account",
-          targetId: actor.principal.id,
+          targetId,
         });
       });
     },

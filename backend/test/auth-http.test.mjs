@@ -102,3 +102,41 @@ test("login rejects untrusted origin, unknown input fields and invalid credentia
     401,
   );
 });
+
+test("only authorized Admin can revoke another user, and another Admin cannot revoke master", async (t) => {
+  const { createAccountFixture } = await import("./helpers/accounts.mjs");
+  const { auth, request, pool, admin } = await createAccountFixture(t);
+  const user = await auth.login({ username: "user01", password: "Only-test-Auth!88" });
+  assert.equal(
+    (
+      await request(
+        "/api/auth/revoke",
+        "POST",
+        { userId: admin.profile.id, all: true },
+        user.accessToken,
+      )
+    ).status,
+    403,
+  );
+  assert.equal(
+    (await request("/api/auth/revoke", "POST", { userId: user.profile.id, all: true })).status,
+    204,
+  );
+  await assert.rejects(auth.authenticate(user.accessToken), (error) => error.status === 401);
+  await pool.query(
+    "INSERT INTO user_roles(user_id,role_id) SELECT id,'system-admin' FROM users WHERE username='user01'",
+  );
+  const otherAdmin = await auth.login({ username: "user01", password: "Only-test-Auth!88" });
+  assert.equal(
+    (
+      await request(
+        "/api/auth/revoke",
+        "POST",
+        { userId: admin.profile.id, all: true },
+        otherAdmin.accessToken,
+      )
+    ).status,
+    403,
+  );
+  assert.equal((await auth.authenticate(admin.accessToken)).principal.isMaster, true);
+});

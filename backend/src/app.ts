@@ -8,6 +8,10 @@ import { createAuthService } from "./auth/service";
 import { authRoutes } from "./auth/routes";
 import { createAccountService } from "./accounts/service";
 import { accountRoutes } from "./accounts/routes";
+import { createRoleService } from "./roles/service";
+import { roleRoutes } from "./roles/routes";
+import { auditRoutes } from "./audit/routes";
+import { authenticate, requirePermission } from "./authorization/middleware";
 
 export interface AppOptions {
   db?: Pool;
@@ -90,6 +94,20 @@ export function createApp(release: ReleaseInfo, options: AppOptions = {}): Expre
     );
   else
     app.use("/api/accounts", () => {
+      throw new ApiError(503, "NOT_READY", "Dịch vụ chưa sẵn sàng");
+    });
+  if (auth && authConfig && options.db) {
+    const roles = createRoleService({ pool: options.db, clock: options.clock ?? systemClock });
+    app.use("/api/roles", roleRoutes(roles, auth, authConfig));
+    app.get(
+      "/api/permissions",
+      authenticate(auth),
+      requirePermission("permission.view"),
+      async (req, res) => res.json(await roles.listPermissions(req.auth!)),
+    );
+    app.use("/api/audit", auditRoutes(options.db, auth));
+  } else
+    app.use(["/api/roles", "/api/permissions", "/api/audit"], () => {
       throw new ApiError(503, "NOT_READY", "Dịch vụ chưa sẵn sàng");
     });
   app.get("/api/version", (_req, res) => {

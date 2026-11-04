@@ -107,7 +107,10 @@ export function authRoutes({
     res.json((await auth.authenticate(header.slice(7))).principal);
   });
   router.post("/revoke", browser, async (req, res) => {
-    const command = validate(z.object({ all: z.boolean().optional() }).strict(), req.body);
+    const command = validate(
+      z.object({ all: z.boolean().optional(), userId: z.uuid().optional() }).strict(),
+      req.body,
+    );
     const header = req.get("authorization") ?? "";
     if (!header.startsWith("Bearer "))
       throw new ApiError(401, "UNAUTHENTICATED", "Vui lòng đăng nhập lại");

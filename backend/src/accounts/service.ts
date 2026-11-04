@@ -3,7 +3,8 @@ import type { Pool, PoolConnection, RowDataPacket } from "mysql2/promise";
 import type { Clock } from "../config";
 import type { AccountDto, Page, PrincipalDto } from "../http/contracts";
 import type { AuthPrincipal } from "../auth/service";
-import { resolvePrincipal, sqlDate, type UserRow } from "../auth/repository";
+import { type UserRow } from "../auth/repository";
+import { lockAuthorizedUsers, withRbacWrite } from "../authorization/transaction";
 import { hashPassword } from "../auth/password";
 import { ApiError } from "../http/errors";
 import { withTransaction } from "../db/transaction";
@@ -34,38 +35,16 @@ export function createAccountService({ pool, clock }: { pool: Pool; clock: Clock
     targetId: string | undefined,
     work: (connection: PoolConnection, principal: PrincipalDto, target?: UserRow) => Promise<T>,
   ): Promise<T> {
-    return withTransaction(pool, async (connection) => {
-      const locked = new Map<string, UserRow>();
-      for (const id of [...new Set([actor.principal.id, ...(targetId ? [targetId] : [])])].sort()) {
-        const [rows] = await connection.execute<UserRow[]>(
-          "SELECT * FROM users WHERE id=? FOR UPDATE",
-          [id],
-        );
-        if (rows[0]) locked.set(id, rows[0]);
-      }
-      const current = locked.get(actor.principal.id);
-      if (
-        !current ||
-        !current.active ||
-        current.deleted_at ||
-        current.auth_version !== actor.authVersion
-      )
-        throw new ApiError(401, "UNAUTHENTICATED", "Vui lòng đăng nhập lại");
-      const [[session]] = await connection.execute<RowDataPacket[]>(
-        "SELECT * FROM refresh_token_sessions WHERE id=? AND user_id=? FOR UPDATE",
-        [actor.sid, current.id],
+    const transaction = code === "account.view" ? withTransaction : withRbacWrite;
+    return transaction(pool, async (connection) => {
+      const { users, principal } = await lockAuthorizedUsers(
+        connection,
+        actor,
+        code,
+        clock,
+        targetId ? [targetId] : [],
       );
-      if (
-        !session ||
-        session.revoked_at ||
-        session.auth_version !== current.auth_version ||
-        +sqlDate(session.idle_expires_at) <= +clock.now() ||
-        +sqlDate(session.absolute_expires_at) <= +clock.now()
-      )
-        throw new ApiError(401, "UNAUTHENTICATED", "Vui lòng đăng nhập lại");
-      const principal = await resolvePrincipal(connection, current);
-      assertPermission(principal, code);
-      const target = targetId ? locked.get(targetId) : undefined;
+      const target = targetId ? users.get(targetId) : undefined;
       if (targetId && (!target || target.deleted_at))
         throw new ApiError(404, "NOT_FOUND", "Không tìm thấy tài khoản");
       return work(connection, principal, target);

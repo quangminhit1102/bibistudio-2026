@@ -23,3 +23,11 @@ test("management APIs enforce missing token401 and User permission403; server co
   ]);
   assert.equal((await request("/api/accounts", "GET", undefined, user.accessToken)).status, 401);
 });
+
+test("DB outage returns503 without falling back to fixture authority", async (t) => {
+  const { request, close } = await createAccountFixture(t);
+  await close();
+  const response = await request("/api/accounts");
+  assert.equal(response.status, 503);
+  assert.equal(response.body.error.code, "SERVICE_UNAVAILABLE");
+});
