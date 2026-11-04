@@ -1,6 +1,6 @@
 # Admin Auth — biên bản kiểm chứng 04/11/2026
 
-**Chưa hoàn tất acceptance production.** Không suy ra deploy thành công từ kết quả local. Source được review: `04b415d..9c13d9215ea02241c6b1bf449c9b04ffa0531d5e`. Chưa push auth feature.
+**Chưa hoàn tất acceptance production.** Không suy ra deploy thành công từ kết quả local/CI. Source được review: `04b415d..9c13d9215ea02241c6b1bf449c9b04ffa0531d5e`, các sửa review ở `e5fa407`. Nhánh auth đã push; website production chưa thay đổi.
 
 ## Đã đo và đã chạy
 
@@ -13,6 +13,8 @@
 - Full check sau sửa: lần đầu admin218/backend/tooling/watcher qua, browser dừng do selector test ảnh mới dùng text thay accessible name. Selector đã sửa, browser chạy lại qua (68.8 giây). Lần fullcheck cuối exit0: admin218, backend/tooling138passed +1 POSIX skip, watcher1 (5.1 giây), browser1 (69 giây), gồm đổi vai trò→lưu profile và chi tiết sản phẩm quan tâm. Ảnh desktop/mobile đã xem lại.
 - Build source `e5fa407da9a6452f50ef9d5ed391246af757cf2a` exit0; local artifact SHA-256 `a8d4ae7f334acd50faa9415faf52c1a027dd8c64620795bb0a70aa5f63790e3c`. Public bundle budget qua: tăng8677 byte JS gzip/285 byte CSS gzip, giới hạn10240/2048; không lẫn admin vào initial graph public. Đây là artifact local, không thay artifact CI production.
 - Trusted tools package từ git blob đúng commit trên có SHA-256 `1596ecf42e228f0447b8213096d57c9bba15cec85564b8f43a78862b990cd218`;9 file gồm dependencies lockfile và stable Passenger, không có env/secret.
+- GitHub CI nhánh `codex/admin-dashboard` tại `b247198bc024af7499ba24f6ba88e239c5418ae5` đã success: [run41851055577](https://github.com/quangminhit1102/bibistudio-2026/actions/runs/41851055577). Nhánh feature không upload artifact production; cần CI main riêng.
+- Bổ sung regression cho DB ứng dụng hoàn toàn rỗng trước lần migrate đầu: native dump/restore-check qua, cả source/verifier vẫn rỗng. Bộ backup4/4 qua; không sửa runtime sau lần fullcheck ở trên.
 - Ảnh thật đã xuất vào visualization workspace với tên `bibi-auth-admin.png`, `bibi-auth-user-mobile.png`, `bibi-auth-accounts.png`, `bibi-auth-visitor-interest.png`, `bibi-auth-master-protected.png`. Live acceptance còn chờ.
 
 ## Các thay đổi chính

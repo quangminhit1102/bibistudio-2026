@@ -9,6 +9,20 @@ import { createHash } from "node:crypto";
 import { createAuthFixture } from "./helpers/auth.mjs";
 import { createDatabaseFixture } from "./helpers/database.mjs";
 import { bridge } from "./helpers/native-backup.mjs";
+test("first deployment backs up and restore-verifies a completely empty application database", async (t) => {
+  const source = await createDatabaseFixture(t);
+  const verifier = await createDatabaseFixture(t);
+  const directory = await mkdtemp(join(tmpdir(), "bibi-empty-backup-"));
+  t.after(() => rm(directory, { recursive: true, force: true }));
+  const { createVerifiedBackup, runNativeTool } = await import("../dist/db/backup.js");
+  const receipt = await createVerifiedBackup({ pool: source.pool, database: source.config,
+    verifyDatabase: verifier.config.database, directory, releaseId: "c".repeat(40) + "-123",
+    flavor: "mariadb", runTool: (kind, args, io) => bridge(kind, args, io, runNativeTool) });
+  assert.equal(receipt.verified, true);
+  assert.equal(receipt.tableCount, 0);
+  assert.equal((await source.pool.query("SHOW TABLES"))[0].length, 0);
+  assert.equal((await verifier.pool.query("SHOW TABLES"))[0].length, 0);
+});
 test("real native MariaDB backup restores into an empty isolated DB and preserves newer source writes/revocations", async (t) => {
   const f = await createAuthFixture(t);
   const verify = await createDatabaseFixture(t);
