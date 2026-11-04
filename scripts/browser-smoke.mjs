@@ -17,7 +17,7 @@ export async function verifyRetainedAssets(assets, request = fetch) {
 export async function captureOpenClient(baseUrl) {
   const browser = await chromium.launch();
   try {
-    const page = await browser.newPage();
+    const page = await browser.newPage({ extraHTTPHeaders: { DNT: "1" } });
     const response = await page.goto(baseUrl);
     if (!response?.ok()) throw new Error("Previous site must serve HTTP before activation");
     const urls = await page
@@ -51,7 +51,7 @@ export async function captureOpenClient(baseUrl) {
 export async function browserSmoke(baseUrl) {
   const browser = await chromium.launch();
   try {
-    const page = await browser.newPage();
+    const page = await browser.newPage({ extraHTTPHeaders: { DNT: "1" } });
     const errors = [];
     page.on("pageerror", (e) => errors.push(e.message));
     await page.goto(`${baseUrl}/products/ca-phe-voi-nguoi-thuong-notebook`);

@@ -9,7 +9,9 @@ const {
   prepareDatabase,
   assertRollbackCompatible,
   runDatabaseTool,
+  verifyReleaseProbe,
 } = require("./database-lifecycle.cjs");
+const { verifyDatabaseAssets } = require("./database-metadata.cjs");
 const execute = promisify(execFile);
 function inside(base, target) {
   const relative = path.relative(path.resolve(base), path.resolve(target));
@@ -239,6 +241,13 @@ async function activateRelease(config, id, hooks = {}) {
     await applyRouting(config, manifest);
     await (hooks.restart ?? restart)(config);
     await (hooks.verify ?? verify)(config, manifest);
+    if (manifest.database) {
+      const probe = await (hooks.verifyReleaseProbe ?? verifyReleaseProbe)(config, {
+        dir,
+        manifest,
+      });
+      await atomicWrite(path.join(dir, ".release-probe.json"), JSON.stringify(probe));
+    }
     await atomicWrite(path.join(dir, ".successful"), new Date().toISOString());
     if (old) await atomicWrite(path.join(config.root, "previous"), oldManifest.releaseId);
     if (config.environment === "staging")
@@ -267,6 +276,11 @@ async function activateRelease(config, id, hooks = {}) {
         await applyRouting(config, oldManifest);
         await (hooks.restart ?? restart)(config);
         await (hooks.verify ?? verify)(config, oldManifest);
+        if (oldManifest.database)
+          await (hooks.verifyReleaseProbe ?? verifyReleaseProbe)(config, {
+            dir: old,
+            manifest: oldManifest,
+          });
       } catch (rollback) {
         throw new Error(`Deploy failed: ${error.message}; ROLLBACK FAILED: ${rollback.message}`);
       }
@@ -280,7 +294,7 @@ async function activateRelease(config, id, hooks = {}) {
       await (hooks.restart ?? restart)(config);
     }
     throw new Error(
-      `Deploy failed: ${error.message}; ${old ? "previous release restored" : "no previous release exists"}`,
+      `Deploy failed: ${error.message}; ${old ? "previous release restored" : "no previous release exists"}${manifest.database && !oldManifest?.database ? "; degraded-admin: pre-auth rollback has no auth service" : ""}`,
     );
   }
 }
@@ -294,6 +308,7 @@ async function rollbackRelease(config, id, hooks = {}) {
   let degradedAdmin = false;
   if (manifest.database || active?.database) {
     if (manifest.database) {
+      await verifyDatabaseAssets(path.join(dir, "backend"), manifest.database);
       const schema = await (hooks.databaseStatus ?? runDatabaseTool)(
         config,
         dir,
@@ -311,6 +326,8 @@ async function rollbackRelease(config, id, hooks = {}) {
   await applyRouting(config, manifest);
   await (hooks.restart ?? restart)(config);
   await (hooks.verify ?? verify)(config, manifest);
+  if (manifest.database)
+    await (hooks.verifyReleaseProbe ?? verifyReleaseProbe)(config, { dir, manifest });
   console.log(
     JSON.stringify({
       event: "rolled-back",

@@ -3,6 +3,7 @@ export async function smoke({ baseUrl, expectedRelease, expectedSha, request = f
   const get = async (path, type) => {
     const response = await request(new URL(path, baseUrl), {
       cache: "no-store",
+      headers: { DNT: "1" },
       signal: AbortSignal.timeout(15000),
     });
     if (!response.ok || !response.headers.get("content-type")?.includes(type))
@@ -19,7 +20,7 @@ export async function smoke({ baseUrl, expectedRelease, expectedSha, request = f
   if ((await (await get("/api/health", "application/json")).json()).ok !== true)
     throw new Error("API unhealthy");
   await get("/api/demo", "application/json");
-  const unknown = await request(new URL("/api/unknown", baseUrl));
+  const unknown = await request(new URL("/api/unknown", baseUrl), { headers: { DNT: "1" } });
   if (unknown.status !== 404 || !unknown.headers.get("content-type")?.includes("application/json"))
     throw new Error("API 404 must be JSON");
   await get("/products/ca-phe-voi-nguoi-thuong-notebook", "text/html");

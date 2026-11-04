@@ -55,6 +55,7 @@ Migrate/seed đọc `.env.migration.local`, status/cleanup dùng runtime `.env.l
 | AUTH_ALLOWED_ORIGINS | Danh sách origin chính xác, phân tách bằng dấu phẩy; production chỉ HTTPS |
 | ANALYTICS_ID_SECRET | Secret riêng cho cookie/identity analytics, ít nhất32 byte |
 | RELEASE_PROBE_SECRET | Secret riêng ký probe, bắt buộc khi runtime NODE_ENV=production |
+| RELEASE_PROBE_PASSWORD | Chỉ maintenance env: bootstrap/login tài khoản `bibi_release_probe` không có role/quyền; seed không ghi đè password/status cũ |
 | TRUSTED_PROXY_CIDRS | Để trống trước khi đo proxy; không trust tất cả forwarded headers |
 | BIBI_PRIVATE_ENV_FILE | File private tuyệt đối ngoài webroot/releases cho runtime/CLI |
 | BIBI_MAINTENANCE_ENV_FILE | Chỉ backup CLI; deployment tự chọn `private/maintenance.env`, không nhận đường dẫn qua SSH |
@@ -85,6 +86,10 @@ Host hook chỉ chạy các CLI cố định của release qua Node, không mở
 Backup dùng snapshot InnoDB nhất quán; bản restore được dump lại và đối chiếu SHA-256 với snapshot ban đầu. Database verifier phải rỗng; cleanup chỉ xóa đúng các bảng trong snapshot đã xác định. File SQL/receipt nằm dưới `production/backups`, credential file tạm quyền0600 và được dọn sau lệnh. Giữ backup nếu restore-check lỗi để điều tra; không tự phục hồi đè production. Giới hạn mặc định128MiB cho mỗi dump và120 giây cho mỗi native client; vượt giới hạn làm deploy thất bại.
 
 Passenger của release auth đọc đúng `production/private/runtime.env`, ép `NODE_ENV=production`, không lấy secret từ manifest/frontend và không migrate lúc startup. `maintenance.env` tách khỏi runtime. File private phải tuyệt đối, regular, owned0600 trên Linux và không qua symlink. Hướng dẫn native snapshot/option file: [MySQL mysqldump](https://dev.mysql.com/doc/refman/8.4/en/mysqldump.html), [option files](https://dev.mysql.com/doc/refman/8.4/en/option-files.html); flags MariaDB đã được chạy thực tế trên container10.11.19.
+
+Sau khi đổi pointer, host chạy probe CLI riêng: FE/BE release, DB readiness, login/profile, management403, refresh rotation, logout và signed analytics marker. Probe không dùng Admin/user01; tài khoản kiểm tra không có role, không đọc được khách truy cập hoặc quản lý account. Nếu account bị cấp thêm role/deactivate, deploy dừng thay vì tự sửa quyền. Marker được kiểm tra bằng DB riêng phía host và bị loại khỏi báo cáo; không có endpoint công khai trả kết quả probe. Receipt chỉ có release/assertions, không có cookie, token hay password.
+
+Kiểm thử local đã diễn tập lỗi probe sau activation với native MariaDB backup/restore: pointer trở về release tương thích, display-name mới và logout/audit sau backup vẫn còn. Đây là bằng chứng local, chưa thay thế diễn tập production. Rollback về release pre-auth chỉ cho phép đúng `preAuthRollbackReleaseId` đã được duyệt trong config host và báo `degradedAdmin`; không khôi phục DB. Receiver vẫn chỉ nhận check/upload/deploy/rollback, không nhận SQL hoặc đường dẫn private tùy ý.
 
 ## Giới hạn dữ liệu
 

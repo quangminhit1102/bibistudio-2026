@@ -7,20 +7,28 @@ const execute = promisify(execFile);
 
 /** Fixed host-only commands. No SQL, password or arbitrary executable from SSH input. */
 async function runDatabaseTool(config, dir, command, manifest) {
-  if (!["backup", "migrate", "seed", "status"].includes(command))
+  if (!["backup", "migrate", "seed", "status", "probe"].includes(command))
     throw new Error("Unsupported database operation");
   const privateFile = path.join(config.root, "private/maintenance.env");
   const backup = command === "backup";
-  const args = backup
-    ? [path.join(dir, "backend/dist/db/backup-cli.js"), manifest.releaseId]
-    : [path.join(dir, "backend/dist/db/cli.js"), command];
+  const probe = command === "probe";
+  const args = probe
+    ? [
+        path.join(dir, "backend/dist/db/probe-cli.js"),
+        manifest.releaseId,
+        manifest.sourceSha,
+        config.baseUrl,
+      ]
+    : backup
+      ? [path.join(dir, "backend/dist/db/backup-cli.js"), manifest.releaseId]
+      : [path.join(dir, "backend/dist/db/cli.js"), command];
   try {
     const { stdout } = await execute(path.join(config.runtimeBin, "node"), args, {
       cwd: path.join(dir, "backend"),
       env: {
         PATH: config.runtimeBin + path.delimiter + "/usr/bin:/bin",
         NODE_ENV: "production",
-        [backup ? "BIBI_MAINTENANCE_ENV_FILE" : "BIBI_PRIVATE_ENV_FILE"]: privateFile,
+        [backup || probe ? "BIBI_MAINTENANCE_ENV_FILE" : "BIBI_PRIVATE_ENV_FILE"]: privateFile,
       },
       timeout: backup ? 300000 : 120000,
       maxBuffer: 65536,
@@ -30,6 +38,19 @@ async function runDatabaseTool(config, dir, command, manifest) {
   } catch {
     throw new Error(`Private database ${command} failed; activation forbidden`);
   }
+}
+async function verifyReleaseProbe(config, { dir, manifest }, { run = runDatabaseTool } = {}) {
+  await verifyDatabaseAssets(path.join(dir, "backend"), manifest.database);
+  const receipt = await run(config, dir, "probe", manifest);
+  if (
+    receipt?.ok !== true ||
+    receipt.releaseId !== manifest.releaseId ||
+    receipt.auth !== true ||
+    receipt.rbac !== true ||
+    receipt.analytics !== true
+  )
+    throw new Error("Release DB/auth/analytics acceptance failed");
+  return receipt;
 }
 function assertRollbackCompatible(manifest, schema, options = {}) {
   if (!manifest.database && options.allowPreAuth === true) return { degradedAdmin: true };
@@ -63,4 +84,4 @@ async function prepareDatabase(config, release, { run = runDatabaseTool } = {}) 
     schemaVersion: schema.version,
   };
 }
-module.exports = { prepareDatabase, assertRollbackCompatible, runDatabaseTool };
+module.exports = { prepareDatabase, assertRollbackCompatible, runDatabaseTool, verifyReleaseProbe };
