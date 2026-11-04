@@ -11,6 +11,7 @@
     "db:seed": "node --env-file-if-exists=../.env.migration.local dist/db/cli.js seed",
     "db:status": "node --env-file-if-exists=../.env.local dist/db/cli.js status",
     "analytics:cleanup": "node --env-file-if-exists=../.env.local dist/db/cli.js analytics:cleanup",
+    "auth:cleanup": "node --env-file-if-exists=../.env.local dist/db/cli.js auth:cleanup",
     "build": "tsc -p tsconfig.build.json",
     "check": "tsc --noEmit",
     "test": "npm run build && node --test test/*.test.mjs",

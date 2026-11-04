@@ -35,6 +35,20 @@ export function AccountForm({
   const [error, setError] = useState("");
   const dirty = !readOnly && JSON.stringify({ values, roleIds }) !== baseline;
   useEffect(() => {
+    if (!initial || initial.revision <= revision || dirty || busy) return;
+    const next = {
+      username: initial.username,
+      displayName: initial.displayName,
+      email: initial.email ?? "",
+      password: "",
+    };
+    setValues(next);
+    setRoleIds(initial.roleIds);
+    setRevision(initial.revision);
+    setBaseline(JSON.stringify({ values: next, roleIds: initial.roleIds }));
+    setError("");
+  }, [initial, revision, dirty, busy]);
+  useEffect(() => {
     onDirtyChange?.(dirty);
   }, [dirty, onDirtyChange]);
   return (

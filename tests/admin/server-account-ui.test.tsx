@@ -13,6 +13,20 @@ const account = {
   createdAt: "2026-11-04T00:00:00Z",
   updatedAt: "2026-11-04T00:00:00Z",
 };
+test("clean profile form adopts revision from a saved role change; dirty drafts retain their revision", async () => {
+  const save = vi.fn(async () => ({ ...account, revision: 3 }));
+  const { rerender } = render(<AccountForm initial={account} roles={roles} onSave={save} />);
+  rerender(<AccountForm initial={{ ...account, revision: 2 }} roles={roles} onSave={save} />);
+  const user = userEvent.setup();
+  await user.type(screen.getByRole("textbox", { name: "Tên hiển thị" }), " mới");
+  await user.click(screen.getByRole("button", { name: "Lưu thông tin" }));
+  expect(save.mock.calls[0][1]).toBe(2);
+  await user.type(screen.getByRole("textbox", { name: "Tên hiển thị" }), " nháp");
+  rerender(<AccountForm initial={{ ...account, displayName: "Đã đổi ở nơi khác", revision: 4 }} roles={roles} onSave={save} />);
+  expect(screen.getByRole("textbox", { name: "Tên hiển thị" })).not.toHaveValue("Đã đổi ở nơi khác");
+  await user.click(screen.getByRole("button", { name: "Lưu thông tin" }));
+  expect(save.mock.calls[1][1]).toBe(3);
+});
 
 test("account creation submits multiple role IDs and a password without a single-role projection", async () => {
   const save = vi.fn(async () => ({

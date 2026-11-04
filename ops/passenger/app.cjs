@@ -23,11 +23,10 @@ if (manifest.isBaseline) {
     runtime = createRuntime({ ...env, NODE_ENV: "production" });
   }
   const server = http.createServer(
-    createApp({
-      ...runtime?.appOptions,
-      releaseId: manifest.releaseId,
-      sourceSha: manifest.sourceSha,
-    }),
+    createApp(
+      { releaseId: manifest.releaseId, sourceSha: manifest.sourceSha },
+      runtime?.appOptions,
+    ),
   );
   server.listen();
   let closing;

@@ -108,6 +108,10 @@ test(
         0,
       );
       await capture(page, resolve(evidence, "user-visitors-mobile.png"));
+      await page.getByRole("button", { name: /^Xem KH-/ }).click();
+      await page.getByRole("dialog", { name: "Chi tiết khách truy cập" }).getByText("Sổ tay bản đồ Đà Lạt", { exact: true }).waitFor();
+      await capture(page, resolve(evidence, "visitor-interest-mobile.png"));
+      await page.keyboard.press("Escape");
       assert.equal(
         await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1),
         true,
@@ -142,6 +146,9 @@ test(
       await admin.getByLabel("Mật khẩu", { exact: true }).fill(f.secrets.masterPassword);
       await admin.getByRole("button", { name: "Đăng nhập", exact: true }).click();
       await admin.getByRole("heading", { name: "Bảng điều khiển", exact: true }).waitFor();
+      await admin.locator(".a-kpis .a-card").filter({ hasText: "Tài khoản" }).getByText("2", { exact: true }).waitFor();
+      await admin.getByRole("figure", { name: "Doanh thu ghi nhận theo ngày", exact: true }).waitFor();
+      await capture(admin, resolve(evidence, "admin-dashboard-desktop.png"));
       await admin.goto(base + "/admin/accounts/users");
       await admin.getByRole("button", { name: "Tạo tài khoản", exact: true }).click();
       const dialog = admin.getByRole("dialog", { name: "Tạo tài khoản" });
@@ -151,6 +158,14 @@ test(
       await dialog.getByRole("button", { name: "Tạo tài khoản", exact: true }).click();
       await admin.getByRole("link", { name: "editor_ui", exact: true }).waitFor();
       await capture(admin, resolve(evidence, "admin-accounts-desktop.png"));
+      await admin.getByRole("link", { name: "editor_ui", exact: true }).click();
+      await admin.getByRole("checkbox", { name: "Admin", exact: true }).check();
+      await admin.getByRole("button", { name: "Lưu vai trò", exact: true }).click();
+      await admin.getByText("Đã lưu vai trò và thu hồi các phiên cũ", { exact: true }).waitFor();
+      await admin.getByLabel("Tên hiển thị", { exact: true }).fill("Biên tập UI đã lưu");
+      await admin.getByRole("button", { name: "Lưu thông tin", exact: true }).click();
+      await admin.getByText("Đã lưu thông tin tài khoản", { exact: true }).waitFor();
+      await admin.goto(base + "/admin/accounts/users");
       await admin.getByRole("link", { name: "admin", exact: true }).click();
       await admin.getByText("Tài khoản quản trị chính được bảo vệ", { exact: false }).waitFor();
       assert.equal(await admin.getByLabel("Tên tài khoản", { exact: true }).isDisabled(), true);

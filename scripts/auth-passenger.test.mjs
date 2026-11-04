@@ -27,7 +27,9 @@ test("Passenger loads auth runtime from fixed private file and drains pools on s
       }),
     },
     [path.join(current, "backend/dist/app.js")]: {
-      createApp: (options) => {
+      createApp: (release, options) => {
+        assert.equal(release.releaseId, "release");
+        assert.equal(release.db, undefined);
         assert.equal(options.db, "test-pool");
         return () => {};
       },

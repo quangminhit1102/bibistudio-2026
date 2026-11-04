@@ -28,6 +28,7 @@ test("explicit migrate/status/seed CLI operates only the supplied DB and prints 
   assert.equal((await run("migrate")).version, 4);
   assert.equal((await run("status")).ready, true);
   assert.equal((await run("seed")).ok, true);
+  assert.deepEqual(await run("auth:cleanup"), { sessions: 0, tokens: 0 });
   assert.deepEqual(await run("analytics:cleanup"), {
     sessions: 0,
     visitors: 0,

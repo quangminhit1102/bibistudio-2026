@@ -2,7 +2,7 @@
 
 ## Trạng thái kiểm chứng
 
-Ngày04/11/2026: cPanel trên Edge xác nhận server **10.11.19-MariaDB-cll-lve**, Node24.22.2, client/dump MariaDB10.11.19 tại `/bin/mysql`, `/bin/mysqldump`, `/bin/mariadb`, `/bin/mariadb-dump`. Bộ60 test backend đã qua trên container MariaDB10.11.19; trước đó cũng qua MySQL8.4.13. Runtime DML-only/login/refresh/account UI/analytics đã chạy Chromium riêng trên DB test; kiểm tra tổng thể/UI với engine MariaDB đang được chạy lại. Chưa deploy auth lên production; grants, proxy và backup/restore hosting vẫn cần acceptance. Không đọc credential của DB WordPress có sẵn.
+Ngày04/11/2026: cPanel trên Edge xác nhận server **10.11.19-MariaDB-cll-lve**, Node24.22.2, client/dump MariaDB10.11.19 tại `/bin/mysql`, `/bin/mysqldump`, `/bin/mariadb`, `/bin/mariadb-dump`. Fullcheck local sau review đã qua: admin218, backend/tooling138 +1 POSIX skip trên Windows, watcher1 và Chromium1 trên MariaDB10.11.19. Runtime DML-only, login/refresh/account UI/analytics, role→profile và native backup/rollback giữ dữ liệu mới đã được chạy thực tế. Chưa deploy auth lên production; grants, proxy và backup/restore hosting vẫn cần acceptance. Không đọc credential của DB WordPress có sẵn.
 
 Artifact auth dùng manifest schemaVersion2 với range schema DB và hash migration/catalogue. Receiver cũ chỉ hiểu schemaVersion1 sẽ từ chối artifact này. Không cập nhật receiver/Passenger hoặc phát hành trước khi backup, restore-check, migration, probe và rollback mới đã được kiểm chứng. Các bước hosting bên dưới là yêu cầu acceptance, chưa phải biên bản đã thực hiện.
 
@@ -39,9 +39,12 @@ npm run db:status
 npm run db:migrate
 npm run db:seed
 npm run analytics:cleanup
+npm run auth:cleanup
 ```
 
-Migrate/seed đọc `.env.migration.local`, status/cleanup dùng runtime `.env.local`. Cleanup tối đa100 session/candidate mỗi lượt; chạy lặp theo lịch để xử lý backlog. Chỉ dọn analytics/counter hết hạn; không phục hồi hoặc reset auth/audit. Với production phải dùng private env/cron của hosting đã duyệt, không copy file local sang hosting.
+Migrate/seed đọc `.env.migration.local`, status/cleanup dùng runtime `.env.local`. Analytics cleanup tối đa100 session/candidate mỗi lượt; chạy lặp theo lịch để xử lý backlog. Lệnh analytics chỉ dọn analytics/counter hết hạn; không phục hồi hoặc reset auth/audit. Với production phải dùng private env/cron của hosting đã duyệt, không copy file local sang hosting.
+
+`auth:cleanup` là tác vụ riêng: mỗi lượt tối đa100 family candidate và100 token hash, chỉ sau absolute expiry30 ngày của family. Giữ consumed hash kể cả family đã revoke cho đến hạn đó để không làm yếu reuse detection. Family nhiều hash được dọn qua nhiều lượt; chỉ xóa family sau khi hết hash. Lock theo user→session→token như refresh; không xóa account hoặc audit. Cần acceptance lịch chạy trên hosting; không chạy cleanup trong request người dùng.
 
 ## Environment
 

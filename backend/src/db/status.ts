@@ -16,7 +16,7 @@ export async function readSchemaStatus(pool: Pool, directory: string) {
     .filter((name) => /^\d{3}_[a-z_]+\.sql$/.test(name))
     .sort();
   const migrationChecksums: Record<string, string> = {};
-  let valid = rows.length === files.length && rows.length > 0;
+  let valid = rows.length <= files.length && files.length > 0;
   for (const [index, row] of rows.entries()) {
     const file = files.find((name) => Number(name.slice(0, 3)) === row.version);
     if (!file || row.version !== index + 1) {
@@ -31,8 +31,8 @@ export async function readSchemaStatus(pool: Pool, directory: string) {
   }
   return {
     version: rows.at(-1)?.version ?? 0,
-    state: valid ? "complete" : "dirty",
+    state: valid ? (rows.length ? "complete" : "empty") : "dirty",
     migrationChecksums,
-    ready: valid,
+    ready: valid && rows.length === files.length,
   };
 }

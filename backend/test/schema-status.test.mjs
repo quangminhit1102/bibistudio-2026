@@ -2,6 +2,25 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { fileURLToPath } from "node:url";
 import { createDatabaseFixture } from "./helpers/database.mjs";
+import { mkdtemp, cp, writeFile, rm } from "node:fs/promises";
+import { join } from "node:path";
+import { tmpdir } from "node:os";
+test("a clean applied prefix with a pending packaged migration is not dirty and can advance", async (t) => {
+  const { readSchemaStatus } = await import("../dist/db/status.js");
+  const { migrate } = await import("../dist/db/migrate.js");
+  const { pool } = await createDatabaseFixture(t);
+  const directory = fileURLToPath(new URL("../migrations", import.meta.url));
+  const next = await mkdtemp(join(tmpdir(), "bibi-next-schema-"));
+  t.after(() => rm(next, { recursive: true, force: true }));
+  await cp(directory, next, { recursive: true });
+  await migrate(pool, directory);
+  await writeFile(join(next, "005_next.sql"), "CREATE TABLE next_example (id INT PRIMARY KEY) ENGINE=InnoDB;");
+  const pending = await readSchemaStatus(pool, next);
+  assert.equal(pending.state, "complete");
+  assert.equal(pending.ready, false);
+  assert.equal((await migrate(pool, next)).version, 5);
+  assert.equal((await readSchemaStatus(pool, next)).ready, true);
+});
 test("schema status reports empty/complete/dirty history with exact packaged names and hashes", async (t) => {
   const { readSchemaStatus } = await import("../dist/db/status.js");
   const { migrate } = await import("../dist/db/migrate.js");

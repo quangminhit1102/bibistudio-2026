@@ -7,11 +7,12 @@ import { cleanupAnalytics } from "../visitors/cleanup";
 import { readSchemaStatus } from "./status";
 import { readPrivateEnvironment } from "./private-env";
 import { seedProbeIdentity } from "./probe-identity";
+import { cleanupAuthSessions } from "../auth/cleanup";
 
 async function main(): Promise<void> {
   const command = process.argv[2];
-  if (!["migrate", "seed", "status", "analytics:cleanup"].includes(command)) {
-    throw new Error("Use migrate, seed, status or analytics:cleanup");
+  if (!["migrate", "seed", "status", "analytics:cleanup", "auth:cleanup"].includes(command)) {
+    throw new Error("Use migrate, seed, status, analytics:cleanup or auth:cleanup");
   }
   const pool = createDbPool(readDbConfig());
   try {
@@ -24,6 +25,8 @@ async function main(): Promise<void> {
       if (process.env.RELEASE_PROBE_PASSWORD || process.env.NODE_ENV === "production")
         await seedProbeIdentity(pool, process.env.RELEASE_PROBE_PASSWORD ?? "");
       console.log(JSON.stringify({ ok: true }));
+    } else if (command === "auth:cleanup") {
+      console.log(JSON.stringify(await cleanupAuthSessions(pool, new Date(), 100)));
     } else if (command === "analytics:cleanup") {
       console.log(JSON.stringify(await cleanupAnalytics(pool, new Date(), 100)));
     } else {

@@ -3,7 +3,7 @@ import type { Pool, PoolConnection, RowDataPacket } from "mysql2/promise";
 import type { Clock } from "../config";
 import type { AccountDto, Page, PrincipalDto } from "../http/contracts";
 import type { AuthPrincipal } from "../auth/service";
-import { type UserRow } from "../auth/repository";
+import { resolvePrincipal, type UserRow } from "../auth/repository";
 import { lockAuthorizedUsers, withRbacWrite } from "../authorization/transaction";
 import { hashPassword } from "../auth/password";
 import { ApiError } from "../http/errors";
@@ -188,6 +188,19 @@ export function createAccountService({ pool, clock }: { pool: Pool; clock: Clock
             }
           }
           if (input.password !== undefined) {
+            const targetAuthority = await resolvePrincipal(connection, target!);
+            if (
+              !principal.fullAccess &&
+              (targetAuthority.fullAccess ||
+                targetAuthority.permissions.some(
+                  (permission) => !principal.permissions.includes(permission),
+                ))
+            )
+              throw new ApiError(
+                403,
+                "TARGET_EXCEEDS_AUTHORITY",
+                "Không thể đổi mật khẩu tài khoản có quyền cao hơn",
+              );
             columns.push("password_hash=?");
             values.push(await hashPassword(input.password));
           }

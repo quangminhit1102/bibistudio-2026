@@ -1,0 +1,24 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { createAuthFixture } from "./helpers/auth.mjs";
+test("bounded auth maintenance retains live/spent hashes until family expiry and never deletes audits", async (t) => {
+  const { cleanupAuthSessions } = await import("../dist/auth/cleanup.js");
+  const f = await createAuthFixture(t);
+  const first = await f.auth.login({ username: "user01", password: f.secrets.userPassword });
+  const second = await f.auth.refresh(first.refreshToken);
+  const third = await f.auth.refresh(second.refreshToken);
+  await f.auth.logout(third.refreshToken);
+  assert.deepEqual(await cleanupAuthSessions(f.pool, f.clock.now(), 2), { sessions: 0, tokens: 0 });
+  const [[before]] = await f.pool.query("SELECT COUNT(*) n FROM audit_logs");
+  f.clock.advance(30 * 86400000);
+  const batch = await cleanupAuthSessions(f.pool, f.clock.now(), 2);
+  assert.deepEqual(batch, { sessions: 0, tokens: 2 });
+  assert.deepEqual(await cleanupAuthSessions(f.pool, f.clock.now(), 2), { sessions: 1, tokens: 1 });
+  const [[after]] = await f.pool.query("SELECT COUNT(*) n FROM audit_logs");
+  assert.equal(after.n, before.n);
+  const active = await f.auth.login({ username: "user01", password: f.secrets.userPassword });
+  const [cleanup, grant] = await Promise.all([cleanupAuthSessions(f.pool, f.clock.now(), 2), f.auth.refresh(active.refreshToken)]);
+  assert.equal(cleanup.tokens, 0);
+  assert.ok(grant.accessToken);
+  await assert.rejects(f.auth.refresh(first.refreshToken));
+});
