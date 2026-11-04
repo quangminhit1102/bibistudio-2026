@@ -10,6 +10,47 @@ export interface AuthConfig {
   trustProxy: false | string[];
 }
 export const systemClock: Clock = { now: () => new Date() };
+export function readAuthConfig(env: NodeJS.ProcessEnv = process.env): AuthConfig {
+  const invalid = () => new Error("Authentication configuration missing or invalid");
+  const allowedOrigins = (env.AUTH_ALLOWED_ORIGINS ?? "")
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+  const production = env.NODE_ENV === "production";
+  if (!env.AUTH_JWT_SECRET || Buffer.byteLength(env.AUTH_JWT_SECRET) < 32 || !allowedOrigins.length)
+    throw invalid();
+  for (const origin of allowedOrigins) {
+    let url: URL;
+    try {
+      url = new URL(origin);
+    } catch {
+      throw invalid();
+    }
+    if (
+      url.origin !== origin ||
+      (url.protocol !== "https:" &&
+        !(
+          url.protocol === "http:" &&
+          !production &&
+          ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname)
+        ))
+    )
+      throw invalid();
+  }
+  const proxies = (env.TRUSTED_PROXY_CIDRS ?? "")
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+  if (proxies.some((value) => !ipaddr.isValidCIDR(value))) throw invalid();
+  return {
+    jwtSecret: env.AUTH_JWT_SECRET,
+    jwtIssuer: env.AUTH_JWT_ISSUER || "bibistudio-api",
+    jwtAudience: env.AUTH_JWT_AUDIENCE || "bibistudio-admin",
+    cookieSecure: production,
+    allowedOrigins,
+    trustProxy: proxies.length ? proxies : false,
+  };
+}
 export interface DbConfig {
   host: string;
   port: number;
@@ -46,3 +87,4 @@ export function readDbConfig(env: NodeJS.ProcessEnv = process.env): DbConfig {
     socketPath: env.DB_SOCKET || undefined,
   };
 }
+import ipaddr from "ipaddr.js";

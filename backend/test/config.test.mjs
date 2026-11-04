@@ -22,6 +22,34 @@ test("DB config fails closed and bounds pool, port and database identifiers", as
   assert.equal(readDbConfig({ ...env, DB_POOL_LIMIT: "2" }).connectionLimit, 2);
 });
 
+test("pool bounds acquisition for transactions and direct queries and releases late arrivals", async (t) => {
+  const { createDatabaseFixture } = await import("./helpers/database.mjs");
+  const { createDbPool } = await import("../dist/db/pool.js");
+  const { config } = await createDatabaseFixture(t);
+  const pool = createDbPool({ ...config, connectionLimit: 1 }, { acquireTimeoutMs: 40 });
+  t.after(() => pool.end());
+  const held = await pool.getConnection();
+  let released = false;
+  const release = () => {
+    if (!released) {
+      released = true;
+      held.release();
+    }
+  };
+  const deadline = setTimeout(release, 500);
+  try {
+    await assert.rejects(pool.getConnection(), /acquisition timed out/);
+    await assert.rejects(pool.query("SELECT 1"), /acquisition timed out/);
+    await assert.rejects(pool.execute("SELECT 1"), /acquisition timed out/);
+  } finally {
+    clearTimeout(deadline);
+    release();
+  }
+  // Any queued acquisition that resolves after rejection must immediately release.
+  const [[row]] = await pool.query("SELECT 1 n");
+  assert.equal(row.n, 1);
+});
+
 test("runtime pool uses UTC and parameterized transaction rolls back a failed write", async (t) => {
   const { createDatabaseFixture } = await import("./helpers/database.mjs");
   const { createDbPool } = await import("../dist/db/pool.js");

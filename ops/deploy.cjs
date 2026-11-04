@@ -5,6 +5,11 @@ const { execFile } = require("node:child_process");
 const { promisify } = require("node:util");
 const { randomUUID } = require("node:crypto");
 const { validateManifest } = require("./release.cjs");
+const {
+  prepareDatabase,
+  assertRollbackCompatible,
+  runDatabaseTool,
+} = require("./database-lifecycle.cjs");
 const execute = promisify(execFile);
 function inside(base, target) {
   const relative = path.relative(path.resolve(base), path.resolve(target));
@@ -213,6 +218,21 @@ async function activateRelease(config, id, hooks = {}) {
   if (config.environment === "staging" && BigInt(manifest.ciRunId) < BigInt(highest))
     throw new Error("Refusing older staging release");
   await (hooks.install ?? install)(config, dir);
+  if (manifest.database) {
+    if (oldManifest?.database)
+      assertRollbackCompatible(oldManifest, {
+        state: "complete",
+        version: manifest.database.requiredMin,
+        migrationChecksums: manifest.database.migrationChecksums,
+      });
+    else if (
+      config.environment === "production" &&
+      config.preAuthRollbackReleaseId !== oldManifest?.releaseId
+    )
+      throw new Error("Explicit pre-auth degraded-admin rollback target required");
+    const receipt = await (hooks.prepareDatabase ?? prepareDatabase)(config, { dir, manifest });
+    await atomicWrite(path.join(dir, ".database-prepared.json"), JSON.stringify(receipt));
+  }
   await mergeAssets(config, dir);
   try {
     await point(config, dir);
@@ -234,6 +254,15 @@ async function activateRelease(config, id, hooks = {}) {
   } catch (error) {
     if (old) {
       try {
+        if (manifest.database && oldManifest.database) {
+          const schema = await (hooks.databaseStatus ?? runDatabaseTool)(
+            config,
+            old,
+            "status",
+            oldManifest,
+          );
+          assertRollbackCompatible(oldManifest, schema);
+        }
         await point(config, old);
         await applyRouting(config, oldManifest);
         await (hooks.restart ?? restart)(config);
@@ -258,12 +287,37 @@ async function activateRelease(config, id, hooks = {}) {
 async function rollbackRelease(config, id, hooks = {}) {
   const { dir, manifest } = await inspectRelease(config, id);
   if (!manifest.isBaseline) await fs.access(path.join(dir, ".successful"));
+  const current = await currentTarget(config);
+  const active = current
+    ? JSON.parse(await fs.readFile(path.join(current, "manifest.json"), "utf8"))
+    : null;
+  let degradedAdmin = false;
+  if (manifest.database || active?.database) {
+    if (manifest.database) {
+      const schema = await (hooks.databaseStatus ?? runDatabaseTool)(
+        config,
+        dir,
+        "status",
+        manifest,
+      );
+      assertRollbackCompatible(manifest, schema);
+    } else {
+      degradedAdmin = assertRollbackCompatible(manifest, null, {
+        allowPreAuth: config.preAuthRollbackReleaseId === id,
+      }).degradedAdmin;
+    }
+  }
   await point(config, dir);
   await applyRouting(config, manifest);
   await (hooks.restart ?? restart)(config);
   await (hooks.verify ?? verify)(config, manifest);
   console.log(
-    JSON.stringify({ event: "rolled-back", environment: config.environment, releaseId: id }),
+    JSON.stringify({
+      event: "rolled-back",
+      environment: config.environment,
+      releaseId: id,
+      degradedAdmin,
+    }),
   );
 }
 async function managedBytes(dir) {

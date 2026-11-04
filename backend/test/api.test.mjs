@@ -39,9 +39,24 @@ test("unknown API routes are JSON 404; unsupported methods are 405", async (t) =
   assert.deepEqual(await method.json(), { error: "Method not allowed" });
 });
 test("compiled CommonJS server starts inside an ESM repo and serves HTTP", async (t) => {
+  const { createAuthFixture } = await import("./helpers/auth.mjs");
+  const { randomBytes } = await import("node:crypto");
+  const fixture = await createAuthFixture(t);
   const child = spawn(process.execPath, ["dist/server.js"], {
     cwd: new URL("../", import.meta.url),
-    env: { ...process.env, PORT: "0", HOST: "127.0.0.1" },
+    env: {
+      ...process.env,
+      PORT: "0",
+      HOST: "127.0.0.1",
+      DB_HOST: fixture.dbConfig.host,
+      DB_PORT: String(fixture.dbConfig.port),
+      DB_NAME: fixture.dbConfig.database,
+      DB_USER: fixture.dbConfig.user,
+      DB_PASSWORD: fixture.dbConfig.password,
+      AUTH_JWT_SECRET: fixture.config.jwtSecret,
+      AUTH_ALLOWED_ORIGINS: "http://127.0.0.1:1",
+      ANALYTICS_ID_SECRET: randomBytes(32).toString("hex"),
+    },
     stdio: ["ignore", "pipe", "pipe"],
   });
   t.after(() => child.kill());
@@ -63,4 +78,5 @@ test("compiled CommonJS server starts inside an ESM repo and serves HTTP", async
   });
   const base = await ready;
   assert.deepEqual(await (await fetch(base + "/api/health")).json(), { ok: true });
+  assert.equal((await fetch(base + "/api/ready")).status, 200);
 });

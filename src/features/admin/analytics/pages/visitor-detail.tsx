@@ -1,9 +1,14 @@
 import { useRecordId } from "../../shared/record-editor";
-import { useRecord, useEntity } from "../../services/context";
+import { useRecord, useEntity, useAdmin } from "../../services/context";
+import { ServerVisitorDetail } from "../server-visitors";
 import { PageTitle, Card, ErrorState, Skeleton } from "../../shared/ui/primitives";
 import { date } from "../../shared/lib/text";
 export default function VisitorDetail() {
   const id = useRecordId();
+  const runtime = useAdmin();
+  return runtime.http ? <ServerVisitorDetail id={id} /> : <FixtureVisitorDetail id={id} />;
+}
+function FixtureVisitorDetail({ id }: { id: string }) {
   const visitor = useRecord("visitors", id);
   const sessions = useEntity("sessions", {
     page: 1,

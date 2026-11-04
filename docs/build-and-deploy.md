@@ -10,11 +10,13 @@ Trạng thái website hiện tại phải đọc từ [API version](https://bibi
 
 ## 1. Ba lệnh local
 
+**Đợt auth04/11 đang triển khai, chưa phát hành:** login/RBAC/account/audit/visitor đã nối MySQL local và đã có kiểm chứng Chromium riêng. Xem [Admin Auth Operations](admin-auth-operations.md) và [API/schema](admin-auth-api.md). Artifact auth dùng schemaVersion2; phải nâng receiver/Passenger cùng backup/restore-check/migration/probe/rollback trước khi triển khai. Các biên bản production cũ bên dưới chỉ mô tả release lịch sử, không chứng minh đợt auth đã live.
+
 Admin demo local nằm tại `/admin`, dùng cùng lệnh dev/check/build. Đợt nghiệp vụ 02/11 đã kiểm chứng local và phát hành production tại commit `4c6e070`: khách mua hàng, phiếu VAT có/không, báo cáo, visitors và popup thông báo. Xem [biên bản production](superpowers/reports/2026-11-02-admin-production-release.md). Xem [hướng dẫn admin](admin.md) và [biên bản kiểm chứng](admin-acceptance.md). Dữ liệu/ảnh admin lưu trong trình duyệt, chưa nối Express/MySQL và chưa làm thay đổi catalogue public.
 
-Đợt hoàn thiện UI tiếp theo (Login tiếng Việt, avatar, menu, báo cáo, thư viện96 component và chấm hero) chỉ thực hiện local trên `codex/admin-dashboard`; chưa push/deploy. Local Login dùng fixture `bibi.admin / BibiLocal!2026` sau khi cập nhật source. Không dùng fixture này làm cơ chế bảo vệ admin production; AuthService đã có seam để thay bằng session server sau này. Acceptance local không thay đổi biên bản phát hành `4c6e070` ở trên.
+Đợt hoàn thiện UI trước đây dùng fixture login trong trình duyệt. Runtime mới trên `codex/admin-dashboard` dùng HTTP AuthService; không dùng fixture đó để đăng nhập. Account local `admin`/`user01` lấy password bootstrap trong file ignored do setup tạo. Acceptance local không thay đổi các biên bản production cũ.
 
-Dùng **Node 24**; cài dependencies lần đầu hoặc sau đổi lockfile bằng `npm ci`. Hook cài cả backend và deploy tools theo lockfile riêng. Không cần secret hosting, MySQL hoặc Docker để chạy API demo.
+Dùng **Node24**; cài dependencies lần đầu hoặc sau đổi lockfile bằng `npm ci`. Hook cài cả backend và deploy tools theo lockfile riêng. Để develop auth, bật Docker Desktop rồi chạy một lần `npm run db:setup:local`. DB local được tách khỏi test DB và hosting; không cần secret hosting. Những lần dev sau không tự migrate/seed.
 
 Đợt biên tập 03/11 dùng TinyMCE GPL tự host và chỉ kiểm chứng local, chưa phát hành. `npm ci`, `npm run dev` và các prebuild chuẩn bị asset editor bằng `scripts/prepare-tinymce.mjs`; không cần API key Tiny Cloud hoặc secret CI mới. Asset vendor có version, kèm bản dịch tiếng Việt và giấy phép, được sinh từ dependencies vào `public/vendor/tinymce-<version>/` (Git bỏ qua) rồi đưa vào artifact FE. Cách biên tập/lưu local và tương thích nội dung cũ xem [hướng dẫn admin](admin.md#biên-tập-bài-viết-và-sản-phẩm--local). Không lấy UI local làm bằng chứng đã có CMS backend hay đã deploy production.
 
@@ -26,9 +28,9 @@ Dùng **Node 24**; cài dependencies lần đầu hoặc sau đổi lockfile b�
 
 Xem bản build local: chạy `npm run build`, lấy đường dẫn bundle `.releases/local-<SHA>` từ kết quả, rồi chạy `node scripts/preview.mjs .releases/local-<SHA>`. Shortcut `npm run build -- --preview` hiện gặp vòng import sau khi tạo artifact (đã quan sát ngày 01/11/2026); dùng hai lệnh riêng đến khi tooling được sửa.
 
-FE mặc định `http://localhost:5173`; `/api` proxy tới BE `127.0.0.1:3001`. Trang `/api-test` hiển thị version FE/BE, dữ liệu demo, lỗi và nút thử lại. FE có HMR; BE tự restart khi sửa source. Inspector BE là `127.0.0.1:9230`; debugger hỗ trợ Node có thể attach, pause/resume và debug TypeScript. Log có tiền tố FE/BE, báo UNAVAILABLE khi BE lỗi và READY sau khi phục hồi. Ctrl+C dừng cả hai; có thể khởi động lại mà không bị giữ cổng.
+FE mặc định `http://localhost:5173`; `/api` proxy tới BE `127.0.0.1:3001`, quản trị ở `/admin`. Trang `/api-test` hiển thị version FE/BE và API cơ bản; `/api/ready` còn kiểm tra private config, schema và Master account. FE có HMR; BE tự restart khi sửa source. Inspector BE là `127.0.0.1:9230`; debugger có thể attach, pause/resume và debug TypeScript. Log có tiền tố FE/BE, báo UNAVAILABLE khi BE lỗi và READY sau khi phục hồi. Ctrl+C dừng cả hai; có thể khởi động lại mà không bị giữ cổng.
 
-`.env.example` mô tả tùy chỉnh local; env thật bị gitignore. Không chép key/env production vào source. API hiện tại chỉ có GET `/api/health`, `/api/version`, `/api/demo`, JSON404/405; chưa có database, đăng nhập, quản trị hoặc upload.
+`.env.example` mô tả tên cấu hình; env thật bị gitignore. Setup sinh `.env.local` cho runtime và `.env.migration.local` cho thao tác DB có chủ đích. Không chép key/env production vào source hoặc VITE_*. API local mới có auth/account/role/permission/audit/customer-access; các module kinh doanh/content/media vẫn lưu local. Chỉ `/api/health` đạt chưa đủ chứng minh đăng nhập/MySQL sẵn sàng.
 
 ## 2. CI và artifact
 

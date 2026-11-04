@@ -2,6 +2,15 @@ import { createServer as createViteServer, createLogger } from "vite";
 import { join } from "node:path";
 import { root, isMain } from "./runtime.mjs";
 import { spawnOwned, stopOwned, assertPortsFree } from "./process-group.mjs";
+import { assertLocalDevelopmentTarget, ensureLocalMysql } from "./local-database.mjs";
+
+export async function closeFrontend(server) {
+  await server.close();
+  // Vite closes plugins and its watcher concurrently. A finishing plugin can add
+  // a watch after that first close, reopening Chokidar. Drain plugins first, then
+  // close the watcher again so no filesystem handles survive shutdown.
+  await server.watcher.close();
+}
 
 export async function startDevelopment({
   frontendPort = 5173,
@@ -15,6 +24,7 @@ export async function startDevelopment({
   prebundle = true,
 } = {}) {
   await assertPortsFree([frontendPort, backendPort, inspectorPort]);
+  const healthPath = backendEntry === "src/server.ts" ? "/api/ready" : "/api/health";
   process.env.BACKEND_PORT = String(backendPort);
   const logger = createLogger();
   for (const level of ["info", "warn", "error"]) {
@@ -49,7 +59,7 @@ export async function startDevelopment({
       closed = true;
       clearTimeout(healthTimer);
       await stopOwned([child]);
-      await vite?.close();
+      if (vite) await closeFrontend(vite);
     })());
   signal?.addEventListener(
     "abort",
@@ -96,7 +106,23 @@ export async function startDevelopment({
             },
           ],
       customLogger: logger,
-      server: { host, port: frontendPort, strictPort: true },
+      server: {
+        host,
+        port: frontendPort,
+        strictPort: true,
+        preTransformRequests: prebundle,
+        // Native watch setup dominated the measured Windows CPU profile. These
+        // are private tooling/build outputs, never frontend source or HMR inputs.
+        watch: {
+          ignored: [
+            "**/.superpowers/**",
+            "**/.releases/**",
+            "**/dist-cpanel/**",
+            "**/.output/**",
+            "**/backend/dist/**",
+          ],
+        },
+      },
     });
     if (closed || signal?.aborted) {
       await vite.close();
@@ -107,7 +133,7 @@ export async function startDevelopment({
     const deadline = Date.now() + 30000;
     while (!closed && Date.now() < deadline) {
       try {
-        const r = await fetch(`http://127.0.0.1:${backendPort}/api/health`, {
+        const r = await fetch(`http://127.0.0.1:${backendPort}${healthPath}`, {
           signal: AbortSignal.timeout(1000),
         });
         if (r.ok && (await r.json()).ok) {
@@ -120,7 +146,7 @@ export async function startDevelopment({
     if (!ready)
       throw new Error("Backend did not become ready within 30 seconds; inspect [BE] output");
     console.log(
-      `[FE] READY http://localhost:${frontendPort}/api-test\n[BE] READY http://127.0.0.1:${backendPort}/api/health\n[BE] Debug: 127.0.0.1:${inspectorPort} (attach, no pause)`,
+      `[FE] READY http://localhost:${frontendPort}/api-test\n[BE] READY http://127.0.0.1:${backendPort}${healthPath}\n[BE] Debug: 127.0.0.1:${inspectorPort} (attach, no pause)`,
     );
     onBackendState("ready");
     let state = "ready",
@@ -129,7 +155,7 @@ export async function startDevelopment({
       if (closed) return;
       let healthy = false;
       try {
-        const response = await fetch(`http://127.0.0.1:${backendPort}/api/health`, {
+        const response = await fetch(`http://127.0.0.1:${backendPort}${healthPath}`, {
           signal: AbortSignal.timeout(1000),
         });
         healthy = response.ok && (await response.json()).ok === true;
@@ -164,6 +190,8 @@ export async function startDevelopment({
   }
 }
 if (isMain(import.meta.url)) {
+  assertLocalDevelopmentTarget(process.env);
+  await ensureLocalMysql();
   let service;
   const controller = new AbortController();
   const args = process.argv.slice(2);
@@ -171,8 +199,16 @@ if (isMain(import.meta.url)) {
     const i = args.indexOf(key);
     return i >= 0 ? args[i + 1] : undefined;
   };
+  const frontendPort = Number(value("--port") ?? process.env.FRONTEND_PORT ?? 5173);
+  process.env.AUTH_ALLOWED_ORIGINS = [
+    ...new Set([
+      ...(process.env.AUTH_ALLOWED_ORIGINS ?? "").split(",").filter(Boolean),
+      `http://localhost:${frontendPort}`,
+      `http://127.0.0.1:${frontendPort}`,
+    ]),
+  ].join(",");
   const startup = startDevelopment({
-    frontendPort: Number(value("--port") ?? process.env.FRONTEND_PORT ?? 5173),
+    frontendPort,
     backendPort: Number(process.env.BACKEND_PORT ?? 3001),
     inspectorPort: Number(process.env.INSPECTOR_PORT ?? 9230),
     host: value("--host") ?? "127.0.0.1",

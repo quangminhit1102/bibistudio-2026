@@ -78,7 +78,12 @@ export function createAdminHttp(options: Options = {}) {
     });
     if (response.status === 204) return undefined as T;
     const json = response.headers.get("content-type")?.includes("application/json");
-    const body = json ? await response.json() : null;
+    let body;
+    try {
+      body = json ? await response.json() : null;
+    } catch {
+      throw new AdminHttpError(503, "INVALID_RESPONSE", "Phản hồi API không hợp lệ");
+    }
     if (!response.ok)
       throw new AdminHttpError(
         response.status,

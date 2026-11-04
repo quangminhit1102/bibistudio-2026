@@ -7,6 +7,33 @@ import deploy from "../ops/deploy.cjs";
 const sha = "a".repeat(40),
   first = sha + "-1",
   second = sha + "-2";
+test("failed auth database preparation never changes the current pointer or routing", async (t) => {
+  const config = await fixture(t);
+  const hooks = { install: async () => {}, restart: async () => {}, verify: async () => {} };
+  await deploy.activateRelease(config, first, hooks);
+  const file = join(config.root, "releases", second, "manifest.json");
+  const manifest = JSON.parse(await readFile(file, "utf8"));
+  manifest.schemaVersion = 2;
+  manifest.database = {
+    requiredMin: 1,
+    compatibleMax: 1,
+    migrationChecksums: { "001_identity.sql": "b".repeat(64) },
+    catalogueChecksum: "c".repeat(64),
+  };
+  await writeFile(file, JSON.stringify(manifest));
+  const rules = await readFile(join(config.site, ".htaccess"), "utf8");
+  await assert.rejects(
+    deploy.activateRelease(config, second, {
+      ...hooks,
+      prepareDatabase: async () => {
+        throw new Error("isolated restore failed");
+      },
+    }),
+    /isolated restore failed/,
+  );
+  assert.ok((await readlink(join(config.root, "current"))).endsWith(first));
+  assert.equal(await readFile(join(config.site, ".htaccess"), "utf8"), rules);
+});
 test("production refuses first activation without a verified rollback target", async (t) => {
   const config = await fixture(t);
   config.environment = "production";

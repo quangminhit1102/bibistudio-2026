@@ -1,6 +1,7 @@
 import { join } from "node:path";
 import { readdir } from "node:fs/promises";
 import { root, run } from "./runtime.mjs";
+import { ensureTestDatabase } from "./test-database.mjs";
 const node = (file, args = [], options = {}) => run(process.execPath, [file, ...args], options);
 try {
   await node("node_modules/typescript/bin/tsc", ["--noEmit"]);
@@ -30,10 +31,12 @@ try {
   const backend = (await readdir(join(root, "backend/test")))
     .filter((n) => n.endsWith(".test.mjs"))
     .map((n) => `backend/test/${n}`);
+  await ensureTestDatabase();
   await run(process.execPath, ["--test", ...scripts, ...backend, "src/lib/api-demo.test.ts"]);
   // The actual watcher test depends on timely filesystem/heartbeat transitions.
   // Run it after CPU-heavy hashing/DB suites, with the same assertions/timeouts.
   await run(process.execPath, ["--test", "scripts/dev.test.mjs"]);
+  await node("scripts/auth-ui-check.mjs");
 } catch (error) {
   console.error(error.message);
   process.exitCode = 1;

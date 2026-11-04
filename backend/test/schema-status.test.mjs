@@ -1,0 +1,22 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { fileURLToPath } from "node:url";
+import { createDatabaseFixture } from "./helpers/database.mjs";
+test("schema status reports empty/complete/dirty history with exact packaged names and hashes", async (t) => {
+  const { readSchemaStatus } = await import("../dist/db/status.js");
+  const { migrate } = await import("../dist/db/migrate.js");
+  const { pool } = await createDatabaseFixture(t);
+  const directory = fileURLToPath(new URL("../migrations", import.meta.url));
+  assert.deepEqual(await readSchemaStatus(pool, directory), { version: 0, state: "empty", migrationChecksums: {}, ready: false });
+  await migrate(pool, directory);
+  const status = await readSchemaStatus(pool, directory);
+  assert.equal(status.ready, true);
+  assert.equal(status.state, "complete");
+  assert.equal(status.version, 4);
+  assert.equal(Object.keys(status.migrationChecksums).length, 4);
+  assert.match(status.migrationChecksums["001_identity.sql"], /^[a-f0-9]{64}$/);
+  await pool.query("UPDATE schema_migrations SET state='dirty' WHERE version=4");
+  assert.equal((await readSchemaStatus(pool, directory)).state, "dirty");
+  await pool.query("UPDATE schema_migrations SET state='complete',checksum=REPEAT('a',64) WHERE version=4");
+  assert.equal((await readSchemaStatus(pool, directory)).ready, false);
+});

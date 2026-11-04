@@ -95,6 +95,7 @@ export function SiteFooter() {
       <div className="border-t border-border">
         <div className="mx-auto flex max-w-[1280px] flex-col gap-2 px-5 pb-24 pt-5 text-[11px] tracking-wider text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-6 xl:pb-5 lg:px-12">
           <p>© {new Date().getFullYear()} BiBi Studio · Touch your heart</p>
+          <AnalyticsPrivacyControl />
           <p className="flex gap-5">
             <Link to="/about" className="hover:text-foreground">Về BiBi</Link>
             <Link to="/contact" className="hover:text-foreground">Liên hệ</Link>
@@ -105,3 +106,4 @@ export function SiteFooter() {
     </footer>
   );
 }
+import { AnalyticsPrivacyControl } from "./analytics-privacy-control";

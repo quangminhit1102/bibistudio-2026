@@ -13,7 +13,28 @@ if (manifest.isBaseline) {
     .listen();
 } else {
   const { createApp } = require(path.join(current, "backend/dist/app.js"));
-  http
-    .createServer(createApp({ releaseId: manifest.releaseId, sourceSha: manifest.sourceSha }))
-    .listen();
+  let runtime;
+  if (manifest.database) {
+    const { readPrivateEnvironment } = require(
+      path.join(current, "backend/dist/db/private-env.js"),
+    );
+    const { createRuntime } = require(path.join(current, "backend/dist/runtime.js"));
+    const env = readPrivateEnvironment(path.resolve(__dirname, "../private/runtime.env"));
+    runtime = createRuntime({ ...env, NODE_ENV: "production" });
+  }
+  const server = http.createServer(
+    createApp({
+      ...runtime?.appOptions,
+      releaseId: manifest.releaseId,
+      sourceSha: manifest.sourceSha,
+    }),
+  );
+  server.listen();
+  let closing;
+  const close = () =>
+    (closing ??= new Promise((resolve) => {
+      server.close(() => Promise.resolve(runtime?.close()).then(resolve));
+    }));
+  process.once("SIGTERM", close);
+  process.once("SIGINT", close);
 }

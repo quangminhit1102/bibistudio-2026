@@ -20,6 +20,7 @@ export async function createAuthFixture(t) {
   };
   return {
     ...fixture,
+    dbConfig: fixture.config,
     secrets,
     config,
     auth: createAuthService({ pool: fixture.pool, clock: fixture.clock, config }),

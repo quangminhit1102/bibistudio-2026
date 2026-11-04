@@ -5,7 +5,10 @@ import { resolve, join, extname, sep } from "node:path";
 import { validateBundle } from "./build.mjs";
 import { isMain, root } from "./runtime.mjs";
 
-export async function previewRelease(bundleDir, { port = 4173, host = "127.0.0.1" } = {}) {
+export async function previewRelease(
+  bundleDir,
+  { port = 4173, host = "127.0.0.1", runtimeEnv = process.env } = {},
+) {
   bundleDir = resolve(bundleDir);
   const manifest = await validateBundle(bundleDir);
   // Local preview resolves the exact already-installed backend dependency set;
@@ -17,8 +20,16 @@ export async function previewRelease(bundleDir, { port = 4173, host = "127.0.0.1
     process.platform === "win32" ? "junction" : "dir",
   );
   const require = createRequire(join(bundleDir, "backend/package.json"));
-  const { createApp } = require(join(bundleDir, "backend/dist/app.js"));
-  const api = createApp(manifest);
+  let runtime, api;
+  try {
+    const { createApp } = require(join(bundleDir, "backend/dist/app.js"));
+    if (manifest.database)
+      runtime = require(join(bundleDir, "backend/dist/runtime.js")).createRuntime(runtimeEnv);
+    api = createApp(manifest, runtime?.appOptions);
+  } catch (error) {
+    await unlink(dependencyLink);
+    throw error;
+  }
   const publicRoot = join(bundleDir, "frontend");
   const types = {
     ".html": "text/html; charset=utf-8",
@@ -69,10 +80,16 @@ export async function previewRelease(bundleDir, { port = 4173, host = "127.0.0.1
       res.end("Preview error");
     }
   });
-  await new Promise((done, reject) => {
-    server.once("error", reject);
-    server.listen(port, host, done);
-  });
+  try {
+    await new Promise((done, reject) => {
+      server.once("error", reject);
+      server.listen(port, host, done);
+    });
+  } catch (error) {
+    await runtime?.close();
+    await unlink(dependencyLink);
+    throw error;
+  }
   const address = server.address();
   const url = `http://127.0.0.1:${address.port}`;
   console.log(`BIBI_PREVIEW ${url}/api-test`);
@@ -84,10 +101,17 @@ export async function previewRelease(bundleDir, { port = 4173, host = "127.0.0.1
         server.close(done);
       });
       await unlink(dependencyLink);
+      await runtime?.close();
     },
   };
 }
 if (isMain(import.meta.url)) {
+  try {
+    process.loadEnvFile(join(root, ".env.local"));
+  } catch (error) {
+    if (error.code !== "ENOENT") throw error;
+  }
+  if (process.env.BIBI_PRIVATE_ENV_FILE) process.loadEnvFile(process.env.BIBI_PRIVATE_ENV_FILE);
   const app = await previewRelease(process.argv[2], {
     port: Number(process.env.PREVIEW_PORT ?? 4173),
   });

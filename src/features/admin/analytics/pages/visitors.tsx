@@ -3,6 +3,8 @@ import { EntityManager, type EntityConfig } from "../../shared/entity-manager";
 import { internalTarget } from "../../shared/lib/navigation";
 import { dateTime } from "../../shared/lib/text";
 import { VisitorDialog } from "../components/visitor-dialog";
+import { useAdmin } from "../../services/context";
+import { ServerVisitors } from "../server-visitors";
 function visitorHref(id: string) {
   const q = new URLSearchParams(typeof location !== "undefined" ? location.search : "");
   q.set("visitor", id);
@@ -98,6 +100,10 @@ const config: EntityConfig<"visitors"> = {
   ),
 };
 export default function Visitors() {
+  const runtime = useAdmin();
+  return runtime.http ? <ServerVisitors /> : <FixtureVisitors />;
+}
+function FixtureVisitors() {
   const navigate = useNavigate(),
     search = useSearch({ strict: false }) as Record<string, unknown>;
   const id = typeof search.visitor === "string" ? search.visitor : undefined;

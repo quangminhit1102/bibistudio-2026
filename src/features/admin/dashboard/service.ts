@@ -3,16 +3,34 @@ import { can, authorizeOperation } from "../accounts/permissions";
 import { ensureDataset } from "../demo/registry";
 import { aggregateAnalytics, previousRange, within, type DateRange } from "../analytics/aggregate";
 import { summarizeSlips } from "../sales/slip-aggregate";
+import type { PrincipalDto, Page, AccountDto } from "../../../../backend/src/http/contracts";
+import type { AdminHttpClient } from "../../../lib/admin-http";
+import { createVisitorApi } from "../analytics/http-api";
+export async function loadServerDashboard(
+  http: AdminHttpClient,
+  principal: PrincipalDto,
+  signal?: AbortSignal,
+) {
+  const allowed = (permission: string) =>
+    principal.fullAccess || principal.isMaster || principal.permissions.includes(permission);
+  const [visitors, accounts] = await Promise.all([
+    allowed("customer_access.view") ? createVisitorApi(http).report(signal) : null,
+    allowed("account.view")
+      ? http.request<Page<AccountDto>>("/api/accounts?page=1&pageSize=1&search=", { signal })
+      : null,
+  ]);
+  return { visitors, accounts: accounts?.total ?? null };
+}
 export async function loadDashboard(
   store: AdminStore,
   session: DemoSession | null,
   range: DateRange,
 ) {
   const active = await authorizeOperation(store, session, "dashboard", "view");
+  const serverIdentity = session?.kind === "http";
   await Promise.all([
-    ensureDataset(store, "sessions"),
+    ...(serverIdentity ? [] : [ensureDataset(store, "sessions"), ensureDataset(store, "users")]),
     ensureDataset(store, "purchaseSlips"),
-    ensureDataset(store, "users"),
     ensureDataset(store, "notifications"),
   ]);
   const role =
@@ -20,13 +38,13 @@ export async function loadDashboard(
   const permitted = (resource: Parameters<typeof can>[1]) => can(session, resource, "view", role);
   const [visitors, sessions, slips, customers, products, users, activity, notifications] =
     await Promise.all([
-      store.list("visitors"),
-      store.list("sessions"),
+      serverIdentity ? [] : store.list("visitors"),
+      serverIdentity ? [] : store.list("sessions"),
       store.list("purchaseSlips"),
       store.list("customers"),
       store.list("products"),
-      store.list("users"),
-      store.list("audit"),
+      serverIdentity ? [] : store.list("users"),
+      serverIdentity ? [] : store.list("audit"),
       store.list("notifications"),
     ]);
   const prior = previousRange(range),

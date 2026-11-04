@@ -15,6 +15,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { FloatingContact } from "../components/floating-contact";
 import { isAdminPath } from "../lib/admin-boundary";
+import { VisitorTracking } from "../components/visitor-tracking";
 
 function NotFoundComponent() {
   return (
@@ -150,12 +151,14 @@ function ImageFade() {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const pathname = useRouterState({ select: (state) => state.matches.every(match => match.status === "success") ? state.location.pathname : "" });
   const admin = useRouterState({ select: (state) => isAdminPath(state.location.pathname, import.meta.env.VITE_ROUTER_BASEPATH || '/') });
 
   return (
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
+      <VisitorTracking pathname={pathname} />
       {!admin && <FloatingContact />}
       {!admin && <ImageFade />}
     </QueryClientProvider>

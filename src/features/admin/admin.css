@@ -2121,6 +2121,36 @@
   border-bottom: 1px solid var(--a-border);
   overflow-wrap: anywhere;
 }
+.admin-root .a-visitor-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin: 24px 0;
+}
+.admin-root .a-visitor-filters label {
+  display: grid;
+  flex: 1 1 180px;
+  min-width: 0;
+  gap: 8px;
+}
+.admin-root .a-visitor-filters select {
+  width: 100%;
+  min-height: 44px;
+  min-width: 0;
+  padding: 8px 12px;
+  border: 1px solid var(--a-border);
+  border-radius: 6px;
+  color: var(--a-text);
+  background: var(--a-surface);
+}
+.admin-root .a-visitor-session ul,
+.admin-root .a-visitor-session details {
+  margin-block: 12px;
+}
+.admin-root .a-visitor-session summary {
+  cursor: pointer;
+  padding-block: 8px;
+}
 .admin-root .a-dialog-body > h2 {
   margin-block: 20px 12px;
 }

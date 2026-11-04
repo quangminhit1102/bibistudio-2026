@@ -12,6 +12,21 @@ jobs:
   verify:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    services:
+      mysql:
+        image: mariadb@sha256:d769e37960821dfdcf096954f6e7ac89f747e116c1bba98e48edd265dfc7deae
+        env:
+          MYSQL_ROOT_PASSWORD: ci-test-only
+          MYSQL_ROOT_HOST: "%"
+        ports:
+          - "127.0.0.1:33384:3306"
+        options: >-
+          --health-cmd="mysqladmin ping -h127.0.0.1 -pci-test-only --silent"
+          --health-interval=5s --health-timeout=3s --health-retries=30
+    env:
+      BIBI_TEST_DB_HOST: 127.0.0.1
+      BIBI_TEST_DB_PORT: "33384"
+      BIBI_TEST_DB_PASSWORD: ci-test-only
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
         with:
@@ -25,7 +40,10 @@ jobs:
             backend/package-lock.json
             ops/package-lock.json
       - run: npm ci
+      - run: node node_modules/playwright/cli.js install --with-deps chromium
       - run: npm run check
+        env:
+          BIBI_TEST_DB_CONTAINER: ${{ job.services.mysql.id }}
       - run: npm run build
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'

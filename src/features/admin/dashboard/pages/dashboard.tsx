@@ -10,12 +10,24 @@ import { useAdmin, useRole } from "../../services/context";
 import { can } from "../../accounts/permissions";
 import type { Resource } from "../../services/contracts";
 import type { ReactNode } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { loadServerDashboard } from "../service";
 function Access({ resource, children }: { resource: Resource; children: ReactNode }) {
   const runtime = useAdmin();
   const role = useRole();
   return can(runtime.session, resource, "view", role.data) ? children : null;
 }
 export default function Dashboard() {
+  const runtime = useAdmin();
+  const server = runtime.session?.kind === "http";
+  const live = useQuery({
+    queryKey: ["bibi-admin", "http-dashboard", runtime.session?.userId],
+    enabled: !!runtime.http && server,
+    queryFn: ({ signal }) => {
+      if (!runtime.http || runtime.session?.kind !== "http") throw new Error("Phiên không hợp lệ");
+      return loadServerDashboard(runtime.http, runtime.session.principal, signal);
+    },
+  });
   const [anchor] = useState(() => new Date());
   const [range, setRange] = useState(() => businessRange("30", anchor));
   const report = useAnalytics(range, true);
@@ -26,8 +38,15 @@ export default function Dashboard() {
         value={range}
         onChange={setRange}
         resolvePreset={(p) => businessRange(p, anchor)}
-        caption="Ngày theo giờ Việt Nam"
+        caption={
+          server
+            ? "Bộ lọc áp dụng cho phiếu mua hàng. Khách truy cập tổng hợp trong 90 ngày."
+            : "Ngày theo giờ Việt Nam"
+        }
       />
+      {server && live.error && (
+        <ErrorState error={live.error} onRetry={() => void live.refetch()} />
+      )}
       {report.isPending ? (
         <Skeleton rows={8} />
       ) : report.error ? (
@@ -64,15 +83,25 @@ export default function Dashboard() {
                 />
                 <Kpi
                   title="Khách truy cập"
-                  value={r.current.uniqueVisitors}
-                  raw={r.current.uniqueVisitors}
-                  previous={r.previous.uniqueVisitors}
-                  description="Số anonymous visitor khác nhau có phiên bắt đầu trong kỳ."
+                  value={
+                    server ? (live.data?.visitors?.totalVisitors ?? "—") : r.current.uniqueVisitors
+                  }
+                  raw={server ? undefined : r.current.uniqueVisitors}
+                  previous={server ? undefined : r.previous.uniqueVisitors}
+                  description={
+                    server
+                      ? "Trình duyệt ẩn danh được ghi nhận trong 90 ngày gần nhất."
+                      : "Số anonymous visitor khác nhau có phiên bắt đầu trong kỳ."
+                  }
                 />
                 <Kpi
-                  title="Người dùng hoạt động"
-                  value={active}
-                  description="Tài khoản quản trị hoạt động và có lastLogin trong kỳ."
+                  title={server ? "Tài khoản" : "Người dùng hoạt động"}
+                  value={server ? (live.data?.accounts ?? "—") : active}
+                  description={
+                    server
+                      ? "Tổng tài khoản trên máy chủ, gồm hoạt động và ngừng hoạt động."
+                      : "Tài khoản quản trị hoạt động và có lastLogin trong kỳ."
+                  }
                 />
                 <Kpi
                   title="Tỷ lệ chuyển đổi"
@@ -121,13 +150,40 @@ export default function Dashboard() {
               </div>
               <div className="a-grid-2">
                 <ChartCard title="Phiếu mua hàng theo thời gian" data={b.countTrend} kind="bar" />
-                <ChartCard title="Khách truy cập theo ngày" data={r.current.trend} kind="line" />
+                {server ? (
+                  <Card>
+                    <h2>Sản phẩm được quan tâm</h2>
+                    {live.isPending ? (
+                      <Skeleton rows={2} />
+                    ) : live.data?.visitors ? (
+                      <>
+                        <p>{live.data.visitors.totalSessions} phiên trong 90 ngày</p>
+                        <ul>
+                          {live.data.visitors.products.slice(0, 10).map((product) => (
+                            <li key={product.slug}>
+                              {product.name} · {product.interestedVisitors} khách
+                            </li>
+                          ))}
+                        </ul>
+                        {!live.data.visitors.products.length && (
+                          <p>Chưa ghi nhận sản phẩm được quan tâm.</p>
+                        )}
+                      </>
+                    ) : (
+                      <p>Không có dữ liệu được phép xem.</p>
+                    )}
+                  </Card>
+                ) : (
+                  <ChartCard title="Khách truy cập theo ngày" data={r.current.trend} kind="line" />
+                )}
                 <ChartCard
                   title="Giá trị sản phẩm ghi nhận theo nhóm"
                   data={categories}
                   kind="donut"
                 />
-                <ChartCard title="Nguồn truy cập" data={r.current.sources} kind="donut" />
+                {!server && (
+                  <ChartCard title="Nguồn truy cập" data={r.current.sources} kind="donut" />
+                )}
                 <ChartCard
                   title="Sản phẩm bán nhiều"
                   data={b.byProduct
@@ -161,54 +217,62 @@ export default function Dashboard() {
                     </div>
                   </Card>
                 </Access>
-                <Access resource="audit">
-                  <Card>
-                    <h2>Hoạt động gần đây</h2>
-                    <ol className="a-timeline" style={{ marginTop: 20 }}>
-                      {r.activity
-                        .slice(-5)
-                        .reverse()
-                        .map((a) => (
-                          <li key={a.id}>
-                            {a.action} · {a.resource}
-                            <small>{date(a.createdAt)}</small>
-                          </li>
-                        ))}
-                    </ol>
-                    {!r.activity.length && (
-                      <p style={{ marginTop: 18, color: "var(--a-muted)", fontSize: 12 }}>
-                        Hoạt động chỉnh sửa sẽ xuất hiện ở đây.
-                      </p>
-                    )}
-                  </Card>
-                </Access>
+                {!server && (
+                  <Access resource="audit">
+                    <Card>
+                      <h2>Hoạt động gần đây</h2>
+                      <ol className="a-timeline" style={{ marginTop: 20 }}>
+                        {r.activity
+                          .slice(-5)
+                          .reverse()
+                          .map((a) => (
+                            <li key={a.id}>
+                              {a.action} · {a.resource}
+                              <small>{date(a.createdAt)}</small>
+                            </li>
+                          ))}
+                      </ol>
+                      {!r.activity.length && (
+                        <p style={{ marginTop: 18, color: "var(--a-muted)", fontSize: 12 }}>
+                          Hoạt động chỉnh sửa sẽ xuất hiện ở đây.
+                        </p>
+                      )}
+                    </Card>
+                  </Access>
+                )}
                 <Access resource="notifications">
                   <NotificationSummary />
                 </Access>
                 <Access resource="analytics">
                   <Card>
                     <h2>Khách truy cập gần đây</h2>
-                    <div className="a-table-wrap" style={{ marginTop: 16 }}>
-                      <table className="a-table" style={{ minWidth: 300 }}>
-                        <tbody>
-                          {r.visitors
-                            .slice()
-                            .sort((a, c) => c.lastSeenAt.localeCompare(a.lastSeenAt))
-                            .slice(0, 5)
-                            .map((v) => (
-                              <tr key={v.id}>
-                                <td>
-                                  <Link to="/admin/analytics/visitors" search={{ visitor: v.id }}>
-                                    {v.anonymousId}
-                                  </Link>
-                                </td>
-                                <td>{v.deviceType}</td>
-                                <td>{v.country}</td>
-                              </tr>
-                            ))}
-                        </tbody>
-                      </table>
-                    </div>
+                    {server ? (
+                      <Link className="a-btn" to="/admin/analytics/visitors">
+                        Xem khách truy cập trên máy chủ
+                      </Link>
+                    ) : (
+                      <div className="a-table-wrap" style={{ marginTop: 16 }}>
+                        <table className="a-table" style={{ minWidth: 300 }}>
+                          <tbody>
+                            {r.visitors
+                              .slice()
+                              .sort((a, c) => c.lastSeenAt.localeCompare(a.lastSeenAt))
+                              .slice(0, 5)
+                              .map((v) => (
+                                <tr key={v.id}>
+                                  <td>
+                                    <Link to="/admin/analytics/visitors" search={{ visitor: v.id }}>
+                                      {v.anonymousId}
+                                    </Link>
+                                  </td>
+                                  <td>{v.deviceType}</td>
+                                  <td>{v.country}</td>
+                                </tr>
+                              ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
                   </Card>
                 </Access>
               </div>

@@ -1,12 +1,12 @@
 # BiBi Admin — hướng dẫn cho người và agent
 
-Admin nằm trong app hiện có tại `/admin`, dùng React, TanStack Router/Query, TypeScript và CSS scoped. Giao diện dùng tiếng Việt, dữ liệu lưu trong trình duyệt; chưa nối auth server, MySQL hoặc thanh toán. Catalogue khởi tạo lấy từ dữ liệu website, các sửa đổi admin chưa xuất bản ra website. Không nhập dữ liệu nhạy cảm vào bản local này.
+Admin nằm trong app hiện có tại `/admin`, dùng React, TanStack Router/Query, TypeScript và CSS scoped. Đợt auth04/11 đang triển khai local: login, RBAC, account/role/permission, audit và khách truy cập đã nối Express/MySQL. Chưa phát hành đợt này lên production. Catalogue/content/media và nghiệp vụ kinh doanh vẫn lưu trong trình duyệt; sửa admin chưa xuất bản catalogue public. Xem [API/schema](admin-auth-api.md) và [vận hành/giới hạn](admin-auth-operations.md).
 
 ## Chạy và kiểm tra
 
-Dùng Node24 và các lệnh ở [build-and-deploy.md](build-and-deploy.md): `npm ci`, `npm run dev`, `npm run check`, `npm run build`. FE và BE chạy cùng bằng một lệnh dev; mở `http://localhost:5173/admin`. Đăng nhập local bằng **bibi.admin / BibiLocal!2026**. Đây là fixture công khai trong source, không phải credential hosting hoặc bảo vệ production.
+Dùng Node24 và Docker Desktop. Sau `npm ci`, chạy `npm run db:setup:local` một lần để tạo DB develop, migrate và seed. Sau đó dùng các lệnh ở [build-and-deploy.md](build-and-deploy.md): `npm run dev`, `npm run check`, `npm run build`. FE và BE chạy cùng bằng một lệnh dev; mở `http://localhost:5173/admin`. Account local là `admin`/`user01`; password bootstrap local nằm trong file ignored `.env.migration.local`. Không dùng fixture bibi.admin trước đây để đăng nhập runtime mới.
 
-`npm run test:admin` chỉ chạy bộ test admin. `npm run check` còn kiểm tra TypeScript, lint, ảnh catalogue, tooling triển khai và API. Build release dùng nguyên pipeline cPanel hiện có; admin được phát hành cùng FE khi có yêu cầu phát hành riêng. Không tự push/deploy chỉ vì test hoặc build đạt.
+`npm run test:admin` chỉ chạy bộ test admin. `npm run check` còn kiểm tra TypeScript, lint, ảnh catalogue, tooling, API với MySQL test và Chromium UI. Artifact auth có manifest schemaVersion2 để receiver cũ từ chối. Chưa phát hành trước khi hosting backup/migration/probe/rollback mới được kiểm chứng; build thành công không chứng minh đã deploy.
 
 ## Biên tập Bài viết và Sản phẩm — local
 

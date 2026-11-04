@@ -6,6 +6,8 @@ import * as tar from "tar";
 import { root, run, isMain } from "./runtime.mjs";
 import { validateCatalogue } from "./catalogue-images.mjs";
 import { makeManifest, validateManifest } from "./release-manifest.mjs";
+import databaseMetadata from "../ops/database-metadata.cjs";
+import { writeAnalyticsCatalogue } from "./analytics-catalogue.mjs";
 
 export async function validateBundle(dir) {
   for (const name of [
@@ -25,6 +27,10 @@ export async function validateBundle(dir) {
   }
   const manifest = validateManifest(JSON.parse(await readFile(join(dir, "manifest.json"), "utf8")));
   const fe = JSON.parse(await readFile(join(dir, "frontend/version.json"), "utf8"));
+  if (manifest.database) {
+    await stat(join(dir, "backend/dist/runtime.js"));
+    await databaseMetadata.verifyDatabaseAssets(join(dir, "backend"), manifest.database);
+  }
   if (fe.releaseId !== manifest.releaseId || fe.sourceSha !== manifest.sourceSha)
     throw new Error("FE/BE release mismatch");
   async function scan(path) {
@@ -47,7 +53,12 @@ export async function buildRelease({
   outputDir = join(root, ".releases"),
 } = {}) {
   sourceSha ??= execFileSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).trim();
-  const manifest = makeManifest(sourceSha, ciRunId);
+  await writeAnalyticsCatalogue(root);
+  const manifest = makeManifest(
+    sourceSha,
+    ciRunId,
+    await databaseMetadata.createDatabaseMetadata(join(root, "backend")),
+  );
   const base = resolve(outputDir);
   const bundleDir = join(base, manifest.releaseId);
   if (relative(base, bundleDir).startsWith("..") || bundleDir === base)
@@ -87,8 +98,22 @@ export async function buildRelease({
   await cp(join(root, "backend/dist"), join(bundleDir, "backend/dist"), { recursive: true });
   for (const file of ["package.json", "package-lock.json"])
     await cp(join(root, "backend", file), join(bundleDir, "backend", file));
+  await cp(join(root, "backend/migrations"), join(bundleDir, "backend/migrations"), {
+    recursive: true,
+  });
+  await cp(
+    join(root, "backend/analytics-catalogue.json"),
+    join(bundleDir, "backend/analytics-catalogue.json"),
+  );
   for (const file of ["manifest.json", "frontend/version.json"])
-    await writeFile(join(bundleDir, file), JSON.stringify(manifest, null, 2) + "\n");
+    await writeFile(
+      join(bundleDir, file),
+      JSON.stringify(
+        file === "manifest.json" ? manifest : makeManifest(sourceSha, ciRunId),
+        null,
+        2,
+      ) + "\n",
+    );
   await validateBundle(bundleDir);
   const archive = join(base, `${manifest.releaseId}.tgz`);
   await tar.c({ cwd: bundleDir, file: archive, gzip: true, portable: true, mtime: new Date(0) }, [

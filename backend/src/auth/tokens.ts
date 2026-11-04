@@ -18,6 +18,7 @@ export function signAccess(claims: AccessClaims, config: AuthConfig, clock: Cloc
 }
 export function verifyAccess(token: string, config: AuthConfig, clock: Clock): AccessClaims {
   try {
+    if (token.length > 4096) throw new Error("Invalid token size");
     const value = jwt.verify(token, config.jwtSecret, {
       algorithms: ["HS256"],
       issuer: config.jwtIssuer,
@@ -28,7 +29,14 @@ export function verifyAccess(token: string, config: AuthConfig, clock: Clock): A
       typeof value === "string" ||
       typeof value.sub !== "string" ||
       typeof value.sid !== "string" ||
-      !Number.isSafeInteger(value.authVersion)
+      !/^[a-f0-9-]{36}$/i.test(value.sub) ||
+      !/^[a-f0-9-]{36}$/i.test(value.sid) ||
+      !Number.isSafeInteger(value.authVersion) ||
+      Number(value.authVersion) < 1 ||
+      !Number.isSafeInteger(value.iat) ||
+      !Number.isSafeInteger(value.exp) ||
+      Number(value.exp) - Number(value.iat) !== 900 ||
+      Number(value.iat) > Math.floor(+clock.now() / 1000)
     )
       throw new Error("Invalid claims");
     return { sub: value.sub, sid: value.sid, authVersion: value.authVersion as number };

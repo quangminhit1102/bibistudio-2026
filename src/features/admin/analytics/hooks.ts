@@ -7,8 +7,15 @@ export function useAnalytics(range: DateRange, includeBusiness = false) {
   const runtime = useAdmin();
   const role = useRole();
   return useQuery({
-    queryKey: ["bibi-admin", "analytics-report", range, includeBusiness, runtime.session?.roleId],
-    enabled: !!runtime.session && !role.isPending,
+    queryKey: [
+      "bibi-admin",
+      "analytics-report",
+      range,
+      includeBusiness,
+      runtime.session?.userId,
+      runtime.session?.roleId,
+    ],
+    enabled: !!runtime.session && (runtime.session.kind === "http" || !role.isPending),
     queryFn: async () => {
       if (includeBusiness) return loadDashboard(runtime.store, runtime.session, range);
       requirePermission(

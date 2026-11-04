@@ -83,3 +83,18 @@ test("without Web Locks restore returns login and access expiry requires a fresh
   expect(refreshes).toBe(0);
   expect(unauthorized).toBe(1);
 });
+test("malformed API JSON produces a safe error without echoing response contents", async () => {
+  const client = createAdminHttp({
+    origin: "http://localhost",
+    refreshLock: immediateLock,
+    fetch: async () =>
+      new Response('{"private":"response-secret",broken}', {
+        status: 503,
+        headers: { "content-type": "application/json" },
+      }),
+  });
+  await expect(client.login({ username: "user01", password: "test-only" })).rejects.toMatchObject({
+    code: "INVALID_RESPONSE",
+    message: "Phản hồi API không hợp lệ",
+  });
+});
