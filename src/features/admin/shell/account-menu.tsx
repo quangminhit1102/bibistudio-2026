@@ -5,30 +5,48 @@ import { ProfileAvatar } from "../accounts/account-avatar";
 import { roleNames } from "../accounts/permissions";
 import { ActionMenu } from "../shared/ui/primitives";
 import { ChevronsUpDown } from "lucide-react";
-export function AccountMenu({ user, compact = false }: { user: AdminUser; compact?: boolean }) {
+import type { PrincipalDto } from "../../../../backend/src/http/contracts";
+import { can } from "../accounts/permissions";
+export function AccountMenu({
+  user,
+  compact = false,
+}: {
+  user: AdminUser | PrincipalDto;
+  compact?: boolean;
+}) {
   const runtime = useAdmin(),
     navigate = useNavigate();
+  const server = "displayName" in user;
+  const name = server ? user.displayName : user.name;
+  const role = server
+    ? user.roles.map((item) => item.name).join(", ")
+    : (roleNames[user.roleId] ?? user.roleId);
+  const showProfile = runtime.session?.kind !== "http" || can(runtime.session, "accounts", "view");
   return (
     <div className={`a-account-menu ${compact ? "a-account-compact" : ""}`}>
       <ActionMenu
-        label={`Tài khoản ${user.name}`}
+        label={`Tài khoản ${name}`}
         trigger={
           <>
-            <ProfileAvatar user={user} size={compact ? 32 : 36} />
+            <ProfileAvatar user={server ? { id: user.id, name } : user} size={compact ? 32 : 36} />
             {!compact && (
               <span className="a-account-label">
-                <strong>{user.name}</strong>
-                <small>{roleNames[user.roleId] ?? user.roleId}</small>
+                <strong>{name}</strong>
+                <small>{role || "Chưa có vai trò"}</small>
               </span>
             )}
             {!compact && <ChevronsUpDown size={14} />}
           </>
         }
         items={[
-          {
-            label: "Hồ sơ",
-            onSelect: () => void navigate({ to: "/admin/settings/profile" as "/admin" }),
-          },
+          ...(showProfile
+            ? [
+                {
+                  label: "Hồ sơ",
+                  onSelect: () => void navigate({ to: "/admin/settings/profile" as "/admin" }),
+                },
+              ]
+            : []),
           { label: "Đăng xuất", onSelect: () => void runtime.logout() },
         ]}
       />

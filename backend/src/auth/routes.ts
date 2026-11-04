@@ -114,8 +114,11 @@ export function authRoutes({
     const header = req.get("authorization") ?? "";
     if (!header.startsWith("Bearer "))
       throw new ApiError(401, "UNAUTHENTICATED", "Vui lòng đăng nhập lại");
-    await auth.revoke(await auth.authenticate(header.slice(7)), command);
-    res.clearCookie(cookieName, cookieOptions).sendStatus(204);
+    const actor = await auth.authenticate(header.slice(7));
+    await auth.revoke(actor, command);
+    if (!command.userId || command.userId === actor.principal.id)
+      res.clearCookie(cookieName, cookieOptions);
+    res.sendStatus(204);
   });
   return router;
 }

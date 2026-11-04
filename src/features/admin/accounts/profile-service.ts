@@ -5,6 +5,8 @@ import { ServiceError } from "../services/errors";
 import { validateRecord } from "../services/validation";
 const profile = z.object({ name: z.string().trim().min(1).max(200), email: z.string().email() });
 export async function getProfile(store: AdminStore, session: DemoSession | null) {
+  if (session?.kind === "http")
+    throw new ServiceError("forbidden", "Hồ sơ tài khoản được quản lý qua API máy chủ");
   const user = session ? await store.get("users", session.userId) : undefined;
   if (!user?.active || user.roleId !== session?.roleId || !(await store.get("roles", user.roleId)))
     throw new ServiceError("forbidden", "Phiên không còn hoạt động.");

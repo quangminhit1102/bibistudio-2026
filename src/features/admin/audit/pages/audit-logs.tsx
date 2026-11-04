@@ -3,7 +3,13 @@ import { EntityManager, type EntityConfig } from "../../shared/entity-manager";
 import type { AuditEvent } from "../../services/contracts";
 import { Button, Modal } from "../../shared/ui/primitives";
 import { date } from "../../shared/lib/text";
+import { useAdmin } from "../../services/context";
+import { ServerAudit } from "../server-audit";
 export default function AuditLogs() {
+  const runtime = useAdmin();
+  return runtime.http ? <ServerAudit /> : <FixtureAuditLogs />;
+}
+function FixtureAuditLogs() {
   const [selected, setSelected] = useState<AuditEvent | null>(null);
   const config = useMemo<EntityConfig<"audit">>(
     () => ({

@@ -1,44 +1,12 @@
 import { randomUUID } from "node:crypto";
 import type { Pool, RowDataPacket } from "mysql2/promise";
 import { hashPassword } from "../auth/password";
+import { permissionDefinitions } from "../authorization/registry";
 
 export interface SeedSecrets {
   masterPassword: string;
   userPassword: string;
 }
-const resources = [
-  "customer_access",
-  "account",
-  "role",
-  "permission",
-  "audit",
-  "dashboard",
-  "product",
-  "category",
-  "inventory",
-  "customer",
-  "sales_slip",
-  "sales_report",
-  "post",
-  "media",
-  "notification",
-  "settings",
-  "components",
-];
-const actions = [
-  "view",
-  "create",
-  "update",
-  "delete",
-  "activate",
-  "deactivate",
-  "assign_role",
-  "assign_permission",
-  "revoke_session",
-  "export",
-  "settings",
-];
-
 /** Explicit bootstrap only. Never reset a seed identity, its status or mappings. */
 export async function seedIdentity(pool: Pool, secrets: SeedSecrets): Promise<void> {
   const connection = await pool.getConnection();
@@ -50,14 +18,12 @@ export async function seedIdentity(pool: Pool, secrets: SeedSecrets): Promise<vo
     if (lock.acquired !== 1) throw new Error("Seed lock unavailable");
     locked = true;
     await connection.beginTransaction();
-    for (const resource of resources)
-      for (const action of actions) {
-        const code = `${resource}.${action}`;
-        await connection.execute(
-          "INSERT IGNORE INTO permissions(id,code,description) VALUES (?,?,?)",
-          [code, code, code],
-        );
-      }
+    for (const permission of permissionDefinitions) {
+      await connection.execute(
+        "INSERT IGNORE INTO permissions(id,code,description) VALUES (?,?,?)",
+        [permission.code, permission.code, permission.description],
+      );
+    }
     await connection.execute(
       "INSERT IGNORE INTO roles(id,name,is_system,full_access) VALUES ('system-admin','Admin',1,1)",
     );

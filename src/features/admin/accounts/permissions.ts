@@ -12,6 +12,10 @@ export async function authorizeOperation(
     if (generation !== store.generation)
       throw new ServiceError("aborted", "Phiên đã thay đổi. Thao tác cũ đã bị hủy.");
   };
+  if (session?.kind === "http") {
+    requirePermission(session, resource, action);
+    return assertActive;
+  }
   const role = session ? await store.get("roles", session.roleId) : undefined;
   const user = session ? await store.get("users", session.userId) : undefined;
   assertActive();
@@ -34,6 +38,25 @@ export const resources: Resource[] = [
   "components",
 ];
 export const actions: Action[] = ["view", "create", "update", "delete", "export", "settings"];
+const serverResource: Record<Resource, string> = {
+  dashboard: "dashboard",
+  analytics: "customer_access",
+  products: "product",
+  bookstore: "customer",
+  sales: "sales_slip",
+  content: "post",
+  accounts: "account",
+  audit: "audit",
+  notifications: "notification",
+  settings: "settings",
+  components: "components",
+};
+export function canCode(session: DemoSession | null, code: string): boolean {
+  return (
+    session?.kind === "http" &&
+    (session.principal.fullAccess || session.principal.permissions.includes(code))
+  );
+}
 export const roleNames: Record<string, string> = {
   "super-admin": "Quản trị cao nhất",
   administrator: "Quản trị viên",
@@ -78,6 +101,7 @@ export function defaultPermissions(id: string): Role["permissions"] {
   return {};
 }
 export function can(session: DemoSession | null, resource: Resource, action: Action, role?: Role) {
+  if (session?.kind === "http") return canCode(session, `${serverResource[resource]}.${action}`);
   return (
     !!session &&
     (role?.permissions ?? defaultPermissions(session.roleId))[resource]?.includes(action) === true

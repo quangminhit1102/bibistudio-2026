@@ -11,6 +11,7 @@ try {
   await node("node_modules/eslint/bin/eslint.js", [
     "src/features/admin",
     "src/lib/admin-boundary.ts",
+    "src/lib/admin-http.ts",
     "src/lib/route-leaf.tsx",
     "src/routes/admin*.tsx",
     "backend/src",

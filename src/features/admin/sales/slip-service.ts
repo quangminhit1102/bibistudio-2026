@@ -22,7 +22,7 @@ export function createSlipService(
     const actor = session(),
       generation = store.generation;
     if (!actor) throw new ServiceError("forbidden", "Vui lòng chọn tài khoản.");
-    await ensureDataset(store, "users");
+    if (actor.kind !== "http") await ensureDataset(store, "users");
     const assertActive = await authorizeOperation(store, actor, "sales", action);
     await ensureDataset(store, "purchaseSlips");
     const current = () => {
@@ -43,9 +43,9 @@ export function createSlipService(
       ["purchaseSlips", "settings", "audit", "customers", "products", "users", "roles"],
       async (tx) => {
         current();
-        const user = await tx.get("users", actor.userId),
-          role = await tx.get("roles", actor.roleId);
-        if (!user?.active || user.roleId !== actor.roleId)
+        const user = actor.kind !== "http" ? await tx.get("users", actor.userId) : undefined,
+          role = actor.kind !== "http" ? await tx.get("roles", actor.roleId) : undefined;
+        if (actor.kind !== "http" && (!user?.active || user.roleId !== actor.roleId))
           throw new ServiceError(
             "forbidden",
             "Tài khoản không còn hoạt động hoặc quyền đã thay đổi.",

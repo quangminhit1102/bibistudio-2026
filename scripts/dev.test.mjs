@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtemp, writeFile, rm } from "node:fs/promises";
+import { mkdtemp, writeFile, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createServer } from "node:net";
@@ -56,6 +56,10 @@ test(
       );
       await writeFile(entry, healthy + "\n");
       await until(() => states.at(-1) === "ready" && states.includes("unavailable"));
+      await service.close();
+      await assert.rejects(stat(join(directory, "vite-cache", "deps", "_metadata.json")), {
+        code: "ENOENT",
+      });
     } finally {
       await service?.close();
       await service?.close();

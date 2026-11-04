@@ -127,3 +127,37 @@ test("failed DDL stays dirty and explicit recovery resumes only recorded complet
   await pool.query("DROP TABLE roles");
   assert.equal((await migrate(pool, directory, { resumeDirty: true })).version, 4);
 });
+
+test("first bootstrap without both explicit secrets creates no partial/default identities", async (t) => {
+  const { pool } = await createDatabaseFixture(t);
+  const { migrate } = await import(migrationModule);
+  const { seedIdentity } = await import("../dist/db/seed.js");
+  await migrate(pool, directory);
+  await assert.rejects(
+    seedIdentity(pool, { masterPassword: "Only-test-Seed!99", userPassword: "" }),
+    /72/,
+  );
+  const [[users]] = await pool.query("SELECT COUNT(*) n FROM users");
+  const [[roles]] = await pool.query("SELECT COUNT(*) n FROM roles");
+  assert.equal(users.n, 0);
+  assert.equal(roles.n, 0);
+});
+
+test("unknown newer schema is refused before applying any packaged DDL", async (t) => {
+  const { pool } = await createDatabaseFixture(t);
+  const { migrate } = await import(migrationModule);
+  await migrate(pool, directory);
+  await pool.execute(
+    "INSERT INTO schema_migrations(version,checksum,state) VALUES (9,?,'complete')",
+    ["0".repeat(64)],
+  );
+  await pool.execute("DELETE FROM schema_migration_steps WHERE version=4");
+  await pool.execute("DELETE FROM schema_migrations WHERE version=4");
+  await pool.query("DROP TABLE release_probes");
+  await pool.query("DROP TABLE rate_limit_counters");
+  await assert.rejects(migrate(pool, directory), /newer|unknown/i);
+  const [[row]] = await pool.query(
+    "SELECT COUNT(*) n FROM information_schema.tables WHERE table_schema=DATABASE() AND table_name='rate_limit_counters'",
+  );
+  assert.equal(row.n, 0);
+});

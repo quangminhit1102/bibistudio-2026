@@ -1,6 +1,8 @@
 import type { AdminStore, DemoSession } from "../services/contracts";
 import { authorizeOperation, can, resourceForEntity } from "../accounts/permissions";
 import { ensureDataset } from "../demo/registry";
+import type { AdminHttpClient } from "../../../lib/admin-http";
+import { createAccountApi } from "../accounts/http-api";
 const paths = {
   products: "/admin/products/",
   customers: "/admin/customers/",
@@ -20,12 +22,29 @@ export async function searchAdmin(
   session: DemoSession | null,
   term: string,
   signal?: AbortSignal,
+  http?: AdminHttpClient,
 ) {
-  await ensureDataset(store, "users");
-  const role = session ? await store.get("roles", session.roleId) : undefined;
+  if (session?.kind !== "http") await ensureDataset(store, "users");
+  const role =
+    session && session.kind !== "http" ? await store.get("roles", session.roleId) : undefined;
   const { createEntityService } = await import("../services/entity-service");
   const matches = [];
+  if (session?.kind === "http" && http && can(session, "accounts", "view")) {
+    const accounts = await createAccountApi(http).list(
+      { page: 1, pageSize: 5, search: term },
+      signal,
+    );
+    for (const account of accounts.items)
+      matches.push({
+        id: account.id,
+        label: `${account.displayName} (${account.username})`,
+        entity: "users" as const,
+        kind: "Tài khoản",
+        path: paths.users + encodeURIComponent(account.id),
+      });
+  }
   for (const entity of Object.keys(paths) as (keyof typeof paths)[]) {
+    if (session?.kind === "http" && entity === "users") continue;
     const resource = resourceForEntity(entity);
     if (!can(session, resource, "view", role)) continue;
     const active = await authorizeOperation(store, session, resource, "view");

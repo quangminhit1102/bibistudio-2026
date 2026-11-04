@@ -65,7 +65,11 @@ export function createApp(release: ReleaseInfo, options: AppOptions = {}): Expre
     const [[master]] = await options.db.query<RowDataPacket[]>(
       "SELECT COUNT(*) n FROM users WHERE is_master=1 AND active=1 AND deleted_at IS NULL",
     );
-    if (schema.length !== 4 || schema.some((row) => row.state !== "complete") || master.n !== 1)
+    if (
+      schema.length !== 4 ||
+      schema.some((row, index) => row.version !== index + 1 || row.state !== "complete") ||
+      master.n !== 1
+    )
       throw new ApiError(503, "NOT_READY", "Dịch vụ chưa sẵn sàng");
     res.json({ ok: true });
   });
@@ -105,7 +109,7 @@ export function createApp(release: ReleaseInfo, options: AppOptions = {}): Expre
       requirePermission("permission.view"),
       async (req, res) => res.json(await roles.listPermissions(req.auth!)),
     );
-    app.use("/api/audit", auditRoutes(options.db, auth));
+    app.use("/api/audit", auditRoutes(options.db, auth, options.clock ?? systemClock));
   } else
     app.use(["/api/roles", "/api/permissions", "/api/audit"], () => {
       throw new ApiError(503, "NOT_READY", "Dịch vụ chưa sẵn sàng");

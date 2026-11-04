@@ -3,7 +3,7 @@ import { useAdmin } from "../../services/context";
 import { Button, Card, Field } from "../../shared/ui/primitives";
 import { Leaf, Eye, EyeOff, ArrowRight } from "lucide-react";
 export function Login() {
-  const { login } = useAdmin();
+  const { login, authNotice } = useAdmin();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [visible, setVisible] = useState(false);
@@ -71,9 +71,9 @@ export function Login() {
                 </Button>
               </span>
             </Field>
-            {error && (
+            {(error || authNotice) && (
               <p role="alert" className="a-error">
-                {error}
+                {error || authNotice}
               </p>
             )}
             <Button type="submit" variant="primary" loading={busy}>

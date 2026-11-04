@@ -16,9 +16,18 @@ export default function GlobalSearch({ onClose }: { onClose: () => void }) {
     return () => clearTimeout(timer);
   }, [q]);
   const results = useQuery({
-    queryKey: ["bibi-admin", "search", term, runtime.session?.roleId],
-    enabled: !role.isPending && term.trim().length > 1,
-    queryFn: ({ signal }) => searchAdmin(runtime.store, runtime.session, term, signal),
+    queryKey: [
+      "bibi-admin",
+      "search",
+      term,
+      runtime.session?.userId,
+      runtime.session?.kind === "http"
+        ? runtime.session.principal.revision
+        : runtime.session?.roleId,
+    ],
+    enabled: (runtime.session?.kind === "http" || !role.isPending) && term.trim().length > 1,
+    queryFn: ({ signal }) =>
+      searchAdmin(runtime.store, runtime.session, term, signal, runtime.http),
   });
   return (
     <Modal

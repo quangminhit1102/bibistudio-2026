@@ -29,6 +29,15 @@ test("role CRUD validates permissions, protects Admin and rejects deletion of in
     (
       await request(`/api/roles/${id}/permissions`, "PATCH", {
         revision: 2,
+        permissionIds: ["ACCOUNT.VIEW"],
+      })
+    ).status,
+    400,
+  );
+  assert.equal(
+    (
+      await request(`/api/roles/${id}/permissions`, "PATCH", {
+        revision: 2,
         permissionIds: ["account.view", "account.view"],
       })
     ).status,

@@ -1,3 +1,4 @@
+import { fixtureAuthFactory } from "./helpers/fixture-auth";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -70,7 +71,7 @@ function mount(entry: string) {
   });
   render(
     <QueryClientProvider client={client}>
-      <AdminProvider>
+      <AdminProvider authFactory={fixtureAuthFactory}>
         <RouterProvider router={router} />
       </AdminProvider>
     </QueryClientProvider>,

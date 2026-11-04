@@ -13,14 +13,45 @@ export async function migrate(
   directory: string,
   options: { resumeDirty?: boolean } = {},
 ): Promise<MigrationStatus> {
+  const files = (await readdir(directory))
+    .filter((name) => /^\d{3}_[a-z_]+\.sql$/.test(name))
+    .sort();
+  if (files.length === 0) throw new Error("Migration assets missing");
+  const assets = await Promise.all(
+    files.map(async (file, index) => {
+      const version = Number(file.slice(0, 3));
+      if (version !== index + 1) throw new Error("Migration sequence invalid");
+      const sql = await readFile(join(directory, file), "utf8");
+      return { version, sql, checksum: createHash("sha256").update(sql).digest("hex") };
+    }),
+  );
   const connection = await pool.getConnection();
   let locked = false;
   try {
     const [[lock]] = await connection.query<RowDataPacket[]>(
-      "SELECT GET_LOCK(CONCAT(DATABASE(),':bibi-migrate'),10) acquired",
+      "SELECT GET_LOCK(CONCAT('bibi-migrate:',LEFT(SHA2(DATABASE(),256),32)),10) acquired",
     );
     if (lock.acquired !== 1) throw new Error("Migration lock unavailable");
     locked = true;
+    const [[ledger]] = await connection.query<RowDataPacket[]>(
+      "SELECT COUNT(*) n FROM information_schema.tables WHERE table_schema=DATABASE() AND table_name='schema_migrations'",
+    );
+    const existing: RowDataPacket[] = ledger.n
+      ? (
+          await connection.query<RowDataPacket[]>(
+            "SELECT * FROM schema_migrations ORDER BY version",
+          )
+        )[0]
+      : [];
+    // Validate the entire known history before any DDL, including metadata-table creation.
+    for (const row of existing) {
+      const asset = assets.find((item) => item.version === row.version);
+      if (!asset) throw new Error("Unknown newer schema; packaged migrations cannot modify it");
+      if (asset.checksum !== row.checksum)
+        throw new Error(`Migration checksum mismatch: ${row.version}`);
+      if (row.state !== "complete" && (!options.resumeDirty || row.state !== "dirty"))
+        throw new Error("Dirty schema: inspect DDL and recover explicitly before migration");
+    }
     await connection.query(`CREATE TABLE IF NOT EXISTS schema_migrations (
       version INT UNSIGNED PRIMARY KEY, checksum CHAR(64) NOT NULL,
       state VARCHAR(20) NOT NULL, completed_steps INT UNSIGNED NOT NULL DEFAULT 0,
@@ -29,23 +60,11 @@ export async function migrate(
       version INT UNSIGNED NOT NULL, step_index INT UNSIGNED NOT NULL,
       table_name VARCHAR(64) NOT NULL, ddl_hash CHAR(64) NOT NULL,
       PRIMARY KEY(version,step_index), FOREIGN KEY(version) REFERENCES schema_migrations(version)) ENGINE=InnoDB`);
-    const [existing] = await connection.query<RowDataPacket[]>(
-      "SELECT * FROM schema_migrations ORDER BY version",
-    );
-    if (!options.resumeDirty && existing.some((row) => row.state !== "complete"))
-      throw new Error("Dirty schema: inspect DDL and recover explicitly before migration");
-    const files = (await readdir(directory))
-      .filter((name) => /^\d{3}_[a-z_]+\.sql$/.test(name))
-      .sort();
-    if (files.length === 0) throw new Error("Migration assets missing");
     const applied: number[] = [];
     let version = 0;
-    for (const file of files) {
-      const next = Number(file.slice(0, 3));
-      if (next !== version + 1) throw new Error("Migration sequence invalid");
-      version = next;
-      const sql = await readFile(join(directory, file), "utf8");
-      const checksum = createHash("sha256").update(sql).digest("hex");
+    for (const asset of assets) {
+      const { sql, checksum } = asset;
+      version = asset.version;
       const previous = existing.find((row) => row.version === version);
       if (previous) {
         if (previous.checksum !== checksum)
@@ -116,7 +135,13 @@ export async function migrate(
       throw new Error("Database is newer than packaged migrations");
     return { version, applied };
   } finally {
-    if (locked) await connection.query("SELECT RELEASE_LOCK(CONCAT(DATABASE(),':bibi-migrate'))");
-    connection.release();
+    try {
+      if (locked)
+        await connection.query(
+          "SELECT RELEASE_LOCK(CONCAT('bibi-migrate:',LEFT(SHA2(DATABASE(),256),32)))",
+        );
+    } finally {
+      connection.release();
+    }
   }
 }

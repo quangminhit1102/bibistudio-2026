@@ -15,7 +15,13 @@ export function roleRoutes(roles: RoleService, auth: AuthService, config: Securi
   const name = z.string().trim().min(1).max(100);
   const description = z.string().trim().max(500);
   const permissionIds = z
-    .array(z.string().min(1).max(100))
+    .array(
+      z
+        .string()
+        .min(1)
+        .max(100)
+        .regex(/^[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*$/),
+    )
     .max(200)
     .refine((ids) => new Set(ids).size === ids.length);
   const id = (value: unknown) =>

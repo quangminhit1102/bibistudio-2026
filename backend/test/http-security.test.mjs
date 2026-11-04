@@ -138,3 +138,24 @@ test("audit metadata is allowlisted and rolls back with the caller transaction",
   const [[count]] = await pool.query("SELECT COUNT(*) n FROM audit_logs");
   assert.equal(count.n, 1);
 });
+
+test("readiness refuses a complete but unsupported schema history", async (t) => {
+  const { createAuthFixture } = await import("./helpers/auth.mjs");
+  const { createApp } = await import("../dist/app.js");
+  const fixture = await createAuthFixture(t);
+  const base = await serve(
+    t,
+    createApp(
+      { releaseId: "test", sourceSha: "test" },
+      { db: fixture.pool, config: fixture.config, clock: fixture.clock },
+    ),
+  );
+  assert.equal((await fetch(base + "/api/ready")).status, 200);
+  await fixture.pool.execute(
+    "INSERT INTO schema_migrations(version,checksum,state) VALUES (9,?,'complete')",
+    ["0".repeat(64)],
+  );
+  await fixture.pool.execute("DELETE FROM schema_migration_steps WHERE version=4");
+  await fixture.pool.execute("DELETE FROM schema_migrations WHERE version=4");
+  assert.equal((await fetch(base + "/api/ready")).status, 503);
+});

@@ -13,4 +13,8 @@ test("audit API is permission-checked, paginated and exposes safe event metadata
   assert.equal(result.body.page, 1);
   assert.ok(!JSON.stringify(result.body).match(/password_hash|refreshToken|token_hash|Only-test/));
   assert.equal((await request("/api/audit?pageSize=10000")).status, 400);
+  const searched = await request("/api/audit?search=auth.login&pageSize=20");
+  assert.equal(searched.status, 200);
+  assert.ok(searched.body.items.length > 0);
+  assert.ok(searched.body.items.every((item) => item.action.includes("auth.login")));
 });

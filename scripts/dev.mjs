@@ -78,6 +78,23 @@ export async function startDevelopment({
       root,
       ...(cacheDir ? { cacheDir } : {}),
       ...(prebundle ? {} : { optimizeDeps: { noDiscovery: true, include: [] } }),
+      plugins: prebundle
+        ? []
+        : [
+            {
+              name: "bibi-disable-fixture-optimizer",
+              configResolved(config) {
+                // Plugin config hooks append React dependencies after inline options merge.
+                // Disable them only for HTTP/watcher fixtures that never load FE modules.
+                config.optimizeDeps.noDiscovery = true;
+                config.optimizeDeps.include = [];
+                for (const environment of Object.values(config.environments)) {
+                  environment.optimizeDeps.noDiscovery = true;
+                  environment.optimizeDeps.include = [];
+                }
+              },
+            },
+          ],
       customLogger: logger,
       server: { host, port: frontendPort, strictPort: true },
     });

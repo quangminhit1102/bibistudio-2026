@@ -1,3 +1,4 @@
+import { fixtureAuthFactory } from "./helpers/fixture-auth";
 import { afterEach, expect, it, vi } from "vitest";
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -48,7 +49,7 @@ it("falls back to the current year for a malformed URL without NaN totals", asyn
   try {
     render(
       <QueryClientProvider client={client}>
-        <AdminProvider>
+        <AdminProvider authFactory={fixtureAuthFactory}>
           <RouterProvider router={router} />
         </AdminProvider>
       </QueryClientProvider>,
@@ -96,7 +97,7 @@ it("shares year/customer filters across full totals charts tables and CSV", asyn
     });
     render(
       <QueryClientProvider client={client}>
-        <AdminProvider>
+        <AdminProvider authFactory={fixtureAuthFactory}>
           <RouterProvider router={router} />
         </AdminProvider>
       </QueryClientProvider>,

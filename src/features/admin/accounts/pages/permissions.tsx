@@ -11,7 +11,12 @@ import {
   Skeleton,
   useNotice,
 } from "../../shared/ui/primitives";
+import { ServerPermissions } from "../server-permissions";
 export default function Permissions() {
+  const runtime = useAdmin();
+  return runtime.http ? <ServerPermissions /> : <FixturePermissions />;
+}
+function FixturePermissions() {
   const runtime = useAdmin();
   const self = useRole();
   const roles = useEntity("roles", { page: 1, pageSize: 100 });

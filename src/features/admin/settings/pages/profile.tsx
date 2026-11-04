@@ -3,7 +3,12 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAdmin } from "../../services/context";
 import { ProfileForm } from "../../accounts/profile-form";
 import { Card, PageTitle, Skeleton, ErrorState, useNotice } from "../../shared/ui/primitives";
+import { ServerProfile } from "../../accounts/server-profile";
 export default function Profile() {
+  const runtime = useAdmin();
+  return runtime.http ? <ServerProfile /> : <FixtureProfile />;
+}
+function FixtureProfile() {
   const runtime = useAdmin(),
     cache = useQueryClient(),
     notice = useNotice();

@@ -276,10 +276,18 @@ export interface ListResult<T> {
   page: number;
   pageSize: number;
 }
-export interface DemoSession {
+export interface FixtureSession {
+  kind?: "fixture";
   userId: string;
   roleId: string;
 }
+export interface HttpSession {
+  kind: "http";
+  userId: string;
+  principal: import("../../../../backend/src/http/contracts").PrincipalDto;
+  roleId?: never;
+}
+export type DemoSession = FixtureSession | HttpSession;
 export interface AdminTransaction {
   get<K extends EntityKey>(entity: K, id: string): Promise<AdminModels[K] | undefined>;
   list<K extends EntityKey>(entity: K): Promise<AdminModels[K][]>;

@@ -15,7 +15,8 @@ export async function loadDashboard(
     ensureDataset(store, "users"),
     ensureDataset(store, "notifications"),
   ]);
-  const role = session ? await store.get("roles", session.roleId) : undefined;
+  const role =
+    session && session.kind !== "http" ? await store.get("roles", session.roleId) : undefined;
   const permitted = (resource: Parameters<typeof can>[1]) => can(session, resource, "view", role);
   const [visitors, sessions, slips, customers, products, users, activity, notifications] =
     await Promise.all([

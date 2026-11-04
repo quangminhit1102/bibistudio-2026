@@ -1,13 +1,13 @@
-import type { AdminStore } from "../../services/contracts";
+import type { AdminStore, FixtureSession } from "../../services/contracts";
 import { ServiceError } from "../../services/errors";
-import type { AuthService, AuthSession } from "./contracts";
+import type { AuthService } from "./contracts";
 const key = "bibi-admin:session";
 /** Local-only adapter; server data requires HTTP/cookie authentication later. */
 export function createLocalAuthService(
   store: AdminStore,
   ensureAccounts: () => Promise<void>,
 ): AuthService {
-  async function validate(session: AuthSession): Promise<boolean> {
+  async function validate(session: FixtureSession): Promise<boolean> {
     await ensureAccounts();
     const user = await store.get("users", session.userId);
     return (
@@ -17,6 +17,7 @@ export function createLocalAuthService(
     );
   }
   return {
+    mode: "fixture",
     async login(credentials) {
       const generation = store.generation;
       if (credentials.username.trim() !== "bibi.admin" || credentials.password !== "BibiLocal!2026")

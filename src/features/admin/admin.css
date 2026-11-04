@@ -2515,3 +2515,55 @@
     justify-content: center;
   }
 }
+
+/* Account and permission forms share the admin spacing and touch targets. */
+.admin-root .a-account-form .a-form-section {
+  border: 0;
+  padding: 0;
+  margin: 20px 0 0;
+}
+.admin-root .a-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+.admin-root .a-checkbox:hover {
+  background: var(--a-hover);
+}
+.admin-root .a-checkbox input {
+  flex-shrink: 0;
+}
+.admin-root .a-permission-picker {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: 24px;
+}
+.admin-root .a-role-options {
+  min-width: 0;
+  border: 1px solid var(--a-border);
+  border-radius: 8px;
+  padding: 10px;
+}
+.admin-root .a-role-options legend {
+  padding: 0 6px;
+  font-weight: 600;
+}
+.admin-root .a-audit-id {
+  display: inline-block;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+.admin-root .a-audit-metadata {
+  max-height: 50vh;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

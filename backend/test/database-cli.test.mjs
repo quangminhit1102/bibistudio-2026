@@ -29,5 +29,9 @@ test("explicit migrate/status/seed CLI operates only the supplied DB and prints 
   assert.equal((await run("status")).ready, true);
   assert.equal((await run("seed")).ok, true);
   assert.equal((await run("seed")).ok, true);
+  const withoutBootstrap = await exec(process.execPath, [cli, "seed"], {
+    env: { ...env, MASTER_ADMIN_PASSWORD: "", SEED_USER_PASSWORD: "" },
+  });
+  assert.equal(JSON.parse(withoutBootstrap.stdout).ok, true);
   await assert.rejects(exec(process.execPath, [cli, "drop"], { env }), /Command failed/);
 });

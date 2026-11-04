@@ -25,7 +25,12 @@ export function createEntityService<K extends EntityKey>(
     if (store.generation !== generation)
       throw new ServiceError("aborted", "Phiên thao tác đã thay đổi. Tải lại trước khi tiếp tục.");
     const s = session();
-    requirePermission(s, resource, action, s ? await store.get("roles", s.roleId) : undefined);
+    requirePermission(
+      s,
+      resource,
+      action,
+      s && s.kind !== "http" ? await store.get("roles", s.roleId) : undefined,
+    );
     if (store.generation !== generation)
       throw new ServiceError("aborted", "Đã hủy thao tác của phiên cũ.");
   };

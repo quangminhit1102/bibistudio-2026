@@ -118,9 +118,12 @@ test("only authorized Admin can revoke another user, and another Admin cannot re
     ).status,
     403,
   );
+  const revoked = await request("/api/auth/revoke", "POST", { userId: user.profile.id, all: true });
+  assert.equal(revoked.status, 204);
   assert.equal(
-    (await request("/api/auth/revoke", "POST", { userId: user.profile.id, all: true })).status,
-    204,
+    revoked.headers.get("set-cookie"),
+    null,
+    "Revoking another user must preserve the actor's cookie",
   );
   await assert.rejects(auth.authenticate(user.accessToken), (error) => error.status === 401);
   await pool.query(

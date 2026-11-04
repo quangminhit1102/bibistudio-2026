@@ -1,3 +1,4 @@
+import { fixtureAuthFactory } from "./helpers/fixture-auth";
 import { it, expect } from "vitest";
 import { render, screen, act } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -17,7 +18,7 @@ it("an account switch or logout in another tab invalidates the local session", a
   }
   render(
     <QueryClientProvider client={client}>
-      <AdminProvider>
+      <AdminProvider authFactory={fixtureAuthFactory}>
         <Probe />
       </AdminProvider>
     </QueryClientProvider>,

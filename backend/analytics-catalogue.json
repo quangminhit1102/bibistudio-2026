@@ -1,0 +1,715 @@
+{
+  "version": 1,
+  "routes": [
+    {
+      "path": "/",
+      "label": "Trang chủ"
+    },
+    {
+      "path": "/about",
+      "label": "Về BiBi"
+    },
+    {
+      "path": "/blog",
+      "label": "Nhật ký"
+    },
+    {
+      "path": "/blog/5-thoi-quen-viet-tay-de-song-cham-hon",
+      "label": "5 thói quen viết tay để sống chậm hơn mỗi ngày"
+    },
+    {
+      "path": "/blog/bullet-journal-la-gi-huong-dan-cho-nguoi-moi",
+      "label": "Bullet Journal là gì? Hướng dẫn cho người mới"
+    },
+    {
+      "path": "/blog/cach-bao-quan-va-luu-tru-but-muc-lau-dai",
+      "label": "Cách bảo quản bút mực để dùng được lâu dài"
+    },
+    {
+      "path": "/blog/cach-chon-so-tay-phu-hop",
+      "label": "Cách chọn sổ tay phù hợp với phong cách của bạn"
+    },
+    {
+      "path": "/blog/cam-nang-chon-but-viet-cho-tung-nhu-cau",
+      "label": "Cẩm nang chọn bút viết: gel, bi, kim, máy và dạ quang"
+    },
+    {
+      "path": "/blog/chon-so-tay-theo-muc-dich-su-dung",
+      "label": "Chọn sổ tay theo mục đích sử dụng: học tập, làm việc hay journaling"
+    },
+    {
+      "path": "/blog/goi-qua-handmade-y-nghia-ngay-khai-giang",
+      "label": "Gợi ý gói quà handmade ý nghĩa cho ngày khai giảng"
+    },
+    {
+      "path": "/blog/huong-dan-toan-tap-scrapbook-cho-nguoi-moi",
+      "label": "Hướng dẫn toàn tập Scrapbook cho người mới bắt đầu"
+    },
+    {
+      "path": "/blog/thiet-lap-goc-hoc-tap-truyen-cam-hung",
+      "label": "Thiết lập góc học tập truyền cảm hứng trong 7 bước"
+    },
+    {
+      "path": "/blog/y-tuong-trang-tri-bullet-journal-thang-9",
+      "label": "5 ý tưởng trang trí bullet journal cho tháng 9"
+    },
+    {
+      "path": "/collections",
+      "label": "Bộ sưu tập"
+    },
+    {
+      "path": "/collections/ao-dai",
+      "label": "Áo dài"
+    },
+    {
+      "path": "/collections/explore-vietnam",
+      "label": "Khám phá Việt Nam"
+    },
+    {
+      "path": "/collections/greeting-cards",
+      "label": "Thiệp chúc mừng"
+    },
+    {
+      "path": "/collections/motivation",
+      "label": "Sổ tay tạo động lực"
+    },
+    {
+      "path": "/collections/pressed-flower-cards",
+      "label": "Thiệp ép hoa khô"
+    },
+    {
+      "path": "/collections/spiral-cards",
+      "label": "Thiệp xoắn"
+    },
+    {
+      "path": "/collections/vietnamese-food",
+      "label": "Món ăn Việt Nam"
+    },
+    {
+      "path": "/contact",
+      "label": "Liên hệ"
+    },
+    {
+      "path": "/products",
+      "label": "Sản phẩm"
+    },
+    {
+      "path": "/products/ao-dai-buu-dien-card",
+      "label": "Áo dài & Bưu điện Sài Gòn"
+    },
+    {
+      "path": "/products/ao-dai-da-nang-card",
+      "label": "Áo dài Đà Nẵng"
+    },
+    {
+      "path": "/products/ao-dai-ha-noi-card",
+      "label": "Áo dài Hà Nội"
+    },
+    {
+      "path": "/products/ao-dai-hoi-an-card",
+      "label": "Áo dài Hội An"
+    },
+    {
+      "path": "/products/ao-dai-hue-card",
+      "label": "Áo dài Huế"
+    },
+    {
+      "path": "/products/ao-dai-saigon-card",
+      "label": "Áo dài Sài Gòn"
+    },
+    {
+      "path": "/products/banh-mi-notebook",
+      "label": "Bánh mì"
+    },
+    {
+      "path": "/products/banh-xeo-notebook",
+      "label": "Bánh xèo miền Tây"
+    },
+    {
+      "path": "/products/be-happy-cactus-notebook",
+      "label": "Be Happy"
+    },
+    {
+      "path": "/products/ben-bach-dang-magnet",
+      "label": "Bến Bạch Đằng"
+    },
+    {
+      "path": "/products/bun-bo-hue-notebook",
+      "label": "Bún bò Huế"
+    },
+    {
+      "path": "/products/bun-cha-ha-noi-notebook",
+      "label": "Bún chả Hà Nội"
+    },
+    {
+      "path": "/products/ca-mau-map-notebook",
+      "label": "Sổ tay bản đồ Cà Mau"
+    },
+    {
+      "path": "/products/ca-phe-sua-da-notebook",
+      "label": "Cà phê sữa đá"
+    },
+    {
+      "path": "/products/ca-phe-voi-nguoi-thuong-notebook",
+      "label": "Cà Phê Với Người Thương"
+    },
+    {
+      "path": "/products/cam-on-foil-card",
+      "label": "Cảm ơn"
+    },
+    {
+      "path": "/products/canh-hoa-be-be-card",
+      "label": "Cành Hoa Bé Bé"
+    },
+    {
+      "path": "/products/cau-rong-magnet",
+      "label": "Cầu Rồng Đà Nẵng"
+    },
+    {
+      "path": "/products/cau-vang-magnet",
+      "label": "Cầu Vàng Đà Nẵng"
+    },
+    {
+      "path": "/products/cho-ben-thanh-magnet",
+      "label": "Chợ Bến Thành"
+    },
+    {
+      "path": "/products/cho-ben-thanh-notebook",
+      "label": "Chợ Bến Thành"
+    },
+    {
+      "path": "/products/choose-to-be-happy-notebook",
+      "label": "I Choose To Be Happy"
+    },
+    {
+      "path": "/products/com-tam-notebook",
+      "label": "Cơm tấm"
+    },
+    {
+      "path": "/products/da-lat-map-notebook",
+      "label": "Sổ tay bản đồ Đà Lạt"
+    },
+    {
+      "path": "/products/da-nang-map-notebook",
+      "label": "Sổ tay bản đồ Đà Nẵng"
+    },
+    {
+      "path": "/products/do-what-you-love-colour-notebook",
+      "label": "Do What You Love — Sắc Màu"
+    },
+    {
+      "path": "/products/do-what-you-love-notebook",
+      "label": "Do What You Love, What You Do"
+    },
+    {
+      "path": "/products/dream-big-work-hard-notebook",
+      "label": "Dream Big, Work Hard"
+    },
+    {
+      "path": "/products/enjoy-today-notebook",
+      "label": "Enjoy Today"
+    },
+    {
+      "path": "/products/envelopes",
+      "label": "Bao thư"
+    },
+    {
+      "path": "/products/goi-cuon-notebook",
+      "label": "Gỏi cuốn"
+    },
+    {
+      "path": "/products/greeting-cards",
+      "label": "Thiệp"
+    },
+    {
+      "path": "/products/ha-giang-map-notebook",
+      "label": "Sổ tay bản đồ Hà Giang"
+    },
+    {
+      "path": "/products/ha-noi-map-notebook",
+      "label": "Sổ tay bản đồ Hà Nội"
+    },
+    {
+      "path": "/products/hang-rao-la-nho-card",
+      "label": "Hàng Rào Lá Nhỏ"
+    },
+    {
+      "path": "/products/ho-guom-magnet",
+      "label": "Hồ Hoàn Kiếm"
+    },
+    {
+      "path": "/products/hoa-do-tren-hong-card",
+      "label": "Hoa Đỏ Trên Hồng"
+    },
+    {
+      "path": "/products/hoi-an-map-notebook",
+      "label": "Sổ tay bản đồ Hội An"
+    },
+    {
+      "path": "/products/hu-tieu-go-notebook",
+      "label": "Hủ tiếu gõ"
+    },
+    {
+      "path": "/products/hue-map-notebook",
+      "label": "Sổ tay bản đồ Huế"
+    },
+    {
+      "path": "/products/landmark-81-notebook",
+      "label": "Bến Bạch Đằng & Landmark 81"
+    },
+    {
+      "path": "/products/letter-paper",
+      "label": "Giấy viết thư"
+    },
+    {
+      "path": "/products/life-is-better-laughing-notebook",
+      "label": "Life Is Better When You're Laughing"
+    },
+    {
+      "path": "/products/life-is-too-short-notebook",
+      "label": "Life Is Too Short To Worry"
+    },
+    {
+      "path": "/products/love-yourself-notebook",
+      "label": "Love Yourself"
+    },
+    {
+      "path": "/products/magnets",
+      "label": "Magnet"
+    },
+    {
+      "path": "/products/nguyen-hue-notebook",
+      "label": "Phố đi bộ Nguyễn Huệ"
+    },
+    {
+      "path": "/products/nha-hat-thanh-pho-notebook",
+      "label": "Nhà hát Thành phố"
+    },
+    {
+      "path": "/products/nha-tho-duc-ba-magnet",
+      "label": "Nhà thờ Đức Bà Sài Gòn"
+    },
+    {
+      "path": "/products/nha-tho-duc-ba-notebook",
+      "label": "Nhà thờ Đức Bà"
+    },
+    {
+      "path": "/products/nha-tho-tan-dinh-magnet",
+      "label": "Nhà thờ Tân Định"
+    },
+    {
+      "path": "/products/nha-trang-map-notebook",
+      "label": "Sổ tay bản đồ Nha Trang"
+    },
+    {
+      "path": "/products/notebooks",
+      "label": "Sổ tay"
+    },
+    {
+      "path": "/products/pho-co-ha-noi-magnet",
+      "label": "Phố cổ Hà Nội"
+    },
+    {
+      "path": "/products/phu-quoc-map-notebook",
+      "label": "Sổ tay bản đồ Phú Quốc"
+    },
+    {
+      "path": "/products/phu-yen-map-notebook",
+      "label": "Sổ tay bản đồ Phú Yên"
+    },
+    {
+      "path": "/products/postcards",
+      "label": "Postcard"
+    },
+    {
+      "path": "/products/quang-ninh-map-notebook",
+      "label": "Sổ tay bản đồ Quảng Ninh"
+    },
+    {
+      "path": "/products/sai-gon-map-notebook",
+      "label": "Sổ tay bản đồ Sài Gòn"
+    },
+    {
+      "path": "/products/sun-will-rise-notebook",
+      "label": "Sun Will Rise"
+    },
+    {
+      "path": "/products/thank-you-foil-card",
+      "label": "Thank You Ép Nhũ Vàng"
+    },
+    {
+      "path": "/products/tra-da-via-he-notebook",
+      "label": "Trà đá vỉa hè"
+    },
+    {
+      "path": "/products/trai-dat-tron-notebook",
+      "label": "Trái Đất Tròn, Không Gì Là Không Thể"
+    },
+    {
+      "path": "/products/trai-tim-nho-card",
+      "label": "Trái Tim Nhỏ"
+    },
+    {
+      "path": "/products/ubnd-tphcm-notebook",
+      "label": "Ủy ban Nhân dân TP.HCM"
+    },
+    {
+      "path": "/products/viet-nam-map-notebook",
+      "label": "Sổ tay bản đồ Việt Nam"
+    },
+    {
+      "path": "/products/walk-when-i-want-to-fly-notebook",
+      "label": "Don't Make Me Walk When I Want To Fly"
+    },
+    {
+      "path": "/products/womens-day-apron-bouquet-card",
+      "label": "8/3 Tạp Dề Cắm Hoa"
+    },
+    {
+      "path": "/products/womens-day-blue-floral-card",
+      "label": "8/3 Hoa Xanh Cobalt"
+    },
+    {
+      "path": "/products/womens-day-daisy-frame-card",
+      "label": "8/3 Khung Cúc Hồng"
+    },
+    {
+      "path": "/products/womens-day-floral-border-card",
+      "label": "8/3 Viền Hoa Rực Rỡ"
+    },
+    {
+      "path": "/products/womens-day-flower-envelope-card",
+      "label": "8/3 Thư Hoa Đỏ"
+    },
+    {
+      "path": "/products/womens-day-hearts-card",
+      "label": "8/3 Trăm Trái Tim"
+    },
+    {
+      "path": "/products/womens-day-moon-bouquet-card",
+      "label": "8/3 Bó Hoa Dưới Trăng"
+    },
+    {
+      "path": "/products/womens-day-pink-garden-card",
+      "label": "8/3 Vườn Hồng"
+    },
+    {
+      "path": "/products/womens-day-striped-vase-card",
+      "label": "8/3 Bình Hoa Kẻ Sọc"
+    },
+    {
+      "path": "/products/womens-day-tulip-envelope-card",
+      "label": "8/3 Phong Bì Tuilip"
+    },
+    {
+      "path": "/products/womens-day-vase-sunset-card",
+      "label": "8/3 Bình Hoa Hoàng Hôn"
+    },
+    {
+      "path": "/products/womens-day-wreath-ribbon-card",
+      "label": "8/3 Vòng Hoa Ruy Băng"
+    },
+    {
+      "path": "/products/youre-beautiful-notebook",
+      "label": "You're Beautiful"
+    }
+  ],
+  "products": [
+    {
+      "slug": "ao-dai-buu-dien-card",
+      "name": "Áo dài & Bưu điện Sài Gòn"
+    },
+    {
+      "slug": "ao-dai-da-nang-card",
+      "name": "Áo dài Đà Nẵng"
+    },
+    {
+      "slug": "ao-dai-ha-noi-card",
+      "name": "Áo dài Hà Nội"
+    },
+    {
+      "slug": "ao-dai-hoi-an-card",
+      "name": "Áo dài Hội An"
+    },
+    {
+      "slug": "ao-dai-hue-card",
+      "name": "Áo dài Huế"
+    },
+    {
+      "slug": "ao-dai-saigon-card",
+      "name": "Áo dài Sài Gòn"
+    },
+    {
+      "slug": "banh-mi-notebook",
+      "name": "Bánh mì"
+    },
+    {
+      "slug": "banh-xeo-notebook",
+      "name": "Bánh xèo miền Tây"
+    },
+    {
+      "slug": "be-happy-cactus-notebook",
+      "name": "Be Happy"
+    },
+    {
+      "slug": "ben-bach-dang-magnet",
+      "name": "Bến Bạch Đằng"
+    },
+    {
+      "slug": "bun-bo-hue-notebook",
+      "name": "Bún bò Huế"
+    },
+    {
+      "slug": "bun-cha-ha-noi-notebook",
+      "name": "Bún chả Hà Nội"
+    },
+    {
+      "slug": "ca-mau-map-notebook",
+      "name": "Sổ tay bản đồ Cà Mau"
+    },
+    {
+      "slug": "ca-phe-sua-da-notebook",
+      "name": "Cà phê sữa đá"
+    },
+    {
+      "slug": "ca-phe-voi-nguoi-thuong-notebook",
+      "name": "Cà Phê Với Người Thương"
+    },
+    {
+      "slug": "cam-on-foil-card",
+      "name": "Cảm ơn"
+    },
+    {
+      "slug": "canh-hoa-be-be-card",
+      "name": "Cành Hoa Bé Bé"
+    },
+    {
+      "slug": "cau-rong-magnet",
+      "name": "Cầu Rồng Đà Nẵng"
+    },
+    {
+      "slug": "cau-vang-magnet",
+      "name": "Cầu Vàng Đà Nẵng"
+    },
+    {
+      "slug": "cho-ben-thanh-magnet",
+      "name": "Chợ Bến Thành"
+    },
+    {
+      "slug": "cho-ben-thanh-notebook",
+      "name": "Chợ Bến Thành"
+    },
+    {
+      "slug": "choose-to-be-happy-notebook",
+      "name": "I Choose To Be Happy"
+    },
+    {
+      "slug": "com-tam-notebook",
+      "name": "Cơm tấm"
+    },
+    {
+      "slug": "da-lat-map-notebook",
+      "name": "Sổ tay bản đồ Đà Lạt"
+    },
+    {
+      "slug": "da-nang-map-notebook",
+      "name": "Sổ tay bản đồ Đà Nẵng"
+    },
+    {
+      "slug": "do-what-you-love-colour-notebook",
+      "name": "Do What You Love — Sắc Màu"
+    },
+    {
+      "slug": "do-what-you-love-notebook",
+      "name": "Do What You Love, What You Do"
+    },
+    {
+      "slug": "dream-big-work-hard-notebook",
+      "name": "Dream Big, Work Hard"
+    },
+    {
+      "slug": "enjoy-today-notebook",
+      "name": "Enjoy Today"
+    },
+    {
+      "slug": "goi-cuon-notebook",
+      "name": "Gỏi cuốn"
+    },
+    {
+      "slug": "ha-giang-map-notebook",
+      "name": "Sổ tay bản đồ Hà Giang"
+    },
+    {
+      "slug": "ha-noi-map-notebook",
+      "name": "Sổ tay bản đồ Hà Nội"
+    },
+    {
+      "slug": "hang-rao-la-nho-card",
+      "name": "Hàng Rào Lá Nhỏ"
+    },
+    {
+      "slug": "ho-guom-magnet",
+      "name": "Hồ Hoàn Kiếm"
+    },
+    {
+      "slug": "hoa-do-tren-hong-card",
+      "name": "Hoa Đỏ Trên Hồng"
+    },
+    {
+      "slug": "hoi-an-map-notebook",
+      "name": "Sổ tay bản đồ Hội An"
+    },
+    {
+      "slug": "hu-tieu-go-notebook",
+      "name": "Hủ tiếu gõ"
+    },
+    {
+      "slug": "hue-map-notebook",
+      "name": "Sổ tay bản đồ Huế"
+    },
+    {
+      "slug": "landmark-81-notebook",
+      "name": "Bến Bạch Đằng & Landmark 81"
+    },
+    {
+      "slug": "life-is-better-laughing-notebook",
+      "name": "Life Is Better When You're Laughing"
+    },
+    {
+      "slug": "life-is-too-short-notebook",
+      "name": "Life Is Too Short To Worry"
+    },
+    {
+      "slug": "love-yourself-notebook",
+      "name": "Love Yourself"
+    },
+    {
+      "slug": "nguyen-hue-notebook",
+      "name": "Phố đi bộ Nguyễn Huệ"
+    },
+    {
+      "slug": "nha-hat-thanh-pho-notebook",
+      "name": "Nhà hát Thành phố"
+    },
+    {
+      "slug": "nha-tho-duc-ba-magnet",
+      "name": "Nhà thờ Đức Bà Sài Gòn"
+    },
+    {
+      "slug": "nha-tho-duc-ba-notebook",
+      "name": "Nhà thờ Đức Bà"
+    },
+    {
+      "slug": "nha-tho-tan-dinh-magnet",
+      "name": "Nhà thờ Tân Định"
+    },
+    {
+      "slug": "nha-trang-map-notebook",
+      "name": "Sổ tay bản đồ Nha Trang"
+    },
+    {
+      "slug": "pho-co-ha-noi-magnet",
+      "name": "Phố cổ Hà Nội"
+    },
+    {
+      "slug": "phu-quoc-map-notebook",
+      "name": "Sổ tay bản đồ Phú Quốc"
+    },
+    {
+      "slug": "phu-yen-map-notebook",
+      "name": "Sổ tay bản đồ Phú Yên"
+    },
+    {
+      "slug": "quang-ninh-map-notebook",
+      "name": "Sổ tay bản đồ Quảng Ninh"
+    },
+    {
+      "slug": "sai-gon-map-notebook",
+      "name": "Sổ tay bản đồ Sài Gòn"
+    },
+    {
+      "slug": "sun-will-rise-notebook",
+      "name": "Sun Will Rise"
+    },
+    {
+      "slug": "thank-you-foil-card",
+      "name": "Thank You Ép Nhũ Vàng"
+    },
+    {
+      "slug": "tra-da-via-he-notebook",
+      "name": "Trà đá vỉa hè"
+    },
+    {
+      "slug": "trai-dat-tron-notebook",
+      "name": "Trái Đất Tròn, Không Gì Là Không Thể"
+    },
+    {
+      "slug": "trai-tim-nho-card",
+      "name": "Trái Tim Nhỏ"
+    },
+    {
+      "slug": "ubnd-tphcm-notebook",
+      "name": "Ủy ban Nhân dân TP.HCM"
+    },
+    {
+      "slug": "viet-nam-map-notebook",
+      "name": "Sổ tay bản đồ Việt Nam"
+    },
+    {
+      "slug": "walk-when-i-want-to-fly-notebook",
+      "name": "Don't Make Me Walk When I Want To Fly"
+    },
+    {
+      "slug": "womens-day-apron-bouquet-card",
+      "name": "8/3 Tạp Dề Cắm Hoa"
+    },
+    {
+      "slug": "womens-day-blue-floral-card",
+      "name": "8/3 Hoa Xanh Cobalt"
+    },
+    {
+      "slug": "womens-day-daisy-frame-card",
+      "name": "8/3 Khung Cúc Hồng"
+    },
+    {
+      "slug": "womens-day-floral-border-card",
+      "name": "8/3 Viền Hoa Rực Rỡ"
+    },
+    {
+      "slug": "womens-day-flower-envelope-card",
+      "name": "8/3 Thư Hoa Đỏ"
+    },
+    {
+      "slug": "womens-day-hearts-card",
+      "name": "8/3 Trăm Trái Tim"
+    },
+    {
+      "slug": "womens-day-moon-bouquet-card",
+      "name": "8/3 Bó Hoa Dưới Trăng"
+    },
+    {
+      "slug": "womens-day-pink-garden-card",
+      "name": "8/3 Vườn Hồng"
+    },
+    {
+      "slug": "womens-day-striped-vase-card",
+      "name": "8/3 Bình Hoa Kẻ Sọc"
+    },
+    {
+      "slug": "womens-day-tulip-envelope-card",
+      "name": "8/3 Phong Bì Tuilip"
+    },
+    {
+      "slug": "womens-day-vase-sunset-card",
+      "name": "8/3 Bình Hoa Hoàng Hôn"
+    },
+    {
+      "slug": "womens-day-wreath-ribbon-card",
+      "name": "8/3 Vòng Hoa Ruy Băng"
+    },
+    {
+      "slug": "youre-beautiful-notebook",
+      "name": "You're Beautiful"
+    }
+  ]
+}

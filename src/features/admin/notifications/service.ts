@@ -13,10 +13,10 @@ export type NotificationPage = ListResult<NotificationView> & { unreadCount: num
 async function access(store: AdminStore, session: DemoSession | null) {
   const generation = store.generation;
   if (!session) throw new ServiceError("forbidden", "Vui lòng chọn tài khoản.");
-  await ensureDataset(store, "users");
+  if (session.kind !== "http") await ensureDataset(store, "users");
   const active = await authorizeOperation(store, session, "notifications", "view");
-  const user = await store.get("users", session.userId);
-  if (!user?.active || user.roleId !== session.roleId)
+  const user = session.kind !== "http" ? await store.get("users", session.userId) : undefined;
+  if (session.kind !== "http" && (!user?.active || user.roleId !== session.roleId))
     throw new ServiceError("forbidden", "Tài khoản đã thay đổi.");
   await ensureDataset(store, "notifications");
   const check = () => {
@@ -69,9 +69,9 @@ export async function markNotificationsRead(
     ["notifications", "notificationReads", "users", "roles"],
     async (tx: AdminTransaction) => {
       active();
-      const user = await tx.get("users", actor.userId),
-        role = await tx.get("roles", actor.roleId);
-      if (!user?.active || user.roleId !== actor.roleId)
+      const user = actor.kind !== "http" ? await tx.get("users", actor.userId) : undefined,
+        role = actor.kind !== "http" ? await tx.get("roles", actor.roleId) : undefined;
+      if (actor.kind !== "http" && (!user?.active || user.roleId !== actor.roleId))
         throw new ServiceError("forbidden", "Tài khoản đã thay đổi.");
       requirePermission(actor, "notifications", "view", role);
       const notes = await tx.list("notifications"),

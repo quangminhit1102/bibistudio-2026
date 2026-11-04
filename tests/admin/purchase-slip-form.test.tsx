@@ -1,3 +1,4 @@
+import { fixtureAuthFactory } from "./helpers/fixture-auth";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -126,7 +127,7 @@ it("dirty Cancel asks before leaving and preserves list filters after confirmati
   });
   render(
     <QueryClientProvider client={client}>
-      <AdminProvider>
+      <AdminProvider authFactory={fixtureAuthFactory}>
         <RouterProvider router={router} />
       </AdminProvider>
     </QueryClientProvider>,
@@ -158,7 +159,7 @@ it("voided slip detail remains readable without edit or void actions", async () 
   });
   render(
     <QueryClientProvider client={client}>
-      <AdminProvider>
+      <AdminProvider authFactory={fixtureAuthFactory}>
         <RouterProvider router={router} />
       </AdminProvider>
     </QueryClientProvider>,

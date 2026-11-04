@@ -27,6 +27,7 @@ export async function createAccountFixture(t) {
       ...(body === undefined ? {} : { body: JSON.stringify(body) }),
     });
     return {
+      headers: response.headers,
       status: response.status,
       body: response.status === 204 ? null : await response.json(),
     };

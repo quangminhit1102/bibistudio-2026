@@ -17,7 +17,6 @@ async function main(): Promise<void> {
     } else if (command === "seed") {
       const masterPassword = process.env.MASTER_ADMIN_PASSWORD || "";
       const userPassword = process.env.SEED_USER_PASSWORD || "";
-      if (!masterPassword || !userPassword) throw new Error("Bootstrap secrets missing");
       await seedIdentity(pool, { masterPassword, userPassword });
       console.log(JSON.stringify({ ok: true }));
     } else {
@@ -27,7 +26,9 @@ async function main(): Promise<void> {
       console.log(
         JSON.stringify({
           version: rows.at(-1)?.version ?? 0,
-          ready: rows.length === 4 && rows.every((row) => row.state === "complete"),
+          ready:
+            rows.length === 4 &&
+            rows.every((row, index) => row.version === index + 1 && row.state === "complete"),
         }),
       );
     }
