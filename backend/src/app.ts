@@ -12,11 +12,15 @@ import { createRoleService } from "./roles/service";
 import { roleRoutes } from "./roles/routes";
 import { auditRoutes } from "./audit/routes";
 import { authenticate, requirePermission } from "./authorization/middleware";
+import { analyticsRoutes, type AnalyticsOptions } from "./visitors/routes";
+import { visitorReadRoutes } from "./visitors/private-routes";
+import { createVisitorService } from "./visitors/service";
 
 export interface AppOptions {
   db?: Pool;
   config?: SecurityConfig | AuthConfig;
   clock?: Clock;
+  analytics?: AnalyticsOptions;
 }
 
 export function createApp(release: ReleaseInfo, options: AppOptions = {}): Express {
@@ -31,6 +35,27 @@ export function createApp(release: ReleaseInfo, options: AppOptions = {}): Expre
         })
       : undefined;
   installSecurity(app, options.config ?? { allowedOrigins: [], trustProxy: false });
+  if (auth && options.db && options.analytics)
+    app.use(
+      "/api/customer-access",
+      visitorReadRoutes(
+        createVisitorService(options.db, options.analytics.catalogue, options.clock ?? systemClock),
+        auth,
+      ),
+    );
+  else
+    app.use("/api/customer-access", () => {
+      throw new ApiError(503, "NOT_READY", "Dịch vụ chưa sẵn sàng");
+    });
+  if (options.analytics && options.config)
+    app.use(
+      "/api/analytics",
+      analyticsRoutes(options.analytics, options.config, options.clock, release.releaseId),
+    );
+  else
+    app.use("/api/analytics", () => {
+      throw new ApiError(503, "NOT_READY", "Dịch vụ chưa sẵn sàng");
+    });
   app.use((_req, res, next) => {
     res.setHeader("Cache-Control", "no-store");
     next();

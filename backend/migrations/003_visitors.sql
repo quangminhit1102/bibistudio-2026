@@ -33,6 +33,7 @@ CREATE TABLE visitor_session_pages (
  first_received_at DATETIME(3) NOT NULL,
  last_received_at DATETIME(3) NOT NULL,
  PRIMARY KEY(session_id,path),
+ INDEX page_retention(last_received_at,session_id),
  FOREIGN KEY(session_id) REFERENCES visitor_sessions(id)
 ) ENGINE=InnoDB;
 CREATE TABLE visitor_viewed_products (
@@ -42,5 +43,6 @@ CREATE TABLE visitor_viewed_products (
  last_received_at DATETIME(3) NOT NULL,
  PRIMARY KEY(session_id,product_slug),
  INDEX product_interest(product_slug,last_received_at),
+ INDEX product_retention(last_received_at,session_id),
  FOREIGN KEY(session_id) REFERENCES visitor_sessions(id)
 ) ENGINE=InnoDB;
