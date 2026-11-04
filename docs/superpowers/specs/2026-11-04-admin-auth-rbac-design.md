@@ -1,13 +1,13 @@
 # Admin authentication, RBAC and account management — design
 
 Date: 2026-11-04
-Status: Draft for owner review; no implementation or database changes authorized by this document alone.
+Status: Reviewed design updated with owner-confirmed real visitor collection; awaiting approval before implementation.
 
 ## Intent and approved direction
 
-Replace the local admin identity with Express authentication backed by the production MySQL-compatible database on cPanel. Preserve the React/TanStack UI and existing service boundaries. Provide real account/role/permission management, secure rotating sessions, server authorization and MySQL-backed visitor reads. One production environment only; no staging application. Disposable databases for automated testing are test infrastructure, never the production database.
+Replace the local admin identity with Express authentication backed by the production MySQL-compatible database on cPanel. Preserve the React/TanStack UI and existing service boundaries. Provide real account/role/permission management, secure rotating sessions, server authorization and real visitor collection with MySQL-backed visitor reads. One production environment only; no staging application. Disposable databases for automated testing are test infrastructure, never the production database.
 
-The owner supplied the full API/security/test requirements, chose cPanel MySQL, and accepted the recommended mysql2 + SQL migration direction with application rollback and non-destructive database migrations. This design records additional implementation calls explicitly below; they are proposals until approved.
+The owner supplied the full API/security/test requirements, chose cPanel MySQL, and accepted the recommended mysql2 + SQL migration direction with application rollback and non-destructive database migrations, and explicitly confirmed real visitor collection. This design records additional implementation calls explicitly below; they are proposals until approved.
 
 ## Current source and integration constraints
 
@@ -28,9 +28,9 @@ Keep application code in focused backend modules (db, auth, authorization, accou
 
 ## Scope and non-goals
 
-In scope: listed auth/account/role/permission endpoints, many-role identity, protected master, DB audit, read-only visitor APIs, UI adapters/guards, migrations/seeds, tests, documentation and production-ready deploy/rollback changes.
+In scope: listed auth/account/role/permission endpoints, many-role identity, protected master, DB audit, public bounded visitor collection plus protected read-only visitor APIs, UI adapters/guards, migrations/seeds, tests, documentation and production-ready deploy/rollback changes.
 
-Proposal for visitor scope: serve visitor list/detail/session/product-interest information from MySQL, with an initially empty production dataset. Seed sample visitor data ONLY in disposable tests. **Automatic collection of real public traffic, IP geolocation and public analytics ingestion are excluded from this authentication iteration.** No fake production visitors. Owner must review this boundary; a tracker is a separate feature if wanted now.
+Confirmed visitor scope: collect real public-site visits, sessions and distinct viewed products into MySQL. Seed sample visitor data ONLY in disposable tests; never present synthetic production visitors as customers. Preserve the owner's earlier requirement to avoid one insert per repeated click. Location is inferred only from a verified local/trusted server source; missing location displays “Chưa xác định”. The masking/retention and metrics definitions below are proposed implementation calls for approval.
 
 Not in scope: moving products/posts/sales/media to MySQL; publishing browser-local posts; payment processing; redesigning the admin; email/password recovery; MFA; third-party login. Protect all newly added server endpoints; existing browser-local modules do not become server-backed by adding login.
 
@@ -48,7 +48,7 @@ Use InnoDB, foreign keys, utf8mb4 and UTC timestamps. Actual migration syntax ta
 | RefreshTokenSessions | id, user_id, auth_version, created_at, last_activity_at, idle_expires_at, absolute_expires_at, revoked_at/reason. One row per login session/family; not analytics VisitorSession. |
 | RefreshTokens | id, session_id, unique token_hash, issued_at, consumed_at, replaced_by. Retain spent hashes until the session is past expiry so old-token reuse is detectable. Never store plaintext tokens. |
 | AuditLogs | id, actor_id nullable, target type/id, action, outcome, request_id, timestamp, minimal allowlisted metadata. No passwords, tokens, cookies, SQL credentials or raw Authorization headers. |
-| Visitors, VisitorSessions, VisitorViewedProducts | existing UI-compatible fields, indexed visitor/time filters, bounded session metadata. Unique session_id/product_slug prevents per-click product-interest rows. No collection endpoint in this iteration. |
+| Visitors, VisitorSessions, VisitorViewedProducts | existing UI-compatible fields, indexed visitor/time filters, bounded session metadata. Unique session_id/product_slug prevents per-click product-interest rows. VisitorSessionPages stores unique canonical session/path pairs, not a chronological click/event log. Visitor sessions are distinct from login sessions. |
 | SchemaMigrations | version, checksum, completed timestamp, explicit dirty/in-progress state for interrupted DDL recovery. |
 
 Index normalized username, active/deleted status, role mappings, token hash/session, session user/revocation/expiry, audit time/actor and visitor last_seen/session visitor+time. Limit list page size to100; whitelist sort/filter columns; all values use SQL parameters. Do not perform full-table loads to paginate.
@@ -93,6 +93,46 @@ Coordinate refresh across same-origin tabs with Web Locks. After acquiring the l
 
 Strict rotation has a deliberate consequence: if a successful refresh response is lost, retrying the spent token revokes that family and requires login. Do not weaken reuse detection to hide this case.
 
+## Real visitor collection (owner confirmed)
+
+### What is counted and stored
+
+Add one small public-site tracker at the router boundary in `src/routes/__root.tsx`, separate from admin imports. Initialize client-side after route commit; no browser globals during SSR. Exclude `/admin`, `/api`, auth routes, error pages and non-catalogue/private URLs. No third-party analytics SDK or synchronous request that delays navigation.
+
+One visitor is an anonymous first-party browser identifier, not a verified person. Generate256-bit opaque visitor cookies on the server, signed with a dedicated analytics secret; persist only their hash, with a distinct secret/table from auth. Cookie is host-only HttpOnly, Secure in production, SameSite=Lax, Path=/api/analytics, maximum90days. www and apex are separate cookie contexts unless a verified canonical redirect applies; do not create cross-domain tracking. Blocking/clearing cookies, separate devices or browsers may count as another visitor; never fingerprint to bypass that choice.
+
+A visitor has one active analytics session per30minutes of inactivity across tabs. Lock the visitor row when selecting/creating its active session; sessionCount increments once only when a new session is inserted. Session ends are inferred from last activity/timeouts; closing a tab is not proof the person ended browsing. No idle heartbeat that keeps hidden sessions alive.
+
+Store normalized device class/OS/browser from bounded User-Agent parsing, first/last seen, session landing/latest path, referral hostname/source category, unique canonical page paths and unique product slugs. Resolve product labels against a small server catalogue manifest generated during build from the current catalogue; do not trust client-provided product names. Exclude product-type listing slugs from product-interest counts. Article/referral query strings, URL fragments, input fields, search text, emails, passwords, mouse/keyboard recordings and form payloads are never collected.
+
+Identify IP from the verified proxy topology; never trust arbitrary forwarded IP headers. Proposed privacy default: convert IPv4 to a /24 prefix and IPv6 to /48 before persistence, expose masked IP in the visitor UI, and do not retain the full address in analytics rows or logs. Use a keyed, short-lived IP bucket for throttling if needed. User01's customer_access.view does not expose unmasked IP. Location may be resolved before masking using an existing verified local GeoIP/trusted server facility; do not send customer IP to an external service. Without such a facility store nullable country/city and show “Chưa xác định”; no fabricated location and no dependency on an unverified hosting header. Device/location are estimates, not identity verification.
+
+### Batching, idempotence and limits
+
+- Endpoint: POST `/api/analytics/collect`, same-origin credentialed JSON, validated Origin and a fixed custom request header. Never requires an admin token, and never uses or changes auth session cookies. Unknown/malformed/oversized input is rejected with400/413, throttled traffic with429; valid cookie-bearing collection returns204. If no valid visitor cookie exists, return202 with the new cookie and a fixed retry-bootstrap indicator, write no visitor/session/page rows yet, and retain pending paths until the subsequent acknowledged collect. Serialize initial bootstrap/first collect across same-origin tabs using Web Locks when available; if cookies cannot be established, stop after two bootstrap attempts rather than generating rows endlessly. Without Web Locks, first-ever parallel tabs may count separately; document this approximate-metric limit instead of claiming exact uniqueness. It never exposes visitor/session IDs, stored IP/location, previous activity or account data.
+- First eligible public page sends once after a short defer; subsequent route changes accumulate in memory and flush at most once per15seconds while visible. Debounce bursts so repeated rapid clicks become one request. No periodic request when nothing changed. Use one best-effort keepalive flush on pagehide/visibility-hidden; no unload blocking. Retry transient network/503 at most twice with bounded backoff; do not infinitely retry429 or validation failures.
+- A batch carries canonical paths/product slugs seen since the last acknowledgement and the current/landing path. Product/path sets are capped50 entries per request, at most16KiB body; retain bounded pending sets in memory only. No client timestamp is trusted as session authority.
+- Server validates against generated public route/product allowlists; strips query/fragment and rejects unknown/admin/encoded-private paths before SQL. Referrer is normalized to hostname/category only; never save full URL. Request-origin checks reduce cross-site abuse, but are not proof of genuine traffic: mark analytics as approximate and apply server limits regardless.
+- Transactions use server time, visitor-row lock and INSERT IGNORE/unique constraints for `(session_id,canonical_path)` and `(session_id,product_slug)`. Retrying the same cookie-bearing batch or concurrent tabs with the same established visitor cookie must not create duplicate visitors/sessions/page/product associations or increment distinct counters twice. Derive counters from successful new unique inserts, not incoming array length. Update landing only at session creation, latest route/last_seen monotonically on accepted activity. A duplicate retry can extend activity slightly; do not claim exact dwell time. Latest route means last received by the server, not a reconstructed chronological exit across tabs; label it accordingly. Out-of-order batches must not reduce server last_seen timestamps or double-count distinct pages/products.
+- Keep up to200 distinct page paths and100 distinct products per analytics session. At the cap, continue last_seen updates and set an explicit truncation flag instead of unbounded inserts. The admin UI must disclose capped product lists when applicable.
+- Initial proposed limits:10 batches/minute per visitor and120/minute per trusted network-prefix bucket, plus a global configurable ceiling. Existing MySQL throttle mechanism uses separate analytics keys, bounded expiries and request-cost checks before opening expensive transactions; tune after real hosting preflight. Public ingestion cannot starve auth: use a small dedicated pool/concurrency budget and return503 promptly when saturated. Catalogue rendering/links remain fully usable when metrics fail.
+
+This is intentionally distinct-page/product aggregation. Replace misleading “page views” labels in the affected visitor summary with “Trang khác nhau đã xem”; the backend does not count every repeated page load/click. Visitor sessions expose first/last path and unique viewed products, without a per-click chronological timeline. Existing `pages` adapters may carry unique paths and first-seen timestamps solely for compatible presentation; no invented event history.
+
+### Retention and opt-out
+
+Keep analytics visitor/session/page/product data for90days of session activity; remove expired rows in small indexed batches through an explicit scheduled cleanup command. Remove an inactive visitor record after it has no retained sessions. Keep approximate aggregate reporting consistent with this90-day window and show the available range. Do not apply visitor cleanup rules to auth sessions or security audit logs.
+
+Respect `navigator.globalPrivacyControl`, browser Do Not Track and a documented first-party analytics opt-out setting; skip collection and avoid creating the anonymous cookie when opted out. Provide a small public footer privacy control for turning this analytics collection off/on, without an admin/site redesign; disabling clears pending queues and requests clearing the analytics cookie via a same-origin opt-out endpoint. That endpoint cannot delete another visitor or auth session. Persist the choice locally, synchronize tabs and preserve the opt-out across reload. When opted out, collected historic rows remain subject to the90-day retention rather than silently claiming full erasure. Automated production smoke sends DNT:1 so it is not counted as customer traffic.
+
+No claim that these analytics are complete, bot-proof or legal/compliance-certified. Explain anonymous ID, masked IP, estimated location,90-day retention and opt-out in the privacy control. Precise geolocation, identity enrichment, cross-site tracking and third-party IP APIs are outside scope.
+
+### Visitor verification
+
+Use real MySQL plus injected time: first hit, revisit,30-minute split, concurrent tabs, duplicate/out-of-order batches, rapid100-click sequence, capped pending sets/session limits, invalid paths, missing location, proxy spoofing, bot/oversized/rate tests, opt-out/DNT/GPC, retention and outage behavior. Assert constant row counts for repeated views of the same product within a session, no per-click event table, and no raw IP/query/form/token fields in persisted data/logs. Public collection must not return account/customer history or read arbitrary identifiers.
+
+Browser acceptance: create a genuine public product visit with a fresh controlled test browser context with collection enabled, then read it through the admin visitor UI in local/CI. On production the tagged probe is checked by the host-side verifier, while screenshots verify the real admin UI without injecting fake customer traffic into its lists. A User account sees it through customer_access.view and is denied account/role APIs. Clearly identify controlled test traffic and keep it out of customer production metrics via a dedicated smoke mechanism; never insert fake named customers to make screenshots look populated. Local/CI browser tests assert collection, batching, duplicate suppression and visitor product interest; the live probe strategy is fixed below.
+
 ## HTTP contracts
 
 Success: `{data: ...}` plus `{meta:{page,pageSize,total}}` for lists. Errors: `{error:{code,message,requestId,details?}}`; only field validation details are public. Codes/statuses400 validation,401 unauthenticated,403 forbidden,404 missing,409 conflict,429 throttled,503 temporarily unavailable. Existing health/version/demo contracts remain backward compatible.
@@ -114,6 +154,8 @@ Success: `{data: ...}` plus `{meta:{page,pageSize,total}}` for lists. Errors: `{
 | POST/PUT/DELETE /api/roles[/:id] | matching role action; protected full-access role and in-use deletion checks |
 | GET /api/permissions | permission.view |
 | PATCH /api/roles/:id/permissions | role.assign_permission; permissionIds set, revision, grant ceiling and revocation |
+| POST /api/analytics/collect | public same-origin bounded batch ingestion, anonymous cookie only; rate limited; no history returned |
+| POST /api/analytics/opt-out | same-origin clears only the caller's anonymous analytics cookie; no auth-cookie/data deletion |
 | GET /api/customer-access, /:id, /:id/sessions | customer_access.view; visitor list/detail/sessions and distinct viewed products; bounded paging/filtering |
 | GET /api/audit-logs | audit.view; server security/account audit rows, paginated |
 | GET /api/ready | deployment readiness only, no credentials/PII; DB reachable, expected schema/seed invariants and required config valid |
@@ -128,7 +170,7 @@ Users form adds username/password and a multi-role picker; distinguish create pa
 
 User01 sees only Khách truy cập, with read-only list/detail/session UI and logout; redirect root/dashboard and forbidden deep links to allowed visitor route or403 view. Hide profile-edit, global search results, notifications and shortcuts that expose inaccessible modules. Admin/master sees all existing/future registered modules. Account header/footer display server profile; master's profile/avatar controls are read-only. Non-master profile edits use authorized account API paths, not IndexedDB.
 
-HTTP-backed entity adapters cover users/roles/permissions/audit/visitors and visitor session reports. Existing browser-local business/content services keep their storage but use the current server-derived permission context; changing user clears caches/epoch and prevents an older asynchronous result from rendering. Local users/roles/audit fixture datasets are not seeded/queried as the authority in HTTP mode. Dashboard visitors/active-user totals must use the same server aggregates; keep sales/product local metrics distinct and do not join unrelated local/server user IDs.
+HTTP-backed entity adapters cover users/roles/permissions/audit/visitors and visitor session reports. Existing browser-local business/content services keep their storage but use the current server-derived permission context; changing user clears caches/epoch and prevents an older asynchronous result from rendering. Local users/roles/audit fixture datasets are not seeded/queried as the authority in HTTP mode. Dashboard visitors/active-user totals must use the same server aggregates; replace the mock visitor description and hardcoded country/browser filters with actual API filter metadata and clear empty states; keep sales/product local metrics distinct and do not join unrelated local/server user IDs.
 
 ## Migrations, build, production deploy and rollback
 
@@ -137,7 +179,7 @@ HTTP-backed entity adapters cover users/roles/permissions/audit/visitors and vis
 3. Artifact contains compiled backend, SQL migration files/checksums and schema compatibility range in manifest. It never contains secrets. Validate runtime and migration requirements before deployment/rollback.
 4. Production gate selects exact CI artifact as today. Under the existing host deploy lock: verify archive/storage, install dependencies, validate env/DB, create consistent auth/visitor DB backup outside webroot (0600), hash it, and prove restore into an isolated disposable DB. Refuse migration if backup/restore verification cannot be completed. Do not send backup contents to GitHub logs/artifacts.
 5. Run ordered migrations using a MySQL advisory lock and checksum ledger; only mark a version complete after verification. MySQL/MariaDB DDL may implicitly commit; do not claim CREATE/ALTER are rolled back with the DML transaction. Keep each migration narrowly scoped, additive and resumable with explicit dirty-state checks; stop on unknown/partial schema instead of stamping success or deleting it. Seed bootstrap separately in a transaction. On deploy failure before activation, leave the previous app selected and preserve migration/backup evidence.
-6. Only activate after schema/seed/readiness checks. Restart Passenger with stable private environment loading and execute public API/version/images/retained-assets smoke plus auth/permission checks using dedicated smoke identities or ephemeral DB rows. Never mutate/deactivate/delete the real master or user01 for tests; no test fixture records in production user-facing lists. Add a dedicated opt-in smoke account/session cleanup strategy before live acceptance.
+6. Only activate after schema/seed/readiness checks. Restart Passenger with stable private environment loading and execute public API/version/images/retained-assets smoke plus auth/permission checks using dedicated smoke identities or ephemeral DB rows. Verify analytics with a signed, time-bounded server-issued probe marker whose rows are flagged and excluded from all customer counts/lists; a host-side verifier reads only this probe marker's rows through the private application DB connection and emits pass/fail assertions/counts, never visitor data or credentials. Do not add a public or admin HTTP probe-result endpoint. Do not accept an unsigned client is_test flag. DNT is used for ordinary smoke; the explicit ingestion probe uses a fresh context with this marker and no real visitor cookies. Never mutate/deactivate/delete the real master or user01 for tests; no test fixture records in production user-facing lists. Use a dedicated deployment-probe account with narrowly scoped non-management checks; keep its secrets host-side. Probe rows are segregated by a trusted server test flag, expire within24hours and are removed by bounded cleanup; production APIs never let regular clients set that flag. The narrowly scoped probe account tests login/profile and expected account/role API403 responses only; it never receives fullAccess. A separate host-side DB verifier checks the signed marker and release-bound analytics row counts, so probe-result verification does not require granting Admin to that account. Initial test/bootstrap tooling must document this strategy before live acceptance.
 7. If post-activation checks fail, automatically select last known-good app release whose declared schema range still matches. Verify public site and API. Preserve migrated tables and all subsequent accounts/audit/revocations. No automatic down migration or database snapshot restore during app rollback. Failed rollback is explicit and requires intervention; never report successful deployment.
 8. First auth rollout must also test rollback to the current pre-auth release: public site remains available; auth/account endpoints are absent and expose no DB data. This is a degraded admin state, not a verified working authenticated CMS. Later auth releases roll back to compatible authenticated releases. Keep this transition explicit in the release receipt.
 9. Manual rollback uses the existing protected workflow and compatibility check. Emergency data restore is an independent maintenance action: quiesce writes, identify exact snapshot/time/loss window, owner approval, restore and verify; never overwrite newer production data silently. Deactivation/password/session revocation events must not be reversed by application rollback.
@@ -149,6 +191,7 @@ Stable runtime env/secret file outside immutable release is loaded consistently 
 
 DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD; optional DB_SOCKET / verified TLS settings; DB_POOL_LIMIT default5 with bounded queue/connect/acquire timeouts.
 AUTH_JWT_SECRET (at least256-bit random), AUTH_JWT_ISSUER, AUTH_JWT_AUDIENCE; AUTH_ALLOWED_ORIGINS; AUTH_TRUST_PROXY matching preflight; AUTH_COOKIE_SECURE controlled by environment, AUTH_BCRYPT_COST bounded; login/refresh throttle settings with safe defaults.
+ANALYTICS_ID_SECRET (separate from JWT), ANALYTICS_ENABLED, bounded analytics rate/retention settings (90days default), optional verified local GEOIP_DB_PATH, and private deployment-probe signing/credential settings.
 MASTER_ADMIN_PASSWORD, SEED_USER_PASSWORD required only for first explicit bootstrap. Migration/backup DB credentials and database verification target are separate host-only settings; runtime account must not hold DDL/create-user grants. Access lifetime15min, idle7days and absolute30days are fixed requirements, not casually overridden in production.
 
 ## Verification and delivery acceptance
@@ -161,14 +204,19 @@ UI tests: admin/user login, user visitor-only menu/direct-link guards, role mult
 
 Handoff contains changed files, migration/seed commands, environment template, DB diagram, API contracts, actual test counts/failures/skips, screenshot paths and deploy/rollback run IDs plus exact running source SHA. Report hosting/browser/database blockers accurately. No deployment is implied by design approval; implementation approval and any subsequent production activation must follow the owner's current authorization.
 
-## Builder-owned calls and unresolved owner boundary
+## Builder-owned calls for owner review
 
-Calls proposed here: bcryptjs cost12, lowercase SQL table names, soft-delete accounts, extra spent-token table for strict reuse detection, server DB check on each protected request, MySQL-backed throttling, same-origin canonical host cookies, real MySQL disposable tests, no destructive automatic schema down migration, and read-only visitor backend without a public tracker in this iteration.
+Calls proposed here: bcryptjs cost12, lowercase SQL table names, soft-delete accounts, extra spent-token table for strict reuse detection, server DB check on each protected request, MySQL-backed throttling, same-origin canonical host cookies, real MySQL disposable tests, no destructive automatic schema down migration, public first-party visitor collection, masked IP, no external geolocation calls,90-day analytics retention, distinct page/product semantics,15-second batch cap,30-minute analytics inactivity sessions and a minimal opt-out privacy control.
 
-Owner boundary still to confirm: whether automatic collection of real visitor traffic belongs in this iteration. Current proposal excludes collection and shows empty production results until a separate ingestion/import feature exists. Do not silently seed fake production visitors or implement a new tracker as if authorized.
+Owner confirmed real visitor collection after the first builder check. No unresolved owner scope question remains. All numeric collection/retention limits and masking behavior above are proposed defaults, not claims the owner specified them. Builder must implement and verify them as documented or surface a material constraint rather than silently changing metrics/security behavior.
 
 ## Primary references
 
 - Refresh rotation/replay handling: https://www.rfc-editor.org/info/rfc9700/ and https://datatracker.ietf.org/doc/html/rfc9700#section-4.14
 - MySQL DDL implicit commits: https://dev.mysql.com/doc/refman/8.4/en/implicit-commit.html ; MariaDB: https://mariadb.com/docs/server/reference/sql-statements/transactions/sql-statements-that-cause-an-implicit-commit
 - bcryptjs portability and input limit: https://github.com/dcodeIO/bcrypt.js
+
+
+## Builder-check outcome
+
+The fresh reviewer identified the visitor-collection scope question, which the owner resolved by including real traffic collection. A delta review then found one authority mismatch between a full-access probe-result endpoint and a least-privilege probe account. Resolved as a builder-owned call: no HTTP probe-result endpoint; the host-side verifier reads only signed release-specific probe rows and emits assertions, while the probe account remains non-management and never fullAccess. Reviewer found no other material planning ambiguity in the expanded collection design. Hosting preflight and final owner approval remain required; implementation has not started.
