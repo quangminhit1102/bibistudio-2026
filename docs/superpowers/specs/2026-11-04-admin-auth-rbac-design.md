@@ -1,7 +1,7 @@
 # Admin authentication, RBAC and account management — design
 
 Date: 2026-11-04
-Status: Reviewed design updated with owner-confirmed real visitor collection; awaiting approval before implementation.
+Status: Owner approved on 2026-11-04, including real visitor collection. Implementation plan is written separately; implementation has not started.
 
 ## Intent and approved direction
 
