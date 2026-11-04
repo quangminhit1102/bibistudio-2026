@@ -43,7 +43,7 @@ Tasks0–5 backend;6–7 identity/UI;8–9 analytics;10–11 deploy/tooling;12 a
 
 ---
 
-### Task0: Confirm engine/tooling and execution boundary
+### Task 0: Confirm engine/tooling and execution boundary
 
 **Files:** read docs/build-and-deploy.md, approved spec, backend/build/test conventions and ops/deploy-config.example.json; create ignored .superpowers/auth-preflight.json; update deployment guide with measured prerequisites.
 **Interfaces:** non-secret preflight record contains Node/npm path/version, DB engine/version, Docker daemon availability, DB/backup/restore capabilities, proxy topology and current release. No credential values.
@@ -54,7 +54,7 @@ Tasks0–5 backend;6–7 identity/UI;8–9 analytics;10–11 deploy/tooling;12 a
 - [ ] Record dedicated DB/runtime-DML versus migration/backup needs. Provisioning is a later concrete hosting action; no production migration now.
 - [ ] Commit factual documentation only if changed: `docs: record auth database preflight`.
 
-### Task1: Schema, resumable migrations, seed and DB test harness
+### Task 1: Schema, resumable migrations, seed and DB test harness
 
 **Files:** create backend/src/config.ts, db/pool.ts, db/transaction.ts, db/migrate.ts, db/seed.ts, db/cli.ts, http/contracts.ts,auth/password.ts; backend/migrations/001_identity.sql,002_sessions_audit.sql,003_visitors.sql,004_throttles_probe.sql; backend/test/helpers/database.mjs,http.mjs and migrations.test.mjs; scripts/test-database.mjs,local-database.mjs. Modify backend package/lock, root scripts, .env.example.
 **Interfaces:** createDbPool(config:DbConfig):Pool; withTransaction<T>(pool,work:(connection:PoolConnection)=>Promise<T>):Promise<T>; migrate(pool,directory):Promise<MigrationStatus>; seedIdentity(pool,secrets:SeedSecrets):Promise<void>; CLI migrate/seed/status. Clock has now():Date. TestClock adds set(Date)/advance(ms). createDatabaseFixture(t) returns {pool,config,clock,close}, allocating its own guarded bibi_test_* schema and independent secrets.
@@ -68,7 +68,7 @@ contracts.ts defines Page<T> {items,total,page,pageSize}, PrincipalDto {id,usern
 - [ ] Verify tests/backend types and owned cleanup. Local development volume may persist; test schemas are disposable. No secret logs.
 - [ ] Commit `feat(api): add MySQL migrations and explicit identity bootstrap`.
 
-### Task2: HTTP security, safe errors, audit and throttling
+### Task 2: HTTP security, safe errors, audit and throttling
 
 **Files:** create backend/src/http/errors.ts,validation.ts,security.ts,express.d.ts; audit/repository.ts; auth/throttle.ts; modify app.ts. Test backend/test/http-security.test.mjs.
 **Interfaces:** createApp(release:ReleaseInfo,options?:AppOptions):Express remains synchronous; options inject config/db/clock. ApiError(status,code,message,details?); writeAudit(conn,event:AuditInput):Promise<void>; consumeRateLimit(pool,key,policy,now):Promise<RateDecision>; requireBrowserOrigin(config):RequestHandler.
@@ -79,7 +79,7 @@ contracts.ts defines Page<T> {items,total,page,pageSize}, PrincipalDto {id,usern
 - [ ] Audit writes share caller transactions; metadata allowlist excludes passwords/tokens/cookies/SQL creds/full query URLs. No stack leakage.
 - [ ] Run new and existing backend/test/api.test.mjs tests; commit `feat(api): add guarded HTTP errors audit and persistent throttling`.
 
-### Task3: Password login and rotating refresh families
+### Task 3: Password login and rotating refresh families
 
 **Files:** create backend/src/auth/tokens.ts,repository.ts,service.ts,routes.ts; extend auth/password.ts from Task1; modify app/config/contracts. Tests backend/test/auth.test.mjs,refresh-concurrency.test.mjs.
 **Interfaces:** createAuthService({pool,clock,config}):AuthService with login(credentials,meta):Promise<AuthGrant>, refresh(rawCookie,meta):Promise<AuthGrant>, logout(rawCookie,meta):Promise<void>, revoke(actor:AuthPrincipal,command):Promise<void>. AuthGrant internal includes replacement cookie; public grant is accessToken/expiresAt/profile. signAccess({sub,sid,authVersion},clock):string; verifyAccess(token,clock):AccessClaims; hashRefresh(raw):string. Auth repository checkAndTouchSession(conn,claims,now):Promise<SessionState> rejects idle/absolute expiry/auth_version mismatch and extends idle expiry only to the absolute cap; Task4 middleware consumes it.
@@ -90,7 +90,7 @@ contracts.ts defines Page<T> {items,total,page,pageSize}, PrincipalDto {id,usern
 - [ ] Observe failures, implement user→session→token locks, random256-bit refresh, SHA256 history, bcrypt12, pinned JWT and audited revocation. Do not roll back reuse revocation by throwing inside transaction.
 - [ ] Run both test files/types; commit `feat(auth): implement password login and replay-safe sessions`.
 
-### Task4: Server permissions and protected account CRUD
+### Task 4: Server permissions and protected account CRUD
 
 **Files:** create backend/src/authorization/permissions.ts,middleware.ts; accounts/repository.ts,service.ts,routes.ts; modify auth profile/revoke routes/contracts. Tests backend/test/authorization.test.mjs,accounts.test.mjs,master-protection.test.mjs.
 **Interfaces:** authenticate(deps):RequestHandler supplies req.auth:AuthPrincipal; requirePermission(code:string):RequestHandler; resolvePrincipal(conn,userId,sid):Promise<PrincipalDto>. AccountService list(query):Promise<Page<AccountDto>>,get(id),create(input,actor),update(id,input,revision,actor),setActive(id,active,revision,actor),setRoles(id,roleIds,revision,actor),remove(id,revision,actor). Other-user revoke uses account.revoke_session, rejects a master target.
@@ -101,7 +101,7 @@ contracts.ts defines Page<T> {items,total,page,pageSize}, PrincipalDto {id,usern
 - [ ] Implement narrow update allowlists and dedicated status/role actions. Account creation with roleIds requires assign_role; own role assignment denied; soft delete, deterministic locks and atomic audit. No exposed secret fields.
 - [ ] Run three test files; commit `feat(accounts): enforce server RBAC and protected master CRUD`.
 
-### Task5: Roles, permission matrix and audit reads
+### Task 5: Roles, permission matrix and audit reads
 
 **Files:** create backend/src/roles/repository.ts,service.ts,routes.ts; audit/routes.ts. Tests backend/test/roles.test.mjs,audit.test.mjs.
 **Interfaces:** RoleService list/create/update/remove/setPermissions, all mutations actor/revision; listPermissions():Promise<PermissionDto[]>; listAssignableRoles(actor):Promise<RoleOptionDto[]>; listAudit(query,actor):Promise<Page<AuditDto>>. Add RoleOptionDto to contracts. fullAccess/system flags remain server-owned.
@@ -111,7 +111,7 @@ contracts.ts defines Page<T> {items,total,page,pageSize}, PrincipalDto {id,usern
 - [ ] Observe failures, implement services with matching lock order and no arbitrary resource codes accepted from clients. Seed registers current codes; fullAccess covers future codes without schema changes.
 - [ ] Run tests; commit `feat(rbac): add role permission and audit APIs`.
 
-### Task6: Memory-only HTTP auth and multi-tab refresh
+### Task 6: Memory-only HTTP auth and multi-tab refresh
 
 **Files:** create src/lib/admin-http.ts; accounts/auth/http-service.ts,refresh-lock.ts. Modify accounts/auth/contracts.ts, services/context.tsx,services/contracts.ts,accounts/permissions.ts. Tests tests/admin/http-auth.test.ts,refresh-singleflight.test.ts,auth-epoch.test.ts and tests/e2e/auth-tabs.spec.ts.
 **Interfaces:** createAdminHttp({fetch,origin,onUnauthorized,clock,refreshLock}):AdminHttpClient exposing request<T>(path,options):Promise<T>,login(credentials),restore():Promise<PrincipalDto|null>,logout(),dispose(). Token is closure state only. Session is discriminated HTTP principal or explicitly injected fixture; HTTP never uses legacy roleId authority. canCode(session,code):boolean handles fullAccess.
@@ -122,7 +122,7 @@ contracts.ts defines Page<T> {items,total,page,pageSize}, PrincipalDto {id,usern
 - [ ] Provider defaults to HTTP; fixture adapter only injected tests. Update route/action permission context and local-service guards to server identity without querying local role authority. Old tests inject fixtures intentionally; no production fallback.
 - [ ] Run targeted Vitest/browser tests; commit `feat(admin): connect memory-only sessions and serialized refresh`.
 
-### Task7: Accounts/roles UI and visitor-only navigation
+### Task 7: Accounts/roles UI and visitor-only navigation
 
 **Files:** create src/features/admin/accounts/http-api.ts,account-form.tsx; modify accounts/pages/users.tsx,user-detail.tsx,roles.tsx,permissions.tsx; accounts/config.tsx,profile-form.tsx; shell/admin-layout.tsx,account-menu.tsx,navigation.ts,search-service.ts; services/context.tsx; dashboard/service.ts; audit/pages/audit-logs.tsx. Tests tests/admin/server-account-ui.test.tsx and tests/e2e/account-management.spec.ts.
 **Interfaces:** createAccountApi(http) implements Task4–5 wire methods; useAccount/useAccounts/useServerRoles/usePermissions query by principal ID/epoch, never one roleId. AccountForm({initial,onSave,readOnly}) supports roleIds multi-select and dedicated actions. Use common DataTable/form primitives and safe server DTOs, not a lossy legacy single-role projection.
@@ -133,7 +133,7 @@ contracts.ts defines Page<T> {items,total,page,pageSize}, PrincipalDto {id,usern
 - [ ] Move account search/counts/audit to APIs. Keep local sales/product metrics distinct and do not join backend user IDs to fixture users. Remove fixture users/roles/audit as active authority in HTTP paths.
 - [ ] Run new tests and sidebar/editor/sales/cache regressions; commit `feat(admin): integrate server accounts and permission-aware navigation`.
 
-### Task8: Bounded visitor ingestion and retention
+### Task 8: Bounded visitor ingestion and retention
 
 **Files:** create backend/src/visitors/catalogue.ts,normalize.ts,repository.ts,collector.ts,service.ts,routes.ts,cleanup.ts; scripts/analytics-catalogue.mjs. Modify app/build preparation. Tests backend/test/visitor-ingest.test.mjs,visitor-concurrency.test.mjs,visitor-retention.test.mjs and scripts/analytics-catalogue.test.mjs.
 **Interfaces:** collectVisitor(pool,input:CollectBatch,context:CollectorContext):Promise<CollectResult> returns202 bootstrap/no DB write or204 acknowledged; clearAnalyticsCookie clears caller cookie only; cleanupAnalytics(pool,now,batchLimit):Promise<CleanupCounts>. Context contains verified IP/UA/origin/server clock and optional server-verified probe marker. Generated public route/product manifest contains slugs/labels, no admin/price/cart data. VisitorService list/get/sessions/report/filterOptions returns Task1 visitor DTOs and safe filter metadata. Explicit read routes: GET /api/customer-access, /filter-options, /report, /:id, /:id/sessions; register static routes first.
@@ -144,7 +144,7 @@ contracts.ts defines Page<T> {items,total,page,pageSize}, PrincipalDto {id,usern
 - [ ] Observe failures; implement dedicated small collector pool (2connections within actual hosting quota), visitor-row locking, unique associations and counts from inserted rows only. Mask IPv4/24 or IPv6/48 before persistence, bounded UA parse, no external GeoIP requests. Last route means last received, no per-click timeline. Add explicit cleanup CLI/cron instructions.
 - [ ] Run new tests/catalogue validation; commit `feat(analytics): collect deduplicated sessions and product interests`.
 
-### Task9: Lightweight tracker, privacy control and MySQL visitor UI
+### Task 9: Lightweight tracker, privacy control and MySQL visitor UI
 
 **Files:** create src/lib/visitor-tracker.ts, src/components/visitor-tracking.tsx,analytics-privacy-control.tsx; src/features/admin/analytics/http-api.ts. Modify src/routes/__root.tsx,src/components/site-footer.tsx; analytics/pages/visitors.tsx,visitor-detail.tsx; analytics/components/visitor-dialog.tsx,visitor-service.ts,hooks.ts; dashboard/service.ts. Tests tests/admin/visitor-http.test.ts,tracker-batching.test.ts and tests/e2e/visitor-collection.spec.ts. Retain existing public bundle report/budgets.
 **Interfaces:** createVisitorTracker({send,clock,privacy,bootstrapLock}):VisitorTracker has visit(publicPath),flush(reason),setEnabled(boolean),dispose(). VisitorApi implements list/get/sessions/report/filterOptions using /api/customer-access; React wrapper observes committed public routes only.
@@ -155,7 +155,7 @@ contracts.ts defines Page<T> {items,total,page,pageSize}, PrincipalDto {id,usern
 - [ ] Move visitor list/detail/report/filter options to backend. Remove mock description/production rows; label unique pages and last-received route accurately, null location/truncation/empty states. User stays read-only; dashboard reads same visitor aggregates.
 - [ ] Run tracker/visitor tests, real browser public visit→admin interest walkthrough and desktop/mobile overflow check; run public bundle baseline check. Commit `feat(analytics): connect public collection and live visitor UI`.
 
-### Task10: Migration artifacts and host deploy/rollback hooks
+### Task 10: Migration artifacts and host deploy/rollback hooks
 
 **Files:** modify scripts/build.mjs,release-manifest.mjs,deploy-client.mjs,smoke.mjs,browser-smoke.mjs; ops/deploy.cjs,receiver.cjs,release.cjs,deploy-config.example.json; ops/passenger/app.cjs. Create ops/database-lifecycle.cjs,backend/src/db/backup-cli.ts,probe-cli.ts. Tests scripts/auth-release.test.mjs,auth-deploy.test.mjs,auth-rollback.test.mjs and existing deploy/manifest suite.
 **Interfaces:** manifest.database {requiredMin,compatibleMax,migrationChecksums}; checkDatabaseCompatibility(release,schema):void; prepareDatabase(config,release):Promise<BackupReceipt> exposes hash/state only; verifyReleaseProbe(config,release):Promise<ProbeReceipt>. Host spawns fixed release CLI using runtime node, not arbitrary shell/SQL. Existing scoped SSH grammar remains.
@@ -167,7 +167,7 @@ contracts.ts defines Page<T> {items,total,page,pageSize}, PrincipalDto {id,usern
 - [ ] Add release-signed tagged analytics probe, excluded from real visitor lists/counts and expiring24hours. Host-side DB verifier outputs assertions/counts for this marker only; no HTTP probe-result endpoint. Narrow probe account checks login/profile and expected management403, never fullAccess. Ordinary browser smoke sends DNT. Do not mutate real master/user01 for testing.
 - [ ] Run lifecycle tests and deploy suite with actual restore; commit `feat(deploy): add verified DB migration and compatible app rollback`.
 
-### Task11: Local/CI commands and operational documentation
+### Task 11: Local/CI commands and operational documentation
 
 **Files:** modify root/backend package scripts; scripts/check.mjs,dev.mjs,preview.mjs,install-backend.mjs; .github/workflows/ci.yml,production.yml,rollback.yml; .env.example; docs/admin.md,build-and-deploy.md. Create docs/admin-auth-api.md,admin-auth-operations.md; tests/e2e/auth.config.ts;scripts/auth-ui-check.mjs. Test scripts/auth-tooling.test.mjs.
 **Interfaces:** npm run dev starts FE/BE using configured isolated local DB; may start an initialized local container but never silently migrate. npm run check owns disposable test DB unless a guarded CI DB service is supplied and runs mandatory real integration/UI tests. Build never connects to or mutates production DB. db:setup:local is explicit one-time setup; migrate/seed/status remain deliberate.
@@ -178,7 +178,7 @@ contracts.ts defines Page<T> {items,total,page,pageSize}, PrincipalDto {id,usern
 - [ ] Document schema diagram, endpoints/errors, setup/env, multi-role semantics, strict lost-refresh response behavior, Web Locks fallback, analytics approximations/privacy/retention, direct npm correction, backup/restore, exact rollback/degraded baseline behavior. Other modules remain local explicitly.
 - [ ] Run tooling tests/full check/build; commit `docs(tooling): document and verify auth development and production operations`.
 
-### Task12: Final review and actual acceptance
+### Task 12: Final review and actual acceptance
 
 **Files:** create docs/superpowers/reports/2026-11-04-admin-auth-acceptance.md; actual screenshots under C:/Users/Admin/.codex/visualizations/2026/10/20/01a15a26-a0cd-7650-bf39-5920671482d5/ using bibi-auth-admin.png, bibi-auth-user-mobile.png, bibi-auth-accounts.png and bibi-auth-visitor-interest.png. No mockup screenshot presented as actual implementation.
 **Interfaces:** receipt records exact SHA/schema/checksums, CI artifact digest, tests/failures/skips, backup/restore proof and current/previous release IDs. Acceptance remains conditional until all required checks complete.

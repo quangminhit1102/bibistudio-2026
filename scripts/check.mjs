@@ -24,12 +24,15 @@ try {
   await node("scripts/catalogue-images.mjs");
   await node("node_modules/vitest/vitest.mjs", ["run", "--config", "vitest.admin.config.ts"]);
   const scripts = (await readdir(join(root, "scripts")))
-    .filter((n) => n.endsWith(".test.mjs"))
+    .filter((n) => n.endsWith(".test.mjs") && n !== "dev.test.mjs")
     .map((n) => `scripts/${n}`);
   const backend = (await readdir(join(root, "backend/test")))
     .filter((n) => n.endsWith(".test.mjs"))
     .map((n) => `backend/test/${n}`);
   await run(process.execPath, ["--test", ...scripts, ...backend, "src/lib/api-demo.test.ts"]);
+  // The actual watcher test depends on timely filesystem/heartbeat transitions.
+  // Run it after CPU-heavy hashing/DB suites, with the same assertions/timeouts.
+  await run(process.execPath, ["--test", "scripts/dev.test.mjs"]);
 } catch (error) {
   console.error(error.message);
   process.exitCode = 1;

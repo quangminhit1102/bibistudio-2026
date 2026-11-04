@@ -1,13 +1,13 @@
 # Admin authentication, RBAC and account management — design
 
 Date: 2026-11-04
-Status: Owner approved on 2026-11-04, including real visitor collection. Implementation plan is written separately; implementation has not started.
+Status: Owner approved on 2026-11-04, including real visitor collection. Owner selected native inline execution; implementation is in progress. Production has not changed for this feature.
 
 ## Intent and approved direction
 
 Replace the local admin identity with Express authentication backed by the production MySQL-compatible database on cPanel. Preserve the React/TanStack UI and existing service boundaries. Provide real account/role/permission management, secure rotating sessions, server authorization and real visitor collection with MySQL-backed visitor reads. One production environment only; no staging application. Disposable databases for automated testing are test infrastructure, never the production database.
 
-The owner supplied the full API/security/test requirements, chose cPanel MySQL, and accepted the recommended mysql2 + SQL migration direction with application rollback and non-destructive database migrations, and explicitly confirmed real visitor collection. This design records additional implementation calls explicitly below; they are proposals until approved.
+The owner supplied the full API/security/test requirements, chose cPanel MySQL, and approved the mysql2 + SQL migration direction with application rollback, non-destructive database migrations and real visitor collection. This document is the approved implementation authority.
 
 ## Current source and integration constraints
 
