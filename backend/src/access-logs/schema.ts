@@ -4,7 +4,13 @@ import { join } from "node:path";
 import type { Pool, PoolConnection, RowDataPacket } from "mysql2/promise";
 
 const hash = (value: string) => createHash("sha256").update(value).digest("hex");
-const tables = ["access_log_sources", "access_log_records", "access_log_import_runs"];
+const tables = [
+  "access_log_sources",
+  "access_log_records",
+  "access_log_import_runs",
+  "access_log_current_sources",
+  "access_log_current_records",
+];
 interface Asset {
   version: number;
   name: string;
@@ -41,7 +47,7 @@ async function history(
   connection: Pool | PoolConnection,
 ): Promise<{ exists: boolean; untracked: boolean; rows: RowDataPacket[] }> {
   const [found] = await connection.query<RowDataPacket[]>(
-    "SELECT table_name name FROM information_schema.tables WHERE table_schema=DATABASE() AND table_name IN ('access_log_migrations','access_log_sources','access_log_records','access_log_import_runs')",
+    "SELECT table_name name FROM information_schema.tables WHERE table_schema=DATABASE() AND table_name IN ('access_log_migrations','access_log_sources','access_log_records','access_log_import_runs','access_log_current_sources','access_log_current_records')",
   );
   const exists = found.some((row) => row.name === "access_log_migrations");
   return {

@@ -85,9 +85,4 @@ export interface CollectBatch {
   products: string[];
   lastPath: string;
 }
-export type { AccessLogRecord, AccessLogSyncReceipt } from "../access-logs/types";
-export type AccessLogStatus = Awaited<
-  ReturnType<
-    ReturnType<typeof import("../access-logs/read-service").createAccessLogReadService>["status"]
-  >
->;
+export type { AccessLogRecord, AccessLogSyncReceipt, AccessLogStatus } from "../access-logs/types";

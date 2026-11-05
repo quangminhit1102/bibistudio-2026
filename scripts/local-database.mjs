@@ -24,8 +24,10 @@ export async function prepareLocalAccessLogs(
   baseDirectory = join(root, ".superpowers/local-access-logs"),
 ) {
   const archiveDirectory = join(baseDirectory, "archives"),
-    workDirectory = join(baseDirectory, "work");
+    workDirectory = join(baseDirectory, "work"),
+    currentDirectory = join(baseDirectory, "current");
   await mkdir(archiveDirectory, { recursive: true, mode: 0o700 });
+  await mkdir(currentDirectory, { recursive: true, mode: 0o700 });
   const domainAlias = "local.bibistudio.test";
   const file = join(archiveDirectory, domainAlias + "-Jan-2026.gz");
   const example =
@@ -35,10 +37,21 @@ export async function prepareLocalAccessLogs(
   } catch (error) {
     if (error.code !== "EEXIST") throw error;
   }
+  for (const [name, text] of [
+    [domainAlias, ""],
+    [domainAlias + "-ssl_log", example],
+  ]) {
+    try {
+      await writeFile(join(currentDirectory, name), text, { flag: "wx", mode: 0o600 });
+    } catch (error) {
+      if (error.code !== "EEXIST") throw error;
+    }
+  }
   return {
     ACCESS_LOG_ARCHIVE_DIR: archiveDirectory,
     ACCESS_LOG_DOMAIN_ALIAS: domainAlias,
     ACCESS_LOG_WORK_DIR: workDirectory,
+    ACCESS_LOG_CURRENT_DIR: currentDirectory,
   };
 }
 async function privateEnv(path) {
@@ -242,10 +255,10 @@ export async function setupLocalDatabase() {
   const { createDbPool } = require("../backend/dist/db/pool.js");
   const { readDbConfig } = require("../backend/dist/config.js");
   const { readAccessLogConfig } = require("../backend/dist/access-logs/config.js");
-  const { syncAccessLogArchives } = require("../backend/dist/access-logs/importer.js");
+  const { syncAccessLogs } = require("../backend/dist/access-logs/sync-service.js");
   const runtimePool = createDbPool({ ...readDbConfig(runtimeEnv), connectionLimit: 1 });
   try {
-    const receipt = await syncAccessLogArchives({
+    const receipt = await syncAccessLogs({
       pool: runtimePool,
       config: readAccessLogConfig(runtimeEnv),
       clock: { now: () => new Date() },

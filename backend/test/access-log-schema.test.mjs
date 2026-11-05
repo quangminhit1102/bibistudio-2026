@@ -23,10 +23,10 @@ test("feature migration is separate, checksummed and idempotent on actual MariaD
   await migrateAccessLogs(f.pool, directory);
   const status = await readAccessLogSchema(f.pool, directory);
   assert.equal(status.state, "complete");
-  assert.equal(status.version, 1);
-  assert.equal(Object.keys(status.checksums).length, 1);
+  assert.equal(status.version, 2);
+  assert.equal(Object.keys(status.checksums).length, 2);
   const [tables] = await f.pool.query("SHOW TABLES");
-  assert.equal(tables.length, 4);
+  assert.equal(tables.length, 6);
   assert.ok(tables.every((x) => Object.values(x)[0].startsWith("access_log_")));
 });
 test("dirty, changed and unknown feature history refuse all new DDL", async (t) => {
@@ -37,10 +37,15 @@ test("dirty, changed and unknown feature history refuse all new DDL", async (t) 
   assert.equal((await readAccessLogSchema(f.pool, directory)).state, "dirty");
   await f.pool.query("UPDATE access_log_migrations SET state='complete',checksum=REPEAT('a',64)");
   await assert.rejects(migrateAccessLogs(f.pool, directory), /checksum/i);
-  await f.pool.query("UPDATE access_log_migrations SET version=9");
+  await f.pool.execute("UPDATE access_log_migrations SET checksum=? WHERE version=1", [
+    createHash("sha256")
+      .update(await readFile(join(directory, "001_access_logs.sql")))
+      .digest("hex"),
+  ]);
+  await f.pool.query("UPDATE access_log_migrations SET version=9 WHERE version=2");
   await assert.rejects(migrateAccessLogs(f.pool, directory), /unknown/i);
   const [tables] = await f.pool.query("SHOW TABLES");
-  assert.equal(tables.length, 4);
+  assert.equal(tables.length, 6);
 });
 test("untracked feature tables and DDL drift are not silently adopted", async (t) => {
   const f = await createDatabaseFixture(t);
@@ -59,6 +64,10 @@ test("changed packaged asset is detected before modification", async (t) => {
   await migrateAccessLogs(f.pool, directory);
   const copy = await mkdtemp(join(tmpdir(), "bibi-access-schema-"));
   t.after(() => rm(copy, { recursive: true }));
+  await writeFile(
+    join(copy, "002_current_cache.sql"),
+    await readFile(join(directory, "002_current_cache.sql")),
+  );
   await writeFile(
     join(copy, "001_access_logs.sql"),
     (await readFile(join(directory, "001_access_logs.sql"), "utf8")) + "\n ",

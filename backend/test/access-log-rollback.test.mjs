@@ -14,6 +14,7 @@ import { serve } from "./helpers/http.mjs";
 import { bridge } from "./helpers/native-backup.mjs";
 import { migrateAccessLogs } from "../dist/access-logs/schema.js";
 import { syncAccessLogArchives } from "../dist/access-logs/importer.js";
+import { syncCurrentLogs } from "../dist/access-logs/current-cache.js";
 import { createVerifiedBackup, runNativeTool } from "../dist/db/backup.js";
 import { readSchemaStatus } from "../dist/db/status.js";
 const require = createRequire(import.meta.url),
@@ -35,6 +36,22 @@ test("actual native backup includes log checkpoints; failed activation retains p
       signal: AbortSignal.timeout(120000),
     });
   assert.equal((await sync()).inserted, 1);
+  archive.config.currentDirectory = join(archive.root, "current");
+  await mkdir(archive.config.currentDirectory);
+  await writeFile(join(archive.config.currentDirectory, archive.config.domainAlias), "");
+  const currentFile = join(
+    archive.config.currentDirectory,
+    archive.config.domainAlias + "-ssl_log",
+  );
+  await writeFile(currentFile, Buffer.concat([accessLogLine(), Buffer.from("\n")]));
+  const currentSync = () =>
+    syncCurrentLogs({
+      pool: f.pool,
+      config: archive.config,
+      clock: f.clock,
+      signal: AbortSignal.timeout(120000),
+    });
+  assert.equal((await currentSync()).records, 1);
   const root = await mkdtemp(join(tmpdir(), "bibi-log-rollback-"));
   t.after(() => rm(root, { recursive: true, force: true }));
   const config = { root, site: join(root, "site"), environment: "staging" };
@@ -96,6 +113,11 @@ test("actual native backup includes log checkpoints; failed activation retains p
         if (release.manifest.releaseId === first) return { ok: true };
         await archive.write([accessLogLine(), accessLogLine()]);
         assert.equal((await sync()).inserted, 1);
+        await writeFile(
+          currentFile,
+          Buffer.concat([accessLogLine(), Buffer.from("\n"), accessLogLine(), Buffer.from("\n")]),
+        );
+        assert.equal((await currentSync()).records, 2);
         await f.auth.logout(grant.refreshToken);
         throw new Error("feature probe rejected");
       },
@@ -110,10 +132,16 @@ test("actual native backup includes log checkpoints; failed activation retains p
     "access_log_sources",
     "access_log_records",
     "access_log_import_runs",
+    "access_log_current_sources",
+    "access_log_current_records",
   ])
     assert.ok(dump.includes("`" + table + "`"));
   const [[count]] = await f.pool.query("SELECT COUNT(*) n FROM access_log_records");
   assert.equal(count.n, 2);
+  const [[cache]] = await f.pool.query(
+    "SELECT COUNT(*) n FROM access_log_current_records r JOIN access_log_current_sources s ON r.source_id=s.id AND r.snapshot_id=s.active_snapshot_id",
+  );
+  assert.equal(cache.n, 2);
   const [[point]] = await f.pool.query(
     "SELECT committed_lines,record_count FROM access_log_sources",
   );

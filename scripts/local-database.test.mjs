@@ -12,6 +12,16 @@ test("local setup creates synthetic access archives without hosting data or extr
   const env = await prepareLocalAccessLogs(root);
   assert.ok(env.ACCESS_LOG_ARCHIVE_DIR.startsWith(root));
   assert.ok(env.ACCESS_LOG_WORK_DIR.startsWith(root));
+  assert.ok(env.ACCESS_LOG_CURRENT_DIR.startsWith(root));
+  assert.equal((await readdir(env.ACCESS_LOG_CURRENT_DIR)).length, 2);
+  assert.ok(
+    (
+      await readFile(
+        join(env.ACCESS_LOG_CURRENT_DIR, env.ACCESS_LOG_DOMAIN_ALIAS + "-ssl_log"),
+        "utf8",
+      )
+    ).includes("local-example"),
+  );
   const names = await readdir(env.ACCESS_LOG_ARCHIVE_DIR);
   assert.equal(names.length, 1);
   assert.ok(

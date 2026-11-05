@@ -4,8 +4,11 @@ import { createDbPool } from "../db/pool";
 import { readPrivateEnvironment } from "../db/private-env";
 import { assertProbeIdentity, PROBE_USERNAME } from "../db/probe-identity";
 import { requireAccessLogSchema, createAccessLogReadService } from "./read-service";
+import { readAccessLogConfig } from "./config";
 async function main() {
   const env = readPrivateEnvironment(process.env.BIBI_MAINTENANCE_ENV_FILE);
+  if (!readAccessLogConfig(env).currentDirectory)
+    throw new Error("Current source configuration required");
   const args = process.argv.slice(2),
     [releaseId, sourceSha, baseUrl] = args;
   if (
@@ -30,7 +33,13 @@ async function main() {
     await assertProbeIdentity(pool);
     await requireAccessLogSchema(pool, resolve(__dirname, "../../access-log-migrations"));
     const status = await createAccessLogReadService(pool, systemClock).status();
-    assert(status.state === "complete" && !status.stale);
+    const current = await createAccessLogReadService(pool, systemClock, "current").status();
+    // Bootstrap freshness is gated before activation; rollback must still work if log sources go stale.
+    assert(
+      Number.isSafeInteger(status.total) &&
+        Number.isSafeInteger(current.total) &&
+        current.sources.length === 2,
+    );
     const version = await request("/api/version");
     assert(
       version.status === 200 &&
@@ -57,19 +66,24 @@ async function main() {
         !grant.profile.fullAccess &&
         !grant.profile.isMaster,
     );
-    assert(
-      (
-        await request("/api/customer-access/access-logs/status", {
-          headers: { Authorization: "Bearer " + grant.accessToken },
-        })
-      ).status === 403,
-    );
+    for (const scope of ["current", "archive"])
+      assert(
+        (
+          await request("/api/customer-access/access-logs/status?scope=" + scope, {
+            headers: { Authorization: "Bearer " + grant.accessToken },
+          })
+        ).status === 403,
+      );
     console.log(
       JSON.stringify({
         ok: true,
         accessLogs: true,
         releaseId,
-        total: status.total,
+        archiveRecords: status.total,
+        currentRecords: current.total,
+        archiveState: status.state,
+        currentState: current.state,
+        sourceFresh: !status.stale && !current.stale,
         parseErrors: status.parseErrors,
       }),
     );

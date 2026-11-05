@@ -22,7 +22,7 @@ export interface AppOptions {
   config?: SecurityConfig | AuthConfig;
   clock?: Clock;
   analytics?: AnalyticsOptions;
-  accessLogs?: { pool: Pool; schemaDirectory: string };
+  accessLogs?: { pool: Pool; schemaDirectory: string; currentEnabled?: boolean };
 }
 
 export function createApp(release: ReleaseInfo, options: AppOptions = {}): Express {
@@ -45,6 +45,7 @@ export function createApp(release: ReleaseInfo, options: AppOptions = {}): Expre
         options.accessLogs.schemaDirectory,
         options.clock ?? systemClock,
         auth,
+        options.accessLogs.currentEnabled,
       ),
     );
   if (auth && options.db && options.analytics)

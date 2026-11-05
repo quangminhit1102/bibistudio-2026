@@ -26,7 +26,10 @@ async function setup(t, migrate = true) {
   );
   const grant = await f.auth.login({ username: "user01", password: f.secrets.userPassword });
   const get = async (path = "", token = grant.accessToken) => {
-    const res = await fetch(base + "/api/customer-access/access-logs" + path, {
+    const [pathname, query] = path.split("?"),
+      params = new URLSearchParams(query);
+    if (!params.has("scope")) params.set("scope", "archive");
+    const res = await fetch(base + "/api/customer-access/access-logs" + pathname + "?" + params, {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
     return { status: res.status, body: await res.json(), cache: res.headers.get("cache-control") };

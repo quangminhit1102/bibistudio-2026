@@ -15,15 +15,17 @@ function Detail({
   onClose,
   api,
   identity,
+  scope,
 }: {
   id: string;
   onClose: () => void;
   api: ReturnType<typeof createAccessLogApi>;
   identity: string | undefined;
+  scope: "current" | "archive";
 }) {
   const data = useQuery({
-    queryKey: ["bibi-admin", "access-log", identity, id],
-    queryFn: ({ signal }) => api.get(id, signal),
+    queryKey: ["bibi-admin", "access-log", identity, scope, id],
+    queryFn: ({ signal }) => api.get(id, scope, signal),
   });
   return (
     <Modal
@@ -75,20 +77,21 @@ export function ServerAccessLogs() {
       page: 1,
       pageSize: 20,
       search: "",
-      filters: {},
+      filters: { scope: "current" },
     }),
     [selected, setSelected] = useState<string | null>(null);
   const enabled = canCode(runtime.session, "customer_access.view");
   const identity = runtime.session?.userId;
+  const scope = state.filters.scope === "archive" ? "archive" : "current";
   const logs = useQuery({
     queryKey: ["bibi-admin", "access-logs", identity, state],
     enabled,
     queryFn: ({ signal }) => api.list(state, signal),
   });
   const status = useQuery({
-    queryKey: ["bibi-admin", "access-log-status", identity],
+    queryKey: ["bibi-admin", "access-log-status", identity, scope],
     enabled,
-    queryFn: ({ signal }) => api.status(signal),
+    queryFn: ({ signal }) => api.status(scope, signal),
   });
   const columns = useMemo<ColumnDef<AccessLogRecord, unknown>[]>(
     () => [
@@ -165,6 +168,32 @@ export function ServerAccessLogs() {
         }
       />
       <Card>
+        <div className="a-visitor-filters">
+          <label>
+            Phạm vi nhật ký
+            <select
+              aria-label="Phạm vi nhật ký"
+              value={scope}
+              onChange={(event) => {
+                setSelected(null);
+                setState((old) => ({
+                  ...old,
+                  page: 1,
+                  filters: { ...old.filters, scope: event.target.value },
+                }));
+              }}
+            >
+              <option value="current">Log mới</option>
+              <option value="archive">Lịch sử archive</option>
+            </select>
+          </label>
+        </div>
+        <p className="a-muted">
+          {scope === "current"
+            ? "Bản chụp đầy đủ của file đang ghi. Khi hosting xoay file, log mới được thay bằng bản chụp tiếp theo; xem lịch sử lâu dài trong Lịch sử archive."
+            : "Các archive đã nhập được giữ lâu dài trong MySQL, kể cả khi hosting xóa file nguồn. Nguồn archive có thể cập nhật chậm hơn log mới."}{" "}
+          Hai phạm vi có thể chứa cùng request; số lượng được tính riêng.
+        </p>
         <h2>Kiểm tra cập nhật mỗi 15 phút</h2>
         <p className="a-muted">
           Nút Tải lại lấy dữ liệu đã nhập mới nhất. Thời điểm có bản ghi mới còn phụ thuộc lúc
@@ -202,6 +231,9 @@ export function ServerAccessLogs() {
                   ["Lần chạy gần nhất", time(s.lastSyncAt)],
                   ["Lần thành công gần nhất", time(s.lastSuccessAt)],
                   ["Dữ liệu nguồn đến", time(s.sourceThrough)],
+                  ...(scope === "current"
+                    ? [["File nguồn cập nhật", time(s.sourceModifiedAt ?? null)]]
+                    : []),
                   ["Lỗi định dạng", s.parseErrors],
                 ].map(([label, value]) => (
                   <div key={label}>
@@ -290,7 +322,7 @@ export function ServerAccessLogs() {
               <option value="error">Lỗi định dạng</option>
             </select>
           </label>
-          <Button onClick={() => setState({ ...state, page: 1, search: "", filters: {} })}>
+          <Button onClick={() => setState({ ...state, page: 1, search: "", filters: { scope } })}>
             Xóa bộ lọc
           </Button>
         </div>
@@ -325,6 +357,7 @@ export function ServerAccessLogs() {
           onClose={() => setSelected(null)}
           api={api}
           identity={identity}
+          scope={scope}
         />
       )}
     </>

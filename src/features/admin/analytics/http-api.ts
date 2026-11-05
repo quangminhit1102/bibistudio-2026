@@ -17,6 +17,7 @@ export function createAccessLogApi(http: AdminHttpClient) {
         page: String(input.page),
         pageSize: String(input.pageSize),
         search: input.search,
+        scope: input.filters.scope || "current",
       });
       for (const key of [
         "from",
@@ -31,9 +32,10 @@ export function createAccessLogApi(http: AdminHttpClient) {
         if (input.filters[key]) params.set(key, input.filters[key]);
       return http.request<Page<AccessLogRecord>>(`${root}?${params}`, { signal });
     },
-    get: (id: string, signal?: AbortSignal) =>
-      http.request<AccessLogRecord>(`${root}/${encodeURIComponent(id)}`, { signal }),
-    status: (signal?: AbortSignal) => http.request<AccessLogStatus>(`${root}/status`, { signal }),
+    get: (id: string, scope: "current" | "archive" = "current", signal?: AbortSignal) =>
+      http.request<AccessLogRecord>(`${root}/${encodeURIComponent(id)}?scope=${scope}`, { signal }),
+    status: (scope: "current" | "archive" = "current", signal?: AbortSignal) =>
+      http.request<AccessLogStatus>(`${root}/status?scope=${scope}`, { signal }),
   };
 }
 export interface VisitorFilters {

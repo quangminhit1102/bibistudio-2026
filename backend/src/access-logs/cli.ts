@@ -4,7 +4,7 @@ import { createDbPool } from "../db/pool";
 import { readPrivateEnvironment } from "../db/private-env";
 import { readAccessLogConfig } from "./config";
 import { migrateAccessLogs, readAccessLogSchema } from "./schema";
-import { syncAccessLogArchives } from "./importer";
+import { syncAccessLogs } from "./sync-service";
 
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
@@ -23,7 +23,7 @@ async function main(): Promise<void> {
     }
     if (status.state !== "complete") throw new Error("Feature schema not ready");
     const config = readAccessLogConfig(env);
-    const receipt = await syncAccessLogArchives({
+    const receipt = await syncAccessLogs({
       pool,
       config,
       clock: systemClock,

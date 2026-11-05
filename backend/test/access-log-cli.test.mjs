@@ -51,6 +51,9 @@ function environment(db, files) {
     ACCESS_LOG_ARCHIVE_DIR: files.config.archiveDirectory,
     ACCESS_LOG_DOMAIN_ALIAS: files.config.domainAlias,
     ACCESS_LOG_WORK_DIR: files.config.workDirectory,
+    ...(files.config.currentDirectory
+      ? { ACCESS_LOG_CURRENT_DIR: files.config.currentDirectory }
+      : {}),
   };
 }
 test("access log config requires complete private absolute paths and fixed bounded defaults", () => {
@@ -80,7 +83,7 @@ test("real CLI migrates explicitly, uses private env, exits2 for pending and nev
   assert.equal((await run(file, ["migrate"])).code, 0);
   const status = await run(file, ["status"]);
   assert.equal(status.code, 0);
-  assert.equal(JSON.parse(status.stdout).version, 1);
+  assert.equal(JSON.parse(status.stdout).version, 2);
   await files.write([accessLogLine(), accessLogLine()]);
   const complete = await run(file, ["sync"]);
   assert.equal(complete.code, 0);
@@ -139,4 +142,27 @@ test("runtime publishes only read dependencies, never source paths, migration or
     await runtime.close();
   }
   await assert.rejects(runtime.appOptions.db.getConnection());
+});
+
+test("fixed CLI command imports both archive and current with private configuration", async (t) => {
+  const db = await createDatabaseFixture(t),
+    files = await archiveFixture(t);
+  files.config.currentDirectory = join(files.root, "current");
+  await mkdir(files.config.currentDirectory);
+  await writeFile(join(files.config.currentDirectory, files.config.domainAlias), "");
+  await writeFile(
+    join(files.config.currentDirectory, files.config.domainAlias + "-ssl_log"),
+    Buffer.concat([accessLogLine(), Buffer.from("\n")]),
+  );
+  await files.write([accessLogLine()]);
+  const env = environment(db, files),
+    file = await privateFile(files, env);
+  assert.equal((await run(file, ["migrate"])).code, 0);
+  const result = await run(file, ["sync"]);
+  assert.equal(result.code, 0);
+  const receipt = JSON.parse(result.stdout);
+  assert.equal(receipt.inserted, 1);
+  assert.equal(receipt.current.records, 1);
+  for (const secret of [env.DB_PASSWORD, "203.0.113.42", "token=secret"])
+    assert.ok(!result.stdout.includes(secret));
 });

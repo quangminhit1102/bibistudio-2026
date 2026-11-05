@@ -122,6 +122,7 @@ export async function syncAccessLogArchives(options: {
   config: AccessLogConfig;
   clock: Clock;
   signal: AbortSignal;
+  connection?: PoolConnection;
 }): Promise<AccessLogSyncReceipt> {
   const { pool, config, clock } = options;
   assertAccessLogConfig(config);
@@ -141,7 +142,7 @@ export async function syncAccessLogArchives(options: {
   const pending = new Set<string>(),
     diverged = new Set<string>(),
     failed = new Set<string>();
-  const connection = await pool.getConnection();
+  const connection = options.connection ?? (await pool.getConnection());
   let locked = false;
   const failure = async (basename: string, transport: "http" | "https", error: unknown) => {
     const point = await getOrCreateSource(connection, basename, transport);
@@ -302,7 +303,7 @@ export async function syncAccessLogArchives(options: {
             "SELECT RELEASE_LOCK(CONCAT('bibi-access-sync:',LEFT(SHA2(DATABASE(),256),32)))",
           );
       } finally {
-        connection.release();
+        if (!options.connection) connection.release();
       }
     }
   }

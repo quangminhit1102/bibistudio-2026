@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { randomBytes } from "node:crypto";
-import { mkdir } from "node:fs/promises";
+import { mkdir, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { createServer as createViteServer } from "vite";
 import { chromium } from "playwright";
@@ -10,7 +10,7 @@ import { createRuntime } from "../../backend/dist/runtime.js";
 import { startServer } from "../../backend/dist/server.js";
 import { archiveFixture, accessLogLine } from "../../backend/test/helpers/access-logs.mjs";
 import { migrateAccessLogs } from "../../backend/dist/access-logs/schema.js";
-import { syncAccessLogArchives } from "../../backend/dist/access-logs/importer.js";
+import { syncAccessLogs } from "../../backend/dist/access-logs/sync-service.js";
 async function capture(page, path) {
   await page.waitForFunction(() =>
     document
@@ -32,11 +32,18 @@ test(
     const f = await createAuthFixture({ after: (fn) => cleanup.push(fn) });
     f.clock.set(new Date());
     const archive = await archiveFixture({ after: (fn) => cleanup.push(fn) });
+    archive.config.currentDirectory = resolve(archive.root, "current");
+    await mkdir(archive.config.currentDirectory);
+    await writeFile(resolve(archive.config.currentDirectory, archive.config.domainAlias), "");
+    await writeFile(
+      resolve(archive.config.currentDirectory, archive.config.domainAlias + "-ssl_log"),
+      Buffer.concat([accessLogLine(), Buffer.from("\n")]),
+    );
     await migrateAccessLogs(f.pool, resolve("backend/access-log-migrations"));
     await archive.write([accessLogLine()]);
     assert.equal(
       (
-        await syncAccessLogArchives({
+        await syncAccessLogs({
           pool: f.pool,
           config: archive.config,
           clock: f.clock,
@@ -67,6 +74,7 @@ test(
           ACCESS_LOG_ARCHIVE_DIR: archive.config.archiveDirectory,
           ACCESS_LOG_DOMAIN_ALIAS: archive.config.domainAlias,
           ACCESS_LOG_WORK_DIR: archive.config.workDirectory,
+          ACCESS_LOG_CURRENT_DIR: archive.config.currentDirectory,
         },
         f.clock,
       );

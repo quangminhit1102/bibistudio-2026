@@ -1,0 +1,2 @@
+# Feature migration checksums must remain byte-identical across Windows and Linux.
+backend/access-log-migrations/*.sql text eol=lf

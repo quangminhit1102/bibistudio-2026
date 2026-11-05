@@ -94,6 +94,7 @@ test("default log mode pages full history, keeps filters, safely renders text an
   const f = mount({ pending: true });
   expect((await screen.findAllByText(/1.205 bản ghi|1205 bản ghi/)).length).toBeGreaterThan(0);
   expect(screen.getByText("Kiểm tra cập nhật mỗi 15 phút")).toBeInTheDocument();
+  expect(screen.getByLabelText("Phạm vi nhật ký")).toHaveValue("current");
   expect(screen.getByText(/Chưa đồng bộ đủ/)).toBeInTheDocument();
   expect(screen.getByText(/Quá 45 phút/)).toBeInTheDocument();
   expect(document.querySelector("script")).toBeNull();
@@ -121,6 +122,15 @@ test("default log mode pages full history, keeps filters, safely renders text an
     await within(await screen.findByRole("dialog")).findByText("INVALID_LINE"),
   ).toBeInTheDocument();
   fireEvent.keyDown(document, { key: "Escape" });
+  fireEvent.change(screen.getByLabelText("Phạm vi nhật ký"), { target: { value: "archive" } });
+  await vi.waitFor(() =>
+    expect(f.paths.some((path) => path.includes("scope=archive") && path.includes("page=1"))).toBe(
+      true,
+    ),
+  );
+  await vi.waitFor(() =>
+    expect(f.paths.some((path) => path.includes("/status?scope=archive"))).toBe(true),
+  );
   fireEvent.click(screen.getByRole("button", { name: "Khách và sản phẩm" }));
   expect(routing.navigate).toHaveBeenCalledWith(
     expect.objectContaining({ search: expect.objectContaining({ view: "visitors" }) }),

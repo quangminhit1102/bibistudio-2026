@@ -6,6 +6,7 @@ export function readAccessLogConfig(env: NodeJS.ProcessEnv): AccessLogConfig {
     archiveDirectory: env.ACCESS_LOG_ARCHIVE_DIR ?? "",
     domainAlias: env.ACCESS_LOG_DOMAIN_ALIAS ?? "",
     workDirectory: env.ACCESS_LOG_WORK_DIR ?? "",
+    ...(env.ACCESS_LOG_CURRENT_DIR ? { currentDirectory: env.ACCESS_LOG_CURRENT_DIR } : {}),
     limits: {
       compressedBytes: 64 * 1024 ** 2,
       expandedBytes: 256 * 1024 ** 2,
@@ -23,6 +24,7 @@ export function accessLogConfigured(env: NodeJS.ProcessEnv): boolean {
     env.ACCESS_LOG_ARCHIVE_DIR,
     env.ACCESS_LOG_DOMAIN_ALIAS,
     env.ACCESS_LOG_WORK_DIR,
+    env.ACCESS_LOG_CURRENT_DIR,
   ].some(Boolean);
   if (configured) readAccessLogConfig(env);
   return configured;

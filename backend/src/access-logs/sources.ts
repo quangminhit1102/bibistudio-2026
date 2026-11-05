@@ -19,6 +19,8 @@ export function assertAccessLogConfig(config: AccessLogConfig): void {
   if (
     !isAbsolute(config.archiveDirectory) ||
     !isAbsolute(config.workDirectory) ||
+    (config.currentDirectory !== undefined && !isAbsolute(config.currentDirectory)) ||
+    (config.currentDirectory !== undefined && config.domainAlias.length + 8 > 255) ||
     !/^[a-z0-9](?:[a-z0-9.-]{0,251}[a-z0-9])?$/.test(config.domainAlias) ||
     config.domainAlias.includes("..") ||
     Object.entries(bounds).some(([key, max]) => {

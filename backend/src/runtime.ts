@@ -29,7 +29,11 @@ export function createRuntime(env: NodeJS.ProcessEnv = process.env, clock: Clock
     clock,
     ...(logEnabled
       ? {
-          accessLogs: { pool: db, schemaDirectory: resolve(__dirname, "../access-log-migrations") },
+          accessLogs: {
+            pool: db,
+            schemaDirectory: resolve(__dirname, "../access-log-migrations"),
+            currentEnabled: Boolean(env.ACCESS_LOG_CURRENT_DIR),
+          },
         }
       : {}),
     analytics: {

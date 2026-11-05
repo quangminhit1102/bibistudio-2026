@@ -30,7 +30,7 @@ test("manifest3 carries independently hashed log assets and retains1/2 compatibi
   });
   assert.throws(() => baseline.exports.validateManifest(m), /Invalid release manifest/);
   assert.equal(m.schemaVersion, 3);
-  assert.equal(validateManifest(m).accessLogs.requiredMin, 1);
+  assert.equal(validateManifest(m).accessLogs.requiredMin, 2);
   assert.equal(validateManifest(makeManifest("a".repeat(40), "123", database)).schemaVersion, 2);
   assert.equal(validateManifest(makeManifest("a".repeat(40), "123")).schemaVersion, 1);
   for (const patch of [
@@ -113,8 +113,9 @@ test("feature preparation requires verified backup and complete bootstrap before
     if (command === "status")
       return { state: "complete", version: 4, migrationChecksums: database.migrationChecksums };
     if (command === "access-log-status")
-      return { state: "complete", version: 1, checksums: accessLogs.migrationChecksums };
-    if (command === "access-log-sync") return { state: "complete", inserted: 10 };
+      return { state: "complete", version: 2, checksums: accessLogs.migrationChecksums };
+    if (command === "access-log-sync")
+      return { state: "complete", inserted: 10, current: { state: "complete" } };
     if (command === "probe")
       return { ok: true, releaseId: manifest.releaseId, auth: true, rbac: true, analytics: true };
     if (command === "access-log-probe")
@@ -147,6 +148,13 @@ test("feature preparation requires verified backup and complete bootstrap before
     /bootstrap|complete/i,
   );
   assert.equal((await verifyReleaseProbe({ root: dir }, release, { run })).accessLogs, true);
+  await assert.rejects(
+    prepareDatabase({ root: dir }, release, {
+      run: async (...args) =>
+        args[2] === "access-log-sync" ? { state: "complete" } : run(...args),
+    }),
+    /bootstrap|complete/i,
+  );
   await assert.rejects(
     verifyReleaseProbe({ root: dir }, release, {
       run: async (...args) => (args[2] === "access-log-probe" ? { ok: false } : run(...args)),

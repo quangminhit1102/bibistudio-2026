@@ -2,7 +2,8 @@ import type { Pool, RowDataPacket } from "mysql2/promise";
 import type { Clock } from "../config";
 import { ApiError } from "../http/errors";
 import { readAccessLogSchema } from "./schema";
-import type { AccessLogRecord } from "./types";
+import type { AccessLogRecord, AccessLogStatus } from "./types";
+import { readCurrentAccessLogStatus } from "./current-read-service";
 
 export interface AccessLogFilters {
   page: number;
@@ -68,7 +69,15 @@ function where(filters: AccessLogFilters): { sql: string; values: (string | numb
   if (filters.isBot !== undefined) add("is_bot = ?", filters.isBot === "true" ? 1 : 0);
   return { sql: parts.length ? " WHERE " + parts.join(" AND ") : "", values };
 }
-export function createAccessLogReadService(pool: Pool, clock: Clock) {
+export function createAccessLogReadService(
+  pool: Pool,
+  clock: Clock,
+  scope: "current" | "archive" = "archive",
+) {
+  const from =
+    scope === "current"
+      ? "access_log_current_records r JOIN access_log_current_sources s ON r.source_id=s.id AND r.snapshot_id=s.active_snapshot_id"
+      : "access_log_records r";
   return {
     async list(filters: AccessLogFilters) {
       const query = where(filters);
@@ -78,13 +87,14 @@ export function createAccessLogReadService(pool: Pool, clock: Clock) {
         await connection.query("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ");
         await connection.beginTransaction();
         const [[count]] = await connection.query<RowDataPacket[]>(
-          "SELECT COUNT(*) n FROM access_log_records" + query.sql,
+          "SELECT COUNT(*) n FROM " + from + query.sql,
           query.values,
         );
         const [rows] = await connection.query<RowDataPacket[]>(
-          "SELECT * FROM access_log_records" +
+          "SELECT r.* FROM " +
+            from +
             query.sql +
-            " ORDER BY occurred_at DESC,id DESC LIMIT ? OFFSET ?",
+            " ORDER BY r.occurred_at DESC,r.id DESC LIMIT ? OFFSET ?",
           [...query.values, filters.pageSize, (filters.page - 1) * filters.pageSize],
         );
         await connection.commit();
@@ -103,13 +113,14 @@ export function createAccessLogReadService(pool: Pool, clock: Clock) {
     },
     async get(id: string) {
       const [rows] = await pool.execute<RowDataPacket[]>(
-        "SELECT * FROM access_log_records WHERE id=?",
+        "SELECT r.* FROM " + from + " WHERE r.id=?",
         [id],
       );
       if (!rows[0]) throw new ApiError(404, "NOT_FOUND", "Không tìm thấy bản ghi");
       return record(rows[0]);
     },
-    async status() {
+    async status(): Promise<AccessLogStatus> {
+      if (scope === "current") return readCurrentAccessLogStatus(pool, clock);
       const [[summary]] = await pool.query<RowDataPacket[]>(
         "SELECT COUNT(*) total,SUM(parse_status='error') parse_errors,MIN(occurred_at) earliest,MAX(occurred_at) latest FROM access_log_records",
       );
@@ -133,6 +144,7 @@ export function createAccessLogReadService(pool: Pool, clock: Clock) {
               ? "complete"
               : "never";
       return {
+        scope: "archive",
         state,
         total: Number(summary.total),
         parseErrors: Number(summary.parse_errors ?? 0),

@@ -17,6 +17,40 @@ export interface AccessLogRecord {
   parseStatus: "parsed" | "error";
   errorCode: string | null;
 }
+export interface AccessLogStatus {
+  scope?: "current" | "archive";
+  state: "never" | "complete" | "pending" | "error";
+  total: number;
+  parseErrors: number;
+  earliest: string | null;
+  latest: string | null;
+  lastSyncAt: string | null;
+  lastSuccessAt: string | null;
+  sourceThrough: string | null;
+  sourceModifiedAt?: string | null;
+  stale: boolean;
+  ipTrusted: boolean;
+  timezone: string;
+  lastRun: {
+    state: string;
+    inserted: number;
+    parseErrors: number;
+    pendingSources: number;
+    divergedSources: number;
+    missingSources: number;
+  } | null;
+  sources: {
+    basename: string;
+    transport: string;
+    state: string;
+    errorCode: string | null;
+    recordCount: number;
+    blankCount: number;
+    sourceThrough: string | null;
+    lastSeenAt: string | null;
+    sourceModifiedAt?: string | null;
+  }[];
+}
 export interface AccessLogCheckpoint {
   sourceId: string;
   basename: string;
@@ -39,6 +73,7 @@ export interface AccessLogSyncReceipt {
   finishedAt: string;
 }
 export interface AccessLogConfig {
+  currentDirectory?: string;
   archiveDirectory: string;
   domainAlias: string;
   workDirectory: string;
@@ -55,6 +90,16 @@ export interface ArchiveSource {
   basename: string;
   path: string;
   transport: "http" | "https";
+}
+export interface CurrentSnapshot {
+  id: string;
+  transport: "http" | "https";
+  basename: string;
+  path: string;
+  sha256: string;
+  bytes: number;
+  sourceModifiedAt: string;
+  capturedAt: string;
 }
 export interface ArchiveSnapshot extends ArchiveSource {
   compressedSha256: string;

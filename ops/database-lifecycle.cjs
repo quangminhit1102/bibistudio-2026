@@ -115,7 +115,7 @@ async function prepareDatabase(config, release, { run = runDatabaseTool } = {}) 
     throw new Error("Newer schema cannot be migrated by this release");
   if (manifest.accessLogs) {
     const feature = await run(config, dir, "access-log-status", manifest);
-    if (!["empty", "complete"].includes(feature?.state) || feature.version > 1)
+    if (!["empty", "complete"].includes(feature?.state) || feature.version > 2)
       throw new Error("Dirty or unknown access log schema");
     if (feature.state === "complete") checkAccessLogCompatibility(manifest.accessLogs, feature);
   }
@@ -139,7 +139,7 @@ async function prepareDatabase(config, release, { run = runDatabaseTool } = {}) 
       await run(config, dir, "access-log-status", manifest),
     );
     accessLogs = await run(config, dir, "access-log-sync", manifest);
-    if (accessLogs?.state !== "complete")
+    if (accessLogs?.state !== "complete" || accessLogs.current?.state !== "complete")
       throw new Error("Access log bootstrap must complete before activation");
   }
   return {
