@@ -44,6 +44,7 @@ export function DataTable<T extends { id: string }>({
   onSelectionChange,
   selectable = true,
   mobileRow,
+  pageSizes = [10, 20, 50, 100],
 }: {
   columns: ColumnDef<T, unknown>[];
   result: ListResult<T>;
@@ -58,6 +59,7 @@ export function DataTable<T extends { id: string }>({
   onSelectionChange?: (s: RowSelectionState) => void;
   selectable?: boolean;
   mobileRow?: (row: T) => ReactNode;
+  pageSizes?: number[];
 }) {
   const [localSelection, setLocalSelection] = useState<RowSelectionState>({});
   const [showColumns, setShowColumns] = useState(false);
@@ -280,7 +282,7 @@ export function DataTable<T extends { id: string }>({
             value={state.pageSize}
             onChange={(e) => onStateChange({ ...state, page: 1, pageSize: Number(e.target.value) })}
           >
-            {[...new Set([state.pageSize, 10, 20, 50, 100])]
+            {[...new Set([state.pageSize, ...pageSizes])]
               .sort((a, b) => a - b)
               .map((n) => (
                 <option key={n}>{n}</option>

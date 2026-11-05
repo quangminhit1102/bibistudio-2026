@@ -2133,7 +2133,8 @@
   min-width: 0;
   gap: 8px;
 }
-.admin-root .a-visitor-filters select {
+.admin-root .a-visitor-filters select,
+.admin-root .a-visitor-filters input {
   width: 100%;
   min-height: 44px;
   min-width: 0;

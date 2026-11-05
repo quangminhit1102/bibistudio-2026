@@ -5,6 +5,8 @@ import { dateTime } from "../../shared/lib/text";
 import { VisitorDialog } from "../components/visitor-dialog";
 import { useAdmin } from "../../services/context";
 import { ServerVisitors } from "../server-visitors";
+import { ServerAccessLogs } from "../server-access-logs";
+import { Button } from "../../shared/ui/primitives";
 function visitorHref(id: string) {
   const q = new URLSearchParams(typeof location !== "undefined" ? location.search : "");
   q.set("visitor", id);
@@ -101,7 +103,42 @@ const config: EntityConfig<"visitors"> = {
 };
 export default function Visitors() {
   const runtime = useAdmin();
-  return runtime.http ? <ServerVisitors /> : <FixtureVisitors />;
+  return runtime.http ? <VisitorModes /> : <FixtureVisitors />;
+}
+function VisitorModes() {
+  const search = useSearch({ strict: false }) as Record<string, unknown>,
+    navigate = useNavigate();
+  const view =
+    search.view === "visitors" || (search.view !== "logs" && typeof search.visitor === "string")
+      ? "visitors"
+      : "logs";
+  return (
+    <>
+      <div className="a-actions" role="group" aria-label="Nguồn dữ liệu truy cập">
+        {(
+          [
+            ["logs", "Nhật ký cPanel"],
+            ["visitors", "Khách và sản phẩm"],
+          ] as const
+        ).map(([value, label]) => (
+          <Button
+            key={value}
+            aria-pressed={view === value}
+            onClick={() =>
+              void navigate({
+                to: "/admin/analytics/visitors",
+                search: { ...search, view: value, visitor: undefined } as never,
+                replace: true,
+              })
+            }
+          >
+            {label}
+          </Button>
+        ))}
+      </div>
+      {view === "logs" ? <ServerAccessLogs /> : <ServerVisitors />}
+    </>
+  );
 }
 function FixtureVisitors() {
   const navigate = useNavigate(),

@@ -8,7 +8,7 @@ import Visitors from "../../src/features/admin/analytics/pages/visitors";
 import { profile, grant, json, immediateLock } from "./helpers/http-client";
 vi.mock("@tanstack/react-router", () => ({
   useNavigate: () => vi.fn(),
-  useSearch: () => ({}),
+  useSearch: () => ({ view: "visitors" }),
   useBlocker: () => ({ status: "idle" }),
   Link: ({ children }: React.PropsWithChildren) => <a>{children}</a>,
 }));
