@@ -85,3 +85,4 @@ export interface CollectBatch {
   products: string[];
   lastPath: string;
 }
+export type { AccessLogRecord, AccessLogSyncReceipt } from "../access-logs/types";
