@@ -1,6 +1,6 @@
 # IP khách thực qua PHP gateway trên cPanel
 
-Trạng thái: phương án đã được owner chọn sau spike; thiết kế này chờ owner duyệt. Chưa được phép triển khai gateway production từ tài liệu chưa duyệt.
+Trạng thái: TẠM DỪNG PHƯƠNG ÁN GATEWAY. Sau khi xem thiết kế, owner yêu cầu kiến trúc đơn giản, ít cấu hình/vận hành. Chưa duyệt tài liệu này; không lập plan hoặc triển khai gateway theo tài liệu này khi chưa chốt lại phương án đơn giản hơn. Kết quả spike vẫn là bằng chứng kỹ thuật, không phải yêu cầu phải giữ gateway.
 
 ## 1. Mục đích và bằng chứng
 
