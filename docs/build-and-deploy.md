@@ -10,7 +10,7 @@ Trạng thái website hiện tại phải đọc từ [API version](https://bibi
 
 ## 1. Ba lệnh local
 
-**Đợt auth04/11 đang triển khai, chưa phát hành:** login/RBAC/account/audit/visitor đã nối MySQL local và đã có kiểm chứng Chromium riêng. Xem [Admin Auth Operations](admin-auth-operations.md) và [API/schema](admin-auth-api.md). Artifact auth dùng schemaVersion2; phải nâng receiver/Passenger cùng backup/restore-check/migration/probe/rollback trước khi triển khai. Các biên bản production cũ bên dưới chỉ mô tả release lịch sử, không chứng minh đợt auth đã live.
+**Đợt auth đã phát hành05/11:** login/RBAC/account/audit/visitor dùng MariaDB cPanel, artifact `e7257b4962d1afd7689234c70cb65fb176e828d3-41852205705`. Deploy, native backup/restore-check và rollback/phát hành lại đã qua; xem [biên bản thực tế](superpowers/reports/2026-11-04-admin-auth-acceptance.md), [vận hành](admin-auth-operations.md) và [API/schema](admin-auth-api.md). Receiver/Passenger đã hỗ trợ schemaVersion2. Riêng IP khách thực chưa đạt: proxy hosting chỉ đưa loopback, không sanitize forwarded headers; giữ trust=false, cần cấu hình phía hosting trước khi chấp nhận số liệu IP.
 
 Admin demo local nằm tại `/admin`, dùng cùng lệnh dev/check/build. Đợt nghiệp vụ 02/11 đã kiểm chứng local và phát hành production tại commit `4c6e070`: khách mua hàng, phiếu VAT có/không, báo cáo, visitors và popup thông báo. Xem [biên bản production](superpowers/reports/2026-11-02-admin-production-release.md). Xem [hướng dẫn admin](admin.md) và [biên bản kiểm chứng](admin-acceptance.md). Dữ liệu/ảnh admin lưu trong trình duyệt, chưa nối Express/MySQL và chưa làm thay đổi catalogue public.
 
@@ -62,9 +62,9 @@ Workflow: [Rollback production](../.github/workflows/rollback.yml). Chỉ có pr
 3. Duyệt production như deploy. Hosting kiểm tra release, đổi con trỏ, phục hồi routing phù hợp, restart và xác minh HTTP.
 4. Đối chiếu FE/BE, trang sản phẩm và ảnh. Baseline chưa có API demo nên kiểm tra static và checksum baseline. Có thể chọn lại release thành công vừa rời đi để phục hồi sau diễn tập.
 
-Deploy và rollback dùng chung concurrency group `deploy-production`, không cancel run đang chạy; receiver còn khóa `flock` trên server. Baseline/bản thành công trước là điều kiện bắt buộc trước activation production. Giữ active, previous, baseline và năm release thành công gần nhất. Rollback không rewrite Git history và không rebuild.
+Deploy và rollback dùng chung concurrency group `deploy-production`, không cancel run đang chạy; receiver còn khóa `flock` trên server. Baseline/bản thành công trước là điều kiện bắt buộc trước activation production. Giữ active, previous, baseline và năm release thành công gần nhất. Rollback không rewrite Git history và không rebuild. Database rollback chỉ đổi app tương thích schema; không down-migrate hoặc restore đè dữ liệu.
 
-Không cố tình đưa fixture hỏng lên production. Mọi diễn tập rollback gây chuyển website thật phải thuộc phạm vi người dùng duyệt. Khi thêm database sau này, cần thiết kế migration/rollback dữ liệu riêng.
+Không cố tình đưa fixture hỏng lên production. Mọi diễn tập rollback gây chuyển website thật phải thuộc phạm vi người dùng duyệt. Release pre-auth được duyệt riêng báo `degradedAdmin:true`; không dùng để khẳng định auth vẫn hoạt động. Xem biên bản auth05/11 ở trên.
 
 ## 5. Hosting và những thứ phải giữ
 

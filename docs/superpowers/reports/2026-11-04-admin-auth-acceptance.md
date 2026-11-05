@@ -1,6 +1,29 @@
 # Admin Auth — biên bản kiểm chứng 04/11/2026
 
-**Chưa hoàn tất acceptance production.** Không suy ra deploy thành công từ kết quả local/CI. Source được review: `04b415d..9c13d9215ea02241c6b1bf449c9b04ffa0531d5e`, các sửa review ở `e5fa407`. Nhánh auth đã push; website production chưa thay đổi.
+**Auth/RBAC đã phát hành production và diễn tập rollback/phát hành lại thành công ngày 05/11/2026. Acceptance toàn bộ còn thiếu IP khách thực do cấu hình proxy hosting.** Source được review: `04b415d..9c13d9215ea02241c6b1bf449c9b04ffa0531d5e`, các sửa review ở `e5fa407`. Không đánh dấu phần IP hoàn tất chỉ vì probe auth qua.
+
+## Hosting thực tế 05/11/2026
+
+- CI main [41852205705](https://github.com/quangminhit1102/bibistudio-2026/actions/runs/41852205705) success, SHA `e7257b4962d1afd7689234c70cb65fb176e828d3`; artifact `13336527044`, digest ZIP `sha256:bae45d1e4e8d1e158b3caa547337084a262464a401b9045803ffc3719abb44af`.
+- Đã tạo hai DB/user đúng phạm vi được owner duyệt; kết nối MariaDB thực tế thành công. Runtime chỉ DML trên DB ứng dụng; maintenance chỉ DML+CREATE/ALTER/INDEX/REFERENCES trên ứng dụng và thêm DROP trên verifier. Hai DB ban đầu rỗng, đã đổi default sang utf8mb4_unicode_ci; UTC session hoạt động. Không đọc DB WordPress.
+- Private runtime/maintenance env ở ngoài webroot, owner-only0600. Pool runtime3 + collector2; maintenance1. Host max_connections500; max_user_connections0; tài khoản hosting có giới hạn100 processes/40 entry processes và2GB RAM. Forwarded headers chưa được trust.
+- Trusted tools và Passenger đã bootstrap đúng9 hash từ commit `e5fa407`; source tgz SHA-256 `1596ecf42e228f0447b8213096d57c9bba15cec85564b8f43a78862b990cd218`. Lần đầu check bị nested flock, đã tự phục hồi tools/app/config cũ; retry dùng internal `--locked` dưới outer flock đạt. Không mở rộng SSH grammar.
+- [Deploy41964870276](https://github.com/quangminhit1102/bibistudio-2026/actions/runs/41964870276) success: release `e7257b4962d1afd7689234c70cb65fb176e828d3-41852205705`; previous `9eb48b8c4b51bec51bb9a20088e2179b04cbe2e1-41663925930`. Native backup/isolated restore-check, migrate/seed/status và probe auth/RBAC/analytics đã qua; runner kiểm tra FE/BE, ảnh sản phẩm và client cũ qua.
+- Backup đầu1069 byte, verified true; SHA-256 `f0903d651035419b47cfde5afd53d6911fb01f362cd6d1aacf22dc74061567bf`.
+- UI Edge thực tế: user01 đăng nhập chỉ thấy Khách truy cập; đăng xuất thành công; admin đăng nhập có đầy đủ menu; Master detail readonly; editor TinyMCE tự host tải toolbar/iframe. Ảnh thật `bibi-auth-production-user.jpg`, `bibi-auth-production-master.jpg`, `bibi-auth-production-editor.jpg` tại visualization workspace.
+- [Rollback41965536213](https://github.com/quangminhit1102/bibistudio-2026/actions/runs/41965536213) success, đúng release pre-auth được duyệt; receipt `degradedAdmin:true`. [Phát hành lại41965738915](https://github.com/quangminhit1102/bibistudio-2026/actions/runs/41965738915) success, dùng lại chính artifact CI, không build lại. Current cuối cùng là `e7257b4962d1afd7689234c70cb65fb176e828d3-41852205705`.
+- Evidence riêng0600 chỉ gồm trường không bí mật của3 users,2 revoked sessions và8 audit rows; tất cả phát sinh sau snapshot DB rỗng ban đầu. Đã đối chiếu từng bản ghi sau rollback và sau phát hành lại: nguyên vẹn cả3/2/8; audit cuối tăng12. Không down-migrate hoặc restore snapshot đè production. Ảnh `bibi-auth-production-rollback-data.jpg` và `bibi-auth-production-republished-data.jpg`.
+- Backup lần phát hành lại verified,23309 byte, schemaVersion4. DB verifier đã trở về0 bảng. Probe cuối chạy lại sau maintenance vẫn auth/RBAC/analytics=true; seed idempotent qua sau khi xóa MASTER_ADMIN_PASSWORD/SEED_USER_PASSWORD khỏi maintenance.env. Không đổi mật khẩu đã hash hoặc secret ký hiện hành.
+- Cron cài hai CLI cleanup mỗi10 phút, lệch nhau1 phút, lock chống chạy chồng; batch100. Đã quan sát cron thực sự chạy, log riêng0600 chỉ count; auth0session/0token và analytics0session/0visitor/0page/0product. Cron cũ được giữ nguyên và có backup riêng0600. App pre-auth không có CLI thì lịch tự bỏ qua.
+- Reload UI sau rollback/phát hành lại khôi phục session Admin và TinyMCE qua refresh cookie; không phải fixture login.
+
+### IP khách thực: chưa đạt
+
+Đo request riêng trên mount `/api`: socket loopback; request bình thường không có X-Forwarded-For/X-Real-IP và không có secure `!~Passenger-Client-Address`. Header X-Forwarded-For giả từ client vẫn tới app. Đã thử hai cấu hình RequestHeader dùng REMOTE_ADDR (expression và rewrite environment) trong API .htaccess: hosting không ghi đè X-Forwarded-For; cả hai thử nghiệm đã phục hồi nguyên bản ngay. Hook quan sát tạm cũng đã gỡ, bootstrap và routing được đối chiếu byte; không ghi raw IP/UA.
+
+Do đó giữ TRUSTED_PROXY_CIDRS rỗng. Request spoof không làm thay đổi IP được collector dùng, nhưng IP đang chỉ phản ánh loopback; network rate limit cũng dùng chung prefix đó. Không mở trust loopback khi chưa có nguồn IP được webserver ghi đè chắc chắn. Vị trí vẫn null như thiết kế.
+
+Việc còn lại ở quyền quản trị hosting: tại LiteSpeed/Passenger, xóa header IP do client gửi và chèn địa chỉ client từ kết nối thực, hoặc cung cấp secure Passenger client-address; kiểm chứng từ client bên ngoài với header giả trước khi cấu hình CIDR tin cậy của app. Tham chiếu [Passenger secure headers](https://www.phusionpassenger.com/docs/advanced_guides/in_depth/node/secure_http_headers.html), [Apache RequestHeader](https://httpd.apache.org/docs/2.4/mod/mod_headers.html), [LiteSpeed visitor IP](https://docs.litespeedtech.com/lsws/visitorip/). Không coi chỉ sửa .env là đã khắc phục.
 
 ## Đã đo và đã chạy
 
@@ -30,11 +53,11 @@
 | Artifact2/checksums/fixed host hooks/Passenger | `ops`, `scripts/build.mjs`, `scripts/preview.mjs`, `scripts/smoke.mjs` |
 | Local DB/dev/check/CI và browser acceptance | `scripts/local-database.mjs`, `scripts/dev.mjs`, `scripts/check.mjs`, `.github/workflows/ci.yml`, `backend/test`, `tests/admin`, `tests/e2e/auth.spec.mjs` |
 
-## Cấu hình hosting dự kiến — chưa áp dụng
+## Cấu hình hosting đã áp dụng 05/11/2026
 
 Phạm vi chỉ `/home/vhplasti/bibi-deploy/production`, website `bibistudio.vn`; không thay DB/user/app khác.
 
-| Tài nguyên | Dự kiến |
+| Tài nguyên | Thực tế |
 | --- | --- |
 | DB ứng dụng | `vhplasti_bibi_prod`, utf8mb4/InnoDB |
 | DB restore-check | `vhplasti_bibi_verify`, riêng và rỗng; chỉ chứa snapshot trong lúc kiểm thử |
@@ -43,19 +66,19 @@ Phạm vi chỉ `/home/vhplasti/bibi-deploy/production`, website `bibistudio.vn`
 | Runtime config | `production/private/runtime.env`, owner-only0600, ngoài webroot/releases |
 | Maintenance config | `production/private/maintenance.env`, owner-only0600; không đưa vào GitHub/frontend/artifact |
 | Backup | `production/backups`,0700, SQL/receipt0600; không auto data-restore khi rollback app |
-| Runtime pools | Chính5 + collector2/mỗi process; phải đo quota/số process trước activation |
-| Proxy | Chưa trust forwarded IP; chỉ cấu hình CIDR sau khi đo |
+| Runtime pools | Chính3 + collector2/mỗi process; maintenance1 |
+| Proxy | Đã đo: socket loopback, forwarded IP không được sanitize; giữ trust=false |
 
 Tên DB/user phải đối chiếu giới hạn và trạng thái cPanel tại thời điểm tạo. Mật khẩu tạo qua bước owner nhập riêng; không chép password vào source, lệnh argv, biên bản hoặc chat. Environment cần cấu hình xem `docs/admin-auth-operations.md`; seed Admin/user01 chỉ lấy bootstrap env khi identity chưa có. `bibi_release_probe` không có role/quyền, mật khẩu riêng.
 
 Trusted host tools phải bootstrap đúng source/checksum: `database-metadata.cjs`, `database-lifecycle.cjs`, `deploy.cjs`, `receiver.cjs`, `release.cjs` và stable `app/app.cjs`. Giữ receiver grammar check/upload/deploy/rollback. Giữ npm thực `/opt/alt/alt-nodejs24/root/usr/bin/npm`. Bản pre-auth được phép rollback phải là đúng release ID đã xác minh; receipt báo admin không có auth service. Không tự coi rollback pre-auth là auth vẫn hoạt động.
 
-## Còn phải đạt trước khi kết luận hoàn tất
+## Trạng thái acceptance cuối
 
-1. Fullcheck/build/budget và review bảo mật không còn lỗi quan trọng.
-2. Cấp quyền DB/config được owner duyệt cụ thể tại bước thực hiện; đo grants/charset/timezone/quota/proxy; native backup/restore-check thật trên hosting.
-3. Push/CI artifact đúng SHA; bootstrap trusted tools; Run workflow production có gate duyệt.
-4. Probe DB/auth/RBAC/analytics, FE/BE version, ảnh, TinyMCE và tab client cũ trên production.
-5. Rollback app rồi phát hành lại, ghi release hiện tại/trước đó, backup hash và bằng chứng dữ liệu mới/revocation vẫn còn. Không down-migrate hoặc restore snapshot production cho diễn tập.
+1. Đạt: fullcheck/build/budget, review và sửa5 findings có regression.
+2. Đạt: DB/grants/config được owner duyệt, charset/timezone/quota, native backup/restore-check thật. Chưa đạt: IP khách thực qua proxy.
+3. Đạt: main CI artifact đúng SHA, trusted tools, protected workflow production.
+4. Đạt: probe DB/auth/RBAC/analytics, FE/BE, ảnh, TinyMCE, client cũ và UI login thật.
+5. Đạt: rollback rồi phát hành lại, dữ liệu sau backup/revocation/audit giữ nguyên; không restore DB production.
 
 Các module catalogue/content/media/kinh doanh vẫn lưu local của trình duyệt; đợt này không triển khai CRUD backend cho các module đó. Vị trí khách chưa xác định giữ null, IP bị che, không lưu raw click timeline. Không báo các giới hạn này thành chức năng backend đã hoàn tất.

@@ -2,9 +2,9 @@
 
 ## Trạng thái kiểm chứng
 
-Ngày04/11/2026: cPanel trên Edge xác nhận server **10.11.19-MariaDB-cll-lve**, Node24.22.2, client/dump MariaDB10.11.19 tại `/bin/mysql`, `/bin/mysqldump`, `/bin/mariadb`, `/bin/mariadb-dump`. Fullcheck local sau review đã qua: admin218, backend/tooling138 +1 POSIX skip trên Windows, watcher1 và Chromium1 trên MariaDB10.11.19. Runtime DML-only, login/refresh/account UI/analytics, role→profile và native backup/rollback giữ dữ liệu mới đã được chạy thực tế. Chưa deploy auth lên production; grants, proxy và backup/restore hosting vẫn cần acceptance. Không đọc credential của DB WordPress có sẵn.
+Ngày05/11/2026: auth/RBAC đã deploy production trên **10.11.19-MariaDB-cll-lve**, Node24.22.2, native MariaDB client/dump `/bin/mariadb`, `/bin/mariadb-dump`. Grants DML-only, backup/restore-check thật, migration4, seed/probe, UI đăng nhập và rollback/phát hành lại giữ dữ liệu đã qua. Xem [biên bản và workflow](superpowers/reports/2026-11-04-admin-auth-acceptance.md). Fullcheck trước phát hành: admin218, backend/tooling138 +1 POSIX skip trên Windows, watcher1, Chromium1; CI Linux/main cũng success. Không dùng DB WordPress. Acceptance IP khách thực còn thiếu do proxy hosting, chi tiết bên dưới.
 
-Artifact auth dùng manifest schemaVersion2 với range schema DB và hash migration/catalogue. Receiver cũ chỉ hiểu schemaVersion1 sẽ từ chối artifact này. Không cập nhật receiver/Passenger hoặc phát hành trước khi backup, restore-check, migration, probe và rollback mới đã được kiểm chứng. Các bước hosting bên dưới là yêu cầu acceptance, chưa phải biên bản đã thực hiện.
+Artifact auth dùng manifest schemaVersion2 với range schema DB và hash migration/catalogue. Receiver/Passenger hiện tại đã được bootstrap đúng source/hash và kiểm chứng. Receiver cũ chỉ hiểu schemaVersion1 sẽ từ chối artifact này; không hạ tools cũ trong rollback app. Các checklist bên dưới là điều kiện phải giữ cho những lần phát hành sau; kết quả05/11 ở biên bản liên kết trên.
 
 ## Local ít lệnh
 
@@ -70,7 +70,7 @@ Migrate/seed đọc `.env.migration.local`, status/cleanup dùng runtime `.env.l
 
 Không dùng prefix VITE_ cho bất kỳ secret nào. Production Secure cookie tự bật theo NODE_ENV. Cookie analytics và auth có path khác nhau. Access token chỉ memory; refresh token DB chỉ hash. Mất refresh response hoặc reuse có thể yêu cầu login lại theo chủ đích; không nới rotation để che lỗi mạng.
 
-## Checklist acceptance hosting còn phải làm
+## Checklist vận hành hosting
 
 1. Đo MySQL/MariaDB version, InnoDB/charset/timezone, proxy/IP thực, connection quota và quyền của từng DB account. Giữ npm thực `/opt/alt/alt-nodejs24/root/usr/bin/npm` đã sửa trong đợt trước; không quay lại wrapper CloudLinux lỗi lock path.
 2. Tạo DB riêng, runtime DML account, maintenance account và DB restore-verification riêng. File private ngoài webroot/releases, quyền0600; không dùng user DB không giới hạn của hosting. Việc cấp quyền mới phải được review cụ thể trước khi thực hiện.
@@ -84,7 +84,7 @@ Emergency data restore là thao tác bảo trì riêng: dừng ghi, chọn snaps
 
 ### Backup và chuyển release trong source hiện tại
 
-Host hook chỉ chạy các CLI cố định của release qua Node, không mở thêm shell command hoặc SQL trong receiver. Bản có auth phải qua kiểm tra SQL/catalogue checksum, schema sạch, backup, restore-check, migrate, seed và kiểm tra schema lần nữa trước khi đổi pointer. Các bước này mới được kiểm thử local, chưa được acceptance trên hosting.
+Host hook chỉ chạy các CLI cố định của release qua Node, không mở thêm shell command hoặc SQL trong receiver. Bản có auth phải qua kiểm tra SQL/catalogue checksum, schema sạch, backup, restore-check, migrate, seed và kiểm tra schema lần nữa trước khi đổi pointer. Các bước này đã qua trên hosting05/11 với cả DB rỗng và DB đã có dữ liệu.
 
 Backup dùng snapshot InnoDB nhất quán; bản restore được dump lại và đối chiếu SHA-256 với snapshot ban đầu. Database verifier phải rỗng; cleanup chỉ xóa đúng các bảng trong snapshot đã xác định. File SQL/receipt nằm dưới `production/backups`, credential file tạm quyền0600 và được dọn sau lệnh. Giữ backup nếu restore-check lỗi để điều tra; không tự phục hồi đè production. Giới hạn mặc định128MiB cho mỗi dump và120 giây cho mỗi native client; vượt giới hạn làm deploy thất bại.
 
@@ -98,4 +98,8 @@ Kiểm thử local đã diễn tập lỗi probe sau activation với native Mar
 
 Account, role, permission, audit và visitor dùng MySQL. Các chức năng kinh doanh/catalogue/content/media hiện có vẫn lưu local trong trình duyệt; đổi port/hostname có thể mở kho khác. Không suy luận các module này đã có backend CRUD chỉ vì login đã được thay.
 
-Analytics là số trình duyệt ẩn danh và sản phẩm quan tâm gần đúng. Cookie bị chặn/xóa, DNT/GPC hoặc thiếu Web Locks có thể giảm/đổi số liệu. Không có raw IP/UA, click timeline, thời gian ở trang hoặc định vị chính xác. Vị trí chưa được xác định, giữ null. Retention/probe phải có lịch cleanup được acceptance trên hosting trước khi coi vận hành production hoàn tất.
+Analytics là số trình duyệt ẩn danh và sản phẩm quan tâm gần đúng. Cookie bị chặn/xóa, DNT/GPC hoặc thiếu Web Locks có thể giảm/đổi số liệu. Không có raw IP/UA, click timeline, thời gian ở trang hoặc định vị chính xác. Vị trí chưa được xác định, giữ null.
+
+Cron cleanup đã được cài và quan sát chạy thật05/11: analytics vào phút7/17/27/37/47/57; auth vào8/18/28/38/48/58, mỗi lượt100, dùng runtime DML/private env và flock maintenance.lock. Chỉ chạy khi current có CLI, không migrate/seed trong cron. Log count-only0600 tại production/private/analytics-cleanup.log và auth-cleanup.log; cron trước đó được backup0600 và giữ nguyên. Bootstrap Admin/User password đã xóa khỏi maintenance.env sau seed đầu; seed lại identity đã có không cần hai password này và không reset account.
+
+**IP khách thực chưa sẵn sàng:** đã đo socket loopback và forwarded IP giả vẫn được chuyển nguyên tới app; secure Passenger client-address không có. Thử RequestHeader ở API .htaccess không ghi đè được X-Forwarded-For, đã phục hồi toàn bộ cấu hình thử. Giữ TRUSTED_PROXY_CIDRS rỗng; IP hiện là prefix loopback và network rate limit dùng chung prefix. Hosting phải sanitize/chèn IP từ kết nối thực trước khi app trust đúng CIDR. Không bật trust=true hoặc trust loopback để che lỗi này. Hướng dẫn và bằng chứng ở biên bản.
