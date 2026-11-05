@@ -24,6 +24,7 @@ function record(row: RowDataPacket): AccessLogRecord {
   return {
     id: row.id,
     sourceId: row.source_id,
+    sourceName: row.source_basename,
     ordinal: Number(row.ordinal),
     occurredAt: iso(row.occurred_at),
     method: row.method,
@@ -77,7 +78,7 @@ export function createAccessLogReadService(
   const from =
     scope === "current"
       ? "access_log_current_records r JOIN access_log_current_sources s ON r.source_id=s.id AND r.snapshot_id=s.active_snapshot_id"
-      : "access_log_records r";
+      : "access_log_records r JOIN access_log_sources s ON r.source_id=s.id";
   return {
     async list(filters: AccessLogFilters) {
       const query = where(filters);
@@ -86,12 +87,12 @@ export function createAccessLogReadService(
       try {
         await connection.query("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ");
         await connection.beginTransaction();
-        const [[count]] = await connection.query<RowDataPacket[]>(
+        const [[count]] = await connection.execute<RowDataPacket[]>(
           "SELECT COUNT(*) n FROM " + from + query.sql,
           query.values,
         );
-        const [rows] = await connection.query<RowDataPacket[]>(
-          "SELECT r.* FROM " +
+        const [rows] = await connection.execute<RowDataPacket[]>(
+          "SELECT r.*,s.basename AS source_basename FROM " +
             from +
             query.sql +
             " ORDER BY r.occurred_at DESC,r.id DESC LIMIT ? OFFSET ?",
@@ -113,7 +114,7 @@ export function createAccessLogReadService(
     },
     async get(id: string) {
       const [rows] = await pool.execute<RowDataPacket[]>(
-        "SELECT r.* FROM " + from + " WHERE r.id=?",
+        "SELECT r.*,s.basename AS source_basename FROM " + from + " WHERE r.id=?",
         [id],
       );
       if (!rows[0]) throw new ApiError(404, "NOT_FOUND", "Không tìm thấy bản ghi");

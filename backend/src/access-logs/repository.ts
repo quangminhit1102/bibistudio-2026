@@ -83,7 +83,7 @@ export async function commitAccessLogBatch(
   )
     throw new Error("Stale access log checkpoint");
   if (records.length) {
-    await connection.query(
+    await connection.execute(
       "INSERT INTO access_log_records(id,source_id,ordinal,occurred_at,method,pathname,status,bytes,ip_prefix,device_type,operating_system,browser,resource_kind,is_bot,referrer,parse_status,error_code) VALUES " +
         records.map(() => "(" + Array(17).fill("?").join(",") + ")").join(","),
       records.flatMap((r) => [

@@ -61,6 +61,7 @@ test("scope defaults current, pages all1205 cached rows, archive separate, valid
   assert.ok(status.body.sourceModifiedAt);
   const id = first.body.items[0].id;
   assert.equal((await get("/" + id)).status, 200);
+  assert.equal((await get("/" + id)).body.sourceName, config.domainAlias + "-ssl_log");
   assert.equal((await get("/" + id + "?scope=archive")).status, 404);
   await writeFile(ssl, "");
   await sync();

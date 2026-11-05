@@ -71,6 +71,7 @@ test("protected SQL history pages all1205 rows, filters safely and exposes sanit
   assert.ok(marker);
   assert.equal(marker.occurredAt, null);
   assert.equal((await f.get("/" + marker.id)).body.id, marker.id);
+  assert.equal((await f.get("/" + marker.id)).body.sourceName, a.basename);
   for (const [query, total] of [
     ["search=%25_", 1],
     ["pathname=/literal%25_x", 1],

@@ -36,7 +36,7 @@ async function writeBatch(
   rows: AccessLogRecord[],
 ): Promise<void> {
   if (!rows.length) return;
-  await connection.query(
+  await connection.execute(
     "INSERT INTO access_log_current_records(id,source_id,snapshot_id,ordinal,occurred_at,method,pathname,status,bytes,ip_prefix,device_type,operating_system,browser,resource_kind,is_bot,referrer,parse_status,error_code) VALUES " +
       rows.map(() => "(" + Array(18).fill("?").join(",") + ")").join(",") +
       " ON DUPLICATE KEY UPDATE id=id",

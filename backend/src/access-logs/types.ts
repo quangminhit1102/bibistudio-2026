@@ -1,6 +1,7 @@
 export interface AccessLogRecord {
   id: string;
   sourceId: string;
+  sourceName?: string;
   ordinal: number;
   occurredAt: string | null;
   method: string | null;
