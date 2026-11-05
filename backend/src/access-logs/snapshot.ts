@@ -22,6 +22,7 @@ import {
   ensureWorkDirectory,
 } from "./sources";
 import type { AccessLogConfig, ArchiveSource, ArchiveSnapshot } from "./types";
+import { disposeSnapshot, recoverDisposals } from "./disposal";
 
 interface Descriptor {
   basename: string;
@@ -35,6 +36,11 @@ export interface QueuedSnapshot extends ArchiveSnapshot {
 const digest = (text: string) => createHash("sha256").update(text).digest("hex");
 const folderName = (name: string, hash: string) => "snapshot-" + digest(name) + "-" + hash;
 export async function workUsage(config: AccessLogConfig): Promise<number> {
+  await recoverDisposals(
+    config.workDirectory,
+    /^snapshot-[a-f0-9]{64}-[a-f0-9]{64}$/,
+    "archive.gz",
+  );
   let size = 0;
   for (const folder of await readdir(config.workDirectory)) {
     if (!/^(?:snapshot-[a-f0-9]{64}-[a-f0-9]{64}|[.]pending-[a-zA-Z0-9]+)$/.test(folder))
@@ -74,7 +80,7 @@ export async function removeSnapshot(
   );
   if (resolve(dirname(snapshot.path)) !== resolve(folder))
     throw new AccessLogFailure("UNSAFE_SNAPSHOT_PATH");
-  await removeFolder(folder);
+  await disposeSnapshot(folder, "archive.gz");
 }
 export async function queuedSnapshots(config: AccessLogConfig): Promise<QueuedSnapshot[]> {
   await ensureWorkDirectory(config);

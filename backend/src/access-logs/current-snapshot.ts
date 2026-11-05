@@ -23,6 +23,7 @@ import {
   ensureWorkDirectory,
 } from "./sources";
 import { workUsage } from "./snapshot";
+import { disposeSnapshot, recoverDisposals } from "./disposal";
 
 export const currentWorkDirectory = (config: AccessLogConfig) => config.workDirectory + "-current";
 const uuid = /^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/;
@@ -50,6 +51,7 @@ async function prepare(config: AccessLogConfig): Promise<string> {
 }
 export async function currentSnapshotWorkUsage(config: AccessLogConfig): Promise<number> {
   const root = await prepare(config);
+  await recoverDisposals(root, /^snapshot-[a-f0-9-]{36}$/, "source.log");
   let size = 0;
   for (const folder of await readdir(root)) {
     if (!/^snapshot-[a-f0-9-]{36}$|^[.]pending-[a-zA-Z0-9]+$/.test(folder))
@@ -85,9 +87,7 @@ export async function removeCurrentSnapshot(
   const folder = join(currentWorkDirectory(config), "snapshot-" + snapshot.id);
   if (!uuid.test(snapshot.id) || resolve(dirname(snapshot.path)) !== resolve(folder))
     throw new AccessLogFailure("UNSAFE_SNAPSHOT_PATH");
-  await unlink(join(folder, "source.log"));
-  await unlink(join(folder, "descriptor.json"));
-  await rmdir(folder);
+  await disposeSnapshot(folder, "source.log");
 }
 export async function queuedCurrentSnapshots(config: AccessLogConfig): Promise<CurrentSnapshot[]> {
   const root = await prepare(config);
