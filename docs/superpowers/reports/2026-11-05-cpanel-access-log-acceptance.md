@@ -18,7 +18,13 @@ Trạng thái05/11: triển khai local trong worktree codex/admin-dashboard. **F
 4. Review ảnh thấy current mode có câu retention của archive và detail dùng lời nhắc form lưu/padding thiếu. Test current copy RED; đã sửa câu đúng phạm vi, summary/bộ lọc thu gọn và readonly detail. UI regression7pass. Source basename thiếu cũng RED ở cả hai API và đã sửa; không trả private path.
 5. SQL mode `NO_BACKSLASH_ESCAPES`: RED cho nhập path chứa dấu nháy và search literal; đổi bulk insert/count/list sang native prepared execute. New+API/importer15tests pass, không giả định hosting đang bị ảnh hưởng bởi mode này.
 
-**Còn phải hoàn tất tại Task8:** final full check sau các chỉnh sửa, build artifact/budget/preview, fresh whole-branch review và xử lý Important findings. Chưa coi các mục này đã đạt.
+**Local Task8 đã đạt sau bản sửa recovery:** `npm run build` và `node scripts/check.mjs` exit0 tại7a27627. TypeScript/lint không lỗi;221UItests/90files; Node213tests209pass4platformskip; watcher1pass; real MySQL/auth browser1pass67.2s; large-log browser1pass29.1s. Windows skip các trường hợp POSIX/flock/symlink; Linux CI còn phải xác nhận. Ảnh desktop/mobile cuối đã mở kiểm tra. Main CI và hosting acceptance là các bước riêng, chưa suy ra từ local.
+
+### Review độc lập và bản sửa recovery
+
+Review toàn nhánh90ab46c…c40c438: không có Critical, một Important P2. Cleanup tuần tự có thể để lại snapshot thiếu descriptor nếu job dừng giữa lúc xóa, làm kẹt các lần nhập sau. Đã tái hiện RED8case và sửa tại7a276273925ed4a50943d91e788b353fc912012f: rename nguyên thư mục sang trạng thái disposal trước khi xóa; khôi phục idempotent dưới lock hiện có, vẫn từ chối entry/file/symlink bất thường. Regression ngắt sau rename, payload unlink, descriptor unlink và rmdir cho cả hai scope; kiểm tra MariaDB sau mất nguồn giữ đúng3record archive/current pointer. Disposal/current/importer29tests đạt; không có Minor bị hoãn.
+
+Build thực `npm run build` tại7a27627 thành công, manifest3/feature2/core4. Public initial graph4module không có admin/backend SQL/parser; budget delta JS gzip8671bytes <10240, CSS297bytes <2048. Preview artifact biên dịch tại localhost4198 đã đăng nhập Admin, thử Tải lại, chi tiết và chuyển hai phạm vi trên Edge với DB local; ảnh lưu tại thư mục visualizations của phiên (bibi-log-preview-current-20261105.png, bibi-log-preview-archive-20261105.png, bibi-log-preview-detail-20261105.png). Đây là dữ liệu synthetic local, không phải hosting.
 
 Ảnh synthetic nằm ở .superpowers/e2e/access-logs: current-desktop.png, current-mobile.png, archive-desktop.png, valid-record-desktop.png, parse-marker-desktop.png, parse-marker-mobile.png. CI chuẩn chạy cả auth và large-log browser test; chỉ upload hai thư mục ảnh fixture, retention7ngày. Không chép log/secret hosting vào CI.
 

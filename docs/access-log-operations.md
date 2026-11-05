@@ -27,6 +27,7 @@ Sync exit0 khi complete/no-op,2 khi pending,1 khi lỗi. Output chỉ receipt/co
 - Snapshot private0700/0600 giữ nguồn đã chụp đến khi checkpoint hoàn tất; không sửa/xóa file cPanel. Không dọn thủ công queue khi chưa đối chiếu checkpoint.
 - Crash giữa batch: record và checkpoint cùng transaction; chạy lại sync để tiếp tục, không reset ordinal hoặc hash-dedup các dòng giống nhau.
 - Prefix hoặc queued partial tail đổi: source_diverged, giữ evidence và dừng stream. Xác minh nguồn/DDL/checkpoint trước mọi recovery, không tự stamp complete hoặc reset source.
+- Snapshot đã xử lý được rename nguyên thư mục sang `.disposing-snapshot-*` trước khi xóa. Nếu job dừng giữa cleanup, lần chạy sau tiếp tục xóa đúng các file thuộc trạng thái này dưới lock; snapshot live thiếu descriptor hoặc entry lạ vẫn báo lỗi và giữ để kiểm tra. Không tự xóa cả thư mục work để chữa lỗi.
 - Source thiếu, gzip hỏng, quyền lỗi, quota hoặc backlog: giữ dữ liệu đã commit, báo trạng thái và lần thành công cuối. Không biến lỗi thành bảng rỗng thành công.
 - Feature ledger access_log_migrations riêng, phiên bản2; auth schema_migrations vẫn4. Artifact schemaVersion3 hash cả001/002. App rollback giữ archive/checkpoint/cache và auth revocations, không restore đè DB/down-migrate. Bootstrap cả hai nguồn phải complete trước activation. Probe rollback kiểm tra schema/quyền/counts nhưng cho phép dữ liệu stale để nguồn log lỗi không chặn phục hồi website; UI vẫn cảnh báo stale/lỗi. Phải kiểm chứng thật cùng tooling mới trước production.
 
