@@ -15,6 +15,7 @@ import { authenticate, requirePermission } from "./authorization/middleware";
 import { analyticsRoutes, type AnalyticsOptions } from "./visitors/routes";
 import { visitorReadRoutes } from "./visitors/private-routes";
 import { createVisitorService } from "./visitors/service";
+import { accessLogRoutes } from "./access-logs/routes";
 
 export interface AppOptions {
   db?: Pool;
@@ -36,6 +37,16 @@ export function createApp(release: ReleaseInfo, options: AppOptions = {}): Expre
         })
       : undefined;
   installSecurity(app, options.config ?? { allowedOrigins: [], trustProxy: false });
+  if (auth && options.accessLogs)
+    app.use(
+      "/api/customer-access/access-logs",
+      accessLogRoutes(
+        options.accessLogs.pool,
+        options.accessLogs.schemaDirectory,
+        options.clock ?? systemClock,
+        auth,
+      ),
+    );
   if (auth && options.db && options.analytics)
     app.use(
       "/api/customer-access",
