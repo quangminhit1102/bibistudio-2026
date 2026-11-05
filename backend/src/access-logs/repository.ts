@@ -20,7 +20,7 @@ function checkpoint(row: RowDataPacket): AccessLogCheckpoint {
   };
 }
 export async function getOrCreateSource(
-  pool: Pool,
+  pool: Pool | PoolConnection,
   basename: string,
   transport: "http" | "https",
 ): Promise<AccessLogCheckpoint> {
