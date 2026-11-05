@@ -1,6 +1,6 @@
 # Lịch sử truy cập từ cPanel — đồng bộ hằng ngày vào MySQL
 
-Trạng thái: owner đã chọn đưa toàn bộ record còn có nguồn vào trang Khách truy cập, lưu độc lập khi cPanel xóa log gốc, cập nhật hằng ngày. Thiết kế chờ owner duyệt; chưa triển khai sản phẩm hoặc đổi production. Thiết kế PHP gateway trước đó tạm dừng.
+Trạng thái: owner đã duyệt thiết kế05/11 bằng phản hồi “Ok” sau khi xem tài liệu; đã chốt toàn bộ record còn có nguồn, lưu độc lập cPanel và cập nhật hằng ngày. Đang lập implementation plan; chưa triển khai sản phẩm hoặc đổi production. Thiết kế PHP gateway trước đó tạm dừng.
 
 ## 1. Mục tiêu và ràng buộc
 
@@ -104,4 +104,4 @@ Builder tự chọn tên file/helper/test harness và chi tiết parser chuẩn 
 
 ## 11. Builder check
 
-Review độc lập05/11 đã đối chiếu source/thiết kế và kết luận không còn câu hỏi quan trọng buộc builder phải đoán để lập plan. Review xác nhận các điều kiện cần chứng minh: prefix archive, multiplicity theo vị trí, retry/checkpoint/gzip, migration feature riêng giữ auth4, rollback thực tế, không trộn request với người/phiên và không gọi IP log là trusted. Đây là review thiết kế, không phải kết quả importer/API/UI đã được triển khai. Chờ owner duyệt tài liệu trước khi viết implementation plan.
+Review độc lập05/11 đã đối chiếu source/thiết kế và kết luận không còn câu hỏi quan trọng buộc builder phải đoán để lập plan. Review xác nhận các điều kiện cần chứng minh: prefix archive, multiplicity theo vị trí, retry/checkpoint/gzip, migration feature riêng giữ auth4, rollback thực tế, không trộn request với người/phiên và không gọi IP log là trusted. Đây là review thiết kế, không phải kết quả importer/API/UI đã được triển khai. Owner đã duyệt, chuyển sang implementation plan cùng ngày.
