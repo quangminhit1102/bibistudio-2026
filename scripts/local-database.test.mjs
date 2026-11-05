@@ -1,6 +1,27 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { assertLocalDevelopmentTarget } from "./local-database.mjs";
+import { prepareLocalAccessLogs } from "./local-database.mjs";
+import { mkdtemp, readdir, rm, readFile } from "node:fs/promises";
+import { join } from "node:path";
+import { tmpdir } from "node:os";
+import { gunzipSync } from "node:zlib";
+test("local setup creates synthetic access archives without hosting data or extra daily commands", async (t) => {
+  const root = await mkdtemp(join(tmpdir(), "bibi-local-logs-"));
+  t.after(() => rm(root, { recursive: true }));
+  const env = await prepareLocalAccessLogs(root);
+  assert.ok(env.ACCESS_LOG_ARCHIVE_DIR.startsWith(root));
+  assert.ok(env.ACCESS_LOG_WORK_DIR.startsWith(root));
+  const names = await readdir(env.ACCESS_LOG_ARCHIVE_DIR);
+  assert.equal(names.length, 1);
+  assert.ok(
+    gunzipSync(await readFile(join(env.ACCESS_LOG_ARCHIVE_DIR, names[0])))
+      .toString()
+      .includes("local-example"),
+  );
+  await prepareLocalAccessLogs(root);
+  assert.equal((await readdir(env.ACCESS_LOG_ARCHIVE_DIR)).length, 1);
+});
 test("local setup/dev refuses production targets and root runtime users", () => {
   assert.doesNotThrow(() =>
     assertLocalDevelopmentTarget({

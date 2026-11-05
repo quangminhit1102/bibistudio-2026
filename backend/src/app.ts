@@ -21,6 +21,7 @@ export interface AppOptions {
   config?: SecurityConfig | AuthConfig;
   clock?: Clock;
   analytics?: AnalyticsOptions;
+  accessLogs?: { pool: Pool; schemaDirectory: string };
 }
 
 export function createApp(release: ReleaseInfo, options: AppOptions = {}): Express {

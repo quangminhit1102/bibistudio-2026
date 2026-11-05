@@ -4,11 +4,13 @@ import type { AppOptions } from "./app";
 import { readAuthConfig, readDbConfig, systemClock, type Clock } from "./config";
 import { createDbPool } from "./db/pool";
 import { createCatalogue } from "./visitors/catalogue";
+import { accessLogConfigured } from "./access-logs/config";
 
 /** Synchronous app dependencies; no schema or account mutation during startup. */
 export function createRuntime(env: NodeJS.ProcessEnv = process.env, clock: Clock = systemClock) {
   const config = readAuthConfig(env);
   const database = readDbConfig(env);
+  const logEnabled = accessLogConfigured(env);
   if (
     !env.ANALYTICS_ID_SECRET ||
     Buffer.byteLength(env.ANALYTICS_ID_SECRET) < 32 ||
@@ -25,6 +27,11 @@ export function createRuntime(env: NodeJS.ProcessEnv = process.env, clock: Clock
     db,
     config,
     clock,
+    ...(logEnabled
+      ? {
+          accessLogs: { pool: db, schemaDirectory: resolve(__dirname, "../access-log-migrations") },
+        }
+      : {}),
     analytics: {
       pool: collector,
       catalogue,

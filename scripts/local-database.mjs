@@ -14,11 +14,33 @@ import { parseEnv, promisify } from "node:util";
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import { createRequire } from "node:module";
+import { gzipSync } from "node:zlib";
 import mysql from "../backend/node_modules/mysql2/promise.js";
 import { TEST_MYSQL_IMAGE } from "./test-database.mjs";
 import { root, isMain } from "./runtime.mjs";
 const execute = promisify(execFile);
 const require = createRequire(import.meta.url);
+export async function prepareLocalAccessLogs(
+  baseDirectory = join(root, ".superpowers/local-access-logs"),
+) {
+  const archiveDirectory = join(baseDirectory, "archives"),
+    workDirectory = join(baseDirectory, "work");
+  await mkdir(archiveDirectory, { recursive: true, mode: 0o700 });
+  const domainAlias = "local.bibistudio.test";
+  const file = join(archiveDirectory, domainAlias + "-Jan-2026.gz");
+  const example =
+    '203.0.113.10 - - [01/Jan/2026:07:00:00 +0700] "GET /products/local-example HTTP/1.1" 200 123 "-" "LocalExampleBrowser/1.0"\n';
+  try {
+    await writeFile(file, gzipSync(Buffer.from(example)), { flag: "wx", mode: 0o600 });
+  } catch (error) {
+    if (error.code !== "EEXIST") throw error;
+  }
+  return {
+    ACCESS_LOG_ARCHIVE_DIR: archiveDirectory,
+    ACCESS_LOG_DOMAIN_ALIAS: domainAlias,
+    ACCESS_LOG_WORK_DIR: workDirectory,
+  };
+}
 async function privateEnv(path) {
   try {
     const text = await readFile(path, "utf8");
@@ -129,6 +151,7 @@ export async function setupLocalDatabase() {
     RELEASE_PROBE_SECRET: configured.RELEASE_PROBE_SECRET || randomBytes(32).toString("hex"),
   };
   assertLocalDevelopmentTarget(runtimeEnv);
+  Object.assign(runtimeEnv, await prepareLocalAccessLogs());
   const migrationEnv = {
     DB_HOST: "127.0.0.1",
     DB_PORT: "33385",
@@ -211,8 +234,26 @@ export async function setupLocalDatabase() {
       masterPassword: migrationEnv.MASTER_ADMIN_PASSWORD,
       userPassword: migrationEnv.SEED_USER_PASSWORD,
     });
+    const { migrateAccessLogs } = require("../backend/dist/access-logs/schema.js");
+    await migrateAccessLogs(pool, join(root, "backend/access-log-migrations"));
   } finally {
     await pool.end();
+  }
+  const { createDbPool } = require("../backend/dist/db/pool.js");
+  const { readDbConfig } = require("../backend/dist/config.js");
+  const { readAccessLogConfig } = require("../backend/dist/access-logs/config.js");
+  const { syncAccessLogArchives } = require("../backend/dist/access-logs/importer.js");
+  const runtimePool = createDbPool({ ...readDbConfig(runtimeEnv), connectionLimit: 1 });
+  try {
+    const receipt = await syncAccessLogArchives({
+      pool: runtimePool,
+      config: readAccessLogConfig(runtimeEnv),
+      clock: { now: () => new Date() },
+      signal: AbortSignal.timeout(120000),
+    });
+    if (receipt.state !== "complete") throw new Error("Local example log import incomplete");
+  } finally {
+    await runtimePool.end();
   }
   console.log(
     "Local MySQL ready at127.0.0.1:33385. Runtime settings:.env.local; initial login passwords:.env.migration.local. Existing accounts were not reset.",
