@@ -1,0 +1,53 @@
+CREATE TABLE access_log_sources (
+ id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin PRIMARY KEY,
+ basename VARCHAR(255) CHARACTER SET ascii COLLATE ascii_bin NOT NULL UNIQUE,
+ transport ENUM('http','https') NOT NULL,
+ committed_bytes BIGINT UNSIGNED NOT NULL DEFAULT 0,
+ committed_lines BIGINT UNSIGNED NOT NULL DEFAULT 0,
+ record_count BIGINT UNSIGNED NOT NULL DEFAULT 0,
+ blank_count BIGINT UNSIGNED NOT NULL DEFAULT 0,
+ prefix_sha256 CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+ state VARCHAR(32) NOT NULL DEFAULT 'pending',
+ error_code VARCHAR(64) NULL,
+ snapshot_sha256 CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NULL,
+ source_through DATETIME(3) NULL,
+ last_seen_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+ updated_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
+) ENGINE=InnoDB;
+CREATE TABLE access_log_records (
+ id CHAR(64) CHARACTER SET ascii COLLATE ascii_bin PRIMARY KEY,
+ source_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+ ordinal BIGINT UNSIGNED NOT NULL,
+ occurred_at DATETIME(3) NULL,
+ method VARCHAR(20) NULL,
+ pathname VARCHAR(2048) NULL,
+ status SMALLINT UNSIGNED NULL,
+ bytes BIGINT UNSIGNED NULL,
+ ip_prefix VARCHAR(64) NULL,
+ device_type VARCHAR(30) NULL,
+ operating_system VARCHAR(50) NULL,
+ browser VARCHAR(50) NULL,
+ resource_kind ENUM('page','asset','api','other') NOT NULL,
+ is_bot BOOLEAN NOT NULL DEFAULT FALSE,
+ referrer VARCHAR(2048) NULL,
+ parse_status ENUM('parsed','error') NOT NULL,
+ error_code VARCHAR(64) NULL,
+ UNIQUE KEY record_position(source_id,ordinal),
+ INDEX record_time(occurred_at,id),
+ INDEX record_network(ip_prefix,occurred_at),
+ INDEX record_path(pathname(191),occurred_at),
+ FOREIGN KEY(source_id) REFERENCES access_log_sources(id)
+) ENGINE=InnoDB;
+CREATE TABLE access_log_import_runs (
+ id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin PRIMARY KEY,
+ state ENUM('complete','pending','error') NOT NULL,
+ inserted BIGINT UNSIGNED NOT NULL DEFAULT 0,
+ parse_errors BIGINT UNSIGNED NOT NULL DEFAULT 0,
+ pending_sources INT UNSIGNED NOT NULL DEFAULT 0,
+ diverged_sources INT UNSIGNED NOT NULL DEFAULT 0,
+ missing_sources INT UNSIGNED NOT NULL DEFAULT 0,
+ source_through DATETIME(3) NULL,
+ started_at DATETIME(3) NOT NULL,
+ finished_at DATETIME(3) NOT NULL,
+ INDEX import_time(finished_at,id)
+) ENGINE=InnoDB;
