@@ -104,7 +104,7 @@ test(
       const base = `http://127.0.0.1:${frontend.httpServer.address().port}`;
       runtime.appOptions.config.allowedOrigins.splice(0, 1, base);
       browser = await chromium.launch();
-      const evidence = resolve(".superpowers/sdd/2026-11-04-admin-auth-rbac/evidence");
+      const evidence = resolve(".superpowers/e2e/auth");
       await mkdir(evidence, { recursive: true });
       const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
       const page = await context.newPage();

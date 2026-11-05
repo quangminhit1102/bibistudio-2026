@@ -95,9 +95,11 @@ test("default log mode pages full history, keeps filters, safely renders text an
   expect((await screen.findAllByText(/1.205 bản ghi|1205 bản ghi/)).length).toBeGreaterThan(0);
   expect(screen.getByText("Kiểm tra cập nhật mỗi 15 phút")).toBeInTheDocument();
   expect(screen.getByLabelText("Phạm vi nhật ký")).toHaveValue("current");
+  expect(screen.queryByText(/Chỉ gồm các archive đã có thể nhập/)).not.toBeInTheDocument();
   expect(screen.getByText(/Chưa đồng bộ đủ/)).toBeInTheDocument();
   expect(screen.getByText(/Quá 45 phút/)).toBeInTheDocument();
   expect(document.querySelector("script")).toBeNull();
+  fireEvent.click(screen.getByText("Bộ lọc nâng cao", { exact: true }));
   fireEvent.change(screen.getByLabelText("Từ ngày (UTC)"), { target: { value: "2026-11-01" } });
   await vi.waitFor(() =>
     expect(f.paths.some((path) => path.includes("from=2026-11-01"))).toBe(true),
@@ -121,6 +123,7 @@ test("default log mode pages full history, keeps filters, safely renders text an
   expect(
     await within(await screen.findByRole("dialog")).findByText("INVALID_LINE"),
   ).toBeInTheDocument();
+  expect(screen.queryByText("Kiểm tra thông tin trước khi lưu.")).not.toBeInTheDocument();
   fireEvent.keyDown(document, { key: "Escape" });
   fireEvent.change(screen.getByLabelText("Phạm vi nhật ký"), { target: { value: "archive" } });
   await vi.waitFor(() =>

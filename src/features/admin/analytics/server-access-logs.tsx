@@ -10,6 +10,12 @@ import { DataTable, type TableState } from "../shared/tables/data-table";
 import { dateTime } from "../shared/lib/text";
 const time = (value: string | null) => (value ? dateTime(value) : "Chưa xác định");
 const kind = { page: "Trang", asset: "Tài nguyên", api: "API", other: "Khác" };
+const deviceLabel = (value: string | null) =>
+  ({ desktop: "Máy tính", mobile: "Di động", tablet: "Máy tính bảng", unknown: "Chưa xác định" })[
+    value ?? ""
+  ] ??
+  value ??
+  "Chưa xác định";
 function Detail({
   id,
   onClose,
@@ -31,39 +37,42 @@ function Detail({
     <Modal
       open
       title="Chi tiết bản ghi"
+      description="Thông tin request HTTP đã ghi nhận. IP được che."
       onOpenChange={(open) => {
         if (!open) onClose();
       }}
     >
-      {data.isPending ? (
-        <Skeleton />
-      ) : data.error ? (
-        <ErrorState error={data.error} onRetry={() => void data.refetch()} />
-      ) : (
-        <dl className="a-key-values">
-          {[
-            ["ID", data.data.id],
-            ["Thời gian", time(data.data.occurredAt)],
-            ["IP đã che", data.data.ipPrefix],
-            ["Đường dẫn", data.data.pathname],
-            ["Phương thức", data.data.method],
-            ["HTTP", data.data.status],
-            ["Số byte", data.data.bytes],
-            ["Thiết bị", data.data.deviceType],
-            ["Hệ điều hành", data.data.operatingSystem],
-            ["Trình duyệt", data.data.browser],
-            ["Nguồn giới thiệu", data.data.referrer],
-            ["ID nguồn", data.data.sourceId],
-            ["Dòng trong nguồn", data.data.ordinal],
-            ["Kết quả đọc", data.data.parseStatus === "error" ? data.data.errorCode : "Đã đọc"],
-          ].map(([label, value]) => (
-            <div key={label}>
-              <dt>{label}</dt>
-              <dd style={{ overflowWrap: "anywhere" }}>{value ?? "Chưa xác định"}</dd>
-            </div>
-          ))}
-        </dl>
-      )}
+      <div className="a-dialog-body">
+        {data.isPending ? (
+          <Skeleton />
+        ) : data.error ? (
+          <ErrorState error={data.error} onRetry={() => void data.refetch()} />
+        ) : (
+          <dl className="a-key-values">
+            {[
+              ["ID", data.data.id],
+              ["Thời gian", time(data.data.occurredAt)],
+              ["IP đã che", data.data.ipPrefix],
+              ["Đường dẫn", data.data.pathname],
+              ["Phương thức", data.data.method],
+              ["HTTP", data.data.status],
+              ["Số byte", data.data.bytes],
+              ["Thiết bị", deviceLabel(data.data.deviceType)],
+              ["Hệ điều hành", data.data.operatingSystem],
+              ["Trình duyệt", data.data.browser],
+              ["Nguồn giới thiệu", data.data.referrer],
+              ["Nguồn", data.data.sourceName ?? data.data.sourceId],
+              ["Dòng trong nguồn", data.data.ordinal],
+              ["Kết quả đọc", data.data.parseStatus === "error" ? data.data.errorCode : "Đã đọc"],
+            ].map(([label, value]) => (
+              <div key={label}>
+                <dt>{label}</dt>
+                <dd style={{ overflowWrap: "anywhere" }}>{value ?? "Chưa xác định"}</dd>
+              </div>
+            ))}
+          </dl>
+        )}
+      </div>
     </Modal>
   );
 }
@@ -133,8 +142,9 @@ export function ServerAccessLogs() {
         header: "Thiết bị–Hệ điều hành",
         enableSorting: false,
         cell: ({ row }) =>
-          [row.original.deviceType, row.original.operatingSystem].filter(Boolean).join("–") ||
-          "Chưa xác định",
+          [deviceLabel(row.original.deviceType), row.original.operatingSystem]
+            .filter(Boolean)
+            .join("–") || "Chưa xác định",
       },
       { accessorKey: "browser", header: "Trình duyệt", enableSorting: false },
       {
@@ -167,8 +177,8 @@ export function ServerAccessLogs() {
           </Button>
         }
       />
-      <Card>
-        <div className="a-visitor-filters">
+      <Card className="a-access-log-summary">
+        <div className="a-visitor-filters a-log-scope">
           <label>
             Phạm vi nhật ký
             <select
@@ -190,19 +200,11 @@ export function ServerAccessLogs() {
         </div>
         <p className="a-muted">
           {scope === "current"
-            ? "Bản chụp đầy đủ của file đang ghi. Khi hosting xoay file, log mới được thay bằng bản chụp tiếp theo; xem lịch sử lâu dài trong Lịch sử archive."
-            : "Các archive đã nhập được giữ lâu dài trong MySQL, kể cả khi hosting xóa file nguồn. Nguồn archive có thể cập nhật chậm hơn log mới."}{" "}
-          Hai phạm vi có thể chứa cùng request; số lượng được tính riêng.
+            ? "Bản chụp file đang ghi; xem lịch sử lâu dài trong Lịch sử archive."
+            : "Lịch sử archive đã nhập được giữ lâu dài, kể cả khi hosting xóa nguồn."}
         </p>
         <h2>Kiểm tra cập nhật mỗi 15 phút</h2>
-        <p className="a-muted">
-          Nút Tải lại lấy dữ liệu đã nhập mới nhất. Thời điểm có bản ghi mới còn phụ thuộc lúc
-          hosting cập nhật log nguồn.
-        </p>
-        <p className="a-muted">
-          IP lấy từ log hosting, đã che và chưa xác minh nguồn IP thực. Nhật ký vận hành tách riêng
-          với thống kê sản phẩm; không suy đoán vị trí hay danh tính.
-        </p>
+        <p className="a-muted">IP đã che; nguồn IP hosting chưa được xác minh.</p>
         {status.isPending ? (
           <Skeleton rows={2} />
         ) : status.error ? (
@@ -210,8 +212,8 @@ export function ServerAccessLogs() {
         ) : (
           s && (
             <>
-              <strong>{s.total.toLocaleString("vi-VN")} bản ghi</strong>
-              <p>
+              <strong className="a-log-total">{s.total.toLocaleString("vi-VN")} bản ghi</strong>
+              <p className="a-log-state" data-state={s.state} role="status">
                 {
                   {
                     never: "Chưa chạy đồng bộ",
@@ -228,13 +230,10 @@ export function ServerAccessLogs() {
               )}
               <dl className="a-key-values">
                 {[
-                  ["Lần chạy gần nhất", time(s.lastSyncAt)],
-                  ["Lần thành công gần nhất", time(s.lastSuccessAt)],
-                  ["Dữ liệu nguồn đến", time(s.sourceThrough)],
-                  ...(scope === "current"
-                    ? [["File nguồn cập nhật", time(s.sourceModifiedAt ?? null)]]
-                    : []),
-                  ["Lỗi định dạng", s.parseErrors],
+                  ["Lần kiểm tra gần nhất", time(s.lastSyncAt)],
+                  scope === "current"
+                    ? ["File nguồn cập nhật", time(s.sourceModifiedAt ?? null)]
+                    : ["Dữ liệu nguồn đến", time(s.sourceThrough)],
                 ].map(([label, value]) => (
                   <div key={label}>
                     <dt>{label}</dt>
@@ -242,11 +241,20 @@ export function ServerAccessLogs() {
                   </div>
                 ))}
               </dl>
-              <details>
+              <details className="a-log-notes">
                 <summary>Phạm vi và trạng thái nguồn</summary>
                 <p>
-                  Chỉ gồm các archive đã có thể nhập. Lịch sử bị hosting xóa trước khi nhập không
-                  thể phục hồi. Bản ghi đã nhập được giữ trong cơ sở dữ liệu.
+                  {scope === "current"
+                    ? "Bản chụp được thay sau mỗi lần cập nhật thành công và có thể đổi khi hosting xoay file. Đây không phải kho lịch sử lâu dài."
+                    : "Chỉ gồm các archive đã có thể nhập. Lịch sử bị hosting xóa trước khi nhập không thể phục hồi; bản ghi archive đã nhập được giữ lâu dài."}
+                </p>
+                <p>
+                  Hai phạm vi có thể chứa cùng request và được tính riêng. Nút Tải lại lấy dữ liệu
+                  đã nhập; độ mới phụ thuộc lúc hosting cập nhật nguồn. Nhật ký không xác định danh
+                  tính, vị trí hoặc phiên khách.
+                </p>
+                <p>
+                  Lần thành công gần nhất: {time(s.lastSuccessAt)} · Lỗi định dạng: {s.parseErrors}
                 </p>
                 <p>
                   Sớm nhất: {time(s.earliest)} · Gần nhất: {time(s.latest)}
@@ -254,7 +262,14 @@ export function ServerAccessLogs() {
                 {s.sources.map((source) => (
                   <p key={source.basename} style={{ overflowWrap: "anywhere" }}>
                     {source.basename} · {source.recordCount} bản ghi ·{" "}
-                    {source.errorCode ?? source.state}
+                    {source.errorCode ??
+                      {
+                        complete: "Đã nhập",
+                        pending: "Đang chờ",
+                        error: "Có lỗi",
+                        diverged: "Nguồn thay đổi",
+                      }[source.state] ??
+                      source.state}
                   </p>
                 ))}
               </details>
@@ -263,69 +278,85 @@ export function ServerAccessLogs() {
         )}
       </Card>
       <Card>
-        <div className="a-visitor-filters">
-          {(
-            [
-              ["from", "Từ ngày (UTC)", "date"],
-              ["to", "Đến ngày (UTC)", "date"],
-              ["ipPrefix", "IP đã che", "text"],
-              ["pathname", "Đường dẫn chính xác", "text"],
-              ["status", "Mã HTTP", "number"],
-            ] as const
-          ).map(([key, label, type]) => (
-            <label key={key}>
-              {label}
-              <input
-                aria-label={label}
-                type={type}
-                value={state.filters[key] ?? ""}
-                onChange={(e) => filter(key, e.target.value)}
-              />
+        <details className="a-log-filters">
+          <summary>
+            <span>Bộ lọc nâng cao</span>
+            {Object.entries(state.filters).some(([key, value]) => key !== "scope" && value) && (
+              <small>
+                {" "}
+                ·{" "}
+                {
+                  Object.entries(state.filters).filter(([key, value]) => key !== "scope" && value)
+                    .length
+                }{" "}
+                đang dùng
+              </small>
+            )}
+          </summary>
+          <div className="a-visitor-filters">
+            {(
+              [
+                ["from", "Từ ngày (UTC)", "date"],
+                ["to", "Đến ngày (UTC)", "date"],
+                ["ipPrefix", "IP đã che", "text"],
+                ["pathname", "Đường dẫn chính xác", "text"],
+                ["status", "Mã HTTP", "number"],
+              ] as const
+            ).map(([key, label, type]) => (
+              <label key={key}>
+                {label}
+                <input
+                  aria-label={label}
+                  type={type}
+                  value={state.filters[key] ?? ""}
+                  onChange={(e) => filter(key, e.target.value)}
+                />
+              </label>
+            ))}
+            <label>
+              Nhóm tài nguyên
+              <select
+                aria-label="Nhóm tài nguyên"
+                value={state.filters.resourceKind ?? ""}
+                onChange={(e) => filter("resourceKind", e.target.value)}
+              >
+                <option value="">Tất cả</option>
+                {Object.entries(kind).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
             </label>
-          ))}
-          <label>
-            Nhóm tài nguyên
-            <select
-              aria-label="Nhóm tài nguyên"
-              value={state.filters.resourceKind ?? ""}
-              onChange={(e) => filter("resourceKind", e.target.value)}
-            >
-              <option value="">Tất cả</option>
-              {Object.entries(kind).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Bot (ước lượng)
-            <select
-              aria-label="Bot (ước lượng)"
-              value={state.filters.isBot ?? ""}
-              onChange={(e) => filter("isBot", e.target.value)}
-            >
-              <option value="">Tất cả</option>
-              <option value="true">Có dấu hiệu bot</option>
-              <option value="false">Không có dấu hiệu bot</option>
-            </select>
-          </label>
-          <label>
-            Kết quả đọc
-            <select
-              aria-label="Kết quả đọc"
-              value={state.filters.parseStatus ?? ""}
-              onChange={(e) => filter("parseStatus", e.target.value)}
-            >
-              <option value="">Tất cả</option>
-              <option value="parsed">Đã đọc</option>
-              <option value="error">Lỗi định dạng</option>
-            </select>
-          </label>
-          <Button onClick={() => setState({ ...state, page: 1, search: "", filters: { scope } })}>
-            Xóa bộ lọc
-          </Button>
-        </div>
+            <label>
+              Bot (ước lượng)
+              <select
+                aria-label="Bot (ước lượng)"
+                value={state.filters.isBot ?? ""}
+                onChange={(e) => filter("isBot", e.target.value)}
+              >
+                <option value="">Tất cả</option>
+                <option value="true">Có dấu hiệu bot</option>
+                <option value="false">Không có dấu hiệu bot</option>
+              </select>
+            </label>
+            <label>
+              Kết quả đọc
+              <select
+                aria-label="Kết quả đọc"
+                value={state.filters.parseStatus ?? ""}
+                onChange={(e) => filter("parseStatus", e.target.value)}
+              >
+                <option value="">Tất cả</option>
+                <option value="parsed">Đã đọc</option>
+                <option value="error">Lỗi định dạng</option>
+              </select>
+            </label>
+            <Button onClick={() => setState({ ...state, page: 1, search: "", filters: { scope } })}>
+              Xóa bộ lọc
+            </Button>
+          </div>
+        </details>
         <DataTable
           columns={columns}
           result={logs.data ?? { items: [], total: 0, page: state.page, pageSize: state.pageSize }}

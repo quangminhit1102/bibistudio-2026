@@ -46,6 +46,16 @@ jobs:
           BIBI_TEST_DB_CONTAINER: ${{ job.services.mysql.id }}
       - run: npm run build
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: browser-evidence-${{ github.sha }}-${{ github.run_id }}
+          path: |
+            .superpowers/e2e/auth/*.png
+            .superpowers/e2e/access-logs/*.png
+          include-hidden-files: true
+          if-no-files-found: ignore
+          retention-days: 7
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         with:
           name: release-${{ github.sha }}-${{ github.run_id }}

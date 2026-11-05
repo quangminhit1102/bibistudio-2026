@@ -2598,3 +2598,38 @@
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
+
+/* Access-log source controls stay compact; details and advanced filters expand on demand. */
+.admin-root .a-log-scope {
+  max-width: 320px;
+  margin: 0 0 12px;
+}
+.admin-root .a-access-log-summary > p,
+.admin-root .a-access-log-summary h2 {
+  margin-block: 8px;
+}
+.admin-root .a-log-total {
+  display: inline-block;
+  margin-block: 6px;
+  font-size: 20px;
+}
+.admin-root .a-log-state {
+  display: inline-block;
+  margin-left: 12px;
+}
+.admin-root .a-log-notes {
+  margin-top: 12px;
+  color: var(--a-muted);
+}
+.admin-root .a-log-notes summary,
+.admin-root .a-log-filters summary {
+  cursor: pointer;
+  padding-block: 8px;
+  min-height: 36px;
+}
+.admin-root .a-log-filters {
+  margin-bottom: 12px;
+}
+.admin-root .a-log-state[data-state="error"] {
+  color: var(--a-red);
+}
