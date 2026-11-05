@@ -7,6 +7,7 @@ import { root, run, isMain } from "./runtime.mjs";
 import { validateCatalogue } from "./catalogue-images.mjs";
 import { makeManifest, validateManifest } from "./release-manifest.mjs";
 import databaseMetadata from "../ops/database-metadata.cjs";
+import accessLogMetadata from "../ops/access-log-metadata.cjs";
 import { writeAnalyticsCatalogue } from "./analytics-catalogue.mjs";
 
 export async function validateBundle(dir) {
@@ -31,14 +32,19 @@ export async function validateBundle(dir) {
     await stat(join(dir, "backend/dist/runtime.js"));
     await databaseMetadata.verifyDatabaseAssets(join(dir, "backend"), manifest.database);
   }
+  if (manifest.accessLogs) {
+    await accessLogMetadata.verifyAccessLogAssets(join(dir, "backend"), manifest.accessLogs);
+    for (const file of ["cli.js", "probe-cli.js"])
+      await stat(join(dir, "backend/dist/access-logs", file));
+  }
   if (fe.releaseId !== manifest.releaseId || fe.sourceSha !== manifest.sourceSha)
     throw new Error("FE/BE release mismatch");
   async function scan(path) {
     for (const entry of await readdir(path, { withFileTypes: true })) {
       if (
         entry.isSymbolicLink() ||
-        ["node_modules", ".git"].includes(entry.name) ||
-        /^\.env(?:\.|$)/.test(entry.name)
+        ["node_modules", ".git", "private", ".ssh"].includes(entry.name) ||
+        /^\.env(?:\.|$)|\.(?:env|pem|key)$/.test(entry.name)
       )
         throw new Error(`Forbidden bundle entry: ${entry.name}`);
       if (entry.isDirectory()) await scan(join(path, entry.name));
@@ -58,6 +64,7 @@ export async function buildRelease({
     sourceSha,
     ciRunId,
     await databaseMetadata.createDatabaseMetadata(join(root, "backend")),
+    await accessLogMetadata.createAccessLogMetadata(join(root, "backend")),
   );
   const base = resolve(outputDir);
   const bundleDir = join(base, manifest.releaseId);
@@ -101,6 +108,11 @@ export async function buildRelease({
   await cp(join(root, "backend/migrations"), join(bundleDir, "backend/migrations"), {
     recursive: true,
   });
+  await cp(
+    join(root, "backend/access-log-migrations"),
+    join(bundleDir, "backend/access-log-migrations"),
+    { recursive: true },
+  );
   await cp(
     join(root, "backend/analytics-catalogue.json"),
     join(bundleDir, "backend/analytics-catalogue.json"),

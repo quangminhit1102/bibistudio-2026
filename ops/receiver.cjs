@@ -6,6 +6,7 @@ const { spawnSync } = require("node:child_process");
 const tar = require("tar");
 const { validateManifest } = require("./release.cjs");
 const deploy = require("./deploy.cjs");
+const { verifyAccessLogAssets } = require("./access-log-metadata.cjs");
 function parseCommand(command) {
   const words = (command ?? "").trim().split(/\s+/);
   const [action, releaseId, checksum] = words;
@@ -51,7 +52,13 @@ async function inspectArchive(file, { maxExpandedBytes = 1024 ** 3 } = {}) {
         violations.push("Invalid archive path");
       if (!["File", "Directory"].includes(entry.type))
         violations.push("Invalid archive entry type/link");
-      if (parts.some((p) => ["node_modules", ".git"].includes(p) || /^\.env(?:\.|$)/.test(p)))
+      if (
+        parts.some(
+          (p) =>
+            ["node_modules", ".git", "private", ".ssh"].includes(p) ||
+            /^\.env(?:\.|$)|\.(?:env|pem|key)$/.test(p),
+        )
+      )
         violations.push("Forbidden archive entry");
       if (seen.has(name)) violations.push("Duplicate archive entry");
       seen.add(name);
@@ -100,6 +107,11 @@ async function acceptArchive(config, id, checksum, file) {
     const fe = JSON.parse(await fs.readFile(path.join(staging, "frontend/version.json"), "utf8"));
     if (manifest.releaseId !== id || fe.releaseId !== id || fe.sourceSha !== manifest.sourceSha)
       throw new Error("Bundle release mismatch");
+    if (manifest.accessLogs) {
+      await verifyAccessLogAssets(path.join(staging, "backend"), manifest.accessLogs);
+      for (const file of ["cli.js", "probe-cli.js"])
+        await fs.access(path.join(staging, "backend/dist/access-logs", file));
+    }
     await fs.writeFile(path.join(staging, ".archive-sha256"), checksum);
     await fs.rename(staging, dest);
   } catch (e) {

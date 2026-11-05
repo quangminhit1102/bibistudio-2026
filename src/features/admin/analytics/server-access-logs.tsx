@@ -165,7 +165,11 @@ export function ServerAccessLogs() {
         }
       />
       <Card>
-        <h2>Đồng bộ hằng ngày</h2>
+        <h2>Kiểm tra cập nhật mỗi 15 phút</h2>
+        <p className="a-muted">
+          Nút Tải lại lấy dữ liệu đã nhập mới nhất. Thời điểm có bản ghi mới còn phụ thuộc lúc
+          hosting cập nhật log nguồn.
+        </p>
         <p className="a-muted">
           IP lấy từ log hosting, đã che và chưa xác minh nguồn IP thực. Nhật ký vận hành tách riêng
           với thống kê sản phẩm; không suy đoán vị trí hay danh tính.
@@ -190,7 +194,7 @@ export function ServerAccessLogs() {
               </p>
               {s.stale && (
                 <p role="status">
-                  Quá 36 giờ hoặc chưa có lần đồng bộ; dữ liệu có thể chưa cập nhật.
+                  Quá 45 phút hoặc chưa có lần kiểm tra; dữ liệu có thể chưa cập nhật.
                 </p>
               )}
               <dl className="a-key-values">

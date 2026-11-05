@@ -1,5 +1,21 @@
 # Lịch sử truy cập từ cPanel — đồng bộ hằng ngày vào MySQL
 
+> **Điều chỉnh của owner05/11 trong lúc triển khai:** không cần realtime nhưng muốn nhanh hơn một ngày; có nút tải lại. Agent chọn lịch kiểm tra/import **mỗi15 phút**, thay cho cron hằng ngày ở thiết kế gốc dưới đây. Nút Tải lại chỉ đọc lại DB, không chạy importer trong HTTP request. Một cron, cùng lock/checkpoint và giới hạn120giây; không cần cấu hình timezone cho lịch `*/15 * * * *`. Chu kỳ kiểm tra không phải cam kết độ mới15phút: archive hosting vẫn xử lý khoảng24giờ. Đang đo current log bằng request đánh dấu trước khi quyết định có thể dùng nguồn đó an toàn hay phải nhờ Tino điều chỉnh; chưa tuyên bố đáp ứng freshness hoặc deploy production.
+
+## Bổ sung đã chốt: Log mới / Lịch sử archive
+
+Owner đã chọn bộ lọc hai phạm vi trên cùng trang, mặc định Log mới. Current log đã thấy request đánh dấu sau khoảng9phút. Giữ một cron15phút, React/Express/MySQL, không thêm dịch vụ, token, PHP hay thay settings cPanel.
+
+**Log mới là bản chụp đầy đủ của hai file HTTP/HTTPS đang ghi**, cập nhật cache MySQL theo mỗi lượt thành công. Nó không phải một kho lịch sử thứ hai: khi hosting xoay file, lần chụp mới thay cache cũ; lịch sử lâu dài lấy ở phạm vi archive. Đây là lựa chọn triển khai của agent để tránh state theo dõi generation/ghép trùng; không hứa giữ mãi mọi phiên bản cache hoặc gọi số dòng là số khách. Archive đã nhập vẫn giữ vĩnh viễn theo thiết kế gốc, không xóa theo cache. UI nói rõ phạm vi, thời điểm nguồn/lần kiểm tra và lỗi; không cộng chung hai nguồn có thể chứa cùng request.
+
+Thêm ACCESS_LOG_CURRENT_DIR là đường dẫn private cấu hình một lần. Dùng đường canonical đã kiểm chứng /usr/local/apache/domlogs/vhplasti, chỉ đọc đúng hai basename của domain BiBi; không theo symlink file hoặc truy cập domain khác. Local sinh text synthetic bên cạnh gzip; không cần lệnh dev mới.
+
+Feature migration002 chỉ thêm access_log_current_sources và access_log_current_records; core auth vẫn4. Nguồn có stable ID/transport, active snapshot UUID, content checksum operational, source mtime, last checked, state/error và counters. Record có snapshot UUID/ordinal/ID an toàn cùng DTO hiện có. Metadata feature chuyển2..2, hash cả001/002; chưa có feature release production nên không phá release đã phát hành.
+
+Chụp bounded private0700/0600, read descriptor fixed size qua O_NOFOLLOW, kiểm tra inode/device/path và hash prefix đọc lại để phát hiện truncate/rewrite trong khi chụp. Cho phép append vượt mốc đã chụp; không bỏ mãi dữ liệu cuối dòng, tail không đọc được thành marker an toàn trong cache. Queue chụp durable trước nhập, giữ khi process bị dừng. Mỗi nguồn nhập staging snapshot theo batch500, ID theo snapshot+ordinal; chỉ chuyển active pointer bằng transaction sau khi count khớp toàn bộ snapshot. HTTP chỉ nhìn active snapshot; lỗi/deadline giữ cache thành công trước và báo lỗi. Chạy lại staging idempotent, không publish partial snapshot. Dọn các staging/cache snapshot không active sau thành công; không xóa bảng archive. Tổng private work archive+current không quá512MiB; nguồn text tối đa64MiB và job chung120giây.
+
+API hiện có nhận scope=current|archive (default current), cùng JWT/customer_access.view và phân trang20/50/100; chi tiết phải thuộc đúng phạm vi/active snapshot. Trạng thái riêng từng phạm vi; schema503/lỗi nguồn không biến thành0. Tải lại chỉ refetch list/status đang chọn; log mới có thể trễ thêm do hosting, không cam kết độ trễ tối đa15phút. Gate archive-prefix và rollback thật vẫn còn nguyên trước acceptance production.
+
 Trạng thái: owner đã duyệt thiết kế05/11 bằng phản hồi “Ok” sau khi xem tài liệu; đã chốt toàn bộ record còn có nguồn, lưu độc lập cPanel và cập nhật hằng ngày. Đang lập implementation plan; chưa triển khai sản phẩm hoặc đổi production. Thiết kế PHP gateway trước đó tạm dừng.
 
 ## 1. Mục tiêu và ràng buộc

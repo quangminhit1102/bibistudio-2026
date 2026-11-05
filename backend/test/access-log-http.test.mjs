@@ -107,6 +107,11 @@ test("protected SQL history pages all1205 rows, filters safely and exposes sanit
   const serialized = JSON.stringify([first.body, last.body]);
   for (const secret of ["203.0.113.42", "token=secret", "invalid raw secret line", a.root])
     assert.ok(!serialized.includes(secret));
+  const before = await f.get("/status", admin.accessToken);
+  assert.equal(before.body.stale, false);
+  f.clock.advance(46 * 60 * 1000);
+  const renewed = await f.auth.login({ username: "admin", password: f.secrets.masterPassword });
+  assert.equal((await f.get("/status", renewed.accessToken)).body.stale, true);
 });
 test("missing/dirty schema returns503 while auth/public stay ready and source errors stay explicit", async (t) => {
   const f = await setup(t, false);
@@ -118,7 +123,7 @@ test("missing/dirty schema returns503 while auth/public stay ready and source er
   assert.equal(status.status, 200);
   assert.equal(status.body.state, "never");
   await f.pool.query(
-    "INSERT INTO access_log_sources(id,basename,transport,prefix_sha256,state,error_code) VALUES (UUID(),'safe-Nov-2026.gz','https',REPEAT('0',64),'error','SOURCE_DIVERGED')",
+    "INSERT INTO access_log_sources(id,basename,transport,prefix_sha256,state,error_code) VALUES (UUID(),'safe-Nov-2026.gz','https',REPEAT('0',64),'diverged','SOURCE_DIVERGED')",
   );
   const failed = await f.get("/status");
   assert.equal(failed.body.state, "error");

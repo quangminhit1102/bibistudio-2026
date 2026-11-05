@@ -12,6 +12,7 @@ const {
   verifyReleaseProbe,
 } = require("./database-lifecycle.cjs");
 const { verifyDatabaseAssets } = require("./database-metadata.cjs");
+const { verifyAccessLogAssets, checkAccessLogCompatibility } = require("./access-log-metadata.cjs");
 const execute = promisify(execFile);
 function inside(base, target) {
   const relative = path.relative(path.resolve(base), path.resolve(target));
@@ -219,6 +220,8 @@ async function activateRelease(config, id, hooks = {}) {
   }
   if (config.environment === "staging" && BigInt(manifest.ciRunId) < BigInt(highest))
     throw new Error("Refusing older staging release");
+  if (manifest.accessLogs)
+    await verifyAccessLogAssets(path.join(dir, "backend"), manifest.accessLogs);
   await (hooks.install ?? install)(config, dir);
   if (manifest.database) {
     if (oldManifest?.database)
@@ -316,6 +319,18 @@ async function rollbackRelease(config, id, hooks = {}) {
         manifest,
       );
       assertRollbackCompatible(manifest, schema);
+      if (manifest.accessLogs) {
+        await verifyAccessLogAssets(path.join(dir, "backend"), manifest.accessLogs);
+        checkAccessLogCompatibility(
+          manifest.accessLogs,
+          await (hooks.databaseStatus ?? runDatabaseTool)(
+            config,
+            dir,
+            "access-log-status",
+            manifest,
+          ),
+        );
+      }
     } else {
       degradedAdmin = assertRollbackCompatible(manifest, null, {
         allowPreAuth: config.preAuthRollbackReleaseId === id,

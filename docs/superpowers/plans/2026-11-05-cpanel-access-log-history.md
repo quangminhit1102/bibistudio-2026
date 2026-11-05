@@ -1,5 +1,9 @@
 # cPanel Access Log History Implementation Plan
 
+> **Owner change05/11 (overrides daily cadence below):** owner requests faster non-realtime updates and a reload button, delegates interval choice. Use one15minute scheduled check (`*/15 * * * *`), reload reads DB only. Historical Task1–6 records remain unchanged. Task7/9 cadence and UI wording change to15minute checks; no timezone conversion needed. Actual source freshness must be measured with marked requests; do not claim15minute data freshness from a scheduler or stale daily archive. Current-file ingestion is not implicitly authorized by this plan without a verified rotation/reconciliation design; keep this as an explicit live acceptance gate.
+
+> **Selected design update:** owner chose separate “Log mới / Lịch sử archive”, default Log mới. Implement Task10 below before completing Tasks7–9. Current mode is an atomic full-file snapshot cache, archive remains the persistent history; no rotation reconciliation or cross-source dedup. Spec addendum defines this scope. Feature migration/metadata becomes2..2, core4 unchanged. All Task7 feature1 assertions must now use2 and both migration checksums; existing1/2 manifest compatibility remains.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Đồng bộ toàn bộ archive log BiBi còn có nguồn vào MySQL mỗi ngày, giữ lịch sử độc lập cPanel và xem trong trang Khách truy cập.
@@ -163,3 +167,15 @@
 ## Plan self-review
 
 Coverage: spec1–3→constraints/Task5–6;4–5→Task2–4/9;6→Task1–2/7–9;7→Task5–6/8;8→Task4/7–9;9→Task8–9; owner choices10→constraints/Task6–7/9. Shared interface names/fields above are used across parser, repository, importer, API and UI; no undeclared schema5 or gateway dependency. All5 Review Focus conditions have explicit owning tests. Every implementation task has a meaningful RED run, exact code interface, GREEN run and commit. Task9 is external acceptance, not a code implementation/test shortcut.
+
+### Task 10: Current-file snapshot cache and source scope (owner frequency update)
+
+**Files:** create backend/access-log-migrations/002_current_cache.sql, backend/src/access-logs/current-snapshot.ts, current-cache.ts, current-read-service.ts; tests backend/test/access-log-current.test.mjs. Modify schema.ts table allowlist, config/types/CLI, local setup/example, read routes, frontend API/page/tests, feature metadata and release tests/fixtures.
+**Interfaces:** optional config.currentDirectory is canonical fixed domain files; production probe requires it. captureCurrentLogs(config,signal) produces private durable snapshots; syncCurrentLogs({pool,config,clock,signal}) returns count-only state receipt. Current cache has two source rows with active_snapshot_id; staged records keyed(snapshot_id,ordinal). read API scope=current|archive defaults current; same Page/Record/Status DTOs, never mixed totals. Existing archive service remains independently testable. CLI shares one120second deadline across archive and current, one fixed scheduled command. Current queue derives from workDirectory sibling, combined quota512MiB.
+
+- [ ] RED migration/current capture tests: exact two files only, canonical directory/no symlink, source append allowed with frozen prefix, truncate/rewrite detected, quota/deadline bounded, private snapshots retained after interruption and source disappearance.
+- [ ] RED real MariaDB cache tests:1205rows/page13=5, duplicate physical lines retained, malformed/tail marker, stage interruption leaves old active rows/count, rerun no duplicates, pointer/count publish atomic, unchanged file keeps IDs, rotation/full rewrite replaces only cache while archive rows remain, per-source failure preserves prior cache, no raw IP/query/UA stored. Actual schema2 independent of auth4; old e725 factory ready with all feature tables.
+- [ ] Observe missing implementation failures; implement snapshot/cache modules with DML pool1 and dedicated named lock; only publish after full snapshot validation/count; purge inactive derived cache rows only after successful pointer transaction.
+- [ ] RED API/UI tests scope validation, default current, change filter resets pagination/selection, identical list/status scopes, archive>1000 unchanged, active detail404 after replacement, source error distinct from empty, no guessed identities. Implement server delegation and existing-table/primitives source selector.
+- [ ] Explicit local setup migrates002, creates/imports text and gzip synthetic sources. Metadata2 hashes001/002; stage/rollback/native backup tests cover cache tables, archive rows and auth revocations. Production probe checks both modes privately and current config; HTTP restricted probe403 remains.
+- [ ] Run new+existing parser/schema/importer/CLI/API/UI/release/cache/backup tests, lint/typecheck and local setup. Update spec/operations and ledger with actual results. Commit feat: cache current cPanel logs for fifteen minute updates. Resume Task7 full gate, then8/9 unchanged live proof requirements.

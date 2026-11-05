@@ -93,9 +93,9 @@ test("default log mode pages full history, keeps filters, safely renders text an
   routing.search = {};
   const f = mount({ pending: true });
   expect((await screen.findAllByText(/1.205 bản ghi|1205 bản ghi/)).length).toBeGreaterThan(0);
-  expect(screen.getByText("Đồng bộ hằng ngày")).toBeInTheDocument();
+  expect(screen.getByText("Kiểm tra cập nhật mỗi 15 phút")).toBeInTheDocument();
   expect(screen.getByText(/Chưa đồng bộ đủ/)).toBeInTheDocument();
-  expect(screen.getByText(/Quá 36 giờ/)).toBeInTheDocument();
+  expect(screen.getByText(/Quá 45 phút/)).toBeInTheDocument();
   expect(document.querySelector("script")).toBeNull();
   fireEvent.change(screen.getByLabelText("Từ ngày (UTC)"), { target: { value: "2026-11-01" } });
   await vi.waitFor(() =>

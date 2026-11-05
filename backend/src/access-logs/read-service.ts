@@ -125,7 +125,7 @@ export function createAccessLogReadService(pool: Pool, clock: Clock) {
       const last = runs[0];
       const finished = iso(last?.finished_at);
       const state =
-        sources.some((row) => row.state === "error") || last?.state === "error"
+        sources.some((row) => ["error", "diverged"].includes(row.state)) || last?.state === "error"
           ? "error"
           : sources.some((row) => row.state === "pending") || last?.state === "pending"
             ? "pending"
@@ -141,7 +141,7 @@ export function createAccessLogReadService(pool: Pool, clock: Clock) {
         lastSyncAt: finished,
         lastSuccessAt: iso(successes[0]?.finished_at),
         sourceThrough: iso(last?.source_through),
-        stale: !finished || +clock.now() - Date.parse(finished) > 36 * 3600000,
+        stale: !finished || +clock.now() - Date.parse(finished) > 45 * 60000,
         lastRun: last
           ? {
               state: last.state,

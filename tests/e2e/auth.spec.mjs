@@ -8,6 +8,9 @@ import { chromium } from "playwright";
 import { createAuthFixture } from "../../backend/test/helpers/auth.mjs";
 import { createRuntime } from "../../backend/dist/runtime.js";
 import { startServer } from "../../backend/dist/server.js";
+import { archiveFixture, accessLogLine } from "../../backend/test/helpers/access-logs.mjs";
+import { migrateAccessLogs } from "../../backend/dist/access-logs/schema.js";
+import { syncAccessLogArchives } from "../../backend/dist/access-logs/importer.js";
 async function capture(page, path) {
   await page.waitForFunction(() =>
     document
@@ -28,6 +31,20 @@ test(
     const cleanup = [];
     const f = await createAuthFixture({ after: (fn) => cleanup.push(fn) });
     f.clock.set(new Date());
+    const archive = await archiveFixture({ after: (fn) => cleanup.push(fn) });
+    await migrateAccessLogs(f.pool, resolve("backend/access-log-migrations"));
+    await archive.write([accessLogLine()]);
+    assert.equal(
+      (
+        await syncAccessLogArchives({
+          pool: f.pool,
+          config: archive.config,
+          clock: f.clock,
+          signal: AbortSignal.timeout(120000),
+        })
+      ).state,
+      "complete",
+    );
     let runtime, backend, frontend, browser;
     const username = `bt_${randomBytes(8).toString("hex")}`;
     const password = randomBytes(24).toString("hex");
@@ -47,6 +64,9 @@ test(
           AUTH_JWT_SECRET: f.config.jwtSecret,
           AUTH_ALLOWED_ORIGINS: "http://127.0.0.1:1",
           ANALYTICS_ID_SECRET: randomBytes(32).toString("hex"),
+          ACCESS_LOG_ARCHIVE_DIR: archive.config.archiveDirectory,
+          ACCESS_LOG_DOMAIN_ALIAS: archive.config.domainAlias,
+          ACCESS_LOG_WORK_DIR: archive.config.workDirectory,
         },
         f.clock,
       );
@@ -82,14 +102,20 @@ test(
       const page = await context.newPage();
       const errors = [];
       page.on("pageerror", (error) => errors.push(error.message));
-      const collection = page.waitForResponse(
-        (response) =>
-          response.url().endsWith("/api/analytics/collect") && response.status() === 204,
-        { timeout: 60000 },
-      );
+      const collection = page
+        .waitForResponse(
+          (response) =>
+            response.url().endsWith("/api/analytics/collect") && response.status() === 204,
+          { timeout: 60000 },
+        )
+        .then(
+          () => null,
+          (error) => error,
+        );
       await page.goto(base + "/products/da-lat-map-notebook");
       await page.getByRole("heading", { level: 1 }).waitFor();
-      await collection;
+      const collectionError = await collection;
+      if (collectionError) throw collectionError;
       const [[visitor]] = await f.pool.query(
         "SELECT COUNT(*) n FROM visitor_viewed_products WHERE product_slug='da-lat-map-notebook'",
       );
@@ -99,6 +125,12 @@ test(
       await page.getByLabel("Mật khẩu", { exact: true }).fill(f.secrets.userPassword);
       await page.getByRole("button", { name: "Đăng nhập", exact: true }).click();
       await page.getByRole("heading", { name: "Khách truy cập", exact: true }).waitFor();
+      await page
+        .getByRole("heading", { name: "Kiểm tra cập nhật mỗi 15 phút", exact: true })
+        .waitFor();
+      await page.getByText("1 bản ghi", { exact: true }).first().waitFor();
+      await capture(page, resolve(evidence, "user-access-logs-mobile.png"));
+      await page.getByRole("button", { name: "Khách và sản phẩm", exact: true }).click();
       await page.getByText("Sổ tay bản đồ Đà Lạt · 1 khách", { exact: true }).waitFor();
       assert.equal(
         await page
@@ -109,7 +141,10 @@ test(
       );
       await capture(page, resolve(evidence, "user-visitors-mobile.png"));
       await page.getByRole("button", { name: /^Xem KH-/ }).click();
-      await page.getByRole("dialog", { name: "Chi tiết khách truy cập" }).getByText("Sổ tay bản đồ Đà Lạt", { exact: true }).waitFor();
+      await page
+        .getByRole("dialog", { name: "Chi tiết khách truy cập" })
+        .getByText("Sổ tay bản đồ Đà Lạt", { exact: true })
+        .waitFor();
       await capture(page, resolve(evidence, "visitor-interest-mobile.png"));
       await page.keyboard.press("Escape");
       assert.equal(
@@ -146,8 +181,14 @@ test(
       await admin.getByLabel("Mật khẩu", { exact: true }).fill(f.secrets.masterPassword);
       await admin.getByRole("button", { name: "Đăng nhập", exact: true }).click();
       await admin.getByRole("heading", { name: "Bảng điều khiển", exact: true }).waitFor();
-      await admin.locator(".a-kpis .a-card").filter({ hasText: "Tài khoản" }).getByText("2", { exact: true }).waitFor();
-      await admin.getByRole("figure", { name: "Doanh thu ghi nhận theo ngày", exact: true }).waitFor();
+      await admin
+        .locator(".a-kpis .a-card")
+        .filter({ hasText: "Tài khoản" })
+        .getByText("2", { exact: true })
+        .waitFor();
+      await admin
+        .getByRole("figure", { name: "Doanh thu ghi nhận theo ngày", exact: true })
+        .waitFor();
       await capture(admin, resolve(evidence, "admin-dashboard-desktop.png"));
       await admin.goto(base + "/admin/accounts/users");
       await admin.getByRole("button", { name: "Tạo tài khoản", exact: true }).click();

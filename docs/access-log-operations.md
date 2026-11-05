@@ -1,10 +1,12 @@
 # Nhật ký cPanel trong admin BiBi
 
-Trạng thái05/11: parser, schema riêng và importer đang được triển khai/test local. Chưa có API/UI, cron hoặc release production cho feature này. Không suy ra đã import hosting từ tests synthetic.
+Trạng thái05/11: parser, schema riêng, importer, API phân quyền và giao diện đã qua test local theo từng phần. Tooling artifact3, cron và rollback đang kiểm chứng; chưa phát hành production cho feature này. Không suy ra đã import hosting từ tests synthetic.
 
 ## Cách hoạt động
 
-Một cron Node24 nhập archive Raw Access của riêng BiBi mỗi ngày vào MySQL; UI sẽ xem dữ liệu DB, không scrape Visitors và không cap1000 dòng. Current log đang ghi không được nhập song song để tránh trùng với archive. Một record là một HTTP request, có thể là API/ảnh/bot; không phải một người hoặc phiên.
+Một cron Node24 kiểm tra/import mỗi15 phút theo yêu cầu cập nhật mới của owner; UI xem dữ liệu DB, không scrape Visitors và không cap1000 dòng. Nút Tải lại chỉ đọc lại DB. Archive vẫn phụ thuộc chu kỳ hosting khoảng24giờ; không tuyên bố lịch kiểm tra15phút làm archive mới hơn. Current log đang được khảo sát để bổ sung phạm vi dữ liệu mới riêng, tránh đếm trùng với archive. Một record là một HTTP request, có thể là API/ảnh/bot; không phải một người hoặc phiên.
+
+Ngày05/11 đã tạo request đánh dấu trên API/trang sản phẩm và thấy chúng trong current log sau khoảng9phút. Đây là số đo thử, chưa là cam kết độ trễ tối đa. Đã lưu mốc hash/byte archive riêng ngoài webroot để đối chiếu sau lần cập nhật archive thật; gate prefix này còn chờ. API báo stale khi quá45phút chưa có lần chạy, tách biệt với thời gian mới nhất của nguồn.
 
 Giữ dữ liệu đã nhập kể cả cPanel xóa nguồn. Không tự purge bảng log theo90 ngày. Không thể phục hồi archive đã mất trước khi importer đọc. Thời điểm dữ liệu mới nhất phụ thuộc lần cPanel archive, không hứa luôn đủ đến nửa đêm hôm qua. IP nguồn chưa được Tino sửa thì vẫn là giá trị webserver ghi, chỉ được che trước lưu; không dùng làm định danh khách hoặc thay network rate limit auth.
 
