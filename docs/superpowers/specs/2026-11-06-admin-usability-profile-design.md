@@ -1,6 +1,6 @@
 # Hoàn thiện thao tác admin và hồ sơ cá nhân
 
-Trạng thái: bản thiết kế chờ owner duyệt, chưa phải lệnh triển khai. Owner chọn chia hai đợt; chưa cần tự đổi username hoặc mật khẩu. Code hiện tại React/TanStack/Express/MySQL trên cPanel; giữ architecture, tiếng Việt, giao diện tối giản và bundle nhẹ.
+Trạng thái: owner đã duyệt thiết kế và bản phác thảo tương tác ngày06/11; bước tiếp theo là lập/review plan đợt1, chưa triển khai code. Owner chọn chia hai đợt; chưa cần tự đổi username hoặc mật khẩu. Code hiện tại React/TanStack/Express/MySQL trên cPanel; giữ architecture, tiếng Việt, giao diện tối giản và bundle nhẹ.
 
 ## Mục tiêu và giới hạn
 
