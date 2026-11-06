@@ -5,7 +5,7 @@ import { mkdir, writeFile, unlink } from "node:fs/promises";
 import { resolve, join } from "node:path";
 import { createServer as createViteServer } from "vite";
 import { chromium } from "playwright";
-import { createAuthFixture } from "../../backend/test/helpers/auth.mjs";
+import { createProfileAuthFixture as createAuthFixture } from "./helpers/profile-fixture.mjs";
 import { archiveFixture, accessLogLine } from "../../backend/test/helpers/access-logs.mjs";
 import { migrateAccessLogs } from "../../backend/dist/access-logs/schema.js";
 import { syncAccessLogs } from "../../backend/dist/access-logs/sync-service.js";
@@ -56,6 +56,7 @@ test(
       );
       runtime = createRuntime(
         {
+          ...f.profileEnv,
           DB_HOST: f.dbConfig.host,
           DB_PORT: String(f.dbConfig.port),
           DB_NAME: f.dbConfig.database,

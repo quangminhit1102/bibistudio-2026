@@ -103,3 +103,15 @@ Editor bài viết và mô tả sản phẩm có menu tiếng Việt Sửa/Chèn
 Chèn/sửa ảnh qua thư viện hiện có; ô chiều rộng nhận16–4096px hoặc để trống. Kích thước kéo trong editor được lưu thành chiều rộng; chiều cao luôn tự động để giữ tỉ lệ và ảnh co lại trên mobile. Bảng, màu và các định dạng được lọc theo whitelist khi lưu, không cho CSS vị trí tùy ý hoặc ảnh/iframe bên ngoài. Màu/định dạng dán từ phần mềm khác có thể được TinyMCE chuẩn hóa; dùng công cụ Định dạng để áp dụng lại.
 
 Chỉ nạp plugin cộng đồng từ package TinyMCE đã cài, không thêm dependency, CDN hoặc API key. Thư mục vendor và mã nguồn TinyMCE có version, giấy phép và thông báo đi kèm như hướng dẫn build/deploy. Dữ liệu admin vẫn nằm trong trình duyệt; đưa UI lên hosting không biến nó thành CMS dùng chung hay cập nhật bài public.
+
+## Hồ sơ cá nhân và ảnh đại diện (đợt06/11, local)
+
+Người dùng đang hoạt động có thể mở **Hồ sơ** từ menu tài khoản trên header hoặc cuối sidebar, kể cả chỉ có quyền Khách truy cập hoặc chưa được gán vai trò. Trang chỉ sửa tên hiển thị, email, số điện thoại và ảnh của chính mình; tên đăng nhập/vai trò không sửa tại đây. Admin+User cộng quyền theo RBAC, không bị hạ về quyền User. Master Admin vẫn chỉ đọc và được backend bảo vệ.
+
+Nút lưu chỉ bật khi thông tin đã thay đổi. Hoàn tác đưa form về dữ liệu đã tải; lỗi lưu/xung đột không xóa bản nháp. Khi có xung đột, **Tải lại dữ liệu** là thao tác chủ động bỏ bản nháp để lấy bản mới. Ảnh được lưu riêng: chọn ảnh chỉ xem trước, bấm **Lưu ảnh** mới upload; **Hủy chọn ảnh** bỏ ảnh chưa lưu; **Xóa ảnh** gỡ ảnh đang dùng. Lưu/hoàn tác phần thông tin trước khi đổi ảnh để tránh xung đột revision.
+
+Số điện thoại không bắt buộc, giữ số0 đầu, không tự suy luận mã quốc gia. Nhận7–15chữ số và dấu+ ở đầu; bỏ khoảng trắng, dấu gạch và ngoặc. Ảnh nhận JPEG/PNG8bit không interlace, tối đa2MiB/16MP; đầu ra tối đa512×512, giữ tỷ lệ, loại metadata. Ảnh chỉ tải qua phiên đăng nhập; header/sidebar cập nhật sau khi lưu và khôi phục khi tải lại trang.
+
+Quản lý tài khoản có thêm số điện thoại. Sau khi tạo tài khoản, mở chi tiết tài khoản để thêm ảnh; lỗi thêm ảnh không làm mất tài khoản đã tạo. Quyền quản lý tài khoản khác vẫn dùng `account.view`/`account.update`; quyền tự sửa hồ sơ không cấp quyền quản lý tài khoản.
+
+Cấu hình/backup/rollback xem [vận hành hồ sơ](admin-profile-operations.md). Đây là nghiệm thu local; production cần đợt phát hành được duyệt riêng.

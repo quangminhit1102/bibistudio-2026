@@ -3,7 +3,9 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { AccountMenu } from "../../src/features/admin/shell/account-menu";
 const logout = vi.fn();
-vi.mock("../../src/features/admin/services/context", () => ({ useAdmin: () => ({ logout }) }));
+vi.mock("../../src/features/admin/services/context", () => ({
+  useAdmin: () => ({ logout, session: { userId: "user-1", roleId: "super-admin" } }),
+}));
 vi.mock("@tanstack/react-router", () => ({ useNavigate: () => vi.fn() }));
 vi.mock("../../src/features/admin/accounts/account-avatar", () => ({
   ProfileAvatar: () => <span>MN</span>,

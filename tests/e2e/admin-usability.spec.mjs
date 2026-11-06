@@ -5,7 +5,7 @@ import { mkdir } from "node:fs/promises";
 import { resolve } from "node:path";
 import { createServer as createViteServer } from "vite";
 import { chromium } from "playwright";
-import { createAuthFixture } from "../../backend/test/helpers/auth.mjs";
+import { createProfileAuthFixture as createAuthFixture } from "./helpers/profile-fixture.mjs";
 import { createRuntime } from "../../backend/dist/runtime.js";
 import { startServer } from "../../backend/dist/server.js";
 
@@ -28,6 +28,7 @@ test(
       );
       runtime = createRuntime(
         {
+          ...f.profileEnv,
           DB_HOST: f.dbConfig.host,
           DB_PORT: String(f.dbConfig.port),
           DB_NAME: f.dbConfig.database,

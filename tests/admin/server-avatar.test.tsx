@@ -17,6 +17,7 @@ it("choosing an image only previews; explicit save uploads, metadata dirty block
     saved = vi.fn();
   const user = { ...profile, phone: null, avatarId: null };
   const view = render(<AvatarEditor user={user} api={api} onSaved={saved} metadataDirty={false} />);
+  expect(screen.getByRole("button", { name: "Chọn ảnh" })).toBeEnabled();
   fireEvent.change(screen.getByLabelText("Chọn ảnh đại diện"), {
     target: { files: [new File(["png"], "a.png", { type: "image/png" })] },
   });

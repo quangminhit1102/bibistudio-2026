@@ -88,3 +88,23 @@ Tracker gom dirty data15 giây, chunk50/15KiB, memory tối đa200 trang/100 s�
 GET `/api/customer-access`, `/filter-options`, `/report`, `/:id`, `/:id/sessions` đều cần `customer_access.view`. List lọc search/deviceType/browser/product và pagination. Detail chỉ đọc, báo số trang khác nhau và trang nhận gần nhất. Report đếm khách khác nhau quan tâm từng sản phẩm. Dữ liệu probe có chữ ký release riêng bị loại khỏi mọi list/detail/report/options; marker hết hạn24 giờ, không có HTTP endpoint đọc kết quả probe.
 
 Retention90 ngày thực hiện bằng lệnh cleanup có giới hạn; counter/số association được tính lại sau cleanup. Không xóa auth session, account, audit hay các dấu revoke khi dọn analytics. Dashboard dùng report/account total trên server; các module sản phẩm, bài viết, media, khách mua hàng, phiếu và báo cáo kinh doanh vẫn giữ lưu trữ local như trước.
+
+## Profile feature1 (local, chưa phát hành hosting)
+
+Identity schema vẫn4. Feature migration tại `backend/profile-migrations/001_profiles.sql`, ledger riêng `profile_schema_migrations`. Khi manifest4 yêu cầu profile mà cấu hình/migration không sẵn sàng, `/api/ready` trả503. Không tự migrate lúc khởi động.
+
+| Endpoint | Quyền và dữ liệu |
+| --- | --- |
+| `GET /api/profile` | Mọi active session, chỉ chính mình; PrincipalDto + `phone`, `avatarId` nullable |
+| `PATCH /api/profile` | Mọi active non-Master, strict body `{revision, displayName?, email?, phone?}`; không username/password/role/active/targetId |
+| `PUT /api/profile/avatar` | Ảnh binary JPEG/PNG; Bearer + Origin + X-Bibi-Request; `If-Match: "<revision>"` bắt buộc |
+| `DELETE /api/profile/avatar` | Gỡ ảnh chính mình, cùng header/revision; ảnh cũ được retire, không xóa file ngay |
+| `GET /api/profile/avatar/:assetId` | Bearer; chỉ ảnh hiện tại; `private, no-store` |
+| `PUT/DELETE /api/accounts/:id/avatar` | `account.update`, non-Master target, cùng revision/Origin |
+| `GET /api/accounts/:id/avatar/:assetId` | `account.view`; không trả path nội bộ |
+
+Account create/update thêm `phone?: string|null`. Nếu client không gửi phone, các trường cũ giữ hợp đồng tương thích. Session/profile refresh phản ánh phone/avatar metadata; avatar bytes không nằm trong JWT/DB/localStorage. Access token vẫn chỉ trong memory; private image dùng fetch Blob và ObjectURL được thu hồi khi đổi ảnh/logout/unmount. Upload và JSON dùng chung refresh-singleflight/epoch guard; không replay mutation từ phiên cũ sang user khác.
+
+Lỗi chính:400 input,401 phiên,403 permission/Master/Origin,404 ảnh không còn hiện tại,409 revision,413>2MiB,415 định dạng,428 thiếu If-Match,429 worker/rate/quota,503 schema/storage/commit không rõ kết quả. Khi mất phản hồi commit, tải lại hồ sơ để biết trạng thái trước khi thử lại; không tự xóa file có thể đã được DB tham chiếu. Audit chỉ ghi changedFields/assetIds, không email/phone/bytes/token.
+
+Mỗi actor10upload/15phút (DB), một worker/process5giây; mỗi user tối đa128asset metadata/64MiB giữ lại. Xem [vận hành và giới hạn hosting](admin-profile-operations.md).

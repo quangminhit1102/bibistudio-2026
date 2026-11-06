@@ -8,6 +8,8 @@ Staging tạm ngừng theo yêu cầu người dùng. YAML được giữ tại 
 
 Trạng thái website hiện tại phải đọc từ [API version](https://bibistudio.vn/api/version) hoặc [API test](https://bibistudio.vn/api-test), đối chiếu với run GitHub. Không suy luận website đã cập nhật chỉ từ một build thành công.
 
+**Profile đợt2 (local):** hồ sơ tự phục vụ, phone/avatar, feature schema1 và manifest4, backup DB+ảnh có isolated restore. Chưa push/deploy/cấu hình cPanel. Khi nâng cấp source này, chạy lại `npm run db:setup:local` một lần; lệnh develop hằng ngày không đổi. Receiver3 không nhận manifest4; xem [vận hành hồ sơ](admin-profile-operations.md) trước mọi phát hành.
+
 ## 1. Ba lệnh local
 
 **Usability06/11 đã kiểm chứng local:** sửa màn edit phiếu bị chờ role local trong HTTP session, dirty guard sản phẩm/bài viết, tooltip sidebar thu gọn, trạng thái chỉ đọc và badge semantic. Không đổi DB schema/RBAC và chưa push/deploy. Xem [biên bản đợt1](superpowers/reports/2026-11-06-admin-usability-wave1-acceptance.md); các biên bản production bên dưới vẫn chỉ áp dụng release cũ.

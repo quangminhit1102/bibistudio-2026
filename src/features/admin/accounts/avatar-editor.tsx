@@ -90,12 +90,18 @@ export function AvatarEditor({
         )}
         {!locked && (
           <div>
-            <label>
-              Chọn ảnh đại diện
+            <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+              <Button type="button" disabled={disabled} onClick={() => input.current?.click()}>
+                Chọn ảnh
+              </Button>
+              <span className="a-muted" role="status" style={{ overflowWrap: "anywhere" }}>
+                {file?.name ?? "Chưa chọn ảnh"}
+              </span>
               <input
                 ref={input}
                 aria-label="Chọn ảnh đại diện"
                 type="file"
+                hidden
                 accept="image/jpeg,image/png"
                 disabled={disabled}
                 onChange={(e) => {
@@ -113,7 +119,7 @@ export function AvatarEditor({
                   setFile(next);
                 }}
               />
-            </label>
+            </div>
             <p className="a-muted">
               JPEG/PNG, tối đa 2 MiB và 16 triệu điểm ảnh. Ảnh được thu về tối đa 512 × 512.
             </p>
