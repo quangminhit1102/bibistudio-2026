@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import type { AppOptions } from "./app";
-import { readAuthConfig, readDbConfig, systemClock, type Clock } from "./config";
+import { readAuthConfig, readDbConfig, readProfileConfig, systemClock, type Clock } from "./config";
 import { createDbPool } from "./db/pool";
 import { createCatalogue } from "./visitors/catalogue";
 import { accessLogConfigured } from "./access-logs/config";
@@ -11,6 +11,7 @@ export function createRuntime(env: NodeJS.ProcessEnv = process.env, clock: Clock
   const config = readAuthConfig(env);
   const database = readDbConfig(env);
   const logEnabled = accessLogConfigured(env);
+  const profiles = readProfileConfig(env);
   if (
     !env.ANALYTICS_ID_SECRET ||
     Buffer.byteLength(env.ANALYTICS_ID_SECRET) < 32 ||
@@ -27,6 +28,9 @@ export function createRuntime(env: NodeJS.ProcessEnv = process.env, clock: Clock
     db,
     config,
     clock,
+    ...(profiles
+      ? { profiles: { ...profiles, schemaDirectory: resolve(__dirname, "../profile-migrations") } }
+      : {}),
     ...(logEnabled
       ? {
           accessLogs: {

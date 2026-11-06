@@ -16,6 +16,9 @@ import { analyticsRoutes, type AnalyticsOptions } from "./visitors/routes";
 import { visitorReadRoutes } from "./visitors/private-routes";
 import { createVisitorService } from "./visitors/service";
 import { accessLogRoutes } from "./access-logs/routes";
+import { profileRoutes } from "./profile/routes";
+import { createProfileService } from "./profile/service";
+import { profileSchemaStatus } from "./profile/schema";
 
 export interface AppOptions {
   db?: Pool;
@@ -23,6 +26,7 @@ export interface AppOptions {
   clock?: Clock;
   analytics?: AnalyticsOptions;
   accessLogs?: { pool: Pool; schemaDirectory: string; currentEnabled?: boolean };
+  profiles?: { schemaDirectory: string; assetDirectory: string };
 }
 
 export function createApp(release: ReleaseInfo, options: AppOptions = {}): Express {
@@ -109,8 +113,32 @@ export function createApp(release: ReleaseInfo, options: AppOptions = {}): Expre
       master.n !== 1
     )
       throw new ApiError(503, "NOT_READY", "Dịch vụ chưa sẵn sàng");
+    if (options.profiles) {
+      try {
+        if (
+          (await profileSchemaStatus(options.db, options.profiles.schemaDirectory)).state !==
+          "complete"
+        )
+          throw new Error("profile schema not ready");
+      } catch {
+        throw new ApiError(503, "PROFILE_NOT_READY", "Dịch vụ hồ sơ chưa sẵn sàng");
+      }
+    }
     res.json({ ok: true });
   });
+  if (auth && authConfig && options.db && options.profiles) {
+    app.use(
+      "/api/profile",
+      profileRoutes(
+        createProfileService({ pool: options.db, clock: options.clock ?? systemClock }),
+        auth,
+        authConfig,
+      ),
+    );
+  } else
+    app.use("/api/profile", () => {
+      throw new ApiError(503, "PROFILE_NOT_READY", "Dịch vụ hồ sơ chưa sẵn sàng");
+    });
   if (auth && authConfig && options.db)
     app.use(
       "/api/auth",

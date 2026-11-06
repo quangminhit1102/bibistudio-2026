@@ -1,3 +1,11 @@
+import { isAbsolute } from "node:path";
+export function readProfileConfig(env: NodeJS.ProcessEnv): { assetDirectory: string } | undefined {
+  const root = env.PROFILE_ASSET_DIR;
+  if (root === undefined) return undefined;
+  if (!root || root !== root.trim() || !isAbsolute(root))
+    throw new Error("Invalid private profile asset directory");
+  return { assetDirectory: root };
+}
 export interface Clock {
   now(): Date;
 }

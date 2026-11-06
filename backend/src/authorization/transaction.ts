@@ -9,10 +9,19 @@ import { assertPermission } from "./permissions";
 export async function withRbacWrite<T>(
   pool: Pool,
   work: (connection: PoolConnection) => Promise<T>,
+  options: { profileAssets?: boolean } = {},
 ): Promise<T> {
   const connection = await pool.getConnection();
   let locked = false;
+  let profileLocked = false;
   try {
+    if (options.profileAssets) {
+      const [[profileLock]] = await connection.query<RowDataPacket[]>(
+        "SELECT GET_LOCK(CONCAT('bibi-profile-assets:',LEFT(SHA2(DATABASE(),256),32)),5) acquired",
+      );
+      if (profileLock.acquired !== 1) throw new ApiError(503, "WRITE_BUSY", "Vui lòng thử lại sau");
+      profileLocked = true;
+    }
     const [[lock]] = await connection.query<RowDataPacket[]>(
       "SELECT GET_LOCK(CONCAT('bibi-rbac:',LEFT(SHA2(DATABASE(),256),32)),10) acquired",
     );
@@ -32,7 +41,14 @@ export async function withRbacWrite<T>(
           "SELECT RELEASE_LOCK(CONCAT('bibi-rbac:',LEFT(SHA2(DATABASE(),256),32)))",
         );
     } finally {
-      connection.release();
+      try {
+        if (profileLocked)
+          await connection.query(
+            "SELECT RELEASE_LOCK(CONCAT('bibi-profile-assets:',LEFT(SHA2(DATABASE(),256),32)))",
+          );
+      } finally {
+        connection.release();
+      }
     }
   }
 }

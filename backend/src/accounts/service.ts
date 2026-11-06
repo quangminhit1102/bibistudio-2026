@@ -38,8 +38,7 @@ export function createAccountService({ pool, clock }: { pool: Pool; clock: Clock
     targetId: string | undefined,
     work: (connection: PoolConnection, principal: PrincipalDto, target?: UserRow) => Promise<T>,
   ): Promise<T> {
-    const transaction = code === "account.view" ? withTransaction : withRbacWrite;
-    return transaction(pool, async (connection) => {
+    const job = async (connection: PoolConnection) => {
       const { users, principal } = await lockAuthorizedUsers(
         connection,
         actor,
@@ -51,7 +50,12 @@ export function createAccountService({ pool, clock }: { pool: Pool; clock: Clock
       if (targetId && (!target || target.deleted_at))
         throw new ApiError(404, "NOT_FOUND", "Không tìm thấy tài khoản");
       return work(connection, principal, target);
-    });
+    };
+    return code === "account.view"
+      ? withTransaction(pool, job)
+      : withRbacWrite(pool, job, {
+          profileAssets: code === "account.create" || code === "account.update",
+        });
   }
   async function checkRoles(
     connection: PoolConnection,
