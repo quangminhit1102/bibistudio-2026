@@ -10,7 +10,7 @@ Dùng Node24 và Docker Desktop. Sau `npm ci`, chạy `npm run db:setup:local` m
 
 ## Biên tập Bài viết và Sản phẩm — local
 
-Đợt usability06/11 đang kiểm chứng local, chưa push/deploy: sidebar thu gọn có tooltip khi hover hoặc focus, Escape để đóng; form chỉ cảnh báo rời trang khi nội dung khác bản mở/lưu thành công. Hồ sơ Master hiển thị lý do bảo vệ, trường chỉ đọc vẫn focus/copy được. Nhãn trạng thái dùng xanh lá (thành công), đỏ (hủy/lỗi), vàng (cần chú ý), xanh dương (thông tin/VAT), tím (quyền/bảo vệ), xám (trung tính). Quyền Admin+User vẫn cộng dồn. Điện thoại/ảnh đại diện và tự sửa hồ sơ sẽ làm riêng trong đợt2, chưa có ở đợt này.
+Đợt usability06/11 đã kiểm chứng local, chưa push/deploy: sidebar thu gọn có tooltip khi hover hoặc focus, Escape để đóng; form chỉ cảnh báo rời trang khi nội dung khác bản mở/lưu thành công. Hồ sơ Master hiển thị lý do bảo vệ, trường chỉ đọc vẫn focus/copy được. Nhãn trạng thái dùng xanh lá (thành công), đỏ (hủy/lỗi), vàng (cần chú ý), xanh dương (thông tin/VAT), tím (quyền/bảo vệ), xám (trung tính). Quyền Admin+User vẫn cộng dồn. Điện thoại/ảnh đại diện và tự sửa hồ sơ sẽ làm riêng trong đợt2, chưa có ở đợt này.
 
 Hai màn tạo/sửa dùng **TinyMCE 8.10.1 tự host theo GPL**, do người dùng chọn và xác nhận ngày 03/11/2026. Không cần Tiny Cloud, API key hoặc CDN. Attribution, `license.md`, `notices.txt` và thông tin nguồn đi cùng asset; không thay đổi license của chính repository BiBi.
 

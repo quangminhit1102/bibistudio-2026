@@ -126,7 +126,7 @@ test(
       await tabletLink.focus();
       assert.equal(await page.getByRole("tooltip").count(), 0);
 
-      // A fresh random origin and browser context isolate all IndexedDB catalogue/business data.
+      // A fresh browser context isolates all IndexedDB catalogue/business data from user browsers.
       await go("/admin/sales/slips/PMH-2026-0002/edit?returnTo=%2Fadmin%2Fsales%2Fslips%3F");
       await heading("Chỉnh sửa phiếu mua hàng").waitFor();
       await page.getByRole("button", { name: "Hủy", exact: true }).click();

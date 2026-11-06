@@ -1,6 +1,6 @@
 # Admin usability đợt 1 — kiểm chứng
 
-Đang hoàn tất kiểm chứng local, chưa push hoặc deploy. Full check/build/budget và compiled preview đã đạt; review độc lập cuối còn chờ.
+Đợt1 đã hoàn tất kiểm chứng local, chưa push hoặc deploy. Bản đầu đã qua full check/build/budget và compiled preview; review độc lập phát hiện3regression đã sửa với test RED→GREEN. Toàn bộ check/build/budget và compiled preview sau sửa đều đạt tại source `e27102c`.
 
 ## Các bản sửa và bằng chứng
 
@@ -10,19 +10,44 @@
 - AccountForm: Master/view-only có lý do rõ, trường readonly vẫn focus/copy được; không cho submit thay đổi, Save của account thường chỉ bật khi dirty; Hủy/Quay lại không phụ thuộc dirty.3file9test đạt. Backend/RBAC không đổi.
 - Badge: semantic mapping theo domain/state, giá trị không biết về neutral; sáu palette hỗ trợ light/dark, không chỉ dựa vào màu.6file30test đạt. Inventory bên dưới.
 
-Browser acceptance dùng MariaDB test schema ngẫu nhiên + compiled Express + React/TinyMCE thật + Chromium. Trình duyệt/origin mới cô lập IndexedDB, không đọc DB hosting hoặc dữ liệu local người dùng. Đã qua deep-link và list→detail→edit phiếu, hai form create pristine/theme/revert/gõ thật, guard điều hướng và beforeunload, Master readonly, tooltip hover/focus/Escape/vị trí/cạnh viewport sau cuộn, menu mobile, badge light/dark. Text/background contrast cả6tone >=4.5:1; document không tràn ngang ở390px. Bài test dùng CSS font fallback bằng response font stylesheet rỗng để không phụ thuộc Google Fonts; không mock editor, route hoặc API nghiệp vụ.
+Browser acceptance dùng MariaDB test schema ngẫu nhiên + compiled Express + React/TinyMCE thật + Chromium. Browser context mới cô lập IndexedDB với trình duyệt người dùng, không đọc DB hosting hoặc dữ liệu local người dùng. Đã qua deep-link và list→detail→edit phiếu, hai form create pristine/theme/revert/gõ thật, guard điều hướng và beforeunload, Master readonly, tooltip hover/focus/Escape/vị trí/cạnh viewport sau cuộn, menu mobile, badge light/dark. Text/background contrast cả6tone >=4.5:1; document không tràn ngang ở390px. Bài test dùng CSS font fallback bằng response font stylesheet rỗng để không phụ thuộc Google Fonts; không mock editor, route hoặc API nghiệp vụ.
 
 Evidence local: `.superpowers/e2e/admin-usability/*.png` (1440×1000 và390×844); screenshot đợi chuyển cảnh hoàn tất, không dùng ảnh skeleton/transition. Mobile editor thực đã kiểm tra không tràn ngang.
 
-`npm run check` Node24 exit0:95file253test admin,209test API/tooling đạt +4skip dành cho Linux (flock/symlink/POSIX permissions), watcher phục hồi1test và3browser suite auth/access logs/usability đều đạt. Lint0error/10warning hiện có. Lượt đầu thất bại tại assertion E2E cũ còn tìm lời nhắc Master trước sửa và đòi disabled; đã cập nhật assertion enabled+noteditable+readonly theo thiết kế duyệt rồi chạy lại toàn bộ check đạt. Không hạ kiểm tra immutability backend.
+`npm run check` Node24 exit0:95file256test admin sau sửa review,209test API/tooling đạt +4skip dành cho Linux (flock/symlink/POSIX permissions), watcher phục hồi1test và3browser suite auth/access logs/usability đều đạt. Lint0error/10warning hiện có. Lượt đầu thất bại tại assertion E2E cũ còn tìm lời nhắc Master trước sửa và đòi disabled; đã cập nhật assertion enabled+noteditable+readonly theo thiết kế duyệt rồi chạy lại toàn bộ check đạt. Không hạ kiểm tra immutability backend.
 
-`npm run build` exit0 tạo release `local-2022d8bcf914ada7860938fc57ba9157615dcd4d`. `node scripts/admin-bundle-report.mjs` exit0: public initial JS gzip182985byte, delta8696byte so với baseline repo (giới hạn10240); CSS gzip11503byte, delta297byte (giới hạn2048). Manifest initial graph không chứa module admin. Vite vẫn cảnh báo chunk public >500kB như hiện tại; budget không vượt.
+`npm run build` exit0 tạo release `local-e27102cd49575ec06215b0842dd90c732d70d0b0`. `node scripts/admin-bundle-report.mjs` exit0: public initial JS gzip182977byte, delta8688byte so với baseline repo (giới hạn10240); CSS gzip11519byte, delta313byte (giới hạn2048). Manifest initial graph không chứa module admin. Vite vẫn cảnh báo chunk public >500kB như hiện tại; budget không vượt.
 
-Compiled preview `http://127.0.0.1:4199/admin` dùng DB develop loopback đã guard; không migrate/seed/reset dữ liệu. Edge thực: dashboard→PMH-2026-0002→Chỉnh sửa tải đầy đủ form; thu gọn sidebar và focus icon mở tooltip, Escape đóng; TinyMCE local trên create sản phẩm tải xong, rời form chưa sửa không bị hỏi; Hồ sơ Master hiện readonly và lý do khóa. Không lưu thay đổi dữ liệu nghiệp vụ trong lượt manual. Tab được giữ tại Hồ sơ cho owner review. Bằng chứng: `.superpowers/e2e/admin-usability/compiled-slip-tooltip.png`. Preview phục vụ sourceSHA2022d8b; các commit tài liệu/review sau đó không thay mã ứng dụng.
+Compiled preview `http://127.0.0.1:4199/admin` dùng DB develop loopback đã guard; không migrate/seed/reset dữ liệu. Edge thực: dashboard→PMH-2026-0002→Chỉnh sửa tải đầy đủ form; thu gọn sidebar và focus icon mở tooltip, Escape đóng; TinyMCE local trên create sản phẩm tải xong, rời form chưa sửa không bị hỏi; Hồ sơ Master hiện readonly và lý do khóa. Không lưu thay đổi dữ liệu nghiệp vụ trong lượt manual. Tab được giữ tại Hồ sơ cho owner review. Bằng chứng: `.superpowers/e2e/admin-usability/compiled-slip-tooltip.png`. Preview đã thay sang sourceSHA e27102cd49575ec06215b0842dd90c732d70d0b0 và đối chiếu /api/version. Sau reload Edge đã kiểm tra tooltip focus/Escape ở900px, khôi phục viewport desktop. Bằng chứng mới: `.superpowers/e2e/admin-usability/compiled-tablet-tooltip-final.png`. Commit tài liệu/chú thích sau e27102c không thay mã thực thi ứng dụng hoặc test.
 
 ## Phạm vi giữ lại
 
 Đợt2 theo spec đã duyệt mới thêm self-profile API/phone/avatar và quyền tự sửa hồ sơ. Admin+User vẫn là cộng quyền hợp lệ; không tự đổi role của user01 trên production. Không migration/schema/auth thay đổi trong đợt1. Các dữ liệu catalogue/bài viết/phiếu vẫn ở store trình duyệt như kiến trúc hiện tại.
+
+## Review độc lập và xử lý
+
+Một reviewer fresh-context đã review toàn bộ range76dd885..4ec83ef; không có Critical, có3Important và1Minor. Không dispatch lượt review thứ hai; các bản sửa được kiểm chứng bằng regression và full suite theo quy trình native.
+
+- Important: HTML TinyMCE chuẩn hóa xuống dòng giữa block làm Undo vẫn dirty. Unit RED đã tái hiện; actual seeded-editor còn cho thấy TinyMCE đổi thứ tự thuộc tính ảnh. Thêm regression RED cho thứ tự thuộc tính, chuẩn hóa chúng và whitespace ở ranh giới block. Vẫn giữ khác biệt inline/pre whitespace, media ID, alt, link, formatting. Unit và actual edit seeded post→gõ→Undo→rời trang đều GREEN.
+- Important: date seed `2026-08-25` và ISO `2026-08-24T17:00:00.000Z` là cùng ngày hiển thị Việt Nam nhưng bị so chuỗi khác. Regression RED; dùng `calendarDate` cùng UI; actual input đổi ngày rồi trả về ngày cũ, beforeunload và điều hướng GREEN.
+- Important: CSS rail768–1023px ẩn label nhưng React chưa collapsed nên không có focus tooltip. Browser900px RED; theo dõi đúng media query CSS để bật tooltip, không áp dụng cho mobile drawer. Browser900px focus/Escape và resize1440px GREEN.
+- Minor để lại: cache fingerprint baseline và rich body khi nhập trường khác, tránh parse/sanitize hai body mỗi render. Reviewer đo jsdom khoảng18ms/100đoạn; chưa đo browser, chưa chứng minh lỗi tương tác thực. Không ghép tối ưu chưa duyệt vào lượt fix. Chi phí: bài viết rất dài có thể tốn thêm CPU khi gõ.
+
+Quyết định phạm vi: self-profile API/phone/avatar/migrations/production role changes giữ đợt2 theo spec (chi phí: chưa có các khả năng này trong đợt1). Deploy/hosting/rollback đợt1 chưa thực hiện vì chỉ bàn giao local review (chi phí: phải kiểm chứng hosting ở lần phát hành được duyệt). Functional browser test dùng fallback font để tránh mạng ngoài; chi phí là test đó không chứng minh custom webfont, đã kiểm tra riêng compiled Edge bình thường. Main/admin modules được warmup trong harness, không tăng timeout để che lỗi UI.
+
+## Tệp thay đổi
+
+Các đường dẫn dưới đây tương đối với repository; inventory badge chi tiết ở phần sau.
+
+| Nhóm | Tệp |
+| --- | --- |
+| Loading phiếu | `src/features/admin/sales/pages/slip-editor.tsx` |
+| Dirty guard | `src/features/admin/shared/forms/compose-form.tsx`, `form-baseline.ts` |
+| Sidebar | `src/features/admin/shell/admin-layout.tsx`, `sidebar-navigation.tsx` |
+| Controls/Badge | `src/features/admin/accounts/account-form.tsx`, `shared/ui/primitives.tsx`, `shared/ui/status-badges.ts`, `admin.css`; call sites theo inventory bên dưới |
+| Regression | `tests/admin/slip-editor-route.test.tsx`, `form-baseline.test.ts`, `editor-unsaved-guard.test.tsx`, `sidebar-tooltips.test.tsx`, `status-badges.test.tsx`, `server-profile.test.tsx`, `server-account-ui.test.tsx` |
+| Browser/CI | `tests/e2e/admin-usability.spec.mjs`, `tests/e2e/auth.spec.mjs`, `scripts/auth-ui-check.mjs`, `.github/workflows/ci.yml` |
+| Tài liệu | `docs/admin.md`, `docs/build-and-deploy.md`, biên bản này; spec/plan đã duyệt trong `docs/superpowers/` |
 
 ## Inventory badge trước sửa (Task5)
 

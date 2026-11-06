@@ -10,7 +10,7 @@ Trạng thái website hiện tại phải đọc từ [API version](https://bibi
 
 ## 1. Ba lệnh local
 
-**Usability06/11 đang kiểm chứng local:** sửa màn edit phiếu bị chờ role local trong HTTP session, dirty guard sản phẩm/bài viết, tooltip sidebar thu gọn, trạng thái chỉ đọc và badge semantic. Không đổi DB schema/RBAC và chưa push/deploy. Xem [biên bản đợt1](superpowers/reports/2026-11-06-admin-usability-wave1-acceptance.md); các biên bản production bên dưới vẫn chỉ áp dụng release cũ.
+**Usability06/11 đã kiểm chứng local:** sửa màn edit phiếu bị chờ role local trong HTTP session, dirty guard sản phẩm/bài viết, tooltip sidebar thu gọn, trạng thái chỉ đọc và badge semantic. Không đổi DB schema/RBAC và chưa push/deploy. Xem [biên bản đợt1](superpowers/reports/2026-11-06-admin-usability-wave1-acceptance.md); các biên bản production bên dưới vẫn chỉ áp dụng release cũ.
 
 **Nhật ký cPanel đã deploy05/11:** release `d7a47285ddd54848b34c58ed6948b871d2b0ba99-42063626652`, workflow42065964107 thành công; API thật đọc được Log mới và9392record archive. Cùng trang Khách truy cập có Log mới (snapshot cache, mặc định), Lịch sử archive (giữ lâu dài) và Khách và sản phẩm hiện có. Feature schema2/manifest3 tách auth schema4, có backup/rollback giữ dữ liệu. Cron `*/15 * * * *` đã cài06/11; quan sát job tự chạy07:45VN thành công, Log mới575record. UI production đã kiểm tra Tải lại/chi tiết/chuyển nguồn/trang94 archive. Owner đã đồng ý kiểm chứng chu kỳ archive thật sau deploy; nguồn IP thực vẫn chưa được xác minh. Xem [vận hành nhật ký](access-log-operations.md) và [acceptance local/live](superpowers/reports/2026-11-05-cpanel-access-log-acceptance.md).
 
