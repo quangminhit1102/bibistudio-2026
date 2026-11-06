@@ -64,7 +64,7 @@ function SlipEditorSession({ id }: { id: string }) {
         }}
       />
     );
-  if (!options.data || role.isPending || (id && (!snapshot || snapshot.id !== id)))
+  if (!options.data || role.isLoading || (id && (!snapshot || snapshot.id !== id)))
     return <Skeleton />;
   if (!can(runtime.session, "sales", id ? "update" : "create", role.data))
     return <ErrorState error={new Error("Bạn không có quyền chỉnh sửa phiếu.")} />;
