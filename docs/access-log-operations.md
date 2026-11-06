@@ -1,6 +1,6 @@
 # Nhật ký cPanel trong admin BiBi
 
-Trạng thái05/11: parser, schema riêng, importer, API phân quyền và giao diện đã qua test local theo từng phần. Tooling artifact3, cron và rollback đang kiểm chứng; chưa phát hành production cho feature này. Không suy ra đã import hosting từ tests synthetic.
+Trạng thái06/11: feature đã phát hành production (d7a4728/CI42063626652), có diễn tập rollback về e725 rồi chuyển lại bản mới. Cron15phút đã cài và quan sát tự chạy07:45VN; archive9392record, current575record tại thời điểm kiểm tra. Backup native đã đối chiếu hash và UI production đã thử Tải lại/chi tiết/chuyển nguồn/phân trang. Kiểm chứng giữ prefix qua một lần cPanel cập nhật archive thật vẫn chờ; owner đồng ý làm sau deploy. Không suy ra toàn bộ acceptance đã đạt từ tests synthetic hoặc lịch cron.
 
 ## Cách hoạt động
 
