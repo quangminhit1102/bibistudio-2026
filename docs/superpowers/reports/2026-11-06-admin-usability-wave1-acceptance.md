@@ -1,6 +1,6 @@
 # Admin usability đợt 1 — kiểm chứng
 
-Đang hoàn tất kiểm chứng local, chưa push hoặc deploy. Full check đã đạt; build/budget/compiled preview và review cuối còn chờ.
+Đang hoàn tất kiểm chứng local, chưa push hoặc deploy. Full check/build/budget và compiled preview đã đạt; review độc lập cuối còn chờ.
 
 ## Các bản sửa và bằng chứng
 
@@ -15,6 +15,10 @@ Browser acceptance dùng MariaDB test schema ngẫu nhiên + compiled Express + 
 Evidence local: `.superpowers/e2e/admin-usability/*.png` (1440×1000 và390×844); screenshot đợi chuyển cảnh hoàn tất, không dùng ảnh skeleton/transition. Mobile editor thực đã kiểm tra không tràn ngang.
 
 `npm run check` Node24 exit0:95file253test admin,209test API/tooling đạt +4skip dành cho Linux (flock/symlink/POSIX permissions), watcher phục hồi1test và3browser suite auth/access logs/usability đều đạt. Lint0error/10warning hiện có. Lượt đầu thất bại tại assertion E2E cũ còn tìm lời nhắc Master trước sửa và đòi disabled; đã cập nhật assertion enabled+noteditable+readonly theo thiết kế duyệt rồi chạy lại toàn bộ check đạt. Không hạ kiểm tra immutability backend.
+
+`npm run build` exit0 tạo release `local-2022d8bcf914ada7860938fc57ba9157615dcd4d`. `node scripts/admin-bundle-report.mjs` exit0: public initial JS gzip182985byte, delta8696byte so với baseline repo (giới hạn10240); CSS gzip11503byte, delta297byte (giới hạn2048). Manifest initial graph không chứa module admin. Vite vẫn cảnh báo chunk public >500kB như hiện tại; budget không vượt.
+
+Compiled preview `http://127.0.0.1:4199/admin` dùng DB develop loopback đã guard; không migrate/seed/reset dữ liệu. Edge thực: dashboard→PMH-2026-0002→Chỉnh sửa tải đầy đủ form; thu gọn sidebar và focus icon mở tooltip, Escape đóng; TinyMCE local trên create sản phẩm tải xong, rời form chưa sửa không bị hỏi; Hồ sơ Master hiện readonly và lý do khóa. Không lưu thay đổi dữ liệu nghiệp vụ trong lượt manual. Tab được giữ tại Hồ sơ cho owner review. Bằng chứng: `.superpowers/e2e/admin-usability/compiled-slip-tooltip.png`. Preview phục vụ sourceSHA2022d8b; các commit tài liệu/review sau đó không thay mã ứng dụng.
 
 ## Phạm vi giữ lại
 
