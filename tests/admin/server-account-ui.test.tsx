@@ -22,8 +22,16 @@ test("clean profile form adopts revision from a saved role change; dirty drafts 
   await user.click(screen.getByRole("button", { name: "Lưu thông tin" }));
   expect(save.mock.calls[0][1]).toBe(2);
   await user.type(screen.getByRole("textbox", { name: "Tên hiển thị" }), " nháp");
-  rerender(<AccountForm initial={{ ...account, displayName: "Đã đổi ở nơi khác", revision: 4 }} roles={roles} onSave={save} />);
-  expect(screen.getByRole("textbox", { name: "Tên hiển thị" })).not.toHaveValue("Đã đổi ở nơi khác");
+  rerender(
+    <AccountForm
+      initial={{ ...account, displayName: "Đã đổi ở nơi khác", revision: 4 }}
+      roles={roles}
+      onSave={save}
+    />,
+  );
+  expect(screen.getByRole("textbox", { name: "Tên hiển thị" })).not.toHaveValue(
+    "Đã đổi ở nơi khác",
+  );
   await user.click(screen.getByRole("button", { name: "Lưu thông tin" }));
   expect(save.mock.calls[1][1]).toBe(3);
 });
@@ -76,8 +84,43 @@ test("master account fields are read-only with no password or mutation submit co
       onSave={save}
     />,
   );
-  expect(screen.getByRole("textbox", { name: "Tên tài khoản" })).toBeDisabled();
+  expect(screen.getByRole("textbox", { name: "Tên tài khoản" })).toHaveAttribute("readonly");
   expect(screen.queryByLabelText("Mật khẩu mới")).not.toBeInTheDocument();
   expect(screen.queryByRole("button", { name: "Lưu thông tin" })).not.toBeInTheDocument();
+  expect(save).not.toHaveBeenCalled();
+});
+
+test("readonly information stays focusable, does not become dirty and keeps a way back", async () => {
+  const save = vi.fn(),
+    dirty = vi.fn(),
+    back = vi.fn();
+  render(
+    <AccountForm
+      initial={account}
+      roles={roles}
+      onSave={save}
+      readOnly
+      onDirtyChange={dirty}
+      onCancel={back}
+    />,
+  );
+  const name = screen.getByRole("textbox", { name: "Tên hiển thị" });
+  await userEvent.setup().type(name, " forbidden");
+  expect(name).toHaveValue(account.displayName);
+  expect(name).toHaveFocus();
+  expect(dirty).toHaveBeenLastCalledWith(false);
+  expect(screen.getByText("Bạn chỉ có quyền xem thông tin tài khoản.")).toBeInTheDocument();
+  await userEvent.setup().click(screen.getByRole("button", { name: "Quay lại" }));
+  expect(back).toHaveBeenCalledOnce();
+  expect(save).not.toHaveBeenCalled();
+});
+test("unchanged editable account cannot submit but cancel remains available", async () => {
+  const save = vi.fn(),
+    cancel = vi.fn();
+  render(<AccountForm initial={account} roles={roles} onSave={save} onCancel={cancel} />);
+  expect(screen.getByRole("button", { name: "Lưu thông tin" })).toBeDisabled();
+  expect(screen.getByText("Chưa có thay đổi")).toBeInTheDocument();
+  await userEvent.setup().click(screen.getByRole("button", { name: "Hủy" }));
+  expect(cancel).toHaveBeenCalledOnce();
   expect(save).not.toHaveBeenCalled();
 });

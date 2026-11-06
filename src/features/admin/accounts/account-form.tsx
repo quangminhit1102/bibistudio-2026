@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { AccountDto, RoleOptionDto } from "../../../../backend/src/http/contracts";
 import type { AccountDraft } from "./http-api";
 import { Button, Field } from "../shared/ui/primitives";
+import { LockKeyhole } from "lucide-react";
 
 export function AccountForm({
   initial,
@@ -54,9 +55,10 @@ export function AccountForm({
   return (
     <form
       className="a-account-form"
+      data-readonly={readOnly}
       onSubmit={async (event) => {
         event.preventDefault();
-        if (readOnly || busy) return;
+        if (readOnly || busy || (initial && !dirty)) return;
         if (
           (!initial && !values.password) ||
           (values.password &&
@@ -95,14 +97,12 @@ export function AccountForm({
         }
       }}
     >
-      <fieldset
-        disabled={readOnly || busy}
-        style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}
-      >
+      <fieldset disabled={busy} style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}>
         <div className="a-form-grid">
           <Field label="Tên tài khoản">
             <input
               value={values.username}
+              readOnly={readOnly}
               autoComplete="off"
               required
               minLength={3}
@@ -114,6 +114,7 @@ export function AccountForm({
           <Field label="Tên hiển thị">
             <input
               value={values.displayName}
+              readOnly={readOnly}
               required
               maxLength={160}
               onChange={(event) => setValues({ ...values, displayName: event.target.value })}
@@ -123,6 +124,7 @@ export function AccountForm({
             <input
               type="email"
               value={values.email}
+              readOnly={readOnly}
               maxLength={254}
               onChange={(event) => setValues({ ...values, email: event.target.value })}
             />
@@ -153,6 +155,7 @@ export function AccountForm({
               <label key={role.id} className="a-checkbox">
                 <input
                   type="checkbox"
+                  disabled={readOnly}
                   checked={roleIds.includes(role.id)}
                   onChange={(event) =>
                     setRoleIds((current) =>
@@ -168,24 +171,42 @@ export function AccountForm({
           </fieldset>
         )}
       </fieldset>
-      {initial?.isMaster && (
-        <p className="a-muted">
-          Tài khoản quản trị chính được bảo vệ; thông tin và phân quyền không thể thay đổi.
-        </p>
+      {readOnly && (
+        <div className="a-readonly-note">
+          <LockKeyhole size={17} aria-hidden />
+          <div>
+            <strong>
+              {initial?.isMaster
+                ? "Tài khoản quản trị gốc được bảo vệ"
+                : "Bạn chỉ có quyền xem thông tin tài khoản."}
+            </strong>
+            {initial?.isMaster && (
+              <p>Thông tin và phân quyền của tài khoản này không thể thay đổi.</p>
+            )}
+          </div>
+        </div>
       )}
       {error && (
         <p role="alert" className="a-error">
           {error}
         </p>
       )}
-      {!readOnly && (
+      {(!readOnly || onCancel) && (
         <div className="a-form-footer">
-          <Button type="submit" variant="primary" loading={busy}>
-            {initial ? "Lưu thông tin" : "Tạo tài khoản"}
-          </Button>
+          {!readOnly && (
+            <Button
+              type="submit"
+              variant="primary"
+              loading={busy}
+              disabled={Boolean(initial) && !dirty}
+            >
+              {initial ? "Lưu thông tin" : "Tạo tài khoản"}
+            </Button>
+          )}
+          {!readOnly && initial && !dirty && <span className="a-muted">Chưa có thay đổi</span>}
           {onCancel && (
             <Button type="button" disabled={busy} onClick={onCancel}>
-              Hủy
+              {readOnly ? "Quay lại" : "Hủy"}
             </Button>
           )}
         </div>

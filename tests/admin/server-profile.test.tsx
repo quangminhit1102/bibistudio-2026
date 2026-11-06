@@ -46,7 +46,8 @@ test("master profile reads server account data with no edit, password or local-a
       </AdminProvider>
     </QueryClientProvider>,
   );
-  expect(await screen.findByDisplayValue("Quản trị chính")).toBeDisabled();
+  expect(await screen.findByDisplayValue("Quản trị chính")).toHaveAttribute("readonly");
+  expect(screen.getByText("Tài khoản quản trị gốc được bảo vệ")).toBeInTheDocument();
   expect(screen.queryByRole("button", { name: "Lưu thông tin" })).not.toBeInTheDocument();
   expect(screen.queryByLabelText("Mật khẩu mới")).not.toBeInTheDocument();
   expect(screen.queryByText("Đổi ảnh đại diện")).not.toBeInTheDocument();
