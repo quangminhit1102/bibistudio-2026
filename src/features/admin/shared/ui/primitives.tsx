@@ -253,8 +253,19 @@ export function ActionMenu({
     </DropdownMenu.Root>
   );
 }
-export function Tooltip({ label, children }: { label: string; children: ReactNode }) {
+export function Tooltip({
+  label,
+  children,
+  side,
+  enabled = true,
+}: {
+  label: string;
+  children: ReactNode;
+  side?: "top" | "right" | "bottom" | "left";
+  enabled?: boolean;
+}) {
   const dark = useContext(AdminThemeContext);
+  if (!enabled) return <>{children}</>;
   return (
     <RadixTooltip.Provider delayDuration={150}>
       <RadixTooltip.Root>
@@ -263,6 +274,7 @@ export function Tooltip({ label, children }: { label: string; children: ReactNod
           <RadixTooltip.Content
             className={`admin-root a-tooltip ${dark ? "dark" : ""}`}
             sideOffset={5}
+            side={side}
           >
             {label}
           </RadixTooltip.Content>

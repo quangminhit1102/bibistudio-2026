@@ -106,7 +106,12 @@ export function AdminLayout() {
           BiBi Admin<small>KHÔNG GIAN QUẢN TRỊ</small>
         </span>
       </Link>
-      <SidebarNavigation groups={allowed} pathname={pathname} {...navGroups} />
+      <SidebarNavigation
+        groups={allowed}
+        pathname={pathname}
+        {...navGroups}
+        collapsed={collapsed && !drawer}
+      />
       <div className="a-sidebar-footer">
         {account.data && <AccountMenu user={account.data} compact={collapsed && !drawer} />}
       </div>
