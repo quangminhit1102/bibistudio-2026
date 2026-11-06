@@ -6,6 +6,8 @@ export interface UserRow extends RowDataPacket {
   username: string;
   display_name: string;
   email: string | null;
+  phone?: string | null;
+  avatar_id?: string | null;
   password_hash: string;
   active: number;
   deleted_at: string | null;
@@ -40,6 +42,8 @@ export async function resolvePrincipal(
     username: user.username,
     displayName: user.display_name,
     email: user.email,
+    phone: user.phone ?? null,
+    avatarId: user.avatar_id ?? null,
     roleIds: roles.map((row) => String(row.id)),
     roles: roles.map(
       (row) => ({ id: String(row.id), name: String(row.name) }) satisfies RoleOptionDto,

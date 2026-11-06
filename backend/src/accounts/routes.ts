@@ -6,6 +6,7 @@ import { requireBrowserOrigin } from "../http/security";
 import { validate } from "../http/validation";
 import { authenticate, requirePermission } from "../authorization/middleware";
 import type { AccountService } from "./service";
+import { phoneSchema } from "../profile/validation";
 
 export function accountRoutes(
   accounts: AccountService,
@@ -51,7 +52,16 @@ export function accountRoutes(
   );
   router.post("/", browser, requirePermission("account.create"), async (req, res) => {
     const input = validate(
-      z.object({ username, password, displayName, email, roleIds: roleIds.default([]) }).strict(),
+      z
+        .object({
+          username,
+          password,
+          displayName,
+          email,
+          phone: phoneSchema,
+          roleIds: roleIds.default([]),
+        })
+        .strict(),
       req.body,
     );
     res.status(201).json(await accounts.create(input, req.auth!));
@@ -64,6 +74,7 @@ export function accountRoutes(
           username: username.optional(),
           displayName: displayName.optional(),
           email,
+          phone: phoneSchema,
           password: password.optional(),
         })
         .strict()

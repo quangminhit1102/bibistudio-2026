@@ -14,6 +14,8 @@ export interface PrincipalDto {
   username: string;
   displayName: string;
   email: string | null;
+  phone?: string | null;
+  avatarId?: string | null;
   roleIds: string[];
   roles: RoleOptionDto[];
   permissions: string[];

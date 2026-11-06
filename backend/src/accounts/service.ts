@@ -11,11 +11,13 @@ import { withTransaction } from "../db/transaction";
 import { assertPermission } from "../authorization/permissions";
 import { writeAudit } from "../audit/repository";
 import { accountDto } from "./repository";
+import { assertProfileSchemaReady } from "../profile/schema";
 
 interface AccountInput {
   username: string;
   displayName: string;
   email?: string | null;
+  phone?: string | null;
   password: string;
   roleIds: string[];
 }
@@ -23,6 +25,7 @@ interface AccountUpdate {
   username?: string;
   displayName?: string;
   email?: string | null;
+  phone?: string | null;
   password?: string;
 }
 const denied = (): ApiError =>
@@ -147,9 +150,19 @@ export function createAccountService({ pool, clock }: { pool: Pool; clock: Clock
           if (input.roleIds.length) await checkRoles(connection, principal, input.roleIds);
           const id = randomUUID();
           const hash = await hashPassword(input.password);
+          if (input.phone !== undefined) await assertProfileSchemaReady(connection);
           await connection.execute(
-            "INSERT INTO users(id,username,display_name,email,password_hash) VALUES (?,?,?,?,?)",
-            [id, input.username.trim().toLowerCase(), input.displayName, input.email ?? null, hash],
+            input.phone === undefined
+              ? "INSERT INTO users(id,username,display_name,email,password_hash) VALUES (?,?,?,?,?)"
+              : "INSERT INTO users(id,username,display_name,email,password_hash,phone) VALUES (?,?,?,?,?,?)",
+            [
+              id,
+              input.username.trim().toLowerCase(),
+              input.displayName,
+              input.email ?? null,
+              hash,
+              ...(input.phone === undefined ? [] : [input.phone]),
+            ],
           );
           for (const roleId of input.roleIds)
             await connection.execute("INSERT INTO user_roles(user_id,role_id) VALUES (?,?)", [
@@ -174,12 +187,14 @@ export function createAccountService({ pool, clock }: { pool: Pool; clock: Clock
       duplicateSafe(() =>
         authorized(actor, "account.update", id, async (connection, principal, target) => {
           mutable(target!, revision);
+          if (input.phone !== undefined) await assertProfileSchemaReady(connection);
           const columns: string[] = [];
           const values: (string | null)[] = [];
           for (const [key, column] of [
             ["username", "username"],
             ["displayName", "display_name"],
             ["email", "email"],
+            ["phone", "phone"],
           ] as const) {
             const value = input[key];
             if (value !== undefined) {

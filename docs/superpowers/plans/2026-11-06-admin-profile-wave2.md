@@ -44,7 +44,7 @@
 - Avatar UI có chọn/xem trước/Lưu ảnh/Hủy/Xóa; tách metadata save khỏi avatar mutation. Khi metadata dirty, yêu cầu lưu/hủy trước đổi ảnh để không làm mất draft/revision. Query refetch không remount/reset form dirty.
 - Codec references: [jpeg-js API/limits](https://github.com/jpeg-js/jpeg-js), [pngjs API](https://github.com/pngjs/pngjs), [PNG sync parser](https://github.com/pngjs/pngjs/blob/main/lib/parser-sync.js). Source hiện tại dùng inflate không bound cho interlaced; không dựa dimension check một mình. Pin/tarball thực tế phải kiểm tra lại khi cài.
 
-## Task1: Migration, DTO và tương thích bản cũ
+### Task 1: Migration, DTO và tương thích bản cũ
 
 **Files:** create `backend/profile-migrations/001_profiles.sql`, `backend/src/profile/schema.ts`, `types.ts`; modify `backend/src/http/contracts.ts`, `backend/src/auth/repository.ts`, `backend/src/accounts/service.ts`, `routes.ts`; test `backend/test/profile-schema.test.mjs`, `profile-phone.test.mjs`.
 
@@ -56,7 +56,7 @@
 - [ ] GREEN command above + existing account-crud/master-protection/migrations tests. Run actual captured old createApp against migrated isolated DB: readiness200/login200, old update of displayName preserves phone/avatar pointer. No unknown-schema bypass in identity checks.
 - [ ] Commit `feat: add profile metadata with additive migration`.
 
-## Task2: Self-profile service và API
+### Task 2: Self-profile service và API
 
 **Files:** create `backend/src/profile/service.ts`, `routes.ts`; modify `backend/src/app.ts`, `runtime.ts`, `config.ts`; test `backend/test/profile-api.test.mjs`.
 
@@ -67,7 +67,7 @@
 - [ ] Keep requireBrowserOrigin JSON behavior for JSON calls; account.update stays mandatory for management routes. Validate empty/invalid data, no-op does not churn revision/audit. Preserve common ApiError shape and safe logs.
 - [ ] GREEN profile API plus http-security/accounts/auth tests; commit `feat: add authenticated self profile API`.
 
-## Task3: Bounded image normalization và private file store
+### Task 3: Bounded image normalization và private file store
 
 **Files:** create `backend/src/profile/avatar-codec.ts`, `avatar-worker.ts`, `avatar-store.ts`; modify backend package/lock and local setup as needed; tests `backend/test/profile-avatar-codec.test.mjs`, `profile-avatar-store.test.mjs`.
 
@@ -79,7 +79,7 @@
 - [ ] RED→GREEN storage tests: root escape/symlink/path injection, exclusive new file, immutable collision, missing/wrong-hash file, permissions, fsync/rename failures, no original bytes retained; POSIX behavior tested on Linux CI rather than fake Windows mode assertions. Record cold decode time/RSS with synthetic max valid input; no hosting compatibility claim from local result.
 - [ ] Commit `feat: normalize and store private profile avatars`.
 
-## Task4: Avatar authorization, concurrency và HTTP binary client
+### Task 4: Avatar authorization, concurrency và HTTP binary client
 
 **Files:** extend `profile/service.ts`, `routes.ts`; create `backend/src/profile/avatar-routes.ts`; modify account routes, `backend/src/http/security.ts`, `src/lib/admin-http.ts`; tests `backend/test/profile-avatar-api.test.mjs`, `tests/admin/http-binary.test.ts`.
 
@@ -90,7 +90,7 @@
 - [ ] RED binary-client tests: concurrent401 single refresh, preserve immutable Blob on retry, raw content type/If-Match, abort and logout/login to another identity discards late responses and does not replay writes. JSON client contracts unchanged.
 - [ ] Implement and GREEN via backend build + `node --test backend/test/profile-avatar-api.test.mjs` and `vitest --config vitest.admin.config.ts run tests/admin/http-binary.test.ts`; commit `feat: secure avatar mutations and authenticated binary requests`.
 
-## Task5: Hồ sơ và quản lý tài khoản trên UI
+### Task 5: Hồ sơ và quản lý tài khoản trên UI
 
 **Files:** create `src/features/admin/accounts/self-profile-form.tsx`, `server-avatar.tsx`, `profile-api.ts`; modify `server-profile.tsx`, `account-form.tsx`, `server-account-detail.tsx`, `http-api.ts`, `server-hooks.ts`, shell `account-menu.tsx`, `admin-layout.tsx`, services/context cache boundaries and minimal admin.css. Tests `tests/admin/self-profile.test.tsx`, `server-avatar.test.tsx`, existing account/navigation/session tests.
 
@@ -101,7 +101,7 @@
 - [ ] RED: choose preview without uploading, save/remove image pending/success/failure, fallback initials, disabled with reason while metadata dirty; busy actions cannot race. Header/sidebar reflect new name/avatar after navigation/reload; logout/account-switch during pending blob has no old-user flash or unreleased ObjectURL.
 - [ ] Implement using existing shared Button/Field/Badge/UnsavedDialog; profile route exception becomes any authenticated self, not account.view. No permission grants or extra admin menu modules. GREEN new tests + server-profile/account-ui/navigation/auth-http regressions; commit `feat: integrate editable server profiles and avatars`.
 
-## Task6: Artifact metadata, paired backup và rollback tooling
+### Task 6: Artifact metadata, paired backup và rollback tooling
 
 **Files:** create `ops/profile-metadata.cjs`, `ops/profile-lifecycle.cjs`, `backend/src/profile/backup.ts`, `cli.ts`; modify `ops/release.cjs`, `receiver.cjs`, `database-lifecycle.cjs`, `scripts/build.mjs`, `preview.mjs`, `local-database.mjs` and CI evidence/check wiring. Tests `scripts/profile-release.test.mjs`, `profile-rollback.test.mjs`, `backend/test/profile-backup.test.mjs`; docs `docs/admin-profile-operations.md`.
 
@@ -114,7 +114,7 @@
 - [ ] Cleanup CLI uses same lock, checks no users reference asset, retired>=30days and backup pin policy; failure cannot remove active/pinned assets. Fresh orphan files only cleaned after24hours, never blind recursive directory deletion. Backup retention and rollback horizon documented together; no new production cron installed here.
 - [ ] GREEN Node tool/API tests and actual native backup/restore/old-backend rehearsal local; commit `feat: package profile assets with verified rollback support`.
 
-## Task7: Full acceptance, compiled preview và bàn giao
+### Task 7: Full acceptance, compiled preview và bàn giao
 
 **Files:** create `tests/e2e/profile.spec.mjs`, `tests/e2e/helpers/profile-fixture.mjs`, `docs/superpowers/reports/2026-11-06-admin-profile-wave2-acceptance.md`; modify `tests/e2e/auth.spec.mjs`, `access-logs.spec.mjs`, `admin-usability.spec.mjs`, `scripts/auth-ui-check.mjs`, `.github/workflows/ci.yml`, `docs/admin.md`, `docs/build-and-deploy.md`, `docs/admin-auth-api.md`.
 
