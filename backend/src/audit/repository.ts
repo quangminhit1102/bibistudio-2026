@@ -8,7 +8,14 @@ export interface AuditInput {
 }
 export async function writeAudit(connection: PoolConnection, event: AuditInput): Promise<void> {
   const metadata: Record<string, unknown> = {};
-  for (const key of ["reason", "changedFields", "roleIds", "permissionIds", "sessionCount"]) {
+  for (const key of [
+    "reason",
+    "changedFields",
+    "roleIds",
+    "permissionIds",
+    "sessionCount",
+    "assetIds",
+  ]) {
     const value = event.metadata?.[key];
     if (typeof value === "string" && value.length <= 100) metadata[key] = value;
     else if (typeof value === "number" && Number.isFinite(value)) metadata[key] = value;

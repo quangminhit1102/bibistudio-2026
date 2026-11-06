@@ -24,7 +24,10 @@ export function installSecurity(app: Express, config: SecurityConfig): void {
     if (origin && config.allowedOrigins.includes(origin)) {
       res.setHeader("Access-Control-Allow-Origin", origin);
       res.setHeader("Access-Control-Allow-Credentials", "true");
-      res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Bibi-Request");
+      res.setHeader(
+        "Access-Control-Allow-Headers",
+        "Content-Type, Authorization, X-Bibi-Request, If-Match",
+      );
       res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
       if (req.method === "OPTIONS") {
         res.sendStatus(204);
@@ -38,15 +41,27 @@ export function installSecurity(app: Express, config: SecurityConfig): void {
 }
 export function requireBrowserOrigin(config: SecurityConfig): RequestHandler {
   return (req, _res, next) => {
-    const origin = req.get("origin");
-    if (!origin || !config.allowedOrigins.includes(origin) || req.get("X-Bibi-Request") !== "1") {
+    requireBrowserHeaders(config)(req, _res, (error?: unknown) => {
+      if (error) {
+        next(error);
+        return;
+      }
+      if (!req.is("application/json")) {
+        next(new ApiError(415, "JSON_REQUIRED", "Yêu cầu dữ liệu JSON"));
+        return;
+      }
+      next();
+    });
+  };
+}
+export function requireBrowserHeaders(config: SecurityConfig): RequestHandler {
+  return (req, _res, next) => {
+    if (
+      !req.get("origin") ||
+      !config.allowedOrigins.includes(req.get("origin")!) ||
+      req.get("X-Bibi-Request") !== "1"
+    )
       next(new ApiError(403, "ORIGIN_REJECTED", "Yêu cầu không được phép"));
-      return;
-    }
-    if (!req.is("application/json")) {
-      next(new ApiError(415, "JSON_REQUIRED", "Yêu cầu dữ liệu JSON"));
-      return;
-    }
-    next();
+    else next();
   };
 }

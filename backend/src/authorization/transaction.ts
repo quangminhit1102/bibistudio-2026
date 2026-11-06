@@ -9,7 +9,7 @@ import { assertPermission } from "./permissions";
 export async function withRbacWrite<T>(
   pool: Pool,
   work: (connection: PoolConnection) => Promise<T>,
-  options: { profileAssets?: boolean } = {},
+  options: { profileAssets?: boolean; beforeCommit?: () => void; afterCommit?: () => void } = {},
 ): Promise<T> {
   const connection = await pool.getConnection();
   let locked = false;
@@ -29,7 +29,9 @@ export async function withRbacWrite<T>(
     locked = true;
     await connection.beginTransaction();
     const result = await work(connection);
+    options.beforeCommit?.();
     await connection.commit();
+    options.afterCommit?.();
     return result;
   } catch (error) {
     await connection.rollback();

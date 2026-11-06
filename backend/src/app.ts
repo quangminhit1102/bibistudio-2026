@@ -19,6 +19,8 @@ import { accessLogRoutes } from "./access-logs/routes";
 import { profileRoutes } from "./profile/routes";
 import { createProfileService } from "./profile/service";
 import { profileSchemaStatus } from "./profile/schema";
+import { createAvatarStore, type AvatarStore } from "./profile/avatar-store";
+import { avatarRoutes } from "./profile/avatar-routes";
 
 export interface AppOptions {
   db?: Pool;
@@ -26,7 +28,7 @@ export interface AppOptions {
   clock?: Clock;
   analytics?: AnalyticsOptions;
   accessLogs?: { pool: Pool; schemaDirectory: string; currentEnabled?: boolean };
-  profiles?: { schemaDirectory: string; assetDirectory: string };
+  profiles?: { schemaDirectory: string; assetDirectory: string; assets?: AvatarStore };
 }
 
 export function createApp(release: ReleaseInfo, options: AppOptions = {}): Express {
@@ -127,14 +129,19 @@ export function createApp(release: ReleaseInfo, options: AppOptions = {}): Expre
     res.json({ ok: true });
   });
   if (auth && authConfig && options.db && options.profiles) {
+    const service = createProfileService({
+      pool: options.db,
+      clock: options.clock ?? systemClock,
+      assets:
+        options.profiles.assets ?? createAvatarStore({ root: options.profiles.assetDirectory }),
+    });
     app.use(
-      "/api/profile",
-      profileRoutes(
-        createProfileService({ pool: options.db, clock: options.clock ?? systemClock }),
-        auth,
-        authConfig,
-      ),
+      avatarRoutes(service, auth, authConfig, {
+        pool: options.db,
+        clock: options.clock ?? systemClock,
+      }),
     );
+    app.use("/api/profile", profileRoutes(service, auth, authConfig));
   } else
     app.use("/api/profile", () => {
       throw new ApiError(503, "PROFILE_NOT_READY", "Dịch vụ hồ sơ chưa sẵn sàng");

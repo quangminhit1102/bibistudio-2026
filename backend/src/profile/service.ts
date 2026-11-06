@@ -8,28 +8,33 @@ import { ApiError } from "../http/errors";
 import { writeAudit } from "../audit/repository";
 import { assertProfileSchemaReady } from "./schema";
 import type { ProfileDto } from "./types";
+import type { AvatarStore } from "./avatar-store";
+import { createAvatarService } from "./avatar-service";
+import { profileDto } from "./repository";
 export interface ProfileInput {
   displayName?: string;
   email?: string | null;
   phone?: string | null;
 }
-async function dto(connection: PoolConnection, user: UserRow): Promise<ProfileDto> {
-  return {
-    ...(await resolvePrincipal(connection, user)),
-    phone: user.phone ?? null,
-    avatarId: user.avatar_id ?? null,
-  };
-}
-export function createProfileService({ pool, clock }: { pool: Pool; clock: Clock }) {
+export function createProfileService({
+  pool,
+  clock,
+  assets,
+}: {
+  pool: Pool;
+  clock: Clock;
+  assets?: AvatarStore;
+}) {
   async function current(connection: PoolConnection, actor: AuthPrincipal) {
     const { users } = await lockAuthorizedUsers(connection, actor, undefined, clock);
     await assertProfileSchemaReady(connection);
     return users.get(actor.principal.id)!;
   }
   return {
+    ...createAvatarService({ pool, clock, assets }),
     getSelf: (actor: AuthPrincipal): Promise<ProfileDto> =>
       withTransaction(pool, async (connection) =>
-        dto(connection, await current(connection, actor)),
+        profileDto(connection, await current(connection, actor)),
       ),
     updateSelf: (
       input: ProfileInput,
@@ -55,7 +60,7 @@ export function createProfileService({ pool, clock }: { pool: Pool; clock: Clock
               ["phone", "phone"],
             ] as const
           ).filter(([key, column]) => input[key] !== undefined && input[key] !== user[column]);
-          if (!fields.length) return dto(connection, user);
+          if (!fields.length) return profileDto(connection, user);
           await connection.execute(
             `UPDATE users SET ${fields.map(([, column]) => column + "=?").join(",")},revision=revision+1,updated_at=? WHERE id=?`,
             [...fields.map(([key]) => input[key] ?? null), clock.now(), user.id],
@@ -71,7 +76,7 @@ export function createProfileService({ pool, clock }: { pool: Pool; clock: Clock
             "SELECT * FROM users WHERE id=?",
             [user.id],
           );
-          return dto(connection, updated);
+          return profileDto(connection, updated);
         },
         { profileAssets: true },
       ),

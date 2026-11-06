@@ -21,6 +21,11 @@ interface RequestOptions {
   method?: string;
   body?: unknown;
   signal?: AbortSignal;
+  ifMatch?: number;
+}
+interface WireOptions extends RequestOptions {
+  rawBody?: Blob;
+  readBlob?: boolean;
 }
 interface Grant {
   accessToken: string;
@@ -64,19 +69,29 @@ export function createAdminHttp(options: Options = {}) {
       throw new Error("Invalid API destination");
     return url.href;
   }
-  async function raw<T>(path: string, input: RequestOptions = {}, bearer?: string): Promise<T> {
+  async function raw<T>(path: string, input: WireOptions = {}, bearer?: string): Promise<T> {
     const response = await send(endpoint(path), {
       method: input.method ?? "GET",
       credentials: "include",
       signal: input.signal,
       headers: {
-        "Content-Type": "application/json",
+        "Content-Type": input.rawBody?.type ?? "application/json",
+        ...(input.ifMatch === undefined ? {} : { "If-Match": `"${input.ifMatch}"` }),
         "X-Bibi-Request": "1",
         ...(bearer ? { Authorization: `Bearer ${bearer}` } : {}),
       },
-      ...(input.body === undefined ? {} : { body: JSON.stringify(input.body) }),
+      ...(input.rawBody
+        ? { body: input.rawBody }
+        : input.body === undefined
+          ? {}
+          : { body: JSON.stringify(input.body) }),
     });
     if (response.status === 204) return undefined as T;
+    if (response.ok && input.readBlob) {
+      if (!/^image\/(png|jpeg)$/.test(response.headers.get("content-type") ?? ""))
+        throw new AdminHttpError(503, "INVALID_RESPONSE", "Invalid image response");
+      return (await response.blob()) as T;
+    }
     const json = response.headers.get("content-type")?.includes("application/json");
     let body;
     try {
@@ -143,6 +158,39 @@ export function createAdminHttp(options: Options = {}) {
     refreshing = { epoch: ticket, promise };
     return promise;
   }
+  async function authorizedRequest<T>(path: string, input: WireOptions = {}): Promise<T> {
+    endpoint(path);
+    input.signal?.throwIfAborted();
+    const ticket = epoch;
+    if (!token) throw unauthenticated();
+    if (expires <= now()) await refresh();
+    assertEpoch(ticket);
+    const sentToken = token!;
+    try {
+      const result = await raw<T>(path, input, sentToken);
+      assertEpoch(ticket);
+      return result;
+    } catch (error) {
+      assertEpoch(ticket);
+      if (!(error instanceof AdminHttpError) || error.status !== 401) throw error;
+      if (path.startsWith("/api/auth/")) {
+        failSession(ticket, error);
+        throw error;
+      }
+      input.signal?.throwIfAborted();
+      if (token === sentToken) await refresh();
+      assertEpoch(ticket);
+      try {
+        const result = await raw<T>(path, input, token!);
+        assertEpoch(ticket);
+        return result;
+      } catch (retryError) {
+        if (retryError instanceof AdminHttpError && retryError.status === 401)
+          failSession(ticket, retryError);
+        throw retryError;
+      }
+    }
+  }
   return {
     async login(credentials: { username: string; password: string }): Promise<PrincipalDto> {
       clear();
@@ -169,37 +217,16 @@ export function createAdminHttp(options: Options = {}) {
         throw error;
       }
     },
-    async request<T>(path: string, input: RequestOptions = {}): Promise<T> {
-      endpoint(path);
-      const ticket = epoch;
-      if (!token) throw unauthenticated();
-      if (expires <= now()) await refresh();
-      assertEpoch(ticket);
-      const sentToken = token!;
-      try {
-        const result = await raw<T>(path, input, sentToken);
-        assertEpoch(ticket);
-        return result;
-      } catch (error) {
-        assertEpoch(ticket);
-        if (!(error instanceof AdminHttpError) || error.status !== 401) throw error;
-        if (path.startsWith("/api/auth/")) {
-          failSession(ticket, error);
-          throw error;
-        }
-        if (token === sentToken) await refresh();
-        assertEpoch(ticket);
-        try {
-          const result = await raw<T>(path, input, token!);
-          assertEpoch(ticket);
-          return result;
-        } catch (retryError) {
-          if (retryError instanceof AdminHttpError && retryError.status === 401)
-            failSession(ticket, retryError);
-          throw retryError;
-        }
-      }
-    },
+    request: <T>(path: string, input: RequestOptions = {}) => authorizedRequest<T>(path, input),
+    upload: <T>(path: string, blob: Blob, options: { revision: number; signal?: AbortSignal }) =>
+      authorizedRequest<T>(path, {
+        method: "PUT",
+        rawBody: blob,
+        ifMatch: options.revision,
+        signal: options.signal,
+      }),
+    requestBlob: (path: string, options: { signal?: AbortSignal } = {}) =>
+      authorizedRequest<Blob>(path, { ...options, readBlob: true }),
     async logout(): Promise<void> {
       clear();
       const work = () => raw<void>("/api/auth/logout", { method: "POST", body: {} });
