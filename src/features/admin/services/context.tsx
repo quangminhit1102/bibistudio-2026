@@ -26,6 +26,7 @@ import { resetDemoData } from "../settings/service";
 import type { AuthCredentials, AuthService } from "../accounts/auth/contracts";
 import { createHttpAuthService } from "../accounts/auth/http-service";
 import type { AdminHttpClient } from "../../../lib/admin-http";
+import type { PrincipalDto } from "../../../../backend/src/http/contracts";
 type Theme = "light" | "dark" | "system";
 interface Runtime {
   store: AdminStore;
@@ -38,6 +39,7 @@ interface Runtime {
   login: (credentials: AuthCredentials) => Promise<void>;
   logout: () => Promise<void>;
   refreshProfile: () => Promise<void>;
+  applyProfile: (principal: PrincipalDto) => boolean;
   reset: () => Promise<void>;
   service: <K extends EntityKey>(entity: K, resource?: Resource) => EntityService<K>;
   ensure: (entity: EntityKey) => Promise<void>;
@@ -226,6 +228,21 @@ export function AdminProvider({
       );
     if (ticket === epoch.current) setSession({ kind: "http", userId: principal.id, principal });
   };
+  const renderedEpoch = epoch.current;
+  const applyProfile = (principal: PrincipalDto): boolean => {
+    if (
+      renderedEpoch !== epoch.current ||
+      session?.kind !== "http" ||
+      session.userId !== principal.id
+    )
+      return false;
+    setSession((current) =>
+      renderedEpoch === epoch.current && current?.kind === "http" && current.userId === principal.id
+        ? { ...current, principal }
+        : current,
+    );
+    return true;
+  };
   const setTheme = (value: Theme) => {
     localStorage.setItem("bibi-admin:theme", JSON.stringify(value));
     themeState(value);
@@ -250,6 +267,7 @@ export function AdminProvider({
         login,
         logout,
         refreshProfile,
+        applyProfile,
         reset,
         service,
         ensure,

@@ -108,7 +108,7 @@ function checkProfileCompatibility(metadata, status) {
   if (
     status?.state !== "complete" ||
     status.version !== 1 ||
-    JSON.stringify(status.checksums) !== JSON.stringify(expected.migrationChecksums)
+    JSON.stringify(status.migrationChecksums) !== JSON.stringify(expected.migrationChecksums)
   )
     throw new Error("Incompatible profile schema/checksum");
 }

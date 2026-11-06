@@ -24,9 +24,9 @@ export function ServerProfile() {
     enabled: !!id,
     queryFn: ({ signal }) => api.get(signal),
   });
-  const saved = async (p: ProfileDto) => {
+  const saved = (p: ProfileDto) => {
+    if (!runtime.applyProfile(p)) throw new DOMException("Phiên đã thay đổi", "AbortError");
     cache.setQueryData(key, p);
-    await runtime.refreshProfile();
     void cache.invalidateQueries({ queryKey: ["bibi-admin", "http-accounts"] });
   };
   if (account.isPending) return <Skeleton />;
@@ -53,7 +53,8 @@ export function ServerProfile() {
           }}
           onReload={() => {
             void account.refetch().then((result) => {
-              if (result.data) setGeneration((n) => n + 1);
+              if (result.isSuccess && result.data && runtime.applyProfile(result.data))
+                setGeneration((n) => n + 1);
             });
           }}
         />

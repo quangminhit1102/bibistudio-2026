@@ -108,7 +108,7 @@ test("receiver chooses profile-aware tools for legacy rollback and refuses DB-on
   const run = async (_c, tool, command) => {
     calls.push([tool, command]);
     return command === "profile-status"
-      ? { state: "complete", version: 1, checksums: profiles.migrationChecksums }
+      ? { state: "complete", version: 1, migrationChecksums: profiles.migrationChecksums }
       : receipt;
   };
   await prepareProfileLifecycle({ root }, capable, legacy, { run });
@@ -125,9 +125,30 @@ test("receiver chooses profile-aware tools for legacy rollback and refuses DB-on
     prepareProfileLifecycle({ root }, capable, legacy, {
       run: async (...args) =>
         args[2] === "profile-status"
-          ? { state: "complete", version: 1, checksums: profiles.migrationChecksums }
+          ? { state: "complete", version: 1, migrationChecksums: profiles.migrationChecksums }
           : { verified: true },
     }),
     /paired/i,
+  );
+});
+
+test("receiver compatibility consumes actual migrated schema status and rejects checksum drift", async (t) => {
+  const f = await createProfileFixture(t);
+  const { profileSchemaStatus } = await import("../backend/dist/profile/schema.js");
+  const {
+    createProfileMetadata,
+    checkProfileCompatibility,
+  } = require("../ops/profile-metadata.cjs");
+  const metadata = await createProfileMetadata(resolve("backend")),
+    status = await profileSchemaStatus(f.pool, resolve("backend/profile-migrations"));
+  assert.equal(status.state, "complete");
+  assert.doesNotThrow(() => checkProfileCompatibility(metadata, status));
+  assert.throws(
+    () =>
+      checkProfileCompatibility(metadata, {
+        ...status,
+        migrationChecksums: { "001_profiles.sql": "f".repeat(64) },
+      }),
+    /checksum/i,
   );
 });

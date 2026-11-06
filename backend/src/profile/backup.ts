@@ -1,7 +1,8 @@
 import { createHash, randomUUID } from "node:crypto";
 import { createReadStream } from "node:fs";
 import { mkdir, writeFile, readFile, readdir, lstat, open } from "node:fs/promises";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
+import { profileSchemaStatus } from "./schema";
 import type { Pool, PoolConnection, RowDataPacket } from "mysql2/promise";
 import { createVerifiedBackup, type BackupReceipt } from "../db/backup";
 import { createAvatarStore, type StoredAvatar } from "./avatar-store";
@@ -34,6 +35,14 @@ export async function withProfileAssetLock<T>(
       c.release();
     }
   }
+}
+async function assertMaintenanceSchema(connection: PoolConnection, allowEmpty: boolean) {
+  const status = await profileSchemaStatus(
+    connection,
+    resolve(__dirname, "../../profile-migrations"),
+  );
+  if (status.state !== "complete" && !(allowEmpty && status.state === "empty"))
+    throw new Error("Profile schema is not compatible with packaged maintenance tool");
 }
 async function references(c: PoolConnection, database?: string): Promise<StoredAvatar[]> {
   if (database && !/^[a-zA-Z0-9_]{1,64}$/.test(database)) throw new Error("Invalid verifier");
@@ -92,6 +101,7 @@ export async function createProfileBackup(
   const source = createAvatarStore({ root: options.assetDirectory });
   await privateDirectory(options.directory);
   return withProfileAssetLock(options.pool, async (c) => {
+    await assertMaintenanceSchema(c, true);
     const assets = await references(c),
       pair = join(options.directory, "profile-" + randomUUID()),
       assetsDirectory = join(pair, "assets");
@@ -223,6 +233,7 @@ export async function cleanupProfileAssets({
   if (!Number.isFinite(+now)) throw new Error("Invalid cleanup time");
   const store = createAvatarStore({ root: assetDirectory });
   return withProfileAssetLock(pool, async (c) => {
+    await assertMaintenanceSchema(c, false);
     const pins = await backupPins(backupDirectory);
     let removed = 0,
       orphans = 0;

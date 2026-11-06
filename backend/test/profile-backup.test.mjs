@@ -159,9 +159,111 @@ test("paired snapshot holds writer lock and a corrupted copied asset blocks rest
   ]);
   assert.equal(source.avatar_id, a.avatarId);
 });
-test('paired backup rejects a referenced symlink without following it',{skip:process.platform==='win32'?'POSIX symlink acceptance required in Linux CI':false},async(t)=>{
- const {createProfileBackup}=await import('../dist/profile/backup.js'),{rename,symlink}=await import('node:fs/promises');
- const f=await createProfileFixture(t),verify=await createDatabaseFixture(t),directory=await mkdtemp(join(tmpdir(),'bibi-profile-link-'));t.after(()=>rm(directory,{recursive:true,force:true}));
- const a=await(await f.upload(pngImage(),1)).json(),path=join(f.assetDirectory,a.avatarId+'.png');await rename(path,path+'.original');await symlink(path+'.original',path);
- await assert.rejects(createProfileBackup({pool:f.pool,database:f.dbConfig,verifyDatabase:verify.config.database,directory,assetDirectory:f.assetDirectory,releaseId:'d'.repeat(40)+'-123',flavor:'mariadb',runTool:(kind,args,io)=>bridge(kind,args,io,runNativeTool)}));
+test(
+  "paired backup rejects a referenced symlink without following it",
+  { skip: process.platform === "win32" ? "POSIX symlink acceptance required in Linux CI" : false },
+  async (t) => {
+    const { createProfileBackup } = await import("../dist/profile/backup.js"),
+      { rename, symlink } = await import("node:fs/promises");
+    const f = await createProfileFixture(t),
+      verify = await createDatabaseFixture(t),
+      directory = await mkdtemp(join(tmpdir(), "bibi-profile-link-"));
+    t.after(() => rm(directory, { recursive: true, force: true }));
+    const a = await (await f.upload(pngImage(), 1)).json(),
+      path = join(f.assetDirectory, a.avatarId + ".png");
+    await rename(path, path + ".original");
+    await symlink(path + ".original", path);
+    await assert.rejects(
+      createProfileBackup({
+        pool: f.pool,
+        database: f.dbConfig,
+        verifyDatabase: verify.config.database,
+        directory,
+        assetDirectory: f.assetDirectory,
+        releaseId: "d".repeat(40) + "-123",
+        flavor: "mariadb",
+        runTool: (kind, args, io) => bridge(kind, args, io, runNativeTool),
+      }),
+    );
+  },
+);
+
+test("paired backup refuses a drifted pointer column before creating a receipt or invoking native tools", async (t) => {
+  const { createProfileBackup } = await import("../dist/profile/backup.js");
+  const { readdir } = await import("node:fs/promises");
+  const f = await createProfileFixture(t),
+    verify = await createDatabaseFixture(t),
+    directory = await mkdtemp(join(tmpdir(), "bibi-profile-drift-"));
+  t.after(() => rm(directory, { recursive: true, force: true }));
+  await f.upload(pngImage(), 1);
+  await f.pool.query("ALTER TABLE users DROP COLUMN avatar_id");
+  let calls = 0;
+  await assert.rejects(
+    createProfileBackup({
+      pool: f.pool,
+      database: f.dbConfig,
+      verifyDatabase: verify.config.database,
+      directory,
+      assetDirectory: f.assetDirectory,
+      releaseId: "e".repeat(40) + "-123",
+      flavor: "mariadb",
+      runTool: async (kind, args, io) => {
+        calls++;
+        await bridge(kind, args, io, runNativeTool);
+      },
+    }),
+    /schema/i,
+  );
+  assert.equal(calls, 0);
+  assert.equal((await readdir(directory)).length, 0);
+  assert.equal((await readdir(f.assetDirectory)).length, 1);
+});
+test("cleanup refuses an incompatible profile ledger without deleting retired images or rows", async (t) => {
+  const { cleanupProfileAssets } = await import("../dist/profile/backup.js");
+  const { readdir } = await import("node:fs/promises");
+  const f = await createProfileFixture(t),
+    directory = await mkdtemp(join(tmpdir(), "bibi-profile-incompatible-"));
+  t.after(() => rm(directory, { recursive: true, force: true }));
+  const a = await (await f.upload(pngImage(), 1)).json();
+  await f.upload(pngImage(20, 20), a.revision);
+  await f.pool.query("UPDATE profile_avatar_assets SET retired_at=? WHERE id=?", [
+    "2020-01-01",
+    a.avatarId,
+  ]);
+  await f.pool.query("UPDATE profile_schema_migrations SET version=2");
+  await assert.rejects(
+    cleanupProfileAssets({
+      pool: f.pool,
+      assetDirectory: f.assetDirectory,
+      backupDirectory: directory,
+      now: new Date(),
+    }),
+    /schema/i,
+  );
+  assert.equal((await readdir(f.assetDirectory)).length, 2);
+  const [[row]] = await f.pool.query("SELECT COUNT(*) n FROM profile_avatar_assets");
+  assert.equal(row.n, 2);
+});
+
+test("paired backup allows a genuinely empty pre-migration profile schema", async (t) => {
+  const { createProfileBackup } = await import("../dist/profile/backup.js");
+  const { createAuthFixture } = await import("./helpers/auth.mjs");
+  const f = await createAuthFixture(t),
+    verify = await createDatabaseFixture(t),
+    directory = await mkdtemp(join(tmpdir(), "bibi-profile-initial-")),
+    assetDirectory = await mkdtemp(join(tmpdir(), "bibi-profile-initial-assets-"));
+  t.after(() => rm(directory, { recursive: true, force: true }));
+  t.after(() => rm(assetDirectory, { recursive: true, force: true }));
+  const receipt = await createProfileBackup({
+    pool: f.pool,
+    database: f.dbConfig,
+    verifyDatabase: verify.config.database,
+    directory,
+    assetDirectory,
+    releaseId: "f".repeat(40) + "-123",
+    flavor: "mariadb",
+    runTool: (kind, args, io) => bridge(kind, args, io, runNativeTool),
+  });
+  assert.equal(receipt.verified, true);
+  assert.equal(receipt.assetCount, 0);
 });

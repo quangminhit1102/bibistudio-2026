@@ -1,6 +1,6 @@
 # Admin Profile Wave2 — nghiệm thu local06/11/2026
 
-Đã qua check/build/budget và kiểm chứng compiled trực tiếp. Lượt review độc lập cuối đang chờ; chưa push, deploy hay đổi DB/config cPanel. Biên bản production cũ không áp dụng cho tính năng mới này.
+Đã qua check/build/budget và kiểm chứng compiled trực tiếp. Review độc lập đã phát hiện4điểm cần sửa và2minor; các ca hồi quy đã tái hiện RED→GREEN, đang chạy cổng tổng sau sửa; chưa push, deploy hay đổi DB/config cPanel. Biên bản production cũ không áp dụng cho tính năng mới này.
 
 ## Bản kiểm chứng
 
@@ -57,3 +57,17 @@ Evidence local (ignored): `.superpowers/e2e/profile/` có full-check/build/backu
 ## Cổng trước production
 
 Chưa xác minh: Linux CI thực tế, Node24/RSS/codec limits trên cPanel, fixed private dir trong cả hai env, receiver4 trên hosting, paired native backup/restore thực tế trên hosting, protected/self/avatar probes và diễn tập rollback/forward production. Không phát hành chỉ dựa vào biên bản local này. Xem [vận hành hồ sơ](../../admin-profile-operations.md) và [build/deploy](../../build-and-deploy.md).
+
+
+## Review độc lập và lượt sửa cuối
+
+Fresh gpt-6-astra, read-only, range7dbc40e..85719ea; không reviewer phụ hoặc re-review. Đã tái hiện và sửa:
+
+- Receiver dùng sai tên `checksums`: chuyển sang `migrationChecksums` của producer thật. Test đưa kết quả schema từ MySQL thật qua checker và từ chối checksum đổi. Đã thử CLI compiled trên DB develop thật → receiver checker: compatible=true/state=complete/version1.
+- Backup/cleanup gọi trực tiếp bỏ qua schema: thêm kiểm tra packaged schema bên trong profile lock; backup chỉ nhận complete hoặc genuinely empty trước migration, cleanup chỉ complete. Drift mất pointer hoặc ledger version lạ không tạo receipt, không gọi native tool hoặc xóa ảnh/row.
+- Reload503 sau409: chỉ remount form khi refetch thành công; giữ bản nháp qua request thất bại, retry thành công mới thay.
+- PATCH/PUT đã200 nhưng GET refresh header503: đồng bộ shell bằng profile response đã được xác nhận với epoch/identity guard, không biến lỗi refresh sau đó thành lỗi lưu. Test metadata/avatar và callback từ phiên cũ không ghi sang user mới.
+
+Hai minor được hoãn, không đưa vào lượt fix: PNG có dư scanline inflate vẫn được nhận và chuẩn hóa an toàn (review không thấy treo main loop/lộ bytes gốc); URL appearance riêng vẫn mở cho mọi HTTP user để đổi theme local, không mở thêm quyền backend. Chưa có quyết định sản phẩm để đổi hai hành vi này.
+
+Các phần reviewer để ngoài đánh giá được chấp nhận theo phạm vi: hosting cần phát hành được duyệt riêng (chi phí còn nghiệm thu hosting);6skip cần Linux CI (chi phí chưa có bằng chứng Linux); live font theo ruling13 (chi phí chưa test Google Fonts trực tiếp); Wave1 ngoài điểm tích hợp đã duyệt không mở lại (chi phí không audit lại toàn bộ lịch sử).

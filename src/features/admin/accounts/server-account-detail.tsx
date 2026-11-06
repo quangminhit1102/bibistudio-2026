@@ -129,6 +129,8 @@ export function ServerAccountDetail({ id }: { id: string }) {
           onSave={async (draft, revision) => {
             if (avatarBusy) throw new Error("Đợi lưu ảnh hoàn tất");
             const value = await api.update(id, draft, revision);
+            if (value.id === runtime.session?.userId && !runtime.applyProfile(value))
+              throw new DOMException("Phiên đã thay đổi", "AbortError");
             saved(value);
             notice("Đã lưu thông tin tài khoản");
             return value;
@@ -144,8 +146,9 @@ export function ServerAccountDetail({ id }: { id: string }) {
           onDirtyChange={setAvatarDirty}
           onBusyChange={setAvatarBusy}
           onSaved={async (p: ProfileDto) => {
+            if (user.id === runtime.session?.userId && !runtime.applyProfile(p))
+              throw new DOMException("Phiên đã thay đổi", "AbortError");
             saved({ ...user, ...p });
-            if (user.id === runtime.session?.userId) await runtime.refreshProfile();
             notice("Đã cập nhật ảnh đại diện");
           }}
         />
