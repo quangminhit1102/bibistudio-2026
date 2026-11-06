@@ -5,6 +5,7 @@ const { createHash, randomUUID } = require("node:crypto");
 const { spawnSync } = require("node:child_process");
 const tar = require("tar");
 const { validateManifest } = require("./release.cjs");
+const { verifyProfileAssets } = require("./profile-metadata.cjs");
 const deploy = require("./deploy.cjs");
 const { verifyAccessLogAssets } = require("./access-log-metadata.cjs");
 function parseCommand(command) {
@@ -55,7 +56,7 @@ async function inspectArchive(file, { maxExpandedBytes = 1024 ** 3 } = {}) {
       if (
         parts.some(
           (p) =>
-            ["node_modules", ".git", "private", ".ssh"].includes(p) ||
+            ["node_modules", ".git", "private", ".ssh", "uploads", "profile-assets"].includes(p) ||
             /^\.env(?:\.|$)|\.(?:env|pem|key)$/.test(p),
         )
       )
@@ -112,6 +113,8 @@ async function acceptArchive(config, id, checksum, file) {
       for (const file of ["cli.js", "probe-cli.js"])
         await fs.access(path.join(staging, "backend/dist/access-logs", file));
     }
+    if (manifest.profiles)
+      await verifyProfileAssets(path.join(staging, "backend"), manifest.profiles);
     await fs.writeFile(path.join(staging, ".archive-sha256"), checksum);
     await fs.rename(staging, dest);
   } catch (e) {

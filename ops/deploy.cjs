@@ -14,6 +14,7 @@ const {
 const { verifyDatabaseAssets } = require("./database-metadata.cjs");
 const { verifyAccessLogAssets, checkAccessLogCompatibility } = require("./access-log-metadata.cjs");
 const execute = promisify(execFile);
+const { prepareProfileLifecycle } = require("./profile-lifecycle.cjs");
 function inside(base, target) {
   const relative = path.relative(path.resolve(base), path.resolve(target));
   if (!relative || relative.startsWith("..") || path.isAbsolute(relative))
@@ -223,6 +224,12 @@ async function activateRelease(config, id, hooks = {}) {
   if (manifest.accessLogs)
     await verifyAccessLogAssets(path.join(dir, "backend"), manifest.accessLogs);
   await (hooks.install ?? install)(config, dir);
+  const profileBackup = await prepareProfileLifecycle(
+    config,
+    old ? { dir: old, manifest: oldManifest } : null,
+    { dir, manifest },
+    { run: hooks.profileRun },
+  );
   if (manifest.database) {
     if (oldManifest?.database)
       assertRollbackCompatible(oldManifest, {
@@ -235,7 +242,11 @@ async function activateRelease(config, id, hooks = {}) {
       config.preAuthRollbackReleaseId !== oldManifest?.releaseId
     )
       throw new Error("Explicit pre-auth degraded-admin rollback target required");
-    const receipt = await (hooks.prepareDatabase ?? prepareDatabase)(config, { dir, manifest });
+    const receipt = await (hooks.prepareDatabase ?? prepareDatabase)(
+      config,
+      { dir, manifest },
+      { backupReceipt: profileBackup },
+    );
     await atomicWrite(path.join(dir, ".database-prepared.json"), JSON.stringify(receipt));
   }
   await mergeAssets(config, dir);
@@ -275,6 +286,12 @@ async function activateRelease(config, id, hooks = {}) {
           );
           assertRollbackCompatible(oldManifest, schema);
         }
+        await prepareProfileLifecycle(
+          config,
+          { dir, manifest },
+          { dir: old, manifest: oldManifest },
+          { run: hooks.profileRun },
+        );
         await point(config, old);
         await applyRouting(config, oldManifest);
         await (hooks.restart ?? restart)(config);
@@ -308,6 +325,12 @@ async function rollbackRelease(config, id, hooks = {}) {
   const active = current
     ? JSON.parse(await fs.readFile(path.join(current, "manifest.json"), "utf8"))
     : null;
+  await prepareProfileLifecycle(
+    config,
+    current ? { dir: current, manifest: active } : null,
+    { dir, manifest },
+    { run: hooks.profileRun },
+  );
   let degradedAdmin = false;
   if (manifest.database || active?.database) {
     if (manifest.database) {
@@ -337,12 +360,47 @@ async function rollbackRelease(config, id, hooks = {}) {
       }).degradedAdmin;
     }
   }
-  await point(config, dir);
-  await applyRouting(config, manifest);
-  await (hooks.restart ?? restart)(config);
-  await (hooks.verify ?? verify)(config, manifest);
-  if (manifest.database)
-    await (hooks.verifyReleaseProbe ?? verifyReleaseProbe)(config, { dir, manifest });
+  const originalRules = await fs.readFile(path.join(config.site, ".htaccess")).catch((e) => {
+    if (e.code !== "ENOENT") throw e;
+    return null;
+  });
+  try {
+    await point(config, dir);
+    await applyRouting(config, manifest);
+    await (hooks.restart ?? restart)(config);
+    await (hooks.verify ?? verify)(config, manifest);
+    if (manifest.database)
+      await (hooks.verifyReleaseProbe ?? verifyReleaseProbe)(config, { dir, manifest });
+  } catch (error) {
+    try {
+      if (current) {
+        await prepareProfileLifecycle(
+          config,
+          { dir, manifest },
+          { dir: current, manifest: active },
+          { run: hooks.profileRun },
+        );
+        await point(config, current);
+        await applyRouting(config, active);
+        await (hooks.restart ?? restart)(config);
+        await (hooks.verify ?? verify)(config, active);
+        if (active.database)
+          await (hooks.verifyReleaseProbe ?? verifyReleaseProbe)(config, {
+            dir: current,
+            manifest: active,
+          });
+      } else {
+        await fs.unlink(path.join(config.root, "current"));
+        if (originalRules)
+          await atomicWrite(path.join(config.site, ".htaccess"), originalRules, 0o644);
+        else await fs.rm(path.join(config.site, ".htaccess"), { force: true });
+        await (hooks.restart ?? restart)(config);
+      }
+    } catch (recovery) {
+      throw new Error(`Rollback failed: ${error.message}; RECOVERY FAILED: ${recovery.message}`);
+    }
+    throw new Error(`Rollback failed: ${error.message}; previous release restored`);
+  }
   console.log(
     JSON.stringify({
       event: "rolled-back",

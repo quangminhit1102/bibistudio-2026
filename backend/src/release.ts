@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 export interface ReleaseInfo {
   releaseId: string;
   sourceSha: string;
+  schemaVersion?: number;
 }
 export function readRelease(): ReleaseInfo {
   const file = process.env.BIBI_RELEASE_MANIFEST;
@@ -11,5 +12,9 @@ export function readRelease(): ReleaseInfo {
   if (typeof data.releaseId !== "string" || typeof data.sourceSha !== "string") {
     throw new Error("Invalid release manifest");
   }
-  return { releaseId: data.releaseId, sourceSha: data.sourceSha };
+  return {
+    releaseId: data.releaseId,
+    sourceSha: data.sourceSha,
+    ...(data.schemaVersion === 4 ? { schemaVersion: 4 } : {}),
+  };
 }

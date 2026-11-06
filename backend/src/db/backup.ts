@@ -123,6 +123,7 @@ export async function createVerifiedBackup(options: {
   dumpBin?: string;
   clientBin?: string;
   maxBytes?: number;
+  verifyRestored?: (connection: PoolConnection, database: string) => Promise<void>;
 }): Promise<BackupReceipt> {
   const { database, verifyDatabase } = options;
   if (
@@ -242,6 +243,7 @@ export async function createVerifiedBackup(options: {
     const restored = await tableNames(connection, verifyDatabase);
     if (JSON.stringify(restored) !== JSON.stringify(expected))
       throw new Error("Restored database table set mismatch");
+    await options.verifyRestored?.(connection, verifyDatabase);
     await dump(verifyDatabase, verification);
     if ((await digest(verification)) !== sha256)
       throw new Error("Restored database checksum verification failed");

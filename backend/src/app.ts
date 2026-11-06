@@ -115,6 +115,8 @@ export function createApp(release: ReleaseInfo, options: AppOptions = {}): Expre
       master.n !== 1
     )
       throw new ApiError(503, "NOT_READY", "Dịch vụ chưa sẵn sàng");
+    if (release.schemaVersion === 4 && !options.profiles)
+      throw new ApiError(503, "PROFILE_NOT_READY", "Dịch vụ hồ sơ chưa sẵn sàng");
     if (options.profiles) {
       try {
         if (

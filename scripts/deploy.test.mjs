@@ -190,3 +190,21 @@ test("retention keeps active, previous, baseline and five recent successful rele
   for (let i = 6; i <= 10; i++) assert.ok(names.includes(sha + "-" + i));
   assert.ok(!names.includes(sha + "-3"));
 });
+test("failed explicit rollback verification restores current release and routing", async (t) => {
+  const config = await fixture(t),
+    hooks = { install: async () => {}, restart: async () => {}, verify: async () => {} };
+  await deploy.activateRelease(config, first, hooks);
+  await deploy.activateRelease(config, second, hooks);
+  const before = await readFile(join(config.site, ".htaccess"), "utf8");
+  await assert.rejects(
+    deploy.rollbackRelease(config, first, {
+      ...hooks,
+      verify: async (_c, m) => {
+        if (m.releaseId === first) throw new Error("controlled rollback probe failure");
+      },
+    }),
+    /previous|restored|probe/i,
+  );
+  assert.ok((await readlink(join(config.root, "current"))).endsWith(second));
+  assert.equal(await readFile(join(config.site, ".htaccess"), "utf8"), before);
+});

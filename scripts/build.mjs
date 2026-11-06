@@ -7,6 +7,7 @@ import { root, run, isMain } from "./runtime.mjs";
 import { validateCatalogue } from "./catalogue-images.mjs";
 import { makeManifest, validateManifest } from "./release-manifest.mjs";
 import databaseMetadata from "../ops/database-metadata.cjs";
+import profileMetadata from "../ops/profile-metadata.cjs";
 import accessLogMetadata from "../ops/access-log-metadata.cjs";
 import { writeAnalyticsCatalogue } from "./analytics-catalogue.mjs";
 
@@ -37,13 +38,17 @@ export async function validateBundle(dir) {
     for (const file of ["cli.js", "probe-cli.js"])
       await stat(join(dir, "backend/dist/access-logs", file));
   }
+  if (manifest.profiles)
+    await profileMetadata.verifyProfileAssets(join(dir, "backend"), manifest.profiles);
   if (fe.releaseId !== manifest.releaseId || fe.sourceSha !== manifest.sourceSha)
     throw new Error("FE/BE release mismatch");
   async function scan(path) {
     for (const entry of await readdir(path, { withFileTypes: true })) {
       if (
         entry.isSymbolicLink() ||
-        ["node_modules", ".git", "private", ".ssh"].includes(entry.name) ||
+        ["node_modules", ".git", "private", ".ssh", "uploads", "profile-assets"].includes(
+          entry.name,
+        ) ||
         /^\.env(?:\.|$)|\.(?:env|pem|key)$/.test(entry.name)
       )
         throw new Error(`Forbidden bundle entry: ${entry.name}`);
@@ -65,6 +70,7 @@ export async function buildRelease({
     ciRunId,
     await databaseMetadata.createDatabaseMetadata(join(root, "backend")),
     await accessLogMetadata.createAccessLogMetadata(join(root, "backend")),
+    await profileMetadata.createProfileMetadata(join(root, "backend")),
   );
   const base = resolve(outputDir);
   const bundleDir = join(base, manifest.releaseId);
@@ -114,6 +120,11 @@ export async function buildRelease({
     { recursive: true },
   );
   await cp(
+    join(root, "backend/profile-migrations"),
+    join(bundleDir, "backend/profile-migrations"),
+    { recursive: true },
+  );
+  await cp(
     join(root, "backend/analytics-catalogue.json"),
     join(bundleDir, "backend/analytics-catalogue.json"),
   );
@@ -126,6 +137,11 @@ export async function buildRelease({
         2,
       ) + "\n",
     );
+  await writeFile(
+    join(bundleDir, "backend/profile-runtime.json"),
+    JSON.stringify(await profileMetadata.createProfileRuntimeMetadata(join(bundleDir, "backend"))) +
+      "\n",
+  );
   await validateBundle(bundleDir);
   const archive = join(base, `${manifest.releaseId}.tgz`);
   await tar.c({ cwd: bundleDir, file: archive, gzip: true, portable: true, mtime: new Date(0) }, [

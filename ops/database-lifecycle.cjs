@@ -4,6 +4,7 @@ const { execFile } = require("node:child_process");
 const { promisify } = require("node:util");
 const { verifyDatabaseAssets, checkDatabaseCompatibility } = require("./database-metadata.cjs");
 const execute = promisify(execFile);
+const { verifyProfileAssets, checkProfileCompatibility } = require("./profile-metadata.cjs");
 const { verifyAccessLogAssets, checkAccessLogCompatibility } = require("./access-log-metadata.cjs");
 
 /** Fixed host-only commands. No SQL, password or arbitrary executable from SSH input. */
@@ -11,6 +12,10 @@ async function runDatabaseTool(config, dir, command, manifest) {
   if (
     ![
       "backup",
+      "profile-backup",
+      "profile-status",
+      "profile-migrate",
+      "profile-cleanup",
       "migrate",
       "seed",
       "status",
@@ -22,6 +27,8 @@ async function runDatabaseTool(config, dir, command, manifest) {
     ].includes(command)
   )
     throw new Error("Unsupported database operation");
+  const profileCommand = command.startsWith("profile-");
+  const profileAction = profileCommand ? command.slice(8) : null;
   const logCommand = command.startsWith("access-log-");
   const logAction = logCommand ? command.slice("access-log-".length) : null;
   const privateFile = path.join(
@@ -30,27 +37,31 @@ async function runDatabaseTool(config, dir, command, manifest) {
       ? "private/runtime.env"
       : "private/maintenance.env",
   );
-  const backup = command === "backup";
+  const backup = command === "backup" || profileAction === "backup";
   const probe = command === "probe";
-  const args = logCommand
-    ? logAction === "probe"
-      ? [
-          path.join(dir, "backend/dist/access-logs/probe-cli.js"),
-          manifest.releaseId,
-          manifest.sourceSha,
-          config.baseUrl,
-        ]
-      : [path.join(dir, "backend/dist/access-logs/cli.js"), logAction]
-    : probe
-      ? [
-          path.join(dir, "backend/dist/db/probe-cli.js"),
-          manifest.releaseId,
-          manifest.sourceSha,
-          config.baseUrl,
-        ]
-      : backup
-        ? [path.join(dir, "backend/dist/db/backup-cli.js"), manifest.releaseId]
-        : [path.join(dir, "backend/dist/db/cli.js"), command];
+  const args = profileCommand
+    ? profileAction === "backup"
+      ? [path.join(dir, "backend/dist/profile/backup-cli.js"), manifest.releaseId]
+      : [path.join(dir, "backend/dist/profile/cli.js"), profileAction]
+    : logCommand
+      ? logAction === "probe"
+        ? [
+            path.join(dir, "backend/dist/access-logs/probe-cli.js"),
+            manifest.releaseId,
+            manifest.sourceSha,
+            config.baseUrl,
+          ]
+        : [path.join(dir, "backend/dist/access-logs/cli.js"), logAction]
+      : probe
+        ? [
+            path.join(dir, "backend/dist/db/probe-cli.js"),
+            manifest.releaseId,
+            manifest.sourceSha,
+            config.baseUrl,
+          ]
+        : backup
+          ? [path.join(dir, "backend/dist/db/backup-cli.js"), manifest.releaseId]
+          : [path.join(dir, "backend/dist/db/cli.js"), command];
   try {
     const { stdout } = await execute(path.join(config.runtimeBin, "node"), args, {
       cwd: path.join(dir, "backend"),
@@ -89,6 +100,13 @@ async function verifyReleaseProbe(config, { dir, manifest }, { run = runDatabase
     receipt.analytics !== true
   )
     throw new Error("Release DB/auth/analytics acceptance failed");
+  if (manifest.profiles) {
+    await verifyProfileAssets(path.join(dir, "backend"), manifest.profiles);
+    checkProfileCompatibility(
+      manifest.profiles,
+      await run(config, dir, "profile-status", manifest),
+    );
+  }
   if (manifest.accessLogs) {
     await verifyAccessLogAssets(path.join(dir, "backend"), manifest.accessLogs);
     const logs = await run(config, dir, "access-log-probe", manifest);
@@ -103,7 +121,7 @@ function assertRollbackCompatible(manifest, schema, options = {}) {
   checkDatabaseCompatibility(manifest, schema);
   return { degradedAdmin: false };
 }
-async function prepareDatabase(config, release, { run = runDatabaseTool } = {}) {
+async function prepareDatabase(config, release, { run = runDatabaseTool, backupReceipt } = {}) {
   const { dir, manifest } = release;
   await verifyDatabaseAssets(path.join(dir, "backend"), manifest.database);
   if (manifest.accessLogs)
@@ -119,7 +137,9 @@ async function prepareDatabase(config, release, { run = runDatabaseTool } = {}) 
       throw new Error("Dirty or unknown access log schema");
     if (feature.state === "complete") checkAccessLogCompatibility(manifest.accessLogs, feature);
   }
-  const backup = await run(config, dir, "backup", manifest);
+  if (manifest.profiles && !backupReceipt)
+    throw new Error("Paired profile backup is required before migration");
+  const backup = backupReceipt ?? (await run(config, dir, "backup", manifest));
   if (
     backup?.verified !== true ||
     !/^[a-f0-9]{64}$/.test(backup.sha256 ?? "") ||
@@ -141,6 +161,14 @@ async function prepareDatabase(config, release, { run = runDatabaseTool } = {}) 
     accessLogs = await run(config, dir, "access-log-sync", manifest);
     if (accessLogs?.state !== "complete" || accessLogs.current?.state !== "complete")
       throw new Error("Access log bootstrap must complete before activation");
+  }
+  if (manifest.profiles) {
+    await verifyProfileAssets(path.join(dir, "backend"), manifest.profiles);
+    await run(config, dir, "profile-migrate", manifest);
+    checkProfileCompatibility(
+      manifest.profiles,
+      await run(config, dir, "profile-status", manifest),
+    );
   }
   return {
     verified: true,

@@ -25,6 +25,8 @@ export async function previewRelease(
     const { createApp } = require(join(bundleDir, "backend/dist/app.js"));
     if (manifest.database)
       runtime = require(join(bundleDir, "backend/dist/runtime.js")).createRuntime(runtimeEnv);
+    if (manifest.profiles && !runtime?.appOptions?.profiles)
+      throw new Error("Profile preview requires explicit local setup and private asset directory");
     api = createApp(manifest, runtime?.appOptions);
   } catch (error) {
     await unlink(dependencyLink);

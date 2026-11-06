@@ -88,8 +88,11 @@ test("User-only and no-role users edit only their own metadata with stable autho
     refreshed.accessToken,
   );
   assert.equal(noop.body.revision, changed.body.revision);
-  const [[auditCount]]=await f.pool.query("SELECT COUNT(*) n FROM audit_logs WHERE action='profile.update' AND target_id=?",[id]);
-  assert.equal(auditCount.n,1);
+  const [[auditCount]] = await f.pool.query(
+    "SELECT COUNT(*) n FROM audit_logs WHERE action='profile.update' AND target_id=?",
+    [id],
+  );
+  assert.equal(auditCount.n, 1);
   const created = await f.request("/api/accounts", "POST", {
     username: "norole",
     password: "Only-test-NoRole!88",
@@ -220,4 +223,15 @@ test("enabled but unmigrated profile fails closed and disabled feature leaves le
   const off = await fixture(t, { migrated: false, enabled: false });
   assert.equal((await off.request("/api/profile")).status, 503);
   assert.equal((await fetch(off.base + "/api/ready")).status, 200);
+});
+test("manifest4 readiness refuses missing profile configuration", async (t) => {
+  const f = await createAuthFixture(t);
+  const base = await serve(
+    t,
+    createApp(
+      { releaseId: "required", sourceSha: "test", schemaVersion: 4 },
+      { db: f.pool, config: f.config, clock: f.clock },
+    ),
+  );
+  assert.equal((await fetch(base + "/api/ready")).status, 503);
 });

@@ -165,6 +165,8 @@ export async function setupLocalDatabase() {
   };
   assertLocalDevelopmentTarget(runtimeEnv);
   Object.assign(runtimeEnv, await prepareLocalAccessLogs());
+  runtimeEnv.PROFILE_ASSET_DIR = join(root, ".superpowers/local-profile-assets");
+  await mkdir(runtimeEnv.PROFILE_ASSET_DIR, { recursive: true, mode: 0o700 });
   const migrationEnv = {
     DB_HOST: "127.0.0.1",
     DB_PORT: "33385",
@@ -247,6 +249,8 @@ export async function setupLocalDatabase() {
       masterPassword: migrationEnv.MASTER_ADMIN_PASSWORD,
       userPassword: migrationEnv.SEED_USER_PASSWORD,
     });
+    const { migrateProfiles } = require("../backend/dist/profile/schema.js");
+    await migrateProfiles(pool, join(root, "backend/profile-migrations"));
     const { migrateAccessLogs } = require("../backend/dist/access-logs/schema.js");
     await migrateAccessLogs(pool, join(root, "backend/access-log-migrations"));
   } finally {
