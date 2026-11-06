@@ -2728,3 +2728,82 @@
 .admin-root .a-log-state[data-state="error"] {
   color: var(--a-red);
 }
+
+/* Avatar management leads the profile without adding a second form toolbar. */
+.admin-root .a-avatar-editor {
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 24px;
+}
+.admin-root .a-avatar-editor-photo {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--a-hover);
+  box-shadow: 0 0 0 1px var(--a-border);
+}
+.admin-root .a-avatar-editor-photo > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.admin-root .a-avatar-editor-info {
+  min-width: 0;
+}
+.admin-root .a-avatar-editor-info h2,
+.admin-root .a-profile-section-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+.admin-root .a-profile-section-title {
+  margin-bottom: 20px;
+}
+.admin-root .a-avatar-editor-name {
+  margin: 4px 0;
+  overflow-wrap: anywhere;
+}
+.admin-root .a-avatar-editor-hint {
+  margin: 4px 0 0;
+  max-width: 56ch;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.admin-root .a-avatar-editor-file {
+  margin: 6px 0 0;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.admin-root .a-avatar-editor-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  max-width: 300px;
+}
+.admin-root .a-avatar-editor-remove {
+  color: var(--a-red);
+}
+.admin-root .a-avatar-editor-remove:hover {
+  background: color-mix(in srgb, var(--a-red) 8%, var(--a-surface));
+}
+@media (max-width: 640px) {
+  .admin-root .a-avatar-editor {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+    text-align: center;
+    gap: 16px;
+  }
+  .admin-root .a-avatar-editor-actions {
+    width: 100%;
+    max-width: none;
+    justify-content: center;
+  }
+  .admin-root .a-avatar-editor-actions .a-btn {
+    min-height: 44px;
+    min-width: 112px;
+  }
+}

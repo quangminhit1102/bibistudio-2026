@@ -44,7 +44,10 @@ export function ServerAvatar({
         overflow: "hidden",
         alignItems: "center",
         justifyContent: "center",
-        background: "var(--a-soft, #e6dfd0)",
+        background: "var(--a-hover, #f4f4f5)",
+        color: "var(--a-text, #18181b)",
+        fontSize: Math.max(12, Math.round(size * 0.32)),
+        fontWeight: 600,
         flexShrink: 0,
       }}
     >

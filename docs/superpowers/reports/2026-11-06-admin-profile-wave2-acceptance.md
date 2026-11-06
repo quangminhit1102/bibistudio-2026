@@ -1,6 +1,6 @@
 # Admin Profile Wave2 — nghiệm thu local06/11/2026
 
-Đã qua check/build/budget và kiểm chứng compiled trực tiếp. Review độc lập đã phát hiện4điểm cần sửa và2minor; các ca hồi quy đã tái hiện RED→GREEN, đang chạy cổng tổng sau sửa; chưa push, deploy hay đổi DB/config cPanel. Biên bản production cũ không áp dụng cho tính năng mới này.
+Đã qua check/build/budget và kiểm chứng compiled trực tiếp. Review độc lập đã phát hiện4điểm cần sửa và2minor; các ca hồi quy đã tái hiện RED→GREEN và cổng tổng sau sửa đã đạt; chưa push, deploy hay đổi DB/config cPanel. Biên bản production cũ không áp dụng cho tính năng mới này.
 
 ## Bản kiểm chứng
 
@@ -71,3 +71,12 @@ Fresh gpt-6-astra, read-only, range7dbc40e..85719ea; không reviewer phụ hoặ
 Hai minor được hoãn, không đưa vào lượt fix: PNG có dư scanline inflate vẫn được nhận và chuẩn hóa an toàn (review không thấy treo main loop/lộ bytes gốc); URL appearance riêng vẫn mở cho mọi HTTP user để đổi theme local, không mở thêm quyền backend. Chưa có quyết định sản phẩm để đổi hai hành vi này.
 
 Các phần reviewer để ngoài đánh giá được chấp nhận theo phạm vi: hosting cần phát hành được duyệt riêng (chi phí còn nghiệm thu hosting);6skip cần Linux CI (chi phí chưa có bằng chứng Linux); live font theo ruling13 (chi phí chưa test Google Fonts trực tiếp); Wave1 ngoài điểm tích hợp đã duyệt không mở lại (chi phí không audit lại toàn bộ lịch sử).
+
+
+## Bổ sung07/11 — ảnh đại diện ở đầu trang
+
+Theo yêu cầu mới của owner, đã tham khảo bố cục từ Lovable ở plan mode (project `a92fe95d-ba22-47c3-be74-9ed93eadfc00`, message `umsg_01m6skq0pkekrt4d1ed770wry1`) rồi áp dụng vào source local: avatar card nằm ngay dưới tiêu đề Hồ sơ, trước Thông tin tài khoản; ảnh/preview tròn88px, tên và hướng dẫn ngắn, nhóm nút gọn bên phải desktop và xếp dọc giữa mobile. Placeholder dùng token màu sáng/tối thay nền cố định. Chỉ JPEG/PNG và Master readonly vẫn giữ theo source, không áp dụng đề xuất WebP hay mở quyền sửa Master từ bản gợi ý.
+
+Các thay đổi chỉ ở4file UI: server-profile, avatar-editor, server-avatar, admin.css; không thêm thư viện hoặc đổi API/DB. TypeScript/lint đạt;9test tương tác có sẵn đạt; real Chromium/MySQL profile suite đạt202.2giây sau khi khởi động lại Docker/local databases. Đã xem screenshot390×844 và1440×1000, đồng thời suite kiểm tra900×1000, sáng/tối, không tràn ngang. Evidence: `.superpowers/e2e/profile/avatar-layout-tests.log`, `avatar-layout-browser.log`, `profile-*.png`.
+
+Cổng tổng sau review ở runtime commit `4f992f110d7692feffb92f88820684e370241003`:100files/269UI tests đạt;254Node tests gồm248pass/6POSIXskip; watcher1pass và4browser suites đạt. Build và budget sau review đạt (deltaJS8710B/CSS313B). Một full-run ghi nhận PNG16MP1359ms/peak331304KiB (~324MiB), vẫn chỉ là số đo local. Bản build cho bố cục07/11 và URL preview được ghi ở phần bàn giao sau kiểm chứng cuối. Không push/deploy production.

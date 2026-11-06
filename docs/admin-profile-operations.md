@@ -10,7 +10,7 @@ Identity giữ schema4; profile có ledger/checksum riêng, phiên bản1. Migra
 
 ## Chuẩn bị cPanel trước một đợt phát hành được duyệt
 
-1. Đo tài nguyên Node24 thực tế: bộ giải mã JPEG/PNG thuần JS chạy worker riêng. Local PNG16MP ghi nhận khoảng254MiB peak RSS khi chạy riêng và313MiB trong bộ kiểm thử tổng, không phải cam kết bộ nhớ hosting. Worker heap128MiB không giới hạn cứng Buffer/native RSS. Nếu hosting thiếu headroom phải giảm giới hạn hoặc dừng phát hành.
+1. Đo tài nguyên Node24 thực tế: bộ giải mã JPEG/PNG thuần JS chạy worker riêng. Local PNG16MP ghi nhận khoảng254MiB peak RSS khi chạy riêng và khoảng313–324MiB trong các bộ kiểm thử tổng, không phải cam kết bộ nhớ hosting. Worker heap128MiB không giới hạn cứng Buffer/native RSS. Nếu hosting thiếu headroom phải giảm giới hạn hoặc dừng phát hành.
 2. Tạo `production/private/profile-assets` do đúng user Passenger sở hữu, mode0700, ngoài webroot/releases; file ảnh0600. Thêm cùng một giá trị tuyệt đối `PROFILE_ASSET_DIR=/.../production/private/profile-assets` vào cả `private/runtime.env` và `private/maintenance.env` (0600). Không đặt upload vào Git/artifact.
 3. Nâng cấp receiver cùng bộ `ops/*.cjs` liên quan, bao gồm `profile-metadata.cjs`, `profile-lifecycle.cjs`, `release.cjs`, `database-lifecycle.cjs`, `deploy.cjs`, `receiver.cjs`. Receiver cũ từ chối manifest4; không được thử bỏ trường profiles để lách kiểm tra. Receiver mới vẫn nhận manifest1/2/3 theo các cổng identity/access-log hiện có.
 4. Kiểm tra executable backup đã đo (`DB_BACKUP_FLAVOR`, `DB_DUMP_BIN`, `DB_CLIENT_BIN`, `DB_VERIFY_NAME`) và quyền verifier cô lập. Không restore lên DB ứng dụng.

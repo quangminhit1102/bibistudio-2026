@@ -37,7 +37,22 @@ export function ServerProfile() {
     <>
       <PageTitle title="Hồ sơ" description="Thông tin tài khoản và các vai trò của bạn." />
       {account.error && <ErrorState error={account.error} onRetry={() => void account.refetch()} />}
+      <Card className="a-profile-avatar-card">
+        <AvatarEditor
+          key={id}
+          user={user}
+          api={api}
+          metadataDirty={dirty || busy}
+          onDirtyChange={setAvatarDirty}
+          onBusyChange={setAvatarBusy}
+          onSaved={async (p) => {
+            await saved(p);
+            notice("Đã cập nhật ảnh đại diện");
+          }}
+        />
+      </Card>
       <Card>
+        <h2 className="a-profile-section-title">Thông tin tài khoản</h2>
         <SelfProfileForm
           key={`${id}:${generation}`}
           initial={user}
@@ -56,20 +71,6 @@ export function ServerProfile() {
               if (result.isSuccess && result.data && runtime.applyProfile(result.data))
                 setGeneration((n) => n + 1);
             });
-          }}
-        />
-      </Card>
-      <Card>
-        <AvatarEditor
-          key={id}
-          user={user}
-          api={api}
-          metadataDirty={dirty || busy}
-          onDirtyChange={setAvatarDirty}
-          onBusyChange={setAvatarBusy}
-          onSaved={async (p) => {
-            await saved(p);
-            notice("Đã cập nhật ảnh đại diện");
           }}
         />
       </Card>

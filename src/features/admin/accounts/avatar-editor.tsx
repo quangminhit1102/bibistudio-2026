@@ -74,84 +74,94 @@ export function AvatarEditor({
     }
   }
   return (
-    <section className="a-form-section">
-      <h2>Ảnh đại diện</h2>
-      <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+    <section className="a-avatar-editor" aria-label="Ảnh đại diện">
+      <div className="a-avatar-editor-photo">
         {preview ? (
-          <img
-            src={preview}
-            alt="Xem trước ảnh đại diện"
-            width={80}
-            height={80}
-            style={{ objectFit: "contain", borderRadius: 12 }}
-          />
+          <img src={preview} alt="Xem trước ảnh đại diện" width={88} height={88} />
         ) : (
-          <ServerAvatar user={user} size={80} />
-        )}
-        {!locked && (
-          <div>
-            <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-              <Button type="button" disabled={disabled} onClick={() => input.current?.click()}>
-                Chọn ảnh
-              </Button>
-              <span className="a-muted" role="status" style={{ overflowWrap: "anywhere" }}>
-                {file?.name ?? "Chưa chọn ảnh"}
-              </span>
-              <input
-                ref={input}
-                aria-label="Chọn ảnh đại diện"
-                type="file"
-                hidden
-                accept="image/jpeg,image/png"
-                disabled={disabled}
-                onChange={(e) => {
-                  const next = e.target.files?.[0];
-                  setError("");
-                  if (!next) {
-                    clear();
-                    return;
-                  }
-                  if (!["image/jpeg", "image/png"].includes(next.type) || next.size > 2097152) {
-                    setError("Dùng ảnh JPEG/PNG tối đa 2 MiB");
-                    e.target.value = "";
-                    return;
-                  }
-                  setFile(next);
-                }}
-              />
-            </div>
-            <p className="a-muted">
-              JPEG/PNG, tối đa 2 MiB và 16 triệu điểm ảnh. Ảnh được thu về tối đa 512 × 512.
-            </p>
-          </div>
+          <ServerAvatar user={user} size={88} />
         )}
       </div>
-      {metadataDirty && !locked && (
-        <p className="a-muted">Lưu hoặc hoàn tác thông tin trước khi thay đổi ảnh.</p>
-      )}
+      <div className="a-avatar-editor-info">
+        <h2>Ảnh đại diện</h2>
+        <p className="a-avatar-editor-name">{user.displayName}</p>
+        <p className="a-muted a-avatar-editor-hint">
+          {locked
+            ? "Ảnh đại diện ở chế độ chỉ xem."
+            : "JPEG/PNG, tối đa 2 MiB và 16 triệu điểm ảnh. Ảnh được thu về tối đa 512 × 512."}
+        </p>
+        {file && (
+          <p className="a-avatar-editor-file a-muted" role="status">
+            {file.name}
+          </p>
+        )}
+        {metadataDirty && !locked && (
+          <p className="a-muted a-avatar-editor-hint">
+            Lưu hoặc hoàn tác thông tin trước khi thay đổi ảnh.
+          </p>
+        )}
+        {error && (
+          <p role="alert" className="a-error">
+            {error}
+          </p>
+        )}
+      </div>
       {!locked && (
-        <div className="a-form-footer">
-          {file && (
+        <div className="a-avatar-editor-actions">
+          <input
+            ref={input}
+            aria-label="Chọn ảnh đại diện"
+            type="file"
+            hidden
+            accept="image/jpeg,image/png"
+            disabled={disabled}
+            onChange={(e) => {
+              const next = e.target.files?.[0];
+              setError("");
+              if (!next) {
+                clear();
+                return;
+              }
+              if (!["image/jpeg", "image/png"].includes(next.type) || next.size > 2097152) {
+                setError("Dùng ảnh JPEG/PNG tối đa 2 MiB");
+                e.target.value = "";
+                return;
+              }
+              setFile(next);
+            }}
+          />
+          {file ? (
             <>
-              <Button disabled={disabled} loading={busy} onClick={() => void save()}>
+              <Button
+                variant="primary"
+                disabled={disabled}
+                loading={busy}
+                onClick={() => void save()}
+              >
                 Lưu ảnh
               </Button>
               <Button disabled={busy} onClick={clear}>
                 Hủy chọn ảnh
               </Button>
             </>
-          )}
-          {user.avatarId && (
-            <Button disabled={disabled} onClick={() => void save(true)}>
-              Xóa ảnh
-            </Button>
+          ) : (
+            <>
+              <Button disabled={disabled} onClick={() => input.current?.click()}>
+                Chọn ảnh
+              </Button>
+              {user.avatarId && (
+                <Button
+                  variant="ghost"
+                  className="a-avatar-editor-remove"
+                  disabled={disabled}
+                  onClick={() => void save(true)}
+                >
+                  Xóa ảnh
+                </Button>
+              )}
+            </>
           )}
         </div>
-      )}
-      {error && (
-        <p role="alert" className="a-error">
-          {error}
-        </p>
       )}
     </section>
   );
