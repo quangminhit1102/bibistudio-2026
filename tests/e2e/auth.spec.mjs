@@ -216,8 +216,11 @@ test(
       await admin.getByText("Đã lưu thông tin tài khoản", { exact: true }).waitFor();
       await admin.goto(base + "/admin/accounts/users");
       await admin.getByRole("link", { name: "admin", exact: true }).click();
-      await admin.getByText("Tài khoản quản trị chính được bảo vệ", { exact: false }).waitFor();
-      assert.equal(await admin.getByLabel("Tên tài khoản", { exact: true }).isDisabled(), true);
+      await admin.getByText("Tài khoản quản trị gốc được bảo vệ", { exact: true }).waitFor();
+      const masterUsername = admin.getByLabel("Tên tài khoản", { exact: true });
+      assert.equal(await masterUsername.isEnabled(), true);
+      assert.equal(await masterUsername.isEditable(), false);
+      assert.notEqual(await masterUsername.getAttribute("readonly"), null);
       await capture(admin, resolve(evidence, "master-protected-desktop.png"));
       assert.deepEqual(errors, []);
       await adminContext.close();

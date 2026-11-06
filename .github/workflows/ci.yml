@@ -52,6 +52,7 @@ jobs:
           path: |
             .superpowers/e2e/auth/*.png
             .superpowers/e2e/access-logs/*.png
+            .superpowers/e2e/admin-usability/*.png
           include-hidden-files: true
           if-no-files-found: ignore
           retention-days: 7
