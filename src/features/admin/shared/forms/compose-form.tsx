@@ -7,6 +7,7 @@ import { normalizeSearch } from "../lib/text";
 import { postConfig } from "../../content/config";
 import { productConfig } from "../../products/config";
 import type { FormValues } from "./record-form";
+import { hasFormChanges } from "./form-baseline";
 import EditorPreview, { type EditorSnapshot } from "./editor-preview";
 const RichEditor = lazy(() => import("../../content/components/rich-editor"));
 const MediaPicker = lazy(() => import("../../content/components/media-picker"));
@@ -29,14 +30,18 @@ export default function ComposeForm({
 }: { kind: "post" | "product" } & ComposeFormProps) {
   const post = kind === "post",
     config = post ? postConfig : productConfig;
-  const methods = useForm<FormValues>({ defaultValues: initial });
-  const {
-    watch,
-    control,
-    setValue,
-    handleSubmit,
-    formState: { isDirty },
-  } = methods;
+  const [baseline, setBaseline] = useState<FormValues>(() => {
+    const values = structuredClone(initial);
+    if (!values.id && !values.slug)
+      values.slug = normalizeSearch(String(values[post ? "title" : "name"] ?? ""))
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "");
+    return values;
+  });
+  const methods = useForm<FormValues>({ defaultValues: baseline });
+  const { watch, control, setValue, handleSubmit } = methods;
+  const values = watch();
+  const isDirty = hasFormChanges(kind, baseline, values);
   const [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [ready, setReady] = useState(false);
@@ -80,7 +85,9 @@ export default function ComposeForm({
       setError("");
       try {
         await onSave({ ...values, ...(draft ? { status: "draft" } : {}) });
-        methods.reset({ ...values, ...(draft ? { status: "draft" } : {}) });
+        const saved = structuredClone({ ...values, ...(draft ? { status: "draft" } : {}) });
+        setBaseline(saved);
+        methods.reset(saved);
       } catch (e) {
         setError(e instanceof Error ? e.message : "Không thể lưu dữ liệu.");
       } finally {
