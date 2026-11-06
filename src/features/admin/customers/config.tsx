@@ -98,12 +98,18 @@ export const customerConfig: EntityConfig<"customers"> = {
     {
       accessorKey: "vatApplied",
       header: "VAT",
-      cell: ({ getValue }) => <Badge>{getValue() ? "Có VAT" : "Không VAT"}</Badge>,
+      cell: ({ getValue }) => (
+        <Badge tone={getValue() ? "info" : "neutral"}>{getValue() ? "Có VAT" : "Không VAT"}</Badge>
+      ),
     },
     {
       accessorKey: "active",
       header: "Sử dụng",
-      cell: ({ getValue }) => <Badge>{getValue() ? "Hoạt động" : "Ngừng hoạt động"}</Badge>,
+      cell: ({ getValue }) => (
+        <Badge tone={getValue() ? "success" : "neutral"}>
+          {getValue() ? "Hoạt động" : "Ngừng hoạt động"}
+        </Badge>
+      ),
     },
   ],
 };

@@ -91,9 +91,18 @@ export function DataExample({ name }: { name: string }) {
   if (name === "Badge")
     return (
       <>
-        {(["neutral", "success", "warning", "error"] as const).map((t) => (
+        {(["neutral", "success", "warning", "error", "info", "privilege"] as const).map((t) => (
           <Badge key={t} tone={t}>
-            {{ neutral: "Trung tính", success: "Thành công", warning: "Cảnh báo", error: "Lỗi" }[t]}
+            {
+              {
+                neutral: "Trung tính",
+                success: "Thành công",
+                warning: "Cảnh báo",
+                error: "Lỗi",
+                info: "Thông tin",
+                privilege: "Quyền / Bảo vệ",
+              }[t]
+            }
           </Badge>
         ))}
       </>

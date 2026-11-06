@@ -112,11 +112,7 @@ export const productConfig: EntityConfig<"products"> = {
       accessorKey: "status",
       header: "Trạng thái",
       cell: ({ getValue }) => (
-        <Badge
-          tone={
-            getValue() === "published" ? "success" : getValue() === "draft" ? "warning" : "neutral"
-          }
-        >
+        <Badge tone={getValue() === "published" ? "success" : "neutral"}>
           {statuses.find((s) => s.value === getValue())?.label}
         </Badge>
       ),

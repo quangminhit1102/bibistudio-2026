@@ -10,6 +10,7 @@ import {
 import { Dialog, DropdownMenu, Tooltip as RadixTooltip } from "radix-ui";
 import { X, LoaderCircle, MoreHorizontal, Check, AlertCircle } from "lucide-react";
 import { AdminThemeContext } from "./admin-theme";
+import type { BadgeTone } from "./status-badges";
 export type ButtonVariant = "primary" | "secondary" | "outline" | "ghost" | "destructive" | "link";
 export const Button = forwardRef<
   HTMLButtonElement,
@@ -36,13 +37,7 @@ export const Button = forwardRef<
   ),
 );
 Button.displayName = "AdminButton";
-export function Badge({
-  children,
-  tone = "neutral",
-}: {
-  children: ReactNode;
-  tone?: "neutral" | "success" | "warning" | "error";
-}) {
+export function Badge({ children, tone = "neutral" }: { children: ReactNode; tone?: BadgeTone }) {
   return <span className={`a-badge a-badge-${tone}`}>{children}</span>;
 }
 export function Card({ children, className = "" }: { children: ReactNode; className?: string }) {

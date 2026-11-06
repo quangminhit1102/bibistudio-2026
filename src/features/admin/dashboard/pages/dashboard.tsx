@@ -136,7 +136,15 @@ export default function Dashboard() {
                                 </td>
                                 <td>{money(o.total)}</td>
                                 <td>
-                                  <Badge tone={o.status === "saved" ? "success" : "neutral"}>
+                                  <Badge
+                                    tone={
+                                      o.status === "saved"
+                                        ? "success"
+                                        : o.status === "void"
+                                          ? "error"
+                                          : "neutral"
+                                    }
+                                  >
                                     {o.status === "saved" ? "Đã lưu" : "Đã hủy"}
                                   </Badge>
                                 </td>

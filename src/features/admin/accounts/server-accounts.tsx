@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { LockKeyhole } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import type { ColumnDef } from "@tanstack/react-table";
@@ -99,7 +100,13 @@ export function ServerAccounts() {
         enableSorting: false,
         cell: ({ row }) => {
           const account = row.original;
-          if (account.isMaster) return <Badge>Quản trị chính</Badge>;
+          if (account.isMaster)
+            return (
+              <Badge tone="privilege">
+                <LockKeyhole size={12} aria-hidden />
+                Quản trị chính
+              </Badge>
+            );
           const items = [
             ...(canCode(runtime.session, account.active ? "account.deactivate" : "account.activate")
               ? [

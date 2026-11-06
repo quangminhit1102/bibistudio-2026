@@ -1041,6 +1041,77 @@
 .a-badge-error {
   color: var(--a-red);
 }
+.admin-root .a-badge {
+  gap: 4px;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.admin-root .a-badge svg {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+}
+.admin-root .a-badge-neutral {
+  color: #545e6b;
+  background: #f0f2f5;
+  border-color: #e1e5eb;
+}
+.admin-root .a-badge-success {
+  color: #236342;
+  background: #ecf7f0;
+  border-color: #d1eadb;
+}
+.admin-root .a-badge-warning {
+  color: #875400;
+  background: #fff6e4;
+  border-color: #f4e3ba;
+}
+.admin-root .a-badge-error {
+  color: #ad3737;
+  background: #fff0ef;
+  border-color: #f5d6d2;
+}
+.admin-root .a-badge-info {
+  color: #315b9b;
+  background: #edf4ff;
+  border-color: #d4e3fb;
+}
+.admin-root .a-badge-privilege {
+  color: #6f469c;
+  background: #f3efff;
+  border-color: #e3d9f6;
+}
+.admin-root.dark .a-badge-neutral {
+  color: #c2cad6;
+  background: #2b323e;
+  border-color: #404958;
+}
+.admin-root.dark .a-badge-success {
+  color: #9cdbb4;
+  background: #1c372b;
+  border-color: #305642;
+}
+.admin-root.dark .a-badge-warning {
+  color: #f1cf88;
+  background: #3b301e;
+  border-color: #5b482a;
+}
+.admin-root.dark .a-badge-error {
+  color: #f2aaab;
+  background: #3b2528;
+  border-color: #63363b;
+}
+.admin-root.dark .a-badge-info {
+  color: #abcafa;
+  background: #233449;
+  border-color: #364e6b;
+}
+.admin-root.dark .a-badge-privilege {
+  color: #cfb9f0;
+  background: #342b48;
+  border-color: #514268;
+}
 .a-field {
   display: flex;
   flex-direction: column;

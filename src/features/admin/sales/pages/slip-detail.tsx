@@ -6,6 +6,7 @@ import { internalTarget, safeListReturn } from "../../shared/lib/navigation";
 import { money, dateTime } from "../../shared/lib/text";
 import { Card, PageTitle, Badge, Button, ErrorState, Skeleton } from "../../shared/ui/primitives";
 import { useSlipRoute } from "../use-slip-route";
+import { statusBadgeTone } from "../../shared/ui/status-badges";
 import { VoidSlip } from "../components/void-slip";
 export default function SlipDetail() {
   const id = useRecordId(),
@@ -53,8 +54,12 @@ export default function SlipDetail() {
             <small>Mã khách: {s.customerId}</small>
           </div>
           <div className="a-actions">
-            <Badge>{s.vatApplied ? "Có VAT" : "Không VAT"}</Badge>
-            <Badge>{s.status === "void" ? "Đã hủy" : "Đã lưu"}</Badge>
+            <Badge tone={statusBadgeTone("vat", String(s.vatApplied))}>
+              {s.vatApplied ? "Có VAT" : "Không VAT"}
+            </Badge>
+            <Badge tone={statusBadgeTone("slip", s.status)}>
+              {s.status === "void" ? "Đã hủy" : "Đã lưu"}
+            </Badge>
           </div>
         </div>
         <div className="a-table-wrap">

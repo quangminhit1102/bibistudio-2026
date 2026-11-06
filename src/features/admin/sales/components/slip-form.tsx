@@ -3,6 +3,7 @@ import type { AdminProduct, Customer, PurchaseSlip } from "../../services/contra
 import { Button, Badge, Field } from "../../shared/ui/primitives";
 import { money, dateTime } from "../../shared/lib/text";
 import { calculateSlipTotal, parseSlipDraft, type SlipDraft } from "../slip-schema";
+import { statusBadgeTone } from "../../shared/ui/status-badges";
 
 function Picker({
   label,
@@ -170,7 +171,9 @@ export function SlipForm({
               />{" "}
               Có VAT
             </label>
-            <Badge>{draft.vatApplied ? "Có VAT" : "Không VAT"}</Badge>
+            <Badge tone={statusBadgeTone("vat", String(draft.vatApplied))}>
+              {draft.vatApplied ? "Có VAT" : "Không VAT"}
+            </Badge>
             <small>Chỉ là nhãn trên phiếu, không tính thuế.</small>
             {customer && draft.vatApplied !== customer.vatApplied && (
               <>

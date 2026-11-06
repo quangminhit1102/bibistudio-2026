@@ -9,6 +9,7 @@ import { PageTitle, Badge, ErrorState, useNotice } from "../../shared/ui/primiti
 import { money, makeCsv, downloadBlob, dateTime } from "../../shared/lib/text";
 import { useSlipOptions } from "../hooks";
 import { VoidSlip } from "../components/void-slip";
+import { statusBadgeTone } from "../../shared/ui/status-badges";
 export default function Slips() {
   const runtime = useAdmin(),
     role = useRole(),
@@ -100,12 +101,20 @@ export default function Slips() {
     {
       accessorKey: "vatApplied",
       header: "VAT",
-      cell: ({ getValue }) => <Badge>{getValue() ? "Có VAT" : "Không VAT"}</Badge>,
+      cell: ({ getValue }) => (
+        <Badge tone={statusBadgeTone("vat", String(Boolean(getValue())))}>
+          {getValue() ? "Có VAT" : "Không VAT"}
+        </Badge>
+      ),
     },
     {
       accessorKey: "status",
       header: "Trạng thái",
-      cell: ({ getValue }) => <Badge>{getValue() === "void" ? "Đã hủy" : "Đã lưu"}</Badge>,
+      cell: ({ getValue }) => (
+        <Badge tone={statusBadgeTone("slip", String(getValue()))}>
+          {getValue() === "void" ? "Đã hủy" : "Đã lưu"}
+        </Badge>
+      ),
     },
     {
       id: "actions",

@@ -78,7 +78,7 @@ export const postConfig: EntityConfig<"posts"> = {
       accessorKey: "status",
       header: "Trạng thái",
       cell: ({ getValue }) => (
-        <Badge tone={getValue() === "published" ? "success" : "warning"}>
+        <Badge tone={getValue() === "published" ? "success" : "neutral"}>
           {getValue() === "published" ? "Đã xuất bản" : "Nháp"}
         </Badge>
       ),

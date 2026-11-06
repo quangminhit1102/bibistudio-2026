@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { LockKeyhole } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { RoleDto } from "../../../../backend/src/http/contracts";
@@ -109,7 +110,7 @@ export function ServerRoles() {
         header: "Quyền",
         cell: ({ row }) =>
           row.original.fullAccess ? (
-            <Badge>Toàn quyền</Badge>
+            <Badge tone="privilege">Toàn quyền</Badge>
           ) : (
             `${row.original.permissionIds.length} quyền`
           ),
@@ -120,7 +121,13 @@ export function ServerRoles() {
         enableSorting: false,
         cell: ({ row }) => {
           const role = row.original;
-          if (role.fullAccess) return <Badge>Được bảo vệ</Badge>;
+          if (role.fullAccess)
+            return (
+              <Badge tone="privilege">
+                <LockKeyhole size={12} aria-hidden />
+                Được bảo vệ
+              </Badge>
+            );
           const items = [
             ...(canCode(runtime.session, "role.update")
               ? [

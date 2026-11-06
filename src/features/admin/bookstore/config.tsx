@@ -98,7 +98,7 @@ export const bookConfig: EntityConfig<"books"> = {
       accessorKey: "status",
       header: "Trạng thái",
       cell: ({ getValue }) => (
-        <Badge tone={getValue() === "published" ? "success" : "warning"}>
+        <Badge tone={getValue() === "published" ? "success" : "neutral"}>
           {statuses.find((o) => o.value === getValue())?.label}
         </Badge>
       ),
