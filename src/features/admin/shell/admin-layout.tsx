@@ -65,7 +65,7 @@ export function AdminLayout() {
   const canSearch = (["products", "bookstore", "sales", "content", "accounts"] as const).some(
     (resource) => can(session, resource, "view", role.data),
   );
-  const home = allowed[0]?.items[0]?.path ?? "/admin/analytics/visitors";
+  const home = allowed[0]?.items[0]?.path ?? "/admin/settings/profile";
   useEffect(() => {
     if (session && ["/admin", "/admin/"].includes(pathname)) {
       void navigate({ to: home as "/admin" });
@@ -103,9 +103,7 @@ export function AdminLayout() {
   const active = activeNavigationItem(allowed, pathname);
   const ownPreferences =
     (pathname.endsWith("/settings/profile") || pathname.endsWith("/settings/appearance")) &&
-    (session?.kind !== "http" ||
-      can(session, "accounts", "view", role.data) ||
-      can(session, "settings", "view", role.data));
+    !!session;
   const forbidden = !ownPreferences && !canAccessAdminPath(runtime.session, pathname, role.data);
   const nav = (
     <>

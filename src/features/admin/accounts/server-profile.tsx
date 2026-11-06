@@ -1,29 +1,34 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import type { AccountDto, PrincipalDto } from "../../../../backend/src/http/contracts";
 import { useAdmin } from "../services/context";
-import { canCode } from "./permissions";
-import { useAccountApi } from "./server-hooks";
-import { AccountForm } from "./account-form";
+import { createProfileApi } from "./profile-api";
+import { SelfProfileForm } from "./self-profile-form";
+import { AvatarEditor } from "./avatar-editor";
+import type { ProfileDto } from "../../../../backend/src/profile/types";
 import { Card, ErrorState, PageTitle, Skeleton, useNotice } from "../shared/ui/primitives";
 import { UnsavedDialog } from "../shared/forms/preference-form";
-
 export function ServerProfile() {
-  const runtime = useAdmin();
-  const api = useAccountApi();
-  const cache = useQueryClient();
-  const notice = useNotice();
-  const [dirty, setDirty] = useState(false);
-  const id = runtime.session?.userId ?? "";
-  const key = ["bibi-admin", "http-self-account", id];
-  const account = useQuery<AccountDto | PrincipalDto>({
+  const runtime = useAdmin(),
+    cache = useQueryClient(),
+    notice = useNotice();
+  const api = useMemo(() => createProfileApi(runtime.http!), [runtime.http]);
+  const [dirty, setDirty] = useState(false),
+    [avatarDirty, setAvatarDirty] = useState(false),
+    [busy, setBusy] = useState(false),
+    [avatarBusy, setAvatarBusy] = useState(false),
+    [generation, setGeneration] = useState(0);
+  const id = runtime.session?.userId ?? "",
+    key = ["bibi-admin", "http-self-account", id];
+  const account = useQuery({
     queryKey: key,
     enabled: !!id,
-    queryFn: ({ signal }) =>
-      canCode(runtime.session, "account.view")
-        ? api.get(id, signal)
-        : runtime.http!.request<PrincipalDto>("/api/auth/profile", { signal }),
+    queryFn: ({ signal }) => api.get(signal),
   });
+  const saved = async (p: ProfileDto) => {
+    cache.setQueryData(key, p);
+    await runtime.refreshProfile();
+    void cache.invalidateQueries({ queryKey: ["bibi-admin", "http-accounts"] });
+  };
   if (account.isPending) return <Skeleton />;
   if (!account.data)
     return <ErrorState error={account.error} onRetry={() => void account.refetch()} />;
@@ -33,42 +38,45 @@ export function ServerProfile() {
       <PageTitle title="Hồ sơ" description="Thông tin tài khoản và các vai trò của bạn." />
       {account.error && <ErrorState error={account.error} onRetry={() => void account.refetch()} />}
       <Card>
-        {"active" in user ? (
-          <AccountForm
-            key={id}
-            initial={user}
-            roles={[]}
-            readOnly={user.isMaster || !canCode(runtime.session, "account.update")}
-            onDirtyChange={setDirty}
-            onSave={async (draft, revision) => {
-              const saved = await api.update(id, draft, revision);
-              cache.setQueryData(key, saved);
-              if (draft.password) {
-                notice("Đã đổi mật khẩu. Vui lòng đăng nhập lại");
-                await runtime.logout();
-              } else {
-                await runtime.refreshProfile();
-                notice("Đã lưu hồ sơ");
-              }
-              return saved;
-            }}
-          />
-        ) : (
-          <dl className="a-detail-list">
-            <dt>Tên tài khoản</dt>
-            <dd>{user.username}</dd>
-            <dt>Tên hiển thị</dt>
-            <dd>{user.displayName}</dd>
-            <dt>Email</dt>
-            <dd>{user.email ?? "—"}</dd>
-          </dl>
-        )}
+        <SelfProfileForm
+          key={`${id}:${generation}`}
+          initial={user}
+          blocked={avatarBusy}
+          onDirtyChange={setDirty}
+          onBusyChange={setBusy}
+          onSave={async (d, r) => {
+            if (avatarBusy) throw new Error("Đợi lưu ảnh hoàn tất");
+            const p = await api.update(d, r);
+            await saved(p);
+            notice("Đã lưu hồ sơ");
+            return p;
+          }}
+          onReload={() => {
+            void account.refetch().then((result) => {
+              if (result.data) setGeneration((n) => n + 1);
+            });
+          }}
+        />
+      </Card>
+      <Card>
+        <AvatarEditor
+          key={id}
+          user={user}
+          api={api}
+          metadataDirty={dirty || busy}
+          onDirtyChange={setAvatarDirty}
+          onBusyChange={setAvatarBusy}
+          onSaved={async (p) => {
+            await saved(p);
+            notice("Đã cập nhật ảnh đại diện");
+          }}
+        />
       </Card>
       <Card>
         <h2>Vai trò</h2>
-        <p>{user.roles.map((role) => role.name).join(", ") || "Chưa cấp vai trò"}</p>
+        <p>{user.roles.map((r) => r.name).join(", ") || "Chưa cấp vai trò"}</p>
       </Card>
-      <UnsavedDialog dirty={dirty} />
+      <UnsavedDialog dirty={dirty || avatarDirty} />
     </>
   );
 }

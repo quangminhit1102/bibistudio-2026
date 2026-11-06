@@ -11,6 +11,7 @@ export interface AccountDraft {
   username: string;
   displayName: string;
   email: string | null;
+  phone?: string | null;
   password?: string;
   roleIds?: string[];
 }

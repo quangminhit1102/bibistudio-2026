@@ -4,6 +4,9 @@ import type { AccountDto, RoleOptionDto } from "../../../../backend/src/http/con
 import { useAdmin } from "../services/context";
 import { useAccountApi } from "./server-hooks";
 import { canCode } from "./permissions";
+import { AvatarEditor } from "./avatar-editor";
+import { createProfileApi } from "./profile-api";
+import type { ProfileDto } from "../../../../backend/src/profile/types";
 import { AccountForm } from "./account-form";
 import {
   Badge,
@@ -85,6 +88,8 @@ export function ServerAccountDetail({ id }: { id: string }) {
   const cache = useQueryClient();
   const notice = useNotice();
   const [dirty, setDirty] = useState(false);
+  const [avatarDirty, setAvatarDirty] = useState(false);
+  const [avatarBusy, setAvatarBusy] = useState(false);
   const queryKey = ["bibi-admin", "http-account", runtime.session?.userId, id];
   const account = useQuery({ queryKey, queryFn: ({ signal }) => api.get(id, signal) });
   const canAssign = canCode(runtime.session, "account.assign_role");
@@ -122,6 +127,7 @@ export function ServerAccountDetail({ id }: { id: string }) {
           readOnly={readonly}
           onDirtyChange={setDirty}
           onSave={async (draft, revision) => {
+            if (avatarBusy) throw new Error("Đợi lưu ảnh hoàn tất");
             const value = await api.update(id, draft, revision);
             saved(value);
             notice("Đã lưu thông tin tài khoản");
@@ -129,7 +135,22 @@ export function ServerAccountDetail({ id }: { id: string }) {
           }}
         />
       </Card>
-      <UnsavedDialog dirty={dirty} />
+      <Card>
+        <AvatarEditor
+          user={{ ...user, phone: user.phone ?? null, avatarId: user.avatarId ?? null }}
+          api={createProfileApi(runtime.http!, id)}
+          readOnly={readonly}
+          metadataDirty={dirty}
+          onDirtyChange={setAvatarDirty}
+          onBusyChange={setAvatarBusy}
+          onSaved={async (p: ProfileDto) => {
+            saved({ ...user, ...p });
+            if (user.id === runtime.session?.userId) await runtime.refreshProfile();
+            notice("Đã cập nhật ảnh đại diện");
+          }}
+        />
+      </Card>
+      <UnsavedDialog dirty={dirty || avatarDirty} />
       {!user.isMaster &&
         canAssign &&
         user.id !== runtime.session?.userId &&
@@ -138,7 +159,7 @@ export function ServerAccountDetail({ id }: { id: string }) {
             key={id}
             account={user}
             roles={roles.data}
-            disabled={dirty}
+            disabled={dirty || avatarBusy}
             onSave={async (ids) => {
               const value = await api.setRoles(user, ids);
               saved(value);

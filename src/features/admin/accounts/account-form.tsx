@@ -24,6 +24,7 @@ export function AccountForm({
     username: initial?.username ?? "",
     displayName: initial?.displayName ?? "",
     email: initial?.email ?? "",
+    phone: initial?.phone ?? "",
     password: "",
   }));
   const [roleIds, setRoleIds] = useState<string[]>(
@@ -41,6 +42,7 @@ export function AccountForm({
       username: initial.username,
       displayName: initial.displayName,
       email: initial.email ?? "",
+      phone: initial.phone ?? "",
       password: "",
     };
     setValues(next);
@@ -67,6 +69,11 @@ export function AccountForm({
           setError("Mật khẩu cần ít nhất 8 ký tự và không quá 72 byte UTF-8");
           return;
         }
+        const phone = values.phone.trim().replace(/[ ()-]/g, "");
+        if (values.phone.length > 32 || (phone && !/^\+?\d{7,15}$/.test(phone))) {
+          setError("Số điện thoại cần 7–15 chữ số, có thể bắt đầu bằng +");
+          return;
+        }
         setBusy(true);
         setError("");
         try {
@@ -75,6 +82,7 @@ export function AccountForm({
               username: values.username,
               displayName: values.displayName,
               email: values.email.trim() || null,
+              phone: phone || null,
               ...(values.password ? { password: values.password } : {}),
               ...(!initial ? { roleIds } : {}),
             },
@@ -84,6 +92,7 @@ export function AccountForm({
             username: saved.username,
             displayName: saved.displayName,
             email: saved.email ?? "",
+            phone: saved.phone ?? "",
             password: "",
           };
           setValues(next);
@@ -127,6 +136,15 @@ export function AccountForm({
               readOnly={readOnly}
               maxLength={254}
               onChange={(event) => setValues({ ...values, email: event.target.value })}
+            />
+          </Field>
+          <Field label="Số điện thoại">
+            <input
+              type="tel"
+              value={values.phone}
+              readOnly={readOnly}
+              maxLength={32}
+              onChange={(event) => setValues({ ...values, phone: event.target.value })}
             />
           </Field>
           {!readOnly && (

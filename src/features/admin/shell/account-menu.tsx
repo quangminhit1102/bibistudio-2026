@@ -6,7 +6,7 @@ import { roleNames } from "../accounts/permissions";
 import { ActionMenu } from "../shared/ui/primitives";
 import { ChevronsUpDown } from "lucide-react";
 import type { PrincipalDto } from "../../../../backend/src/http/contracts";
-import { can } from "../accounts/permissions";
+import { ServerAvatar } from "../accounts/server-avatar";
 export function AccountMenu({
   user,
   compact = false,
@@ -21,14 +21,18 @@ export function AccountMenu({
   const role = server
     ? user.roles.map((item) => item.name).join(", ")
     : (roleNames[user.roleId] ?? user.roleId);
-  const showProfile = runtime.session?.kind !== "http" || can(runtime.session, "accounts", "view");
+  const showProfile = !!runtime.session;
   return (
     <div className={`a-account-menu ${compact ? "a-account-compact" : ""}`}>
       <ActionMenu
         label={`Tài khoản ${name}`}
         trigger={
           <>
-            <ProfileAvatar user={server ? { id: user.id, name } : user} size={compact ? 32 : 36} />
+            {server ? (
+              <ServerAvatar user={user} size={compact ? 32 : 36} />
+            ) : (
+              <ProfileAvatar user={user} size={compact ? 32 : 36} />
+            )}
             {!compact && (
               <span className="a-account-label">
                 <strong>{name}</strong>
