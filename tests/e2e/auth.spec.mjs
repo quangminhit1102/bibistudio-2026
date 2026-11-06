@@ -102,12 +102,17 @@ test(
         else process.env.BACKEND_PORT = previous;
       }
       await frontend.listen();
+      await frontend.warmupRequest("/src/main.tsx");
+      await frontend.warmupRequest("/src/features/admin/shell/admin-entry.tsx");
       const base = `http://127.0.0.1:${frontend.httpServer.address().port}`;
       runtime.appOptions.config.allowedOrigins.splice(0, 1, base);
       browser = await chromium.launch();
       const evidence = resolve(".superpowers/e2e/auth");
       await mkdir(evidence, { recursive: true });
       const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
+      await context.route(/^https:\/\/fonts\.googleapis\.com\//, (route) =>
+        route.fulfill({ contentType: "text/css", body: "/* Offline acceptance fallback */" }),
+      );
       const page = await context.newPage();
       const errors = [];
       page.on("pageerror", (error) => errors.push(error.message));
@@ -183,6 +188,9 @@ test(
         viewport: { width: 1440, height: 1000 },
         extraHTTPHeaders: { DNT: "1" },
       });
+      await adminContext.route(/^https:\/\/fonts\.googleapis\.com\//, (route) =>
+        route.fulfill({ contentType: "text/css", body: "/* Offline acceptance fallback */" }),
+      );
       const admin = await adminContext.newPage();
       admin.on("pageerror", (error) => errors.push(error.message));
       await admin.goto(base + "/admin");

@@ -104,11 +104,16 @@ test(
         else process.env.BACKEND_PORT = previous;
       }
       await frontend.listen();
+      await frontend.warmupRequest("/src/main.tsx");
+      await frontend.warmupRequest("/src/features/admin/shell/admin-entry.tsx");
       const base = "http://127.0.0.1:" + frontend.httpServer.address().port;
       runtime.appOptions.config.allowedOrigins.splice(0, 1, base);
       browser = await chromium.launch();
       const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } }),
         errors = [];
+      await page.route(/^https:\/\/fonts\.googleapis\.com\//, (route) =>
+        route.fulfill({ contentType: "text/css", body: "/* Offline acceptance fallback */" }),
+      );
       page.on("pageerror", (error) => errors.push(error.message));
       const evidence = resolve(".superpowers/e2e/access-logs");
       await mkdir(evidence, { recursive: true });
