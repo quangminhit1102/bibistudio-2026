@@ -60,6 +60,8 @@ test(
         else process.env.BACKEND_PORT = previous;
       }
       await frontend.listen();
+      await frontend.warmupRequest("/src/main.tsx");
+      await frontend.warmupRequest("/src/features/admin/shell/admin-entry.tsx");
       console.log("usability: frontend ready");
       const base = "http://127.0.0.1:" + frontend.httpServer.address().port;
       runtime.appOptions.config.allowedOrigins.splice(0, 1, base);
@@ -109,6 +111,21 @@ test(
       await heading("Bảng điều khiển").waitFor();
       console.log("usability: login verified");
 
+      // CSS automatically renders an icon-only rail on tablet even without a manual collapse.
+      await page.setViewportSize({ width: 900, height: 1000 });
+      const tabletLink = page
+        .locator("#admin-sidebar")
+        .getByRole("link", { name: "Bảng điều khiển", exact: true });
+      await tabletLink.focus();
+      await page.getByRole("tooltip", { name: "Bảng điều khiển", exact: true }).waitFor();
+      await shot("sidebar-tablet-focus");
+      await page.keyboard.press("Escape");
+      await page.getByRole("tooltip").waitFor({ state: "hidden" });
+      await page.setViewportSize({ width: 1440, height: 1000 });
+      await page.mouse.move(900, 100);
+      await tabletLink.focus();
+      assert.equal(await page.getByRole("tooltip").count(), 0);
+
       // A fresh random origin and browser context isolate all IndexedDB catalogue/business data.
       await go("/admin/sales/slips/PMH-2026-0002/edit?returnTo=%2Fadmin%2Fsales%2Fslips%3F");
       await heading("Chỉnh sửa phiếu mua hàng").waitFor();
@@ -152,6 +169,37 @@ test(
         await page.waitForURL((url) => !url.pathname.endsWith("/create"));
         assert.equal(await page.getByRole("dialog").count(), 0);
       }
+
+      // Edit a real nonempty seeded article, including the date-only seed representation.
+      await go("/admin/content/posts");
+      await page.locator('a[href^="/admin/content/posts/journal-"]').first().click();
+      await page.getByRole("link", { name: "Chỉnh sửa", exact: true }).click();
+      const existingBody = page.frameLocator('iframe[title="Nội dung bài viết"]').locator("body");
+      await existingBody.waitFor();
+      const textBefore = await existingBody.innerText();
+      assert.ok(textBefore.length > 100);
+      await existingBody.click();
+      await existingBody.press("Control+End");
+      await existingBody.pressSequentially(" Kiểm chứng hoàn nguyên", { delay: 15 });
+      assert.equal(await unloadBlocked(), true);
+      await page.getByRole("button", { name: "Hoàn tác", exact: true }).click();
+      assert.equal(await existingBody.innerText(), textBefore);
+      await page.waitForFunction(() =>
+        window.dispatchEvent(new Event("beforeunload", { cancelable: true })),
+      );
+      const publishAt = page.getByLabel("Ngày xuất bản", { exact: true });
+      const originalDate = await publishAt.inputValue();
+      await publishAt.fill(originalDate === "2026-08-26" ? "2026-08-27" : "2026-08-26");
+      await page.waitForFunction(
+        () => !window.dispatchEvent(new Event("beforeunload", { cancelable: true })),
+      );
+      await publishAt.fill(originalDate);
+      await page.waitForFunction(() =>
+        window.dispatchEvent(new Event("beforeunload", { cancelable: true })),
+      );
+      await page.getByRole("button", { name: "Quay lại", exact: true }).click();
+      await page.waitForURL((url) => url.pathname === "/admin/content/posts");
+      assert.equal(await page.getByRole("dialog").count(), 0);
 
       await go("/admin/settings/profile");
       await page.getByText("Tài khoản quản trị gốc được bảo vệ", { exact: true }).waitFor();

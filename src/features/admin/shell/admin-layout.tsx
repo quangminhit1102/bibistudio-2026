@@ -47,6 +47,15 @@ export function AdminLayout() {
       void logout();
   }, [account.error, account.data, session, logout]);
   const [collapsed, setCollapsed] = useState(false);
+  const [responsiveRail, setResponsiveRail] = useState(false);
+  useEffect(() => {
+    // Keep the tooltip state in sync with the icon-only rail breakpoint in admin.css.
+    const query = matchMedia("(min-width: 768px) and (max-width: 1023px)");
+    const update = () => setResponsiveRail(query.matches);
+    update();
+    query.addEventListener("change", update);
+    return () => query.removeEventListener("change", update);
+  }, []);
   const sidebar = useSidebarResize(!collapsed);
   const [drawer, setDrawer] = useState(false);
   const [search, setSearch] = useState(false);
@@ -110,7 +119,7 @@ export function AdminLayout() {
         groups={allowed}
         pathname={pathname}
         {...navGroups}
-        collapsed={collapsed && !drawer}
+        collapsed={(collapsed || responsiveRail) && !drawer}
       />
       <div className="a-sidebar-footer">
         {account.data && <AccountMenu user={account.data} compact={collapsed && !drawer} />}
