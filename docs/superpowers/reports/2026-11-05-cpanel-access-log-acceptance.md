@@ -1,6 +1,15 @@
 # Kiểm chứng nhật ký cPanel
 
-Trạng thái05/11: triển khai local trong worktree codex/admin-dashboard. **Feature chưa deploy production, chưa cài cron thật.** Source/gate hosting tách khỏi local/CI; không dùng fixture làm bằng chứng production.
+Trạng thái06/11: feature đã deploy production bằng artifact `d7a47285ddd54848b34c58ed6948b871d2b0ba99-42063626652`. **Cron 15 phút chưa cài; kiểm chứng qua chu kỳ archive thật còn chờ.** Owner đã xác nhận triển khai ngay và kiểm chứng chu kỳ archive sau. Source/gate hosting tách khỏi local/CI; không dùng fixture làm bằng chứng production.
+
+## Phát hành và kiểm tra production
+
+- Main CI42063626652 đạt:221UItests,213Node tests không skip trên Linux, watcher và hai browser/MySQL flows; build/artifact upload đạt.
+- Workflow [Deploy production42065964107](https://github.com/quangminhit1102/bibistudio-2026/actions/runs/42065964107) thành công lúc23:46:36VN05/11 (16:46:36UTC). Phiên bản trước e725; tooling giữ gate native backup/isolated restore-check trước migration/bootstrap và probe sau activation. Hash/bytes backup cụ thể còn phải đọc receipt private trên hosting.
+- Tooling mới đã sao lưu/cập nhật dưới deploy.lock, hash từng file đối chiếu; private backup `access-log-tools-1793896486632`. Bốn archive preserved đã đưa vào queue trước activation. Config4giá trị đặt trong runtime/maintenance env0600 ngoài webroot; không thêm quyền DB/SSH/token.
+- API thật lúc07:04VN06/11: ready200, không token401; current268record/2nguồn; archive9392record/4nguồn, pageSize100/trang94=92. Chi tiết200; Admin và user01 đọc được cả hai scope. `user01` đang có cả Admin+User, fullAccess=true nên accounts200 là đúng RBAC hiện tại; chưa nghiệm thu User-only, đã hỏi owner về việc giữ hay bỏ role Admin. Không tự sửa quyền đang có.
+- [Rollback42134278489](https://github.com/quangminhit1102/bibistudio-2026/actions/runs/42134278489) đã chuyển thật về e725, degradedAdmin=false, API version đúng e725 và ready200. [Workflow42134479321](https://github.com/quangminhit1102/bibistudio-2026/actions/runs/42134479321) chuyển trở lại release mới thành công lúc07:08:50VN06/11. API kiểm tra lại lúc07:09:17VN: đúng release d7a4728, ready200; current268/archive9392 và phân trang/chi tiết vẫn đúng. Đây là kiểm tra số lượng qua HTTP; hash checkpoint/retained revocations phía DB còn phải đối chiếu trên hosting, không suy ra từ tổng record.
+- Local browser bị tắt trong Work settings khi tiếp tục ngày06/11. Đã yêu cầu bật/kết nối Edge/cPanel để cài cron, quan sát job thực, đọc private backup/schema/checkpoint receipt và chụp UI production. Chưa thực hiện các mục đó bằng cách khác hoặc coi đã đạt.
 
 ## Phạm vi đã triển khai
 
@@ -32,7 +41,7 @@ Build thực `npm run build` tại7a27627 thành công, manifest3/feature2/core4
 
 Đã đọc nguồn đúng domain, đo current-file freshness và lưu mốc archive hash/byte. Lúc22:10VN đã giữ4gzip/175935bytes tại private/access-log-source-preservation,0700/0600, kiểm tra hash với nguồn. Source chưa thay thế hệ từ mốc14:13UTC; prefixPreserved trên cùng snapshot **không** chứng minh append qua một cycle thật. Chi tiết/bằng chứng tại [freshness report](2026-11-05-access-log-freshness.md).
 
-Task9 còn: real archive update-prefix gate, trusted tools upgrade theo hash, private config4giá trị, native production backup/restore-check, migration/queued bootstrap gồm archive đã giữ, đúng main CI artifact, HTTP/UI User/Admin, cài/đọc crontab và chạy job thật, rollback về e725 rồi phát hành lại. Không có feature release/run ID production để báo tại thời điểm này.
+Task9 còn: real archive update-prefix gate (owner cho phép kiểm chứng sau deploy), đọc receipt backup/schema/checkpoint private, UI User/Admin theo quyền owner chốt, cài/đọc crontab và quan sát job thật. Các bước phát hành/rollback đã có run ID và bằng chứng ở mục production phía trên; không lấy chúng làm bằng chứng cron hoặc chu kỳ archive đã đạt.
 
 ## Tệp và cấu hình
 
