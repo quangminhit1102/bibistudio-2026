@@ -60,6 +60,58 @@ This is an audit only. No browser was run. "Confirmed" means read in source; "Hy
 7. Unsaved-changes guard — forms.
 8. Date-range / year picker — reports filter.
 
+## G. Profile page refinement (design only, for your local source)
+
+Based on your description, not on your local files. Only the order and the visuals change. Auth, Master read-only, explicit image save, dirty guards and upload limits stay as they are.
+
+Order: PageTitle "Hồ sơ" → avatar card → "Thông tin tài khoản" (SelfProfileForm) → "Vai trò" card.
+
+```tsx
+<Card className="a-profile-hero">
+  <div className="a-profile-avatar">
+    {preview ?? current ? <img src={preview ?? current} alt="Ảnh đại diện" /> : <span>{initials}</span>}
+  </div>
+  <div className="a-profile-meta">
+    <h2>{displayName}</h2>
+    <p>@{username} · {roleLabel}</p>
+    <small>JPG, PNG hoặc WebP · tối đa {limit} · ảnh vuông hiển thị đẹp nhất</small>
+    {error && <p role="alert" className="a-field-error">{error}</p>}
+  </div>
+  <div className="a-profile-actions">
+    {!dirty ? <>
+      <label className="a-btn a-btn-secondary">Chọn ảnh<input type="file" hidden accept="image/*" disabled={readOnly} /></label>
+      {current && <button className="a-btn a-btn-ghost" disabled={readOnly}>Gỡ ảnh</button>}
+    </> : <>
+      <button className="a-btn a-btn-ghost">Hủy</button>
+      <button className="a-btn a-btn-primary" aria-busy={saving}>Lưu ảnh</button>
+    </>}
+  </div>
+</Card>
+```
+
+```css
+.a-profile-hero{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:20px}
+.a-profile-avatar{width:88px;height:88px;border-radius:50%;overflow:hidden;border:1px solid var(--a-border);background:var(--a-hover);display:grid;place-items:center;font-weight:600;font-size:24px}
+.a-profile-avatar img{width:100%;height:100%;object-fit:cover}
+.a-profile-meta{min-width:0;display:grid;gap:2px}
+.a-profile-meta h2,.a-profile-meta p{overflow-wrap:anywhere}
+.a-profile-meta p,.a-profile-meta small{color:var(--a-muted)}
+.a-profile-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.a-profile-actions label:has(input:disabled){opacity:.5;pointer-events:none}
+@media (max-width:640px){
+  .a-profile-hero{grid-template-columns:1fr;justify-items:center;text-align:center}
+  .a-profile-actions{justify-content:center;width:100%}
+  .a-profile-actions .a-btn{flex:1 1 0;min-height:44px}
+}
+```
+
+Notes:
+- Show Hủy/Lưu only while a new image is chosen, so one clear next step is visible at a time.
+- The hidden file input inside a `label` needs a visible focus ring: `.a-profile-actions label:focus-within{outline:2px solid var(--a-accent);outline-offset:2px}`.
+- Master read-only: show buttons disabled with a short muted line ("Tài khoản Master chỉ xem"), don't hide them.
+- If buttons are `<a>`/`<label>`, the colour bug in A1 applies; check the primary button in dark mode.
+- Check at 360, 768 and 1440 px, light and dark: no overflow with a long name or email.
+
 ## Open decisions for you
 
 - Admin language (section C).
