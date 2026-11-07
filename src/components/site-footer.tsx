@@ -68,7 +68,7 @@ export function SiteFooter() {
                 ["Facebook", contact.facebook],
                 ["Messenger", contact.messenger],
               ].map(([label, href]) => (
-                <a key={label} href={href} target="_blank" rel="noopener noreferrer" className="border border-border px-3 py-1.5 text-[12px] transition hover:border-foreground hover:bg-secondary">
+                  <a key={label} href={href} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center border border-border px-3 py-2 text-sm transition hover:border-foreground hover:bg-secondary">
                   {label}
                 </a>
               ))}
@@ -93,13 +93,12 @@ export function SiteFooter() {
       </div>
 
       <div className="border-t border-border">
-        <div className="mx-auto flex max-w-[1280px] flex-col gap-2 px-5 pb-24 pt-5 text-[11px] tracking-wider text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-6 xl:pb-5 lg:px-12">
+        <div className="mx-auto flex max-w-[1280px] flex-col gap-2 px-5 pb-28 pt-5 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-12">
           <p>© {new Date().getFullYear()} BiBi Studio · Touch your heart</p>
           <AnalyticsPrivacyControl />
           <p className="flex gap-5">
-            <Link to="/about" className="hover:text-foreground">Về BiBi</Link>
-            <Link to="/contact" className="hover:text-foreground">Liên hệ</Link>
-            <Link to="/api-test" className="hover:text-foreground">Kiểm tra API</Link>
+            <Link to="/about" className="inline-flex min-h-11 items-center hover:text-foreground">Về BiBi</Link>
+            <Link to="/contact" className="inline-flex min-h-11 items-center hover:text-foreground">Liên hệ</Link>
           </p>
         </div>
       </div>

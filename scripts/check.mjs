@@ -25,6 +25,7 @@ try {
   ]);
   await node("scripts/catalogue-images.mjs");
   await node("node_modules/vitest/vitest.mjs", ["run", "--config", "vitest.admin.config.ts"]);
+  await node("node_modules/vitest/vitest.mjs", ["run", "--config", "vitest.public.config.ts"]);
   const scripts = (await readdir(join(root, "scripts")))
     .filter((n) => n.endsWith(".test.mjs") && n !== "dev.test.mjs")
     .map((n) => `scripts/${n}`);
