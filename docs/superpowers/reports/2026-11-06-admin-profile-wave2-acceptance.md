@@ -79,4 +79,12 @@ Theo yêu cầu mới của owner, đã tham khảo bố cục từ Lovable ở 
 
 Các thay đổi chỉ ở4file UI: server-profile, avatar-editor, server-avatar, admin.css; không thêm thư viện hoặc đổi API/DB. TypeScript/lint đạt;9test tương tác có sẵn đạt; real Chromium/MySQL profile suite đạt202.2giây sau khi khởi động lại Docker/local databases. Đã xem screenshot390×844 và1440×1000, đồng thời suite kiểm tra900×1000, sáng/tối, không tràn ngang. Evidence: `.superpowers/e2e/profile/avatar-layout-tests.log`, `avatar-layout-browser.log`, `profile-*.png`.
 
-Cổng tổng sau review ở runtime commit `4f992f110d7692feffb92f88820684e370241003`:100files/269UI tests đạt;254Node tests gồm248pass/6POSIXskip; watcher1pass và4browser suites đạt. Build và budget sau review đạt (deltaJS8710B/CSS313B). Một full-run ghi nhận PNG16MP1359ms/peak331304KiB (~324MiB), vẫn chỉ là số đo local. Bản build cho bố cục07/11 và URL preview được ghi ở phần bàn giao sau kiểm chứng cuối. Không push/deploy production.
+Cổng tổng sau review ở runtime commit `4f992f110d7692feffb92f88820684e370241003`:100files/269UI tests đạt;254Node tests gồm248pass/6POSIXskip; watcher1pass và4browser suites đạt. Build và budget sau review đạt (deltaJS8710B/CSS313B). Một full-run ghi nhận PNG16MP1359ms/peak331304KiB (~324MiB), vẫn chỉ là số đo local. Bản build cho bố cục07/11 được ghi ở phần bàn giao cuối bên dưới. Không push/deploy production.
+
+
+## Bàn giao bố cục07/11/2026
+
+- Source `6fff1ba06f8be4d0fe5b295764fac569a2ffee05`; artifact `.releases/local-6fff1ba06f8be4d0fe5b295764fac569a2ffee05.tgz`, manifest4. Build exit0; budget exit0 deltaJS8704B/CSS313B, không có admin trong public initial graph.
+- Preview compiled `http://127.0.0.1:4200/admin/settings/profile` đã đăng nhập trực tiếp bằng fixture local không role; ảnh/name đã lưu vẫn hiện, card ảnh đứng trước thông tin tài khoản. Tab giữ mở cho owner review. Docker local đã được mở lại; không đổi production.
+- Bằng chứng mới: `.superpowers/e2e/profile/avatar-layout-{tests,browser,build}.log`, `avatar-layout-budget.json`, `profile-390-light.png`, `profile-1440-dark.png`. Log cổng tổng sau review được giữ riêng ở `post-review-check.log`/`post-review-build.log`.
+- Hai minor còn hoãn: strict-reject PNG có scanline thừa (đã sanitize an toàn), và URL theme cá nhân trực tiếp cho session HTTP (không mở quyền backend). Các ruling/chi phí đầy đủ ở trên; Linux/POSIX và nghiệm thu hosting vẫn là bước phát hành sau.
