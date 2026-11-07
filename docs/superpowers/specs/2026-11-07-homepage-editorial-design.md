@@ -1,6 +1,6 @@
 # Trang chủ BiBi — Bàn giấy BiBi
 
-Ngày: 2026-11-07. Trạng thái: **hướng A đã được chọn; bản thiết kế này chờ duyệt**.
+Ngày: 2026-11-07. Trạng thái: **đã được người dùng duyệt triển khai local, giữ lựa chọn EN**.
 
 ## Mục đích
 
