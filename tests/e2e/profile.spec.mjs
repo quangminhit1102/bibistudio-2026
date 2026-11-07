@@ -190,6 +190,9 @@ test(
       await page.getByRole("button", { name: "Hủy chọn ảnh", exact: true }).click();
       await page.unroute("**/api/profile/avatar");
       await page.getByLabel("Tên hiển thị", { exact: true }).fill("Nháp không mất");
+      await page.waitForFunction(
+        () => document.querySelector('input[aria-label="Chọn ảnh đại diện"]')?.disabled === true,
+      );
       assert.equal(await page.getByLabel("Chọn ảnh đại diện", { exact: true }).isDisabled(), true);
       await f.pool.query(
         "UPDATE users SET display_name='Thay đổi ở tab khác',revision=revision+1 WHERE id=?",
