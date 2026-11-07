@@ -1,5 +1,9 @@
 # Homepage editorial — local acceptance
 
+**Superseded — user requested reverting this UI on2026-11-07 because it did not meet their expectations. Implementation `bbf047f` was reverted by `4d90e21`. This report records the discarded local iteration, not the current UI. No part of this iteration was pushed or deployed.**
+
+Revert verification: source under `src` and `scripts/check.mjs` matches pre-implementation `c4525f0`; TypeScript and full build exit0. Final preview uses `local-4d90e213073ab592c380159bf58d00a5d7ecbc91` at port4198. Browser confirms original English hero, five slide controls, brand statement and four contact links restored. Screenshot: `.superpowers/home-restored.jpg`. No push/deploy.
+
 Date: 2026-11-07. Implementation commit: `bbf047ff5757a9918d5996d4cd2fce31349b0600`.
 Scope: approved direction A, public homepage/shared contact/footer; EN selector retained. No push, merge or deployment.
 
