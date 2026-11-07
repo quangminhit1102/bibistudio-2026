@@ -1,99 +1,108 @@
-import { useEffect, useId, useRef, useState } from "react";
-import { useRouterState } from "@tanstack/react-router";
-import { ArrowUpRight, MessageCircle, Phone, X } from "lucide-react";
+// src/components/floating-contact.tsx
+// Floating contact bar for quick customer outreach.
+// Order: Phone -> Zalo -> Facebook -> Message (Messenger).
+import { Phone } from "lucide-react";
 import { contact } from "@/data/contact";
-import "@/styles/floating-contact.css";
 
-const channels = [
-  { name: "Gọi điện", detail: contact.phoneDisplay, href: `tel:${contact.phone}` },
-  { name: "Zalo", detail: "Trò chuyện với BiBi", href: contact.zalo },
-  { name: "Facebook", detail: "Ghé thăm fanpage", href: contact.facebook },
-  { name: "Messenger", detail: "Gửi một lời nhắn", href: contact.messenger },
+interface ContactItem {
+  id: string;
+  href: string;
+  label: string;
+  title: string;
+  bg: string;
+  icon: React.ReactNode;
+}
+
+function ZaloIcon({ className = "size-5" }: { className?: string }) {
+  return (
+    <img src="/zalo.png" alt="Zalo" className={`object-contain brightness-0 invert ${className}`} />
+  );
+}
+
+function FacebookIcon({ className = "size-5" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden="true">
+      <path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.096 10.125 24v-8.437H7.078v-3.49h3.047V9.44c0-3.026 1.792-4.706 4.533-4.706 1.313 0 2.686.236 2.686.236v2.97h-1.513c-1.49 0-1.955.931-1.955 1.887v2.26h3.328l-.532 3.49h-2.796V24C19.612 23.096 24 18.1 24 12.073z" />
+    </svg>
+  );
+}
+
+function MessengerIcon({ className = "size-5" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden="true">
+      <path d="M12 0C5.373 0 0 4.975 0 11.115c0 3.498 1.744 6.616 4.472 8.652V24l4.086-2.242c1.09.301 2.246.465 3.442.465 6.627 0 12-4.975 12-11.116C24 4.975 18.627 0 12 0zm1.193 14.963l-3.056-3.26-5.963 3.26 6.559-6.963 3.13 3.26 5.889-3.26-6.559 6.963z" />
+    </svg>
+  );
+}
+
+const contacts: ContactItem[] = [
+  {
+    id: "phone",
+    href: "tel:0392969000",
+    label: "Gọi ngay",
+    title: "Hotline: 0392 969 000",
+    bg: "bg-[#25d366] hover:bg-[#1ebe5a]",
+    icon: <Phone className="size-5" />,
+  },
+  {
+    id: "zalo",
+    href: "https://zalo.me/0392969000",
+    label: "Zalo",
+    title: "Chat Zalo: 0392 969 000",
+    bg: "bg-[#0068ff] hover:bg-[#0056d6]",
+    icon: <ZaloIcon className="size-5" />,
+  },
+  {
+    id: "facebook",
+    href: contact.facebook,
+    label: "Facebook",
+    title: "Fanpage BiBi Studio",
+    bg: "bg-[#1877f2] hover:bg-[#1466d2]",
+    icon: <FacebookIcon className="size-5" />,
+  },
+  {
+    id: "messenger",
+    href: contact.messenger,
+    label: "Messenger",
+    title: "Nhắn tin Messenger",
+    bg: "bg-[#0084ff] hover:bg-[#0070d9]",
+    icon: <MessengerIcon className="size-5" />,
+  },
 ];
 
 export function FloatingContact() {
-  const [open, setOpen] = useState(false);
-  const container = useRef<HTMLDivElement>(null);
-  const trigger = useRef<HTMLButtonElement>(null);
-  const panelId = useId();
-  const href = useRouterState({ select: (state) => state.location.href });
-  useEffect(() => {
-    setOpen(false);
-  }, [href]);
-  useEffect(() => {
-    const dismiss = () => setOpen(false);
-    window.addEventListener("bibi:public-overlay-open", dismiss);
-    return () => window.removeEventListener("bibi:public-overlay-open", dismiss);
-  }, []);
-  useEffect(() => {
-    if (!open) return;
-    const outside = (event: PointerEvent) => {
-      if (event.target instanceof Node && !container.current?.contains(event.target))
-        setOpen(false);
-    };
-    const escape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setOpen(false);
-        trigger.current?.focus();
-      }
-    };
-    document.addEventListener("pointerdown", outside);
-    document.addEventListener("keydown", escape);
-    return () => {
-      document.removeEventListener("pointerdown", outside);
-      document.removeEventListener("keydown", escape);
-    };
-  }, [open]);
-
   return (
     <div
-      className="floating-contact public-contact"
-      ref={container}
-      onBlur={(event) => {
-        if (
-          event.relatedTarget instanceof Node &&
-          !event.currentTarget.contains(event.relatedTarget)
-        )
-          setOpen(false);
-      }}
+      className="floating-contact fixed inset-x-0 bottom-3 z-40 mx-auto flex w-fit items-center gap-2 rounded-full border border-border bg-background/95 p-1.5 shadow-lg backdrop-blur xl:inset-x-auto xl:bottom-auto xl:right-3 xl:top-1/2 xl:mx-0 xl:-translate-y-1/2 xl:flex-col xl:gap-3 xl:rounded-none xl:border-0 xl:bg-transparent xl:p-0 xl:shadow-none xl:backdrop-blur-none"
+      aria-label="Liên hệ mua hàng"
     >
-      <button
-        type="button"
-        ref={trigger}
-        className="public-contact-trigger"
-        aria-label="Liên hệ BiBi"
-        aria-expanded={open}
-        aria-controls={panelId}
-        onClick={() => setOpen((value) => !value)}
-      >
-        {open ? <X aria-hidden="true" /> : <MessageCircle aria-hidden="true" />}
-        <span>Liên hệ</span>
-      </button>
-      {open && (
-        <nav id={panelId} aria-label="Các kênh liên hệ BiBi" className="public-contact-panel">
-          <p>Bạn muốn trò chuyện?</p>
-          {channels.map((channel) => (
-            <a
-              key={channel.name}
-              href={channel.href}
-              target={channel.href.startsWith("http") ? "_blank" : undefined}
-              rel={channel.href.startsWith("http") ? "noopener noreferrer" : undefined}
-              onClick={() => setOpen(false)}
-            >
-              {channel.name === "Gọi điện" ? (
-                <Phone aria-hidden="true" />
-              ) : (
-                <MessageCircle aria-hidden="true" />
-              )}
-              <span>
-                <strong>{channel.name}</strong>
-                <small>{channel.detail}</small>
-              </span>
-              <ArrowUpRight aria-hidden="true" />
-            </a>
-          ))}
-        </nav>
-      )}
+      {contacts.map((c) => (
+        <a
+          key={c.id}
+          href={c.href}
+          target={c.href.startsWith("http") ? "_blank" : undefined}
+          rel={c.href.startsWith("http") ? "noopener noreferrer" : undefined}
+          title={c.title}
+          aria-label={c.title}
+          className="group relative flex items-center justify-center"
+        >
+          {/* Tooltip label */}
+          <span className="pointer-events-none absolute right-full mr-3 hidden items-center whitespace-nowrap rounded-md bg-foreground/90 px-3 py-1.5 text-xs font-semibold text-background opacity-0 shadow-lg backdrop-blur-sm transition-all duration-300 ease-out translate-x-3 scale-95 group-hover:translate-x-0 group-hover:opacity-100 group-hover:scale-100 xl:flex">
+            {c.label}
+            {/* Arrow */}
+            <span className="absolute -right-1 top-1/2 size-2 -translate-y-1/2 rotate-45 bg-foreground/90" />
+          </span>
+
+          {/* Contact button circle */}
+          <span
+            className={`relative flex size-10 items-center justify-center rounded-full text-white shadow-sm transition-all duration-300 ease-out group-hover:scale-110 group-hover:shadow-xl active:scale-95 xl:size-11 ${c.bg}`}
+          >
+            <span className="shrink-0 transition-transform duration-300 ease-out group-hover:scale-110 group-hover:-rotate-6">
+              {c.icon}
+            </span>
+          </span>
+        </a>
+      ))}
     </div>
   );
 }

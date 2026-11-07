@@ -1,6 +1,6 @@
 // Brand-catalogue header: home · products · collections · journal · about · contact · search · language.
 import { ArrowRight, Menu, Phone, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { BrandLogo } from "./brand-logo";
 import { LanguageSwitcher } from "./language-switcher";
@@ -24,7 +24,7 @@ function MegaPanel({ kind, onDone }: { kind: Mega; onDone: () => void }) {
       ? productTypes.map((t) => ({ key: t.id, to: "/products/$slug" as const, slug: t.slug, name: tx(t.plural), sub: tx(t.tagline), image: t.image }))
       : collections.map((c) => ({ key: c.id, to: "/collections/$slug" as const, slug: c.slug, name: tx(c.name), sub: tx(c.tagline), image: c.image }));
   return (
-    <div data-public-mega className="absolute inset-x-0 top-full z-50 border-y border-border bg-background shadow-paper animate-in fade-in slide-in-from-top-1 duration-300">
+    <div className="absolute inset-x-0 top-full z-50 border-y border-border bg-background shadow-paper animate-in fade-in slide-in-from-top-1 duration-300">
       <div className="mx-auto grid max-w-[1280px] grid-cols-[14rem_1fr] gap-10 px-12 py-10">
         <div>
           <p className="eyebrow">{kind === "products" ? "Loại sản phẩm" : "Bộ sưu tập"}</p>
@@ -55,9 +55,6 @@ function MegaPanel({ kind, onDone }: { kind: Mega; onDone: () => void }) {
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
   const [mega, setMega] = useState<Mega | null>(null);
-  useEffect(() => {
-    if (open || mega) window.dispatchEvent(new Event("bibi:public-overlay-open"));
-  }, [open, mega]);
   return (
     <header className="relative z-40 w-full border-b border-border bg-background" onMouseLeave={() => setMega(null)}>
       <div className="mx-auto grid max-w-[1280px] grid-cols-[2.75rem_minmax(0,1fr)_5.5rem] items-center gap-2 px-4 py-3 sm:px-6 lg:flex lg:justify-between lg:gap-6 lg:px-12 lg:py-4">

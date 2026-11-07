@@ -13,7 +13,6 @@ export function QuickSearch({ className = "" }: { className?: string }) {
 
   useEffect(() => {
     if (!open) return;
-    window.dispatchEvent(new Event("bibi:public-overlay-open"));
     input.current?.focus();
     const key = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
     document.addEventListener("keydown", key);
