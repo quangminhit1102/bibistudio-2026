@@ -1,119 +1,146 @@
-# BiBi Admin + homepage — read-only audit and proposed rules (commit ddfdd4c)
+# Trang chủ BiBi Studio — audit UI/UX và đề xuất (chỉ plan, chưa sửa gì)
 
-This is an audit only. No browser was run. "Confirmed" means read in source; "Hypothesis" needs your browser check.
+**Nguồn bằng chứng**
+- Mình đã đọc mã nguồn: `src/routes/index.tsx` (262 dòng), `site-footer.tsx`, `floating-contact.tsx`. Bản mã trong sandbox là `c9e4f73`, khác mã `89e4f3b` bạn nêu. Cần đối chiếu lại trước khi làm.
+- Mình **không** mở trình duyệt hay trang live. Số đo màn hình (CTA dưới màn đầu ở 1280×720, lối vào loại sản phẩm ở y≈5803 trên 390×844, FilmStrip ≈3066px) lấy từ quan sát của Codex, ghi là **[Codex]**.
+- Phần **[Giả định]** cần bạn xác nhận.
 
-## A. Source-confirmed root causes
+## 1. Đánh giá hiện trạng (vấn đề quan trọng nhất trước)
 
-1. **Invisible "Sửa" link on slip detail (dark mode)** — `admin.css:67` `.admin-root a { color: inherit }` (specificity 0,1,1) beats `.a-btn-primary { color: var(--a-on) }` (0,1,0, line 362). A `<Link className="a-btn a-btn-primary">` inherits `--a-text` (#fafafa in dark) on `--a-accent` (#fafafa) → white on white. In light mode it happens to look right only because both are dark-on-dark… actually #18181b on #18181b, also invisible unless parent colour differs. Same applies to `.a-btn-destructive` (`#fff`) and any variant that sets `color` on an `<a>`.
-   - Rule: scope the reset to `.admin-root a:not(.a-btn)` or raise button selectors to `.admin-root .a-btn-*`. Add `:focus-visible`, `[aria-disabled]`, `[data-loading]` states for all variants; destructive hover needs its own darker token, not `opacity`.
-2. **Sidebar footer shows role, not account** — `admin-layout.tsx:141-144` hardcodes initials "MN", shows role name with fallback "Demo", subtitle "Dữ liệu trên trình duyệt". Profile query (`getProfile`, line 37-41) already exists but is not used there. Rule: footer = avatar(initials or image) + display name + role; whole block is a dropdown with only "Hồ sơ" and "Đăng xuất".
-3. **"Trang trong {label}" intermediary** — `admin-layout.tsx:118-122` renders a `<details>` summary for every item with children. Rule: render children as flat indented links under a group heading; keep `item.resource` permission filtering and existing paths; hub/index routes (`admin.products.index`, etc.) redirect to their first allowed child.
-4. **Report chart labels** — `chart.tsx:89-97` vertical bars use fixed `YAxis width={120}` and truncate at 20 chars; `reports.tsx:198` builds labels as `name · id.slice(0,12)`, so long Vietnamese names lose the ID or vice-versa, and tooltip receives the truncated composite string. Rule: pass `{label, fullLabel, id}`; axis shows short label, tooltip shows full name + ID; width computed from container (e.g. 35% clamp 96–220px); on <640px swap chart for a ranked list with bars inline.
-5. **Spacing above "Tổng kết sản phẩm"** — `reports.tsx:205` sibling `<section>`s have no shared vertical rhythm class; spacing depends on children. Rule: one `.a-section-stack` (gap 32px desktop / 24px mobile) wrapping all page sections, `h2` margin-bottom fixed.
-6. **Visible demo wording** — found in ≥40 admin files, e.g. `admin-layout.tsx:213,218-220,227,234` ("Đăng xuất demo", demo strip, footer "Admin demo"), `reports.tsx:153`, `slip-editor.tsx:62`, `transactions.tsx:7,25`, `orders.tsx:9`, `order-detail.tsx:46,143,158,216`, `global-search.tsx:30,60`, `navigation.ts:119` ("Bảo mật demo"). Code identifiers (`DemoSession`, `demo/registry`) are not visible and can stay.
-7. **Homepage dots** — `index.tsx:38` dot group lives inside `HeroSlides`, which is inside `animate-unveil` (`clip-path` inset 10%/14% at start, `styles.css:255`) and inside `<Parallax strength={90}>` (translated layer). The dots therefore move with parallax and are clipped by the unveil clip-path and any overflow of the parallax wrapper.
-   - Rule: render dots as a sibling of `<Parallax>` in the `relative` hero container (not transformed, not clipped), `z-10`, bottom-centre. Simplify: drop the blurred pill, keep 44px buttons, 6px ring / 8px filled active. Keep 5500ms autoplay and reduced-motion check.
+| # | Khu vực | Đang tốt | Vấn đề | Ảnh hưởng | Ưu tiên |
+|---|---|---|---|---|---|
+| 1 | Thứ tự trang | Đủ nội dung, có cá tính | 11 khối. Lối vào theo **loại sản phẩm** ("What we make") đứng thứ 5, sau 7 bộ sưu tập và FilmStrip [Codex: ~7 màn trên mobile] | Khách cần sổ tay hay thiệp phải cuộn rất lâu | Cao |
+| 2 | Hero | Ảnh sổ thật, 2 CTA, slideshow 5 ảnh | Headline tiếng Anh cỡ lớn (`text-[3.35rem]`→`md:text-7xl`) đẩy CTA xuống dưới màn đầu ở desktop [Codex]. Trên mobile ảnh nằm cuối màn đầu. Eyebrow "Touch your heart" lặp ý headline. Chưa nói rõ "làm đồ giấy gì" | Không đạt mục tiêu 5 giây | Cao |
+| 3 | FilmStrip "Trên bàn của BiBi" | Ảnh sản phẩm nổi bật, chuyển động đẹp | Bị ghim khi cuộn, chiếm ≈3066px [Codex] | Cảm giác "kẹt", mệt trên trackpad | Cao |
+| 4 | Nút liên hệ nổi | Đủ 4 kênh, đúng thứ tự | Mobile: thanh 4 nút 40px cố định ở đáy, che ảnh [Codex]. Desktop ≥1280: cột 4 nút ở cạnh phải. Màu thương hiệu từng nút phá bảng màu giấy | Che sản phẩm, trông như template bán hàng | Cao |
+| 5 | Lặp lại | — | Cùng chủ đề Explore Vietnam xuất hiện 3 lần: ô bộ sưu tập lớn, khối "Việt Nam, qua từng trang giấy" (4 sản phẩm) và ảnh hero. Có 3–4 lưới ảnh liên tiếp | Trang dài mà không thêm thông tin | Trung bình |
+| 6 | Ngôn ngữ | — | Tiêu đề trộn Anh/Việt: "Explore Collections", "What we make", "Paper can hold a memory" cạnh "Mẫu nổi bật", "Gợi ý quà". Trong khi đó tiếng Anh vẫn đang "sắp ra mắt" | Thiếu nhất quán, khó đọc với khách Việt | Trung bình |
+| 7 | Loại ảnh | Có cả ảnh thật lẫn artwork | `realLife` chỉ lấy `images[1]`, không có dữ liệu cho biết ảnh nào là ảnh chụp, ảnh nào là artwork. Thẻ sản phẩm hiện ảnh chính `object-contain` (thường là artwork) | Khách thấy artwork rời, phải tự hình dung sản phẩm | Cao |
+| 8 | "Paper can hold a memory" | Giọng văn đẹp | `py-28 md:py-40` cộng chữ hoa 5xl–7xl là một khoảng rất dài, chưa có sản phẩm nào | Đẩy sản phẩm xuống sâu | Trung bình |
+| 9 | Thiệp theo dịp | Ý tưởng tốt, dẫn tới anchor | Hiện cả các dịp chưa có mẫu [Giả định: cần xem dữ liệu live] | Bấm vào thấy trống | Trung bình |
+| 10 | Footer | Đủ liên hệ, bản đồ | Có link kỹ thuật `/api-test` [Codex]. Khối About ngay trước footer lặp với footer | Thiếu chuyên nghiệp | Thấp–TB |
+| 11 | Chuyển động | Có kiểm tra reduced motion | Có cùng lúc Parallax, ScrollExpand, SplitWords, FilmStrip, unveil, Reveal | Nặng, rối | Trung bình |
+| 12 | Hover/focus, tương phản | Có focus ở chấm hero | Link chữ hoa 12px, `tracking-[0.22em]` khá nhỏ. Chưa kiểm tra tương phản `text-kraft` [Giả định] | Khó đọc trên mobile | Trung bình |
 
-## B. Hypotheses needing browser verification
+## 2. Ba hướng thiết kế
 
-- Light-mode primary link-buttons may also lose contrast wherever a parent sets colour (item 1).
-- Parallax wrapper `overflow-hidden` clipping dots on scroll at 360/390 widths.
-- Recharts tooltip overflow off-screen on mobile.
-- Dark-mode contrast of `--a-muted` (#a1a1aa) on `--a-hover` for small 11px text.
-- Component catalogue (`components/catalogue.ts`, 34 `id:` entries found, not the 96 you cited — the rest may be nested examples): keyboard focus traps in overlays, Escape handling, disabled/loading states, mobile drawer focus return. Needs a per-example pass; I did not open each.
+**A. Bàn làm việc editorial (khuyến nghị).** Nền ivory, ảnh sản phẩm thật làm chủ, nhịp so le kiểu tạp chí, chữ Lora hiền hơn, mỗi khối có một nhiệm vụ.
+- Ưu: giữ bản sắc hiện tại, ít đụng tài sản, đưa sản phẩm lên sớm.
+- Nhược: cần gắn nhãn loại ảnh cho từng sản phẩm.
 
-## C. Status semantics (proposal, not decided)
+**B. Catalogue tối giản kiểu MUJI.** Lưới đều, chữ nhỏ, gần như không chuyển động.
+- Ưu: nhanh, rất rõ ràng.
+- Nhược: mất cá tính Việt Nam, dễ trông đại trà, đi ngược mục tiêu 4.
 
-- People (customers, accounts): **Active / Inactive** — reversible, record kept.
-- Content (products, articles): **Draft / Published / Hidden** — Hidden = was published, removed from public listing.
-- Purchase slips: **Saved / Void** — Void is terminal, excluded from reports, number never reused.
-- Badges: one colour per meaning across modules (green active/published/saved, neutral draft/inactive, amber hidden, red void).
-- Language: needs your decision — full Vietnamese, full English (Catalog/Products/Add Product/Categories/Product Inventory), or English nav + Vietnamese content. Mixing per screen should be avoided.
+**C. Kể chuyện theo chủ đề.** Mỗi màn là một chủ đề Việt Nam: phở, áo dài, phố cổ…
+- Ưu: rất đáng nhớ.
+- Nhược: khó tìm theo loại sản phẩm, trang dài, cần nhiều ảnh lifestyle mà hiện chưa có.
 
-## D. Synthetic data rule (needs scope confirmation)
+**Khuyến nghị A**, vì hướng này đưa ảnh sản phẩm thật và lối vào theo loại lên hai màn đầu, đồng thời vẫn giữ chất studio.
 
-- Remove visible demo labels and the "reset demo" control from UI; keep a non-destructive migration that only fills missing seed records and never overwrites user-edited ones; keep legacy IDs/links.
-- Seed names/links from the real catalogue and journal slugs.
-- Internal docs (`AGENTS.md`, README) keep stating data is stored in the browser. Not adding real auth, MySQL or tracking.
-- Open question: should the visitors page stay at all without a disclosure, since its data is not real tracking?
+## 3. Cấu trúc trang chủ mới
 
-## E. Verification matrix
+1. **Hero (thiết kế lại)**
+   - Mục đích: trong 5 giây khách hiểu BiBi làm gì.
+   - Nội dung: headline tiếng Việt ngắn, một dòng phụ liệt kê "sổ tay · thiệp · postcard · bao thư · giấy viết thư · magnet", ảnh **sản phẩm thật**.
+   - Desktop: chia 5/7, CTA nằm trong màn đầu ở 1280×720. Mobile: ảnh lên trước (tỷ lệ 4/5), chữ và CTA ngay dưới.
+   - CTA: "Xem các mẫu" → `/products`, link phụ "Bộ sưu tập" → `/collections`.
+2. **Lối vào theo loại sản phẩm (dời lên từ vị trí 5)**
+   - 6 ô ảnh sản phẩm thật kèm tên tiếng Việt. Desktop 6 cột, mobile cuộn ngang dạng chip-thẻ (2,5 thẻ hiển thị).
+   - Dẫn tới `/products/$typeSlug`.
+3. **Mẫu nổi bật (thiết kế lại từ FilmStrip)**
+   - 6–8 sản phẩm, ảnh thật trước, khi hover đổi sang artwork/chi tiết hình in.
+   - Bỏ ghim cuộn, dùng slider ngang thường có nút mũi tên.
+   - Dẫn tới trang sản phẩm.
+4. **Bộ sưu tập/chủ đề (gộp)**
+   - Một ô lớn cộng lưới các ô còn lại. **Gộp** khối "Việt Nam, qua từng trang giấy" vào ô lớn, chỉ thêm 2 câu chuyện ngắn.
+   - Desktop: so le 1 lớn + 2×3. Mobile: 1 cột, ảnh 4/5.
+5. **Câu chuyện thương hiệu (rút gọn)**
+   - Gộp "Paper can hold a memory" với khối About cuối trang thành 2–3 câu cộng 1 ảnh chụp tay.
+   - CTA "Về BiBi" → `/about`.
+6. **Thiệp theo dịp (giữ)**
+   - Chỉ hiện dịp đã có mẫu. Các dịp còn lại gom vào 1 dòng "Sắp có".
+   - Mobile: chip cuộn ngang.
+7. **Ảnh chụp thực tế (giữ, lọc lại)**
+   - Chỉ dùng ảnh đã gắn nhãn "ảnh chụp", tối đa 6 ảnh, một hàng.
+8. **Liên hệ nhẹ nhàng (thiết kế lại)**
+   - Một dòng: "Thích mẫu nào? Gửi tên mẫu cho BiBi qua Zalo hoặc Messenger", kèm 2–4 nút đơn sắc.
+9. **Footer (giữ)**, bỏ link `/api-test`.
 
-| Check | 360 | 390 | 768 | 1024 | 1440 | Dark | Keyboard |
-|---|---|---|---|---|---|---|---|
-| Slip "Sửa"/destructive buttons visible, hover/focus/disabled | x | | x | | x | x | x |
-| Sidebar footer name/avatar + menu (Hồ sơ, Đăng xuất) | drawer | drawer | x | x | x | x | x |
-| Flat catalog nav, permissions hide items | x | | x | | x | | x |
-| Report chart labels + full tooltip / mobile list | x | x | x | x | x | x | |
-| Section spacing reports | x | | x | | x | | |
-| No visible demo text (search "demo", "mô phỏng") | all | | | | | | |
-| Hero dots not clipped while scrolling, reduced motion | x | x | x | x | x | | x |
+**Bỏ:** khối About trùng lặp (đã gộp vào mục 5) và hiệu ứng ghim của FilmStrip.
 
-## F. Optional missing components (do not build without confirmation)
+## 4. Định hướng thiết kế chi tiết
 
-1. Combobox with search — customer/product pickers on slips; faster than long selects.
-2. Confirm dialog with typed reason — voiding slips; prevents accidental void.
-3. Empty state block — every list; consistent guidance.
-4. Status badge component — enforces section C colours.
-5. Mobile card list for tables — avoids horizontal scroll.
-6. Skeleton loaders — perceived speed.
-7. Unsaved-changes guard — forms.
-8. Date-range / year picker — reports filter.
+- **Chữ:** Lora cho tiêu đề, không viết hoa toàn bộ với tiếng Việt vì dấu dễ dính. Cỡ chữ:
+  - H1: 40px mobile / 64px desktop
+  - H2: 32 / 44px
+  - Nội dung: Inter 16px
+  - Nhãn nhỏ: tối thiểu 12px, `tracking` 0.12em
+- **Màu:** giữ ivory/paper/kraft/sage hiện có. Kraft chỉ dùng cho điểm nhấn, chữ kraft phải đạt tương phản AA.
+- **Khoảng cách:** nhịp section 96px desktop / 64px mobile, thay cho 112–160px hiện nay.
+- **Ảnh:**
+  - Thêm nhãn `kind: product | artwork | lifestyle` cho từng ảnh trong dữ liệu.
+  - Ảnh thật ở hero, thẻ sản phẩm và ảnh chụp thực tế. Artwork chỉ hiện khi hover hoặc trong gallery.
+  - Tỷ lệ: thẻ sản phẩm 4/5, bộ sưu tập 4/5 (ô lớn 16/9 trên desktop), loại sản phẩm 1/1.
+- **Thẻ sản phẩm:** ảnh `object-cover` khi là ảnh thật, kèm tên, loại · bộ sưu tập. Không giá, không giỏ hàng.
+- **Nút:** 1 nút chính đặc màu (foreground) và 1 link gạch chân. Vùng bấm tối thiểu 44px, viền focus rõ.
+- **Chuyển động:** giữ Reveal nhẹ và zoom chậm khi hover. Bỏ ghim cuộn. ScrollExpand/SplitWords chỉ dùng tối đa 1 lần. Giữ reduced motion.
+- **Liên hệ nổi:**
+  - Mobile: **1 nút tròn "Liên hệ"** mở ra 4 kênh; ẩn khi đang mở menu hoặc dialog.
+  - Desktop: giữ cột nhưng đổi sang đơn sắc.
 
-## G. Profile page refinement (design only, for your local source)
+## 5. Phác thảo trải nghiệm
 
-Based on your description, not on your local files. Only the order and the visuals change. Auth, Master read-only, explicit image save, dirty guards and upload limits stay as they are.
-
-Order: PageTitle "Hồ sơ" → avatar card → "Thông tin tài khoản" (SelfProfileForm) → "Vai trò" card.
-
-```tsx
-<Card className="a-profile-hero">
-  <div className="a-profile-avatar">
-    {preview ?? current ? <img src={preview ?? current} alt="Ảnh đại diện" /> : <span>{initials}</span>}
-  </div>
-  <div className="a-profile-meta">
-    <h2>{displayName}</h2>
-    <p>@{username} · {roleLabel}</p>
-    <small>JPG, PNG hoặc WebP · tối đa {limit} · ảnh vuông hiển thị đẹp nhất</small>
-    {error && <p role="alert" className="a-field-error">{error}</p>}
-  </div>
-  <div className="a-profile-actions">
-    {!dirty ? <>
-      <label className="a-btn a-btn-secondary">Chọn ảnh<input type="file" hidden accept="image/*" disabled={readOnly} /></label>
-      {current && <button className="a-btn a-btn-ghost" disabled={readOnly}>Gỡ ảnh</button>}
-    </> : <>
-      <button className="a-btn a-btn-ghost">Hủy</button>
-      <button className="a-btn a-btn-primary" aria-busy={saving}>Lưu ảnh</button>
-    </>}
-  </div>
-</Card>
+```text
+DESKTOP 1280                         MOBILE 390
+[Header: logo | menu | tìm | VI]     [logo        tìm ☰]
+[Hero: chữ 5 | ảnh sổ thật 7 ]       [ảnh sản phẩm 4/5   ]
+ headline / dòng loại SP / 2 CTA     [headline, dòng phụ ]
+[6 ô loại sản phẩm ngang      ]      [CTA chính | link   ]
+[Mẫu nổi bật: slider 4 thẻ  ←→]      [chip loại SP cuộn →]
+[Bộ sưu tập: 1 lớn + 2×3      ]      [mẫu nổi bật cuộn → ]
+[Câu chuyện: ảnh | 3 câu      ]      [bộ sưu tập 1 cột   ]
+[Thiệp theo dịp: chip + 4 thẻ ]      [câu chuyện ngắn    ]
+[Ảnh chụp thực tế 1 hàng      ]      [dịp: chip cuộn     ]
+[Liên hệ nhẹ 1 dòng           ]      [ảnh thực tế cuộn   ]
+[Footer                       ]      [liên hệ | footer   ] (●Liên hệ)
 ```
 
-```css
-.a-profile-hero{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:20px}
-.a-profile-avatar{width:88px;height:88px;border-radius:50%;overflow:hidden;border:1px solid var(--a-border);background:var(--a-hover);display:grid;place-items:center;font-weight:600;font-size:24px}
-.a-profile-avatar img{width:100%;height:100%;object-fit:cover}
-.a-profile-meta{min-width:0;display:grid;gap:2px}
-.a-profile-meta h2,.a-profile-meta p{overflow-wrap:anywhere}
-.a-profile-meta p,.a-profile-meta small{color:var(--a-muted)}
-.a-profile-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
-.a-profile-actions label:has(input:disabled){opacity:.5;pointer-events:none}
-@media (max-width:640px){
-  .a-profile-hero{grid-template-columns:1fr;justify-items:center;text-align:center}
-  .a-profile-actions{justify-content:center;width:100%}
-  .a-profile-actions .a-btn{flex:1 1 0;min-height:44px}
-}
-```
+**Headline hero (chọn 1):**
+1. "Những món đồ giấy nhỏ, giữ lại một chút Việt Nam." — CTA "Xem các mẫu" / "Bộ sưu tập"
+2. "Sổ tay, thiệp và quà giấy — vẽ từ những điều thân quen." — CTA "Khám phá mẫu" / "Chọn theo dịp"
+3. "Giấy để viết, để tặng, để nhớ." — CTA "Xem sổ tay & thiệp" / "Câu chuyện BiBi"
 
-Notes:
-- Show Hủy/Lưu only while a new image is chosen, so one clear next step is visible at a time.
-- The hidden file input inside a `label` needs a visible focus ring: `.a-profile-actions label:focus-within{outline:2px solid var(--a-accent);outline-offset:2px}`.
-- Master read-only: show buttons disabled with a short muted line ("Tài khoản Master chỉ xem"), don't hide them.
-- If buttons are `<a>`/`<label>`, the colour bug in A1 applies; check the primary button in dark mode.
-- Check at 360, 768 and 1440 px, light and dark: no overflow with a long name or email.
+## 6. Kế hoạch thực hiện
 
-## Open decisions for you
+| Giai đoạn | Việc | Ưu tiên | Tác động | Độ khó | Nghiệm thu |
+|---|---|---|---|---|---|
+| 1. Nhanh | Hero mới (headline VI, CTA trong màn đầu) | Cao | Cao | Thấp | CTA thấy được ở 1280×720 và 390×844 |
+| 1 | Dời lối vào theo loại lên vị trí 2 | Cao | Cao | Thấp | Thấy được trong ≤2 màn trên mobile |
+| 1 | Thống nhất tiêu đề sang tiếng Việt, bỏ `/api-test` | TB | TB | Thấp | Không còn tiêu đề tiếng Anh, trừ tên thương hiệu |
+| 1 | Gom nút liên hệ trên mobile | Cao | Cao | TB | Không che ảnh; ẩn khi mở menu/dialog. *Ảnh hưởng mọi trang public* |
+| 2. Section chính | Gắn nhãn loại ảnh trong dữ liệu catalogue | Cao | Cao | TB | Mỗi sản phẩm có ít nhất 1 ảnh có nhãn |
+| 2 | Mẫu nổi bật dạng slider, bỏ ghim | Cao | Cao | TB | Chiều cao khối ≤ 1 màn |
+| 2 | Gộp khối Việt Nam vào bộ sưu tập; gộp 2 khối About | TB | TB | TB | Trang ngắn hơn khoảng 25% |
+| 2 | Thiệp theo dịp chỉ hiện dịp có mẫu | TB | TB | Thấp | Không còn link dẫn tới mục trống |
+| 3. Responsive | Kiểm tra 360/390/768/1024/1440, chế độ tối nếu có, bàn phím | Cao | TB | TB | Không tràn ngang, vùng bấm ≥44px, focus rõ |
+| 4. Tinh chỉnh | Giảm hiệu ứng, ảnh ưu tiên tải `fetchpriority` cho hero, Lighthouse | TB | TB | Thấp | LCP < 2,5s trên mobile [đo sau], reduced motion không có chuyển động |
 
-- Admin language (section C).
-- Whether the visitors page keeps any disclosure (section D).
-- Whether hub routes redirect or stay reachable by URL.
+**Phạm vi:** header, footer và nút liên hệ nổi dùng chung cho mọi trang public, nên sửa ở đây sẽ đổi luôn các trang đó. Không đụng admin.
+
+## Quyết định cần bạn duyệt
+
+1. Hướng A, B hay C.
+2. Headline hero: 1, 2 hay 3, hoặc tự viết.
+3. Tiêu đề trang chủ hoàn toàn tiếng Việt? Có giữ câu "Little things, made to touch your heart" làm câu ký tên không?
+4. Nút liên hệ trên mobile: gom thành 1 nút, hay giữ thanh 4 nút nhưng thu gọn?
+5. Có bỏ hẳn hiệu ứng ghim của FilmStrip không?
+6. Gộp khối "Việt Nam, qua từng trang giấy" vào bộ sưu tập?
+
+## Ảnh/nội dung còn thiếu
+
+- Ảnh sản phẩm thật (không phải artwork) cho cả 6 loại, nhất là bao thư, giấy viết thư, magnet [Giả định: cần kiểm tra dữ liệu].
+- 1–2 ảnh chụp tay ngang cho hero và câu chuyện thương hiệu.
+- Danh sách dịp thiệp đã có mẫu thật.
+- Bạn xác nhận: ảnh nào là ảnh chụp, ảnh nào là artwork/mockup (để gắn nhãn).
+- Mình không tự thêm chất liệu, quy trình, giá hay đánh giá khách hàng.
