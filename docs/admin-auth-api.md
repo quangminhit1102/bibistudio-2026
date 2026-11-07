@@ -97,7 +97,7 @@ Identity schema vẫn4. Feature migration tại `backend/profile-migrations/001_
 | --- | --- |
 | `GET /api/profile` | Mọi active session, chỉ chính mình; PrincipalDto + `phone`, `avatarId` nullable |
 | `PATCH /api/profile` | Mọi active non-Master, strict body `{revision, displayName?, email?, phone?}`; không username/password/role/active/targetId |
-| `PUT /api/profile/avatar` | Ảnh binary JPEG/PNG; Bearer + Origin + X-Bibi-Request; `If-Match: "<revision>"` bắt buộc |
+| `PUT /api/profile/avatar` | JSON `{mimeType, data}` (base64 chuẩn) cho JPEG/PNG; binary cũ vẫn nhận nếu hosting cho phép; Bearer + Origin + X-Bibi-Request; `If-Match: "<revision>"` bắt buộc |
 | `DELETE /api/profile/avatar` | Gỡ ảnh chính mình, cùng header/revision; ảnh cũ được retire, không xóa file ngay |
 | `GET /api/profile/avatar/:assetId` | Bearer; chỉ ảnh hiện tại; `private, no-store` |
 | `PUT/DELETE /api/accounts/:id/avatar` | `account.update`, non-Master target, cùng revision/Origin |
@@ -108,3 +108,5 @@ Account create/update thêm `phone?: string|null`. Nếu client không gửi pho
 Lỗi chính:400 input,401 phiên,403 permission/Master/Origin,404 ảnh không còn hiện tại,409 revision,413>2MiB,415 định dạng,428 thiếu If-Match,429 worker/rate/quota,503 schema/storage/commit không rõ kết quả. Khi mất phản hồi commit, tải lại hồ sơ để biết trạng thái trước khi thử lại; không tự xóa file có thể đã được DB tham chiếu. Audit chỉ ghi changedFields/assetIds, không email/phone/bytes/token.
 
 Mỗi actor10upload/15phút (DB), một worker/process5giây; mỗi user tối đa128asset metadata/64MiB giữ lại. Xem [vận hành và giới hạn hosting](admin-profile-operations.md).
+
+Upload ảnh dùng JSON để tương thích bộ lọc LiteSpeed trên hosting: frontend giới hạn ảnh nguồn2MiB, encode base64 trong memory và giữ identity epoch trước/sau encode. Backend authenticate/origin/preflight/rate-limit trước khi parse envelope; chỉ hai endpoint avatar PUT có parser riêng tối đa2797228byte, JSON API khác giữ16KiB. Strict allowlist mimeType/data, base64 canonical, decoded<=2097152byte, cùng bộ kiểm tra header/worker như binary; không log ảnh/base64. Chi phí truyền tăng khoảng1/3, không thêm dependency hoặc quyền.

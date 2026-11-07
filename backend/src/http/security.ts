@@ -36,7 +36,16 @@ export function installSecurity(app: Express, config: SecurityConfig): void {
     }
     next();
   });
-  app.use(express.json({ limit: "16kb", strict: true }));
+  const json = express.json({ limit: "16kb", strict: true });
+  app.use((req, res, next) => {
+    // Avatar envelopes are bounded and parsed only after authentication/preflight.
+    if (
+      req.method === "PUT" &&
+      /^\/api\/(?:profile|accounts\/[a-f0-9-]{36})\/avatar\/?$/i.test(req.path)
+    )
+      return next();
+    json(req, res, next);
+  });
   app.use(cookieParser());
 }
 export function requireBrowserOrigin(config: SecurityConfig): RequestHandler {

@@ -1,7 +1,7 @@
 import { it, expect, vi } from "vitest";
 import { createAdminHttp } from "../../src/lib/admin-http";
 import { json, grant, immediateLock, profile } from "./helpers/http-client";
-it("binary reads and raw uploads reuse one refresh and preserve blob/headers on retry", async () => {
+it("binary reads and bounded JSON uploads reuse one refresh and preserve blob/headers on retry", async () => {
   const blob = new Blob(["pixels"], { type: "image/png" }),
     seen: RequestInit[] = [];
   let refreshed = 0;
@@ -32,10 +32,10 @@ it("binary reads and raw uploads reuse one refresh and preserve blob/headers on 
   expect(image.type).toBe("image/png");
   expect(saved).toEqual({ saved: true });
   for (const request of seen.filter((r) => r.method === "PUT")) {
-    expect(request.body).toBe(blob);
+    expect(JSON.parse(request.body as string)).toEqual({ mimeType: "image/png", data: "cGl4ZWxz" });
     expect(request.credentials).toBe("include");
     expect((request.headers as Record<string, string>)["If-Match"]).toBe('"7"');
-    expect((request.headers as Record<string, string>)["Content-Type"]).toBe("image/png");
+    expect((request.headers as Record<string, string>)["Content-Type"]).toBe("application/json");
   }
 });
 it("late binary response after logout/login is discarded instead of crossing account identity", async () => {
@@ -107,10 +107,41 @@ it("late unauthorized upload cannot refresh or replay after identity switches", 
   await client.login({ username: "one", password: "secret" });
   const pending = client.upload("/api/profile/avatar", new Blob(["a"]), { revision: 1 });
   const rejected = expect(pending).rejects.toMatchObject({ name: "AbortError" });
+  await vi.waitFor(() => expect(writes).toBe(1));
   await client.logout();
   await client.login({ username: "two", password: "secret" });
   release(json({ error: { code: "EXPIRED" } }, 401));
   await rejected;
   expect(writes).toBe(1);
   expect(refreshes).toBe(0);
+});
+
+it("encoding cannot send an old image after the account changes", async () => {
+  let resolveRead!: (v: ArrayBuffer) => void,
+    writes = 0;
+  const blob = new Blob(["a"], { type: "image/png" });
+  vi.spyOn(blob, "arrayBuffer").mockImplementation(
+    () =>
+      new Promise((resolve) => {
+        resolveRead = resolve;
+      }),
+  );
+  const client = createAdminHttp({
+    origin: "http://localhost",
+    refreshLock: immediateLock,
+    fetch: async (input) => {
+      if (String(input).endsWith("/login")) return json(grant("token"));
+      if (String(input).endsWith("/logout")) return new Response(null, { status: 204 });
+      writes++;
+      return json({});
+    },
+  });
+  await client.login({ username: "one", password: "secret" });
+  const pending = client.upload("/api/profile/avatar", blob, { revision: 1 });
+  const rejected = expect(pending).rejects.toMatchObject({ name: "AbortError" });
+  await client.logout();
+  await client.login({ username: "two", password: "secret" });
+  resolveRead(new ArrayBuffer(1));
+  await rejected;
+  expect(writes).toBe(0);
 });

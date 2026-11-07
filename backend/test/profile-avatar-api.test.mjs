@@ -300,3 +300,90 @@ test("retained avatar quota rejects upload before decode", async (t) => {
   assert.equal((await response.json()).error.code, "AVATAR_QUOTA_EXCEEDED");
   assert.equal((await readdir(f.assetDirectory)).length, 0);
 });
+
+test("bounded JSON image envelope works beyond global JSON limit and retains avatar authorization", async (t) => {
+  const f = await createProfileFixture(t),
+    image = pngImage(2000, 2000);
+  const put = (body, token = f.user.accessToken, rev = 1, path = "/api/profile/avatar") =>
+    fetch(f.base + path, {
+      method: "PUT",
+      headers: {
+        Origin: f.config.allowedOrigins[0],
+        "X-Bibi-Request": "1",
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + token,
+        "If-Match": JSON.stringify(String(rev)),
+      },
+      body: JSON.stringify(body),
+    });
+  assert.ok(image.length > 16384);
+  const r = await put({ mimeType: "image/png", data: image.toString("base64") });
+  assert.equal(r.status, 200);
+  let saved = await r.json();
+  assert.ok(saved.avatarId);
+  assert.equal(
+    (
+      await put(
+        { mimeType: "image/png", data: image.toString("base64") },
+        f.user.accessToken,
+        1,
+        "/api/accounts/" + f.master.profile.id + "/avatar",
+      )
+    ).status,
+    403,
+  );
+  const managed = await put(
+    { mimeType: "image/png", data: image.toString("base64") },
+    f.master.accessToken,
+    saved.revision,
+    "/api/accounts/" + f.user.profile.id + "/avatar",
+  );
+  assert.equal(managed.status, 200);
+  saved = await managed.json();
+  assert.equal(
+    (await put({ mimeType: "image/png", data: "YWJj!!" }, undefined, saved.revision)).status,
+    400,
+  );
+  assert.equal(
+    (
+      await put(
+        { mimeType: "image/png", data: Buffer.alloc(2097153).toString("base64") },
+        undefined,
+        saved.revision,
+      )
+    ).status,
+    413,
+  );
+  assert.equal(
+    (
+      await put(
+        { mimeType: "image/png", data: image.toString("base64"), extra: true },
+        undefined,
+        saved.revision,
+      )
+    ).status,
+    400,
+  );
+  assert.equal(
+    (await put({ mimeType: "image/png", data: image.toString("base64") }, f.master.accessToken))
+      .status,
+    403,
+  );
+  const other = await f.request(
+    "/api/profile",
+    "PATCH",
+    { revision: saved.revision, displayName: "Changed" },
+    f.user.accessToken,
+  );
+  assert.equal(other.status, 200);
+  assert.equal(
+    (
+      await put(
+        { mimeType: "image/png", data: image.toString("base64") },
+        undefined,
+        saved.revision,
+      )
+    ).status,
+    409,
+  );
+});

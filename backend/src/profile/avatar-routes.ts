@@ -49,7 +49,7 @@ export function avatarRoutes(
         const version = revision(req);
         await service.preflightAvatar(target(req), version, req.auth!);
         const mime = (req.get("Content-Type") ?? "").split(";")[0].trim().toLowerCase();
-        if (!["image/png", "image/jpeg"].includes(mime))
+        if (!["image/png", "image/jpeg", "application/json"].includes(mime))
           throw new ApiError(415, "AVATAR_FORMAT", "Dùng ảnh JPEG hoặc PNG");
         const decision = await consumeRateLimit(
           pool,
@@ -69,8 +69,31 @@ export function avatarRoutes(
         res.locals.avatarMime = mime;
         next();
       },
-      express.raw({ type: () => true, limit: 2097152 }),
+      (req, res, next) => {
+        if (res.locals.avatarMime === "application/json")
+          express.json({ limit: 2797228, strict: true })(req, res, next);
+        else express.raw({ type: () => true, limit: 2097152 })(req, res, next);
+      },
       async (req, res) => {
+        if (res.locals.avatarMime === "application/json") {
+          const envelope = validate(
+            z
+              .object({ mimeType: z.enum(["image/png", "image/jpeg"]), data: z.string().min(1) })
+              .strict(),
+            req.body,
+          );
+          if (envelope.data.length > 2796204)
+            throw new ApiError(413, "PAYLOAD_TOO_LARGE", "Dùng ảnh tối đa 2 MiB");
+          if (envelope.data.length % 4 !== 0 || !/^[A-Za-z0-9+/]*={0,2}$/.test(envelope.data))
+            throw new ApiError(400, "INVALID_AVATAR_ENCODING", "Dữ liệu ảnh không hợp lệ");
+          const bytes = Buffer.from(envelope.data, "base64");
+          if (bytes.length > 2097152)
+            throw new ApiError(413, "PAYLOAD_TOO_LARGE", "Dùng ảnh tối đa 2 MiB");
+          if (bytes.toString("base64") !== envelope.data)
+            throw new ApiError(400, "INVALID_AVATAR_ENCODING", "Dữ liệu ảnh không hợp lệ");
+          req.body = bytes;
+          res.locals.avatarMime = envelope.mimeType;
+        }
         if (!Buffer.isBuffer(req.body) || !req.body.length)
           throw new ApiError(400, "AVATAR_REQUIRED", "Vui lòng chọn ảnh");
         const controller = new AbortController(),

@@ -218,13 +218,30 @@ export function createAdminHttp(options: Options = {}) {
       }
     },
     request: <T>(path: string, input: RequestOptions = {}) => authorizedRequest<T>(path, input),
-    upload: <T>(path: string, blob: Blob, options: { revision: number; signal?: AbortSignal }) =>
-      authorizedRequest<T>(path, {
+    upload: async <T>(
+      path: string,
+      blob: Blob,
+      options: { revision: number; signal?: AbortSignal },
+    ) => {
+      endpoint(path);
+      options.signal?.throwIfAborted();
+      const ticket = epoch;
+      if (!token) throw unauthenticated();
+      if (blob.size > 2097152)
+        throw new AdminHttpError(413, "PAYLOAD_TOO_LARGE", "Dùng ảnh tối đa 2 MiB");
+      const bytes = new Uint8Array(await blob.arrayBuffer());
+      assertEpoch(ticket);
+      options.signal?.throwIfAborted();
+      let binary = "";
+      for (let at = 0; at < bytes.length; at += 32768)
+        binary += String.fromCharCode(...bytes.subarray(at, at + 32768));
+      return authorizedRequest<T>(path, {
         method: "PUT",
-        rawBody: blob,
+        body: { mimeType: blob.type, data: btoa(binary) },
         ifMatch: options.revision,
         signal: options.signal,
-      }),
+      });
+    },
     requestBlob: (path: string, options: { signal?: AbortSignal } = {}) =>
       authorizedRequest<Blob>(path, { ...options, readBlob: true }),
     async logout(): Promise<void> {
