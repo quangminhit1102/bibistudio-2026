@@ -39,7 +39,7 @@ Người dùng đã chọn hướng A, “Bàn giấy BiBi”: ảnh sản phẩ
 
 ### 1. Header
 
-Giữ logo, sáu menu, tìm kiếm và menu mobile. Không thêm header sticky trong đợt này. Giữ các menu con và lối vào hiện có. Focus, hover và vùng bấm phải rõ. Do tiếng Anh chưa sẵn sàng, đề xuất ẩn lựa chọn chuyển ngôn ngữ trên public shell, giữ tiếng Việt; không tạo cảm giác nút có chức năng khi chưa dùng được. Việc này không xóa dữ liệu song ngữ.
+Giữ logo, sáu menu, tìm kiếm và menu mobile. Không thêm header sticky trong đợt này. Giữ các menu con và lối vào hiện có. Focus, hover và vùng bấm phải rõ. **Theo xác nhận của người dùng, giữ hiển thị lựa chọn EN** ở desktop và trong menu mobile; không ẩn bộ chọn ngôn ngữ. Giữ nguyên hành vi và trạng thái khả dụng hiện có, không coi việc này là yêu cầu triển khai đầy đủ bản dịch tiếng Anh. Dữ liệu song ngữ được giữ nguyên.
 
 ### 2. Hero
 
@@ -147,7 +147,7 @@ Tuyển ảnh đang có trước. Catalogue thiếu khai báo ảnh riêng ở m
 
 - Hero tiếng Việt theo copy ở trên, ảnh tĩnh thay slideshow; slogan làm chữ ký nhỏ.
 - Lưới mẫu thay FilmStrip, gộp câu chuyện và phần Việt Nam.
-- Header/footer/liên hệ chỉnh đồng bộ toàn public shell; tạm ẩn lựa chọn English chưa sẵn sàng.
+- Header/footer/liên hệ chỉnh đồng bộ toàn public shell. Lựa chọn EN vẫn hiển thị theo yêu cầu đã xác nhận; không thay đổi chức năng chuyển ngôn ngữ trong đợt này.
 - Nút liên hệ gọn ở cả desktop/mobile; giữ nguyên đích các kênh.
 
 Người triển khai tự quyết crop an toàn, sáu mẫu/ảnh đề cử, breakpoint và khoảng cách trong các giới hạn đã nêu. Không tự quyết thông tin thương hiệu mới, đổi contact links, cắt tính năng public hoặc deploy.
