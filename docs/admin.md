@@ -10,7 +10,7 @@ Dùng Node24 và Docker Desktop. Sau `npm ci`, chạy `npm run db:setup:local` m
 
 ## Biên tập Bài viết và Sản phẩm — local
 
-Đợt usability06/11 đã kiểm chứng local, chưa push/deploy: sidebar thu gọn có tooltip khi hover hoặc focus, Escape để đóng; form chỉ cảnh báo rời trang khi nội dung khác bản mở/lưu thành công. Hồ sơ Master hiển thị lý do bảo vệ, trường chỉ đọc vẫn focus/copy được. Nhãn trạng thái dùng xanh lá (thành công), đỏ (hủy/lỗi), vàng (cần chú ý), xanh dương (thông tin/VAT), tím (quyền/bảo vệ), xám (trung tính). Quyền Admin+User vẫn cộng dồn. Điện thoại/ảnh đại diện và tự sửa hồ sơ sẽ làm riêng trong đợt2, chưa có ở đợt này.
+Đợt usability06/11 đã phát hành cùng hồ sơ07/11: sidebar thu gọn có tooltip khi hover hoặc focus, Escape để đóng; form chỉ cảnh báo rời trang khi nội dung khác bản mở/lưu thành công. Hồ sơ Master hiển thị lý do bảo vệ, trường chỉ đọc vẫn focus/copy được. Nhãn trạng thái dùng xanh lá (thành công), đỏ (hủy/lỗi), vàng (cần chú ý), xanh dương (thông tin/VAT), tím (quyền/bảo vệ), xám (trung tính). Quyền Admin+User vẫn cộng dồn. Điện thoại/ảnh đại diện và tự sửa hồ sơ đã có trong đợt2 bên dưới.
 
 Hai màn tạo/sửa dùng **TinyMCE 8.10.1 tự host theo GPL**, do người dùng chọn và xác nhận ngày 03/11/2026. Không cần Tiny Cloud, API key hoặc CDN. Attribution, `license.md`, `notices.txt` và thông tin nguồn đi cùng asset; không thay đổi license của chính repository BiBi.
 
@@ -104,7 +104,7 @@ Chèn/sửa ảnh qua thư viện hiện có; ô chiều rộng nhận16–4096p
 
 Chỉ nạp plugin cộng đồng từ package TinyMCE đã cài, không thêm dependency, CDN hoặc API key. Thư mục vendor và mã nguồn TinyMCE có version, giấy phép và thông báo đi kèm như hướng dẫn build/deploy. Dữ liệu admin vẫn nằm trong trình duyệt; đưa UI lên hosting không biến nó thành CMS dùng chung hay cập nhật bài public.
 
-## Hồ sơ cá nhân và ảnh đại diện (đợt06/11, local)
+## Hồ sơ cá nhân và ảnh đại diện (production07/11)
 
 Người dùng đang hoạt động có thể mở **Hồ sơ** từ menu tài khoản trên header hoặc cuối sidebar, kể cả chỉ có quyền Khách truy cập hoặc chưa được gán vai trò. Trang chỉ sửa tên hiển thị, email, số điện thoại và ảnh của chính mình; tên đăng nhập/vai trò không sửa tại đây. Admin+User cộng quyền theo RBAC, không bị hạ về quyền User. Master Admin vẫn chỉ đọc và được backend bảo vệ.
 
@@ -114,4 +114,4 @@ Số điện thoại không bắt buộc, giữ số0 đầu, không tự suy lu
 
 Quản lý tài khoản có thêm số điện thoại. Sau khi tạo tài khoản, mở chi tiết tài khoản để thêm ảnh; lỗi thêm ảnh không làm mất tài khoản đã tạo. Quyền quản lý tài khoản khác vẫn dùng `account.view`/`account.update`; quyền tự sửa hồ sơ không cấp quyền quản lý tài khoản.
 
-Cấu hình/backup/rollback xem [vận hành hồ sơ](admin-profile-operations.md). Đây là nghiệm thu local; production cần đợt phát hành được duyệt riêng.
+Cấu hình/backup/rollback xem [vận hành hồ sơ](admin-profile-operations.md). Đã phát hành07/11; xem [biên bản production](superpowers/reports/2026-11-07-admin-profile-production-release.md).

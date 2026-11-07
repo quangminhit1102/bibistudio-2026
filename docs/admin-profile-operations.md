@@ -1,6 +1,6 @@
 # Hồ sơ admin: cấu hình, backup và rollback
 
-Trạng thái: triển khai và kiểm chứng local; chưa cài receiver/config mới lên cPanel. Không suy ra production đã sẵn sàng từ test local.
+Trạng thái: đã cài receiver/config và phát hành production07/11/2026. Xem [biên bản thực tế](superpowers/reports/2026-11-07-admin-profile-production-release.md), gồm lỗi LiteSpeed406 đã rollback/sửa, upload thật và paired restore có ảnh. Những mục dưới là quy tắc cho các lần phát hành sau.
 
 ## Local
 
@@ -14,7 +14,7 @@ Identity giữ schema4; profile có ledger/checksum riêng, phiên bản1. Migra
 2. Tạo `production/private/profile-assets` do đúng user Passenger sở hữu, mode0700, ngoài webroot/releases; file ảnh0600. Thêm cùng một giá trị tuyệt đối `PROFILE_ASSET_DIR=/.../production/private/profile-assets` vào cả `private/runtime.env` và `private/maintenance.env` (0600). Không đặt upload vào Git/artifact.
 3. Nâng cấp receiver cùng bộ `ops/*.cjs` liên quan, bao gồm `profile-metadata.cjs`, `profile-lifecycle.cjs`, `release.cjs`, `database-lifecycle.cjs`, `deploy.cjs`, `receiver.cjs`. Receiver cũ từ chối manifest4; không được thử bỏ trường profiles để lách kiểm tra. Receiver mới vẫn nhận manifest1/2/3 theo các cổng identity/access-log hiện có.
 4. Kiểm tra executable backup đã đo (`DB_BACKUP_FLAVOR`, `DB_DUMP_BIN`, `DB_CLIENT_BIN`, `DB_VERIFY_NAME`) và quyền verifier cô lập. Không restore lên DB ứng dụng.
-5. Chỉ sau đó phát hành đúng artifact CI và kiểm chứng API/UI, upload thật, paired restore, rollback rồi forward trên hosting. Các bước này chưa được thực hiện trong đợt local.
+5. Chỉ sau đó phát hành đúng artifact CI và kiểm chứng API/UI, upload thật, paired restore, rollback rồi forward trên hosting. Đợt07/11 đã rollback/forward giữ metadata và thử restore DB+ảnh cô lập sau upload; chi tiết phạm vi trong biên bản.
 
 Lệnh riêng của tool, chạy từ release đã xác minh:
 
@@ -42,3 +42,7 @@ Mỗi thư mục `backups/profile-<uuid>` có SQL, `assets/<uuid>.<png|jpeg>`, m
 Chưa tự xóa backup. Chính sách vận hành khuyến nghị giữ tối thiểu30ngày và mọi mốc rollback còn được cam kết; chỉ xóa nguyên bộ backup hết hạn sau khi xác nhận mốc rollback không còn cần. Giữ các backup còn lại sẽ tiếp tục pin ảnh, đổi lại tăng dung lượng. Tool giới hạn10000ảnh/1GiB cho một snapshot và10000entry thư mục backup; vượt giới hạn dừng an toàn để người vận hành điều chỉnh kiến trúc/dung lượng.
 
 Mỗi user tối đa128ảnh metadata lưu giữ/64MiB; upload tối đa10lần/15phút theo actor trong DB, một worker/process. Chạm quota cần chờ cleanup theo chính sách, không xóa ảnh đang dùng hoặc ảnh đang được backup pin để lấy chỗ. JPEG/PNG8bit không interlace; không nhận APNG/PNG16bit. Input2MiB/16MP, output512×512 tối đa; không giữ EXIF/metadata. Ảnh chỉ tải qua Bearer request rồi tạo ObjectURL, không có URL công khai hoặc token trong URL.
+
+## Upload qua LiteSpeed
+
+Client gửi JSON `{mimeType, data}` với base64 chuẩn để tương thích hosting, không tắt WAF. Ảnh nguồn tối đa2MiB; envelope giới hạn2797228byte sau authenticate/origin/preflight/rate. JSON API khác giữ16KiB. Binary cũ vẫn nhận ở backend nếu upstream cho phép; trên hosting này đã quan sát406 trước Express cho binary/multipart. Mỗi lần phát hành cần thử upload thật, không chỉ kiểm tra readiness/schema.
