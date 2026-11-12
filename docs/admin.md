@@ -115,3 +115,13 @@ Số điện thoại không bắt buộc, giữ số0 đầu, không tự suy lu
 Quản lý tài khoản có thêm số điện thoại. Sau khi tạo tài khoản, mở chi tiết tài khoản để thêm ảnh; lỗi thêm ảnh không làm mất tài khoản đã tạo. Quyền quản lý tài khoản khác vẫn dùng `account.view`/`account.update`; quyền tự sửa hồ sơ không cấp quyền quản lý tài khoản.
 
 Cấu hình/backup/rollback xem [vận hành hồ sơ](admin-profile-operations.md). Đã phát hành07/11; xem [biên bản production](superpowers/reports/2026-11-07-admin-profile-production-release.md).
+
+# In phiếu giao hàng
+
+Từ chi tiết Phiếu mua hàng, chọn **In phiếu** để mở bản in riêng. Khách hàng và sản phẩm được đọc theo ID từ các bảng admin hiện có; số lượng, đơn giá và trạng thái VAT lấy từ phiếu đã lưu. Nếu bản ghi liên kết không còn hoặc tài khoản không có quyền đọc, màn hình báo và dùng thông tin đã lưu trên phiếu.
+
+Có thể sửa người nhận, địa chỉ, mã/tên hàng, đơn vị, số lượng, giá, ngày, số phiếu, đơn vị giao hàng và chữ ký. Giá là giá trước VAT. Bật VAT để cộng thuế trên tổng tiền hàng, chọn thuế suất phù hợp; mặc định mẫu là 8%. Thuế làm tròn đến đồng. Tiền bằng chữ lấy từ tổng thanh toán đã gồm VAT. Thông tin chỉ giữ trong lần mở editor; **không lưu lại phiếu gốc, khách hàng, sản phẩm hoặc báo cáo**. Khôi phục dữ liệu phiếu trả editor về dữ liệu lúc mở.
+
+Desktop có editor và xem trước; màn hình nhỏ chuyển giữa Chỉnh thông tin / Chỉ xem phiếu. Chọn In / Lưu PDF sau khi bản xem trước đã tải. Dùng A4 dọc, tỷ lệ 100%, tắt đầu/chân trang trình duyệt; bật đồ họa nền nếu cần giữ màu xám/vàng. In trong iframe riêng nên không kèm sidebar hay nút admin.
+
+**Tích hợp sau:** nghiệp vụ vẫn dùng dữ liệu browser/dump, chưa có MySQL CRUD. `SlipPrintSource` trong `sales/print-draft.ts` là hợp đồng chỉ đọc `customer(id)` và `product(id)`; thay adapter trong `components/slip-print.tsx` bằng API có xác thực khi chuyển backend. Giữ ID, snapshot lịch sử, số lượng/giá của phiếu và nguyên tắc không ghi bản in vào dữ liệu gốc. Các trường người gửi/đơn vị hiện là mặc định template có thể sửa; có thể lấy từ cấu hình doanh nghiệp sau này.

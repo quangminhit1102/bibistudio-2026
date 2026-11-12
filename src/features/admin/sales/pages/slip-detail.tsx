@@ -8,7 +8,10 @@ import { Card, PageTitle, Badge, Button, ErrorState, Skeleton } from "../../shar
 import { useSlipRoute } from "../use-slip-route";
 import { statusBadgeTone } from "../../shared/ui/status-badges";
 import { VoidSlip } from "../components/void-slip";
+import { lazy, Suspense, useState } from "react";
+const SlipPrint = lazy(() => import("../components/slip-print"));
 export default function SlipDetail() {
+  const [printing, setPrinting] = useState(false);
   const id = useRecordId(),
     record = useSlipRoute(id),
     runtime = useAdmin(),
@@ -20,6 +23,12 @@ export default function SlipDetail() {
     return <ErrorState error={record.error} onRetry={() => void record.refetch()} />;
   const s = record.data,
     editable = s.status === "saved" && can(runtime.session, "sales", "update", role.data);
+  if (printing)
+    return (
+      <Suspense fallback={<Skeleton />}>
+        <SlipPrint key={s.id} slip={s} onClose={() => setPrinting(false)} />
+      </Suspense>
+    );
   return (
     <div className="a-slip-detail">
       <PageTitle
@@ -42,7 +51,7 @@ export default function SlipDetail() {
                 <VoidSlip slip={s} />
               </>
             )}
-            <Button onClick={() => window.print()}>In phiếu</Button>
+            <Button onClick={() => setPrinting(true)}>In phiếu</Button>
           </>
         }
       />

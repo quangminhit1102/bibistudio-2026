@@ -1,0 +1,23 @@
+import { amountInWords, calculatePrintTotals, type PrintDraft } from "./print-draft";
+const escape = (value: string) =>
+  value.replace(
+    /[&<>"']/g,
+    (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!,
+  );
+const money = (n: number) => new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(n);
+
+/** No scripts, external assets, admin CSS or unescaped interpolated text. */
+export function printDocument(d: PrintDraft) {
+  const { subtotal, tax, total } = calculatePrintTotals(d);
+  const [y, m, day] = d.date.split("-");
+  const date = `Ngày ${Number(day)} Tháng ${Number(m)} Năm ${y}`;
+  const signature = (role: string, name: string) =>
+    `<div><p class="date">${date}</p><p class="role">${escape(role)}</p><p class="hint">${escape(d.signatureHint)}</p>${name ? `<p class="name">${escape(name)}</p>` : ""}</div>`;
+  return `<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escape(d.number || d.title)}</title><style>
+*{box-sizing:border-box}html,body{margin:0;background:#f0f1f3;color:#000;font:11pt/1.4 Arial,sans-serif}body{padding:0}.sheet{width:210mm;min-height:297mm;padding:10mm;margin:0 auto;background:white}.company{font-weight:700}.company p{margin:0 0 3px;overflow-wrap:anywhere;white-space:pre-wrap}h1{font-size:12pt;text-align:center;margin:28px 0 4px}.number{text-align:right}.document-number{font-size:10pt;text-align:right;margin:0 0 5px}.customer{margin-bottom:20px}.customer p{margin:0 0 4px;overflow-wrap:anywhere;white-space:pre-wrap}table{width:100%;table-layout:fixed;border-collapse:collapse;font-size:11pt}th,td{border:1px solid black;padding:3px 5px;vertical-align:middle;overflow-wrap:anywhere}th{background:#c8c8c8;font-size:10.5pt;padding:6px 3px;white-space:nowrap}.center{text-align:center}.number{font-variant-numeric:tabular-nums}.code{font-size:10.5pt;word-break:break-all}.blank{border:0;background:white}.sum-label{text-align:center;font-weight:700}.subtotal{background:#ffff99}.grand{background:#ffff00}.words{font-style:italic;margin-top:28px;overflow-wrap:anywhere}.signatures{display:grid;grid-template-columns:1fr 1fr;gap:35px;margin-top:44px;text-align:center;break-inside:avoid}.signatures p{margin:0 0 3px;overflow-wrap:anywhere}.date,.role,.name{font-weight:700}.signatures .hint{font-style:italic;margin-top:49px}.signatures .name{margin-top:45px}thead{display:table-header-group}tfoot{display:table-row-group;break-inside:avoid}tr{break-inside:avoid}
+@page{size:A4 portrait;margin:10mm}
+@media print{html,body{background:white;padding:0;margin:0}.sheet{width:190mm;min-height:0;padding:0;margin:0}th,.subtotal,.grand{print-color-adjust:exact;-webkit-print-color-adjust:exact}.company,.customer,h1{break-inside:avoid}}
+</style></head><body><article class="sheet"><div class="company"><p>${escape(d.company)}</p><p>Địa chỉ: ${escape(d.companyAddress)}</p><p>SĐT: ${escape(d.phone)}</p></div><h1>${escape(d.title)}</h1>${d.number ? `<p class="document-number">Số phiếu: ${escape(d.number)}</p>` : ""}<div class="customer"><p>Khách hàng: ${escape(d.customer)}</p><p>Địa chỉ: ${escape(d.customerAddress)}</p></div>
+<table aria-label="Sản phẩm giao hàng"><colgroup><col style="width:6%"><col style="width:17%"><col style="width:31%"><col style="width:9%"><col style="width:10%"><col style="width:12%"><col style="width:15%"></colgroup><thead><tr><th>STT</th><th>Mã hàng</th><th>Sản phẩm</th><th>Đơn vị</th><th>Số lượng</th><th>Đơn giá</th><th>Thành tiền</th></tr></thead><tbody>${d.items.map((line, i) => `<tr><td class="center">${i + 1}</td><td class="code">${escape(line.code)}</td><td>${escape(line.name)}</td><td class="center">${escape(line.unit)}</td><td class="center">${money(Number(line.quantity))}</td><td class="number">${money(Number(line.price))}</td><td class="number">${money(Number(line.quantity) * Number(line.price))}</td></tr>`).join("")}</tbody><tfoot><tr><td colspan="5" class="blank"></td><td class="subtotal sum-label">Tổng</td><td class="subtotal number">${money(subtotal)}</td></tr>${d.vat ? `<tr><td colspan="5" class="blank"></td><td class="subtotal sum-label">VAT ${escape(d.vatRate)}%</td><td class="subtotal number">${money(tax)}</td></tr>` : ""}<tr><td colspan="5" class="blank"></td><td class="grand sum-label">Thành tiền</td><td class="grand number">${money(total)}</td></tr></tfoot></table>
+<p class="words">Thành tiền (viết bằng chữ): ${amountInWords(total)}</p><div class="signatures">${signature(d.receiverRole, d.receiverName)}${signature(d.issuerRole, d.issuerName)}</div></article></body></html>`;
+}

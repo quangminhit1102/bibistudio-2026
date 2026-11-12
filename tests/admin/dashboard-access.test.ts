@@ -1,8 +1,11 @@
-import { it, expect } from "vitest";
+import { it, expect, vi } from "vitest";
+import { DEMO_NOW } from "../../src/features/admin/demo/clock";
 import { createAdminStore } from "../../src/features/admin/demo/store";
 import { loadDashboard } from "../../src/features/admin/dashboard/service";
 import { presetRange } from "../../src/features/admin/analytics/aggregate";
 it("Editor receives aggregate KPIs without raw customer, visitor, account or audit rows", async () => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date(DEMO_NOW));
   const store = createAdminStore("dashboard-access");
   try {
     const result = await loadDashboard(
@@ -22,5 +25,6 @@ it("Editor receives aggregate KPIs without raw customer, visitor, account or aud
     expect(await store.list("books")).toEqual([]);
   } finally {
     await store.destroy();
+    vi.useRealTimers();
   }
 });
