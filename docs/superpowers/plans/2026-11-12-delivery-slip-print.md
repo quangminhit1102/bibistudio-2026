@@ -1,6 +1,6 @@
 # Delivery Slip Print Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Integrate the approved editable delivery-slip preview and deploy it with current browser data.
 **Architecture:** A typed read adapter maps linked records to a transient draft; pure validation/calculation/document modules feed a React editor and isolated printable iframe. The saved-slip detail mounts the editor without changing route or business records.
@@ -27,21 +27,23 @@
 **Files:** sales/print-draft.ts, sales/print-document.ts; tests/admin/slip-print.test.ts.
 **Interfaces:** `SlipPrintSource` asynchronous customer/product readers; `loadPrintDraft`, `calculatePrintTotals`, `amountInWords`, `printDocument`.
 
-- [ ] Write and run failing tests for linked data, fallback, immutability, VAT/words/escaping/validation.
-- [ ] Implement typed source/draft, exact arithmetic and escaped A4 document; run tests green.
+- [x] Write and run failing tests for linked data, fallback, immutability, VAT/words/escaping/validation.
+- [x] Implement typed source/draft, exact arithmetic and escaped A4 document; run tests green.
 
 ### Task 2: Integrated editor
 
 **Files:** sales/components/slip-print.tsx, sales/print.css, sales/pages/slip-detail.tsx; tests/admin/slip-print-ui.test.tsx.
 **Interfaces:** editor receives saved `PurchaseSlip` and close callback; uses runtime entity services through `SlipPrintSource`.
 
-- [ ] Write failing interaction tests for changing VAT, numeric invalidity, reset and no writes.
-- [ ] Implement responsive editor/preview, iframe readiness and native print; test green.
-- [ ] Inspect desktop/mobile local UI and print output; fix observed problems.
+- [x] Write failing interaction tests for changing VAT, numeric invalidity, reset and no writes.
+- [x] Implement responsive editor/preview, iframe readiness and native print; test green.
+- [x] Inspect desktop/mobile local UI and print output; fix observed problems.
 
 ### Task 3: Verify and release
 
-- [ ] Run TypeScript/lint/admin tests/full check and production build; record actual outcomes.
-- [ ] Request one whole-change review and address important findings with tests.
-- [ ] Commit/push without rewriting history, obtain successful main CI artifact.
-- [ ] Run manual production deploy, verify live version and browser print flow; record previous release/rollback target and remaining limitations.
+- [x] Run TypeScript/lint/admin tests/full check and production build; record actual outcomes.
+- [x] Request one whole-change review and address important findings with tests.
+- [x] Commit/push without rewriting history, obtain successful main CI artifact.
+- [x] Run manual production deploy, verify live version and browser print flow; record previous release/rollback target and remaining limitations.
+
+Acceptance: see [release report](../reports/2026-11-12-delivery-slip-print-release.md). Native one-page printing was observed; long multi-page output remains a stated acceptance limitation.
