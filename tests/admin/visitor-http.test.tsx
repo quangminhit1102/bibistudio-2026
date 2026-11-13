@@ -12,12 +12,16 @@ vi.mock("@tanstack/react-router", () => ({
   useBlocker: () => ({ status: "idle" }),
   Link: ({ children }: React.PropsWithChildren) => <a>{children}</a>,
 }));
+vi.mock("../../src/features/admin/shared/charts/chart", () => ({
+  default: ({ label }: { label: string }) => <figure aria-label={label} />,
+}));
 test("visitor page displays API data and product interests without fixture timelines or mutation controls", async () => {
   localStorage.clear();
   const v = {
     id: "server-visitor",
     anonymousId: "KH-123",
-    ipAddress: "192.0.2.0/24",
+    ipAddress: "2606:4700:4700::1111",
+    ipStatus: "verified",
     country: null,
     city: null,
     deviceType: "mobile",
@@ -48,6 +52,9 @@ test("visitor page displays API data and product interests without fixture timel
         return json({
           totalVisitors: 1,
           totalSessions: 1,
+          totalInterestedVisitors: 1,
+          totalProducts: 1,
+          series: [{ startUtc: "2026-11-04T00:00:00Z", label: "04/11/2026", sessions: 1 }],
           products: [{ slug: "a", name: "Sổ máy chủ", interestedVisitors: 1 }],
         });
       if (url.pathname.endsWith("sessions"))
@@ -95,17 +102,105 @@ test("visitor page displays API data and product interests without fixture timel
       </AdminProvider>
     </QueryClientProvider>,
   );
-  expect((await screen.findAllByText("KH-123")).length).toBeGreaterThan(0);
+  expect((await screen.findAllByText("2606:4700:4700::1111")).length).toBeGreaterThan(0);
+  expect(screen.queryByText("ID khách")).not.toBeInTheDocument();
   expect(screen.getAllByText("Chưa xác định").length).toBeGreaterThan(0);
   expect(screen.queryByRole("button", { name: /Xóa|Thêm mới/ })).not.toBeInTheDocument();
-  fireEvent.change(screen.getByLabelText("Sản phẩm quan tâm"), { target: { value: "a" } });
-  await vi.waitFor(() => expect(paths.some((path) => path.includes("product=a"))).toBe(true));
-  fireEvent.click((await screen.findAllByRole("button", { name: "Xem KH-123" }))[0]);
+  expect(screen.queryByLabelText("Sản phẩm quan tâm")).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Khoảng ngày" }));
+  fireEvent.change(screen.getByLabelText("Từ ngày"), { target: { value: "2026-11-01" } });
+  fireEvent.change(screen.getByLabelText("Đến ngày"), { target: { value: "2026-11-13" } });
+  fireEvent.click(screen.getByRole("button", { name: "Áp dụng" }));
+  await screen.findByRole("option", { name: "Di động" });
+  fireEvent.change(screen.getByLabelText("Thiết bị"), { target: { value: "mobile" } });
+  await vi.waitFor(() => {
+    for (const prefix of [
+      "/api/customer-access?",
+      "/api/customer-access/report?",
+      "/api/customer-access/filter-options?",
+    ]) {
+      expect(
+        paths.some(
+          (path) =>
+            path.startsWith(prefix) &&
+            path.includes("from=2026-11-01") &&
+            path.includes("to=2026-11-13") &&
+            path.includes("deviceType=mobile"),
+        ),
+      ).toBe(true);
+    }
+  });
+  fireEvent.click((await screen.findAllByRole("button", { name: "Chi tiết khách 1" }))[0]);
   const dialog = await screen.findByRole("dialog");
   expect(await within(dialog).findByText("Sổ máy chủ")).toBeInTheDocument();
   expect(within(dialog).getByText("Trang ghi nhận gần nhất")).toBeInTheDocument();
   expect(within(dialog).getByText(/Đã đạt giới hạn/)).toBeInTheDocument();
   expect(within(dialog).queryByText(/Chưa kết thúc|lượt xem|phút/)).not.toBeInTheDocument();
+  view.unmount();
+  query.clear();
+});
+
+test("changing date window aborts old list and never displays its late response", async () => {
+  let finishOld!: (response: Response) => void;
+  let oldSignal: AbortSignal | undefined;
+  const visitor = (ip: string) => ({
+    id: ip,
+    anonymousId: "internal",
+    ipAddress: ip,
+    ipStatus: "verified",
+    country: null,
+    city: null,
+    deviceType: "desktop",
+    operatingSystem: "Windows",
+    browser: "Edge",
+    firstSeenAt: "2026-11-01T00:00Z",
+    lastSeenAt: "2026-11-01T00:00Z",
+    sessionCount: 1,
+    distinctPageCount: 1,
+  });
+  const client = createAdminHttp({
+    origin: "http://localhost",
+    refreshLock: immediateLock,
+    fetch: async (input, init) => {
+      const url = new URL(String(input));
+      if (url.pathname.endsWith("refresh")) return json(grant("memory-user"));
+      if (url.pathname.endsWith("profile")) return json(profile);
+      if (url.pathname.endsWith("filter-options"))
+        return json({ deviceTypes: [], browsers: [], operatingSystems: [], products: [] });
+      if (url.pathname.endsWith("report"))
+        return json({
+          totalVisitors: 1,
+          totalSessions: 1,
+          totalInterestedVisitors: 0,
+          products: [],
+          series: [],
+        });
+      if (url.searchParams.get("from") !== "2026-11-01") {
+        oldSignal = init?.signal ?? undefined;
+        return new Promise<Response>((resolve) => {
+          finishOld = resolve;
+        });
+      }
+      return json({ items: [visitor("8.8.8.8")], total: 1, page: 1, pageSize: 20 });
+    },
+  });
+  const query = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  const view = render(
+    <QueryClientProvider client={query}>
+      <AdminProvider authFactory={() => createHttpAuthService({ client })}>
+        <Visitors />
+      </AdminProvider>
+    </QueryClientProvider>,
+  );
+  fireEvent.click(await screen.findByRole("button", { name: "Khoảng ngày" }));
+  await vi.waitFor(() => expect(finishOld).toBeTypeOf("function"));
+  fireEvent.change(screen.getByLabelText("Từ ngày"), { target: { value: "2026-11-01" } });
+  fireEvent.change(screen.getByLabelText("Đến ngày"), { target: { value: "2026-11-13" } });
+  fireEvent.click(screen.getByRole("button", { name: "Áp dụng" }));
+  await screen.findAllByText("8.8.8.8");
+  expect(oldSignal?.aborted).toBe(true);
+  finishOld(json({ items: [visitor("1.1.1.1")], total: 1, page: 1, pageSize: 20 }));
+  await vi.waitFor(() => expect(screen.queryByText("1.1.1.1")).not.toBeInTheDocument());
   view.unmount();
   query.clear();
 });

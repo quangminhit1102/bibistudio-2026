@@ -2807,3 +2807,94 @@
     min-width: 112px;
   }
 }
+
+/* Visitor reporting shares one date cohort across desktop and mobile. */
+.admin-root .a-visitor-overview {
+  display: grid;
+  gap: 24px;
+  min-width: 0;
+}
+.admin-root .a-visitor-overview h2 {
+  margin-top: 0;
+}
+.admin-root .a-visitor-date-filter {
+  display: grid;
+  gap: 12px;
+}
+.admin-root .a-visitor-custom-dates {
+  display: flex;
+  align-items: end;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.admin-root .a-visitor-custom-dates label {
+  display: grid;
+  gap: 8px;
+  flex: 1 1 180px;
+  min-width: 0;
+}
+.admin-root .a-visitor-custom-dates input {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--a-border);
+  border-radius: 6px;
+  background: var(--a-surface);
+  color: var(--a-text);
+}
+.admin-root .a-visitor-kpis {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+.admin-root .a-visitor-kpis strong {
+  display: block;
+}
+.admin-root .a-visitor-section-heading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 16px;
+}
+.admin-root .a-visitor-ip {
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+.admin-root .a-visitor-chart-data {
+  margin-top: 16px;
+}
+.admin-root .a-visitor-chart-data[open] {
+  max-height: 340px;
+  overflow: auto;
+}
+.admin-root .a-visitor-chart-data summary {
+  cursor: pointer;
+  padding-block: 8px;
+}
+.admin-root .a-visitor-chart-data table,
+.admin-root .a-visitor-products-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.admin-root .a-visitor-chart-data th,
+.admin-root .a-visitor-chart-data td,
+.admin-root .a-visitor-products-table th,
+.admin-root .a-visitor-products-table td {
+  text-align: left;
+  padding: 12px 8px;
+  border-bottom: 1px solid var(--a-border);
+  overflow-wrap: anywhere;
+}
+@media (max-width: 640px) {
+  .admin-root .a-visitor-kpis {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .admin-root .a-visitor-section-heading {
+    flex-direction: column;
+  }
+  .admin-root .a-visitor-date-filter .a-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
