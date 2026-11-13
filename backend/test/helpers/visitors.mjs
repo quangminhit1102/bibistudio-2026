@@ -5,6 +5,11 @@ export async function createVisitorFixture(t, productCount = 4) {
   const fixture = await createDatabaseFixture(t);
   const { migrate } = await import("../../dist/db/migrate.js");
   await migrate(fixture.pool, fileURLToPath(new URL("../../migrations", import.meta.url)));
+  const { migrateVisitorHistory } = await import("../../dist/visitors/schema.js");
+  await migrateVisitorHistory(
+    fixture.pool,
+    fileURLToPath(new URL("../../visitor-migrations", import.meta.url)),
+  );
   const { createCatalogue } = await import("../../dist/visitors/catalogue.js");
   const { collectVisitor } = await import("../../dist/visitors/collector.js");
   const products = Array.from({ length: productCount }, (_, i) => ({

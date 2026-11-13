@@ -46,6 +46,8 @@ export function createRuntime(env: NodeJS.ProcessEnv = process.env, clock: Clock
       idSecret: env.ANALYTICS_ID_SECRET,
       cookieSecure: config.cookieSecure,
       probeSecret: env.RELEASE_PROBE_SECRET,
+      clientIpSourceVerified: config.clientIpSourceVerified,
+      trustedProxyCidrs: config.trustProxy || [],
     },
   };
   let closing: Promise<unknown> | undefined;

@@ -6,6 +6,7 @@ import { sqlDate } from "../auth/repository";
 import { withTransaction } from "../db/transaction";
 import { ApiError } from "../http/errors";
 import { networkPrefix } from "../http/network";
+import { resolveClientAddress } from "../http/client-address";
 import { type Catalogue, publicPath } from "./catalogue";
 import { createVisitorCookie, deviceLabels, visitorIdentity } from "./normalize";
 import type { VerifiedProbe } from "./probe";
@@ -26,6 +27,9 @@ export interface CollectorContext {
   catalogue: Catalogue;
   doNotTrack?: boolean;
   probe?: VerifiedProbe;
+  peer?: string;
+  sourceVerified?: boolean;
+  trustedCidrs?: string[];
 }
 export interface CollectResult {
   status: 202 | 204;
@@ -99,6 +103,12 @@ export async function collectVisitor(
     }
   }
   const labels = deviceLabels(context.userAgent);
+  const clientAddress = resolveClientAddress({
+    peer: context.peer,
+    ip: context.ip,
+    sourceVerified: context.sourceVerified ?? false,
+    trustedCidrs: context.trustedCidrs ?? [],
+  });
   await withTransaction(pool, async (connection) => {
     await connection.execute(
       "INSERT INTO visitors(id,identity_hash,ip_prefix,device_type,operating_system,browser,first_seen_at,last_seen_at,is_probe) VALUES (?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE id=id",
@@ -159,6 +169,19 @@ export async function collectVisitor(
       pageCount = previous.page_count;
       productCount = previous.product_count;
     }
+    await connection.execute(
+      "UPDATE visitor_sessions SET client_ip=IF(?='verified',?,client_ip),ip_status=IF(?='verified','verified',IF(ip_status='verified','verified','unavailable')),device_type=?,operating_system=?,browser=? WHERE id=? AND last_received_at<=?",
+      [
+        clientAddress.status,
+        clientAddress.address,
+        clientAddress.status,
+        labels.device,
+        labels.os,
+        labels.browser,
+        sessionId,
+        context.now,
+      ],
+    );
     const pages = await associations(
       connection,
       sessionId,

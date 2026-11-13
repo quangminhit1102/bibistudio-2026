@@ -1,12 +1,18 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { randomBytes } from "node:crypto";
+import { fileURLToPath } from "node:url";
 import { createAuthFixture } from "./helpers/auth.mjs";
 import { createApp } from "../dist/app.js";
 import { serve } from "./helpers/http.mjs";
 
 test("visitor private APIs serve real deduplicated data, static routes and permission checks", async (t) => {
   const f = await createAuthFixture(t);
+  const { migrateVisitorHistory } = await import("../dist/visitors/schema.js");
+  await migrateVisitorHistory(
+    f.pool,
+    fileURLToPath(new URL("../visitor-migrations", import.meta.url)),
+  );
   const { createCatalogue } = await import("../dist/visitors/catalogue.js");
   const { collectVisitor } = await import("../dist/visitors/collector.js");
   const catalogue = createCatalogue({

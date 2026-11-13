@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { createVisitorFixture } from "./helpers/visitors.mjs";
 
-test("bounded retention removes old analytics in FK order without touching audit/auth", async (t) => {
+test("all real history survives cookie expiry and cleanup without touching audit/auth", async (t) => {
   const f = await createVisitorFixture(t);
   const { cleanupAnalytics } = await import("../dist/visitors/cleanup.js");
   await f.collect(f.batch, f.cookie);
@@ -13,8 +13,8 @@ test("bounded retention removes old analytics in FK order without touching audit
   const bootstrap = await f.collect(f.batch);
   await f.collect(f.batch, bootstrap.cookie.value);
   const result = await cleanupAnalytics(f.pool, f.clock.now(), 1);
-  assert.equal(result.sessions, 1);
-  assert.equal(result.visitors, 1);
+  assert.equal(result.sessions, 0);
+  assert.equal(result.visitors, 0);
   for (const table of [
     "visitors",
     "visitor_sessions",
@@ -23,12 +23,12 @@ test("bounded retention removes old analytics in FK order without touching audit
     "audit_logs",
   ]) {
     const [[row]] = await f.pool.query(`SELECT COUNT(*) n FROM ${table}`);
-    assert.equal(row.n, 1, table);
+    assert.equal(row.n, table === "audit_logs" ? 1 : 2, table);
   }
   await assert.rejects(cleanupAnalytics(f.pool, f.clock.now(), 1001));
 });
 
-test("old associations expire even if a session remains active, then counts match retained data", async (t) => {
+test("old associations remain when a session remains active", async (t) => {
   const f = await createVisitorFixture(t);
   const { cleanupAnalytics } = await import("../dist/visitors/cleanup.js");
   await f.collect(f.batch, f.cookie);
@@ -42,6 +42,6 @@ test("old associations expire even if a session remains active, then counts matc
   await f.pool.query("UPDATE visitors SET last_seen_at=?", [f.clock.now()]);
   await cleanupAnalytics(f.pool, f.clock.now(), 10);
   const [[remaining]] = await f.pool.query("SELECT page_count,product_count FROM visitor_sessions");
-  assert.equal(remaining.page_count, 0);
-  assert.equal(remaining.product_count, 0);
+  assert.equal(remaining.page_count, 1);
+  assert.equal(remaining.product_count, 1);
 });

@@ -5,7 +5,7 @@ import { ApiError } from "../http/errors";
 import { requireBrowserOrigin, type SecurityConfig } from "../http/security";
 import type { Catalogue } from "./catalogue";
 import { collectVisitor } from "./collector";
-import { ANALYTICS_TTL_MS } from "./normalize";
+import { VISITOR_COOKIE_TTL_MS } from "./normalize";
 import { verifyProbeMarker } from "./probe";
 
 export interface AnalyticsOptions {
@@ -14,6 +14,8 @@ export interface AnalyticsOptions {
   catalogue: Catalogue;
   cookieSecure: boolean;
   probeSecret?: string;
+  clientIpSourceVerified?: boolean;
+  trustedProxyCidrs?: string[];
 }
 export const ANALYTICS_COOKIE = "bibi_visitor";
 export function analyticsRoutes(
@@ -44,6 +46,9 @@ export function analyticsRoutes(
             ? req.cookies[ANALYTICS_COOKIE]
             : undefined,
         ip: req.ip ?? "unknown",
+        peer: req.socket.remoteAddress,
+        sourceVerified: options.clientIpSourceVerified ?? false,
+        trustedCidrs: options.trustedProxyCidrs ?? [],
         userAgent: req.get("user-agent") ?? "",
         now,
         idSecret: options.idSecret,
@@ -54,7 +59,7 @@ export function analyticsRoutes(
       if (result.cookie)
         res.cookie(ANALYTICS_COOKIE, result.cookie.value, {
           ...cookieOptions,
-          maxAge: ANALYTICS_TTL_MS,
+          maxAge: VISITOR_COOKIE_TTL_MS,
         });
       res.status(result.status).end();
     } finally {

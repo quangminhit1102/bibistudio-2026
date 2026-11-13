@@ -1,10 +1,12 @@
 import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 
-export const ANALYTICS_TTL_MS = 90 * 86400000;
+export const VISITOR_COOKIE_TTL_MS = 90 * 86400000;
+/** Legacy read adapter only; never use this value to delete stored history. */
+export const ANALYTICS_TTL_MS = VISITOR_COOKIE_TTL_MS;
 const signature = (value: string, secret: string) =>
   createHmac("sha256", secret).update(value).digest("base64url");
 export function createVisitorCookie(secret: string, now: Date): string {
-  const payload = `${randomBytes(32).toString("base64url")}.${Math.floor((+now + ANALYTICS_TTL_MS) / 1000).toString(36)}`;
+  const payload = `${randomBytes(32).toString("base64url")}.${Math.floor((+now + VISITOR_COOKIE_TTL_MS) / 1000).toString(36)}`;
   return `${payload}.${signature(payload, secret)}`;
 }
 export function visitorIdentity(
@@ -15,7 +17,7 @@ export function visitorIdentity(
   if (!cookie || !/^[A-Za-z0-9_-]{43}\.[a-z0-9]{1,12}\.[A-Za-z0-9_-]{43}$/.test(cookie)) return;
   const [id, expiry, signed] = cookie.split(".");
   const expires = parseInt(expiry, 36) * 1000;
-  if (expires <= +now || expires > +now + ANALYTICS_TTL_MS) return;
+  if (expires <= +now || expires > +now + VISITOR_COOKIE_TTL_MS) return;
   const expected = signature(`${id}.${expiry}`, secret);
   if (!timingSafeEqual(Buffer.from(expected), Buffer.from(signed))) return;
   return createHmac("sha256", secret).update(`identity:${id}`).digest("hex");
