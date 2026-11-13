@@ -1,5 +1,11 @@
 import { isMain } from "./runtime.mjs";
-export async function smoke({ baseUrl, expectedRelease, expectedSha, request = fetch }) {
+export async function smoke({
+  baseUrl,
+  expectedRelease,
+  expectedSha,
+  expectedRelay = false,
+  request = fetch,
+}) {
   const get = async (path, type) => {
     const response = await request(new URL(path, baseUrl), {
       cache: "no-store",
@@ -25,6 +31,20 @@ export async function smoke({ baseUrl, expectedRelease, expectedSha, request = f
     throw new Error("API 404 must be JSON");
   await get("/products/ca-phe-voi-nguoi-thuong-notebook", "text/html");
   await get("/catalogue/motivation-ca-phe-nguoi-thuong.jpeg", "image/");
+  if (expectedRelay) {
+    const relay = await request(new URL("/api/analytics/relay/collect.php", baseUrl), {
+      cache: "no-store",
+      redirect: "error",
+      headers: { DNT: "1" },
+      signal: AbortSignal.timeout(6000),
+    });
+    if (
+      relay.status !== 405 ||
+      !relay.headers.get("content-type")?.includes("application/json") ||
+      (await relay.json())?.error?.code !== "ANALYTICS_RELAY_REJECTED"
+    )
+      throw new Error("PHP relay routing smoke failed");
+  }
   console.log(`HTTP smoke passed: ${expectedRelease}`);
 }
 if (isMain(import.meta.url))

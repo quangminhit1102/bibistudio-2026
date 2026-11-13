@@ -6,6 +6,7 @@ const { spawnSync } = require("node:child_process");
 const tar = require("tar");
 const { validateManifest } = require("./release.cjs");
 const { verifyProfileAssets } = require("./profile-metadata.cjs");
+const { verifyVisitorContextAssets } = require("./visitor-context-metadata.cjs");
 const { verifyVisitorAssets } = require("./visitor-metadata.cjs");
 const deploy = require("./deploy.cjs");
 const { verifyAccessLogAssets } = require("./access-log-metadata.cjs");
@@ -119,6 +120,10 @@ async function acceptArchive(config, id, checksum, file) {
     if (manifest.visitorAnalytics) {
       await verifyVisitorAssets(path.join(staging, "backend"), manifest.visitorAnalytics);
       await fs.access(path.join(staging, "backend/dist/visitors/cli.js"));
+    }
+    if (manifest.visitorContext) {
+      await verifyVisitorContextAssets(path.join(staging, "backend"), manifest.visitorContext);
+      await fs.access(path.join(staging, "backend/dist/visitors/context-cli.js"));
     }
     await fs.writeFile(path.join(staging, ".archive-sha256"), checksum);
     await fs.rename(staging, dest);

@@ -3,12 +3,31 @@ const { validateDatabaseMetadata } = require("./database-metadata.cjs");
 const { validateAccessLogMetadata } = require("./access-log-metadata.cjs");
 const { validateProfileMetadata } = require("./profile-metadata.cjs");
 const { validateVisitorMetadata } = require("./visitor-metadata.cjs");
-function makeManifest(sourceSha, ciRunId = null, database, accessLogs, profiles, visitorAnalytics) {
+const { validateVisitorContextMetadata } = require("./visitor-context-metadata.cjs");
+function makeManifest(
+  sourceSha,
+  ciRunId = null,
+  database,
+  accessLogs,
+  profiles,
+  visitorAnalytics,
+  visitorContext,
+) {
   if (!/^[a-f0-9]{40}$/.test(sourceSha)) throw new Error("Invalid source SHA");
   if (ciRunId !== null && !/^[1-9][0-9]*$/.test(String(ciRunId)))
     throw new Error("Invalid CI run ID");
   return {
-    schemaVersion: visitorAnalytics ? 5 : profiles ? 4 : accessLogs ? 3 : database ? 2 : 1,
+    schemaVersion: visitorContext
+      ? 6
+      : visitorAnalytics
+        ? 5
+        : profiles
+          ? 4
+          : accessLogs
+            ? 3
+            : database
+              ? 2
+              : 1,
     releaseId: ciRunId ? `${sourceSha}-${ciRunId}` : `local-${sourceSha}`,
     sourceSha,
     ciRunId: ciRunId ? String(ciRunId) : null,
@@ -16,12 +35,13 @@ function makeManifest(sourceSha, ciRunId = null, database, accessLogs, profiles,
     ...(accessLogs ? { accessLogs: validateAccessLogMetadata(accessLogs) } : {}),
     ...(profiles ? { profiles: validateProfileMetadata(profiles) } : {}),
     ...(visitorAnalytics ? { visitorAnalytics: validateVisitorMetadata(visitorAnalytics) } : {}),
+    ...(visitorContext ? { visitorContext: validateVisitorContextMetadata(visitorContext) } : {}),
   };
 }
 function validateManifest(data, { requireCI = false } = {}) {
   if (
     !data ||
-    ![1, 2, 3, 4, 5].includes(data.schemaVersion) ||
+    ![1, 2, 3, 4, 5, 6].includes(data.schemaVersion) ||
     (data.schemaVersion === 1 && Object.hasOwn(data, "database")) ||
     (data.schemaVersion >= 2 && !data.database) ||
     (data.schemaVersion < 3 && Object.hasOwn(data, "accessLogs")) ||
@@ -29,7 +49,9 @@ function validateManifest(data, { requireCI = false } = {}) {
     (data.schemaVersion < 4 && Object.hasOwn(data, "profiles")) ||
     (data.schemaVersion >= 4 && !data.profiles) ||
     (data.schemaVersion < 5 && Object.hasOwn(data, "visitorAnalytics")) ||
-    (data.schemaVersion === 5 && !data.visitorAnalytics)
+    (data.schemaVersion >= 5 && !data.visitorAnalytics) ||
+    (data.schemaVersion < 6 && Object.hasOwn(data, "visitorContext")) ||
+    (data.schemaVersion === 6 && !data.visitorContext)
   )
     throw new Error("Invalid release manifest");
   const expected = makeManifest(
@@ -39,6 +61,7 @@ function validateManifest(data, { requireCI = false } = {}) {
     data.accessLogs,
     data.profiles,
     data.visitorAnalytics,
+    data.visitorContext,
   );
   if (data.releaseId !== expected.releaseId) throw new Error("Invalid release identity");
   if (requireCI && !data.ciRunId) throw new Error("CI release is required");

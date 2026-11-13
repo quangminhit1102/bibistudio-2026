@@ -10,6 +10,7 @@ import databaseMetadata from "../ops/database-metadata.cjs";
 import profileMetadata from "../ops/profile-metadata.cjs";
 import accessLogMetadata from "../ops/access-log-metadata.cjs";
 import visitorMetadata from "../ops/visitor-metadata.cjs";
+import contextMetadata from "../ops/visitor-context-metadata.cjs";
 import { writeAnalyticsCatalogue } from "./analytics-catalogue.mjs";
 import { prepareCountryDataset } from "./prepare-geoip.mjs";
 
@@ -46,6 +47,10 @@ export async function validateBundle(dir) {
     await visitorMetadata.verifyVisitorAssets(join(dir, "backend"), manifest.visitorAnalytics);
     await stat(join(dir, "backend/dist/visitors/cli.js"));
   }
+  if (manifest.visitorContext) {
+    await contextMetadata.verifyVisitorContextAssets(join(dir, "backend"), manifest.visitorContext);
+    await stat(join(dir, "backend/dist/visitors/context-cli.js"));
+  }
   if (fe.releaseId !== manifest.releaseId || fe.sourceSha !== manifest.sourceSha)
     throw new Error("FE/BE release mismatch");
   async function scan(path) {
@@ -79,6 +84,7 @@ export async function buildRelease({
     await accessLogMetadata.createAccessLogMetadata(join(root, "backend")),
     await profileMetadata.createProfileMetadata(join(root, "backend")),
     await visitorMetadata.createVisitorMetadata(join(root, "backend")),
+    await contextMetadata.createVisitorContextMetadata(join(root, "backend")),
   );
   const base = resolve(outputDir);
   const bundleDir = join(base, manifest.releaseId);
@@ -141,6 +147,8 @@ export async function buildRelease({
     join(root, "backend/analytics-catalogue.json"),
     join(bundleDir, "backend/analytics-catalogue.json"),
   );
+  for (const name of ["relay", "geoip", "visitor-context-migrations"])
+    await cp(join(root, "backend", name), join(bundleDir, "backend", name), { recursive: true });
   for (const file of ["manifest.json", "frontend/version.json"])
     await writeFile(
       join(bundleDir, file),
@@ -162,6 +170,8 @@ export async function buildRelease({
     "frontend",
     "backend",
   ]);
+  if ((await stat(archive)).size > 256 * 1024 ** 2)
+    throw new Error("Release archive exceeds 256MiB budget");
   const checksumFile = archive + ".sha256";
   await writeFile(
     checksumFile,

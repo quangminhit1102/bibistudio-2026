@@ -99,7 +99,12 @@ export async function deployClient() {
       .find((e) => e.event === "deployed" && e.releaseId === id);
     if (!result) throw new Error("Missing deploy receipt");
     try {
-      await smoke({ baseUrl, expectedRelease: id, expectedSha: id.split("-")[0] });
+      await smoke({
+        baseUrl,
+        expectedRelease: id,
+        expectedSha: id.split("-")[0],
+        expectedRelay: result.visitorContext === true,
+      });
       await browserSmoke(baseUrl);
       await oldClient.verify();
     } catch (error) {

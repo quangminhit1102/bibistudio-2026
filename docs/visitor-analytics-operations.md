@@ -65,3 +65,22 @@ Sau kiểm tra cPanel, chủ website yêu cầu deploy source hiện tại dù n
 ## Lưu ý CageFS khi phát hành
 
 Receiver phải giữ SSH_ORIGINAL_COMMAND để validate lệnh SSH. Chỉ child crontab nhận bản sao environment đã bỏ biến này; nếu truyền nguyên biến, CageFS trên hosting đã đo trả Invalid argument. Bản sửa ee12307 có regression test và đã qua rollback/deploy GitHub thật. Không tắt kiểm tra crontab hoặc bỏ khóa deploy để né lỗi.
+
+## Relay IP/quốc gia — manifest6 đang kiểm chứng, chưa phát hành
+
+Không dùng cron hoặc importer. Browser gửi batch hiện có qua `/api/analytics/relay/collect.php`; PHP ký IP quan sát được, Express ghi snapshot phiên và tra quốc gia offline. UI ghi “Chưa xác minh” và “Ước lượng”. `CLIENT_IP_SOURCE_VERIFIED=false`; auth và trust proxy không đổi. MMDB DB-IP Country Lite 11/2026, CC-BY-4.0; attribution nằm trong UI và `backend/geoip/country.lock.json`.
+
+Receiver cần bootstrap đồng bộ từ source đã commit: `release.cjs`, `receiver.cjs`, `deploy.cjs`, `database-lifecycle.cjs`, ba file `visitor-context-{metadata,lifecycle,routing}.cjs` và `php/{loader.php,relay.htaccess}`, cùng các dependency ops hiện có. Trước ghi, đối chiếu SHA256 từng file với source và sao lưu ops hiện tại; không lấy file từ working tree chưa commit. Manifest6 ghi checksum SQL, tổng hợp hai PHP file theo thứ tự ASCII và SHA256/version MMDB. Receiver từ chối asset thiếu, thay đổi hoặc symlink. Archive vẫn giới hạn256MiB.
+
+Cấu hình private, ngoài webroot và0600:
+
+- `private/analytics-relay.json`: đúng4 trường `environment: "production"`, `secret` (32byte random base64url43ký tự), `targetUrl: "https://bibistudio.vn/api/analytics/collect"`, `origins` giống AUTH_ALLOWED_ORIGINS.
+- `private/runtime.env` và `private/maintenance.env`: cùng `ANALYTICS_RELAY_SECRET`; `GEOIP_COUNTRY_FILE=<deploy-root>/current/backend/geoip/country.mmdb`; `CLIENT_IP_SOURCE_VERIFIED=false`. Khóa relay riêng, không dùng lại khóa JWT, identity hay probe. Không đưa cấu hình vào VITE_, argv hoặc log.
+
+Bootstrap loader chỉ tạo `api/analytics/relay/collect.php` và `.htaccess` trong child đó (`PassengerEnabled off`, không liệt kê thư mục). Không sửa `.htaccess` của `/api`. Routing root vẫn dùng quy trình phát hành cũ. Trước thay child files, lưu bản sao trong `private/relay-routing-backup-<UUID>/before.json`; hash các file đã cài nằm tại `private/analytics-relay-routing.json`. File có sẵn không đúng hash bị chặn để kiểm tra, không ghi đè. Loader chọn PHP từ realpath `current`, kiểm tra capability và checksum; release cũ trả404 để tab mới dùng fallback hữu hạn, IP unknown.
+
+Trình tự: paired native backup/restore có avatar → auth/history migrations như cũ → context status/migrate/status → cài child loader → chuyển current → restart → readiness PHP thực (GET405 JSON, không chấp nhận source/404) và auth/profile/analytics probe. Migration context lỗi xảy ra trước khi đổi current. Không restore đè DB live hay down migration. Ledger riêng `visitor_context_schema_migrations` version1, auth4 và visitor-history1 không sửa. Receipt replay là state tạm, dọn tối đa100receipt hết hạn mỗi batch; lịch sử thật không TTL.
+
+Rollback v6→v5 dùng context tool của current v6 để kiểm tra trước khi chuyển. Dữ liệu session mới vẫn ở DB; v5 có thể đổi cột ip_status thành unavailable nhưng không xóa IP/country snapshot, v6 khôi phục ý nghĩa observed khi forward. Old→old không có context tool ở current/candidate bị chặn sau khi relay đã cài; giữ release v6 cho forward. Không chọn tool ngẫu nhiên từ một release retained khác. Importer và TTLcron đã retired giữ nguyên trạng thái tắt.
+
+Local đã đo: PHP loader v6/old/tampered trả405/404/503; pinned backend productionv5 vẫn chạy auth/profile sau DDL mới; backup native phục hồi snapshot/ledger/receipt trong verifier riêng. Artifact local đầu tiên199025808byte (~189.8MiB), dưới256MiB; đây chưa phải artifact CI/production. Chưa có kết quả deploy/live cho manifest6 ở thời điểm ghi mục này.

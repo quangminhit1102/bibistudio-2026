@@ -16,6 +16,12 @@ const { verifyAccessLogAssets, checkAccessLogCompatibility } = require("./access
 const execute = promisify(execFile);
 const { prepareProfileLifecycle } = require("./profile-lifecycle.cjs");
 const { prepareVisitorLifecycle } = require("./visitor-lifecycle.cjs");
+const { prepareVisitorContext } = require("./visitor-context-lifecycle.cjs");
+const {
+  validateRelayConfiguration,
+  installRelayRouting,
+  verifyRelayRouting,
+} = require("./visitor-context-routing.cjs");
 function inside(base, target) {
   const relative = path.relative(path.resolve(base), path.resolve(target));
   if (!relative || relative.startsWith("..") || path.isAbsolute(relative))
@@ -154,6 +160,7 @@ async function verify(config, m) {
       });
       if (!image.ok || !image.headers.get("content-type")?.startsWith("image/"))
         throw new Error("Catalogue image check failed");
+      if (m.visitorContext) await verifyRelayRouting(config);
       return;
     } catch (e) {
       last = e;
@@ -224,6 +231,7 @@ async function activateRelease(config, id, hooks = {}) {
     throw new Error("Refusing older staging release");
   if (manifest.accessLogs)
     await verifyAccessLogAssets(path.join(dir, "backend"), manifest.accessLogs);
+  if (manifest.visitorContext) await validateRelayConfiguration(config);
   await (hooks.install ?? install)(config, dir);
   const profileBackup = await prepareProfileLifecycle(
     config,
@@ -256,6 +264,13 @@ async function activateRelease(config, id, hooks = {}) {
     );
     await atomicWrite(path.join(dir, ".database-prepared.json"), JSON.stringify(receipt));
   }
+  await prepareVisitorContext(
+    config,
+    old ? { dir: old, manifest: oldManifest } : null,
+    { dir, manifest },
+    { backupReceipt: profileBackup, run: hooks.contextRun },
+  );
+  if (manifest.visitorContext) await installRelayRouting(config);
   await mergeAssets(config, dir);
   try {
     await point(config, dir);
@@ -276,6 +291,7 @@ async function activateRelease(config, id, hooks = {}) {
     console.log(
       JSON.stringify({
         event: "deployed",
+        ...(manifest.visitorContext ? { visitorContext: true } : {}),
         environment: config.environment,
         releaseId: id,
         previousReleaseId: oldManifest?.releaseId ?? null,
@@ -344,6 +360,14 @@ async function rollbackRelease(config, id, hooks = {}) {
     { dir, manifest },
     { run: hooks.visitorRun, retire: hooks.retireVisitorCrons, backupReceipt: profileBackup },
   );
+  if (manifest.visitorContext) await validateRelayConfiguration(config);
+  await prepareVisitorContext(
+    config,
+    current ? { dir: current, manifest: active } : null,
+    { dir, manifest },
+    { backupReceipt: profileBackup, run: hooks.contextRun },
+  );
+  if (manifest.visitorContext) await installRelayRouting(config);
   let degradedAdmin = false;
   if (manifest.database || active?.database) {
     if (manifest.database) {
