@@ -1,6 +1,6 @@
 # Khách truy cập — IP nguồn, lịch sử đầy đủ và phân tích theo thời gian
 
-Trạng thái: bản thiết kế chờ chủ website duyệt; chưa triển khai ứng dụng hoặc cấu hình hosting. Builder check độc lập ngày 13/11: không còn câu hỏi quan trọng cần trả lời trước khi lập plan.
+Trạng thái: chủ website đã duyệt ngày 13/11 sau khi chốt bộ lọc chỉ chọn ngày; chưa triển khai ứng dụng hoặc cấu hình hosting. Builder check độc lập ngày 13/11: không còn câu hỏi quan trọng cần trả lời trước khi lập plan.
 
 ## 1. Mục đích và các quyết định đã chốt
 
