@@ -1,6 +1,6 @@
 # IP và quốc gia theo phiên — thiết kế relay analytics trên cPanel
 
-Trạng thái: dự thảo chờ chủ website duyệt. Phương án PHP nhỏ + Express + GeoIP offline đã được chọn; chưa được coi là đã triển khai hoặc kiểm chứng production.
+Trạng thái: chủ website đã duyệt thiết kế bằng “Ok” sau liên kết tài liệu; chờ duyệt plan trước implementation. Phương án PHP nhỏ + Express + GeoIP offline đã được chọn; chưa được coi là đã triển khai hoặc kiểm chứng production.
 
 ## Mục tiêu và phạm vi đã chốt
 
