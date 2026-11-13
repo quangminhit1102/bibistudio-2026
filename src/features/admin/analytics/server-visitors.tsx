@@ -1,11 +1,12 @@
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import { useSearch } from "@tanstack/react-router";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { VisitorDto, VisitorScopeInput } from "../../../../backend/src/http/contracts";
 import { VisitorFilters } from "./components/visitor-filters";
 import { resolveFilterDates } from "./visitor-date-filter";
 import { VisitorSessionsChart, VisitorProductsChart } from "./visitor-charts";
+import { VisitorSessionList } from "./components/visitor-session-list";
 import { useAdmin } from "../services/context";
 import { canCode } from "../accounts/permissions";
 import { createVisitorApi } from "./http-api";
@@ -25,113 +26,80 @@ const device = (value: string) =>
 export function ServerVisitorDetail({ id, scope }: { id: string; scope?: VisitorScopeInput }) {
   const runtime = useAdmin(),
     api = useVisitorApi();
-  const [page, setPage] = useState(1);
+  const [defaultDates] = useState(() => resolveFilterDates({ preset: "1m" }));
+  const filter = scope ?? defaultDates;
   const enabled = canCode(runtime.session, "customer_access.view");
   const visitor = useQuery({
-    queryKey: ["bibi-admin", "http-visitor", runtime.session?.userId, id, scope],
+    queryKey: ["bibi-admin", "http-visitor", runtime.session?.userId, id, filter],
     enabled,
-    queryFn: ({ signal }) => api.get(id, signal, scope),
+    queryFn: ({ signal }) => api.get(id, signal, filter),
   });
-  const sessions = useQuery({
-    queryKey: ["bibi-admin", "http-visitor-sessions", runtime.session?.userId, id, page, scope],
+  const history = useInfiniteQuery({
+    queryKey: ["bibi-admin", "visitor-history", runtime.session?.userId, id, filter],
     enabled,
-    queryFn: ({ signal }) => api.sessions(id, page, signal, scope),
+    initialPageParam: undefined as string | undefined,
+    queryFn: ({ signal, pageParam }) => api.sessionHistory(id, filter, pageParam, signal),
+    getNextPageParam: (page) => page.nextCursor ?? undefined,
   });
-  if (runtime.sessionLoading || visitor.isPending || sessions.isPending) return <Skeleton />;
+  if (runtime.sessionLoading) return <Skeleton />;
   if (!enabled) return <ErrorState error={new Error("Bạn không có quyền xem khách truy cập")} />;
-  if (visitor.error || sessions.error)
+  if (visitor.isPending || history.isPending) return <Skeleton />;
+  if (visitor.error || (!history.data && history.error))
     return (
       <ErrorState
-        error={visitor.error ?? sessions.error}
+        error={visitor.error ?? history.error}
         onRetry={() => {
           void visitor.refetch();
-          void sessions.refetch();
+          void history.refetch();
         }}
       />
     );
   const v = visitor.data!;
+  const sessions = [
+    ...new Map(
+      history.data!.pages.flatMap((page) => page.items).map((session) => [session.id, session]),
+    ).values(),
+  ];
   return (
-    <div className="a-detail-grid">
+    <div className="a-visitor-detail">
       <Card>
-        <h2>{v.anonymousId}</h2>
+        <h2>Thông tin truy cập</h2>
         <dl className="a-key-values">
           {[
-            ["IP đã che", v.ipAddress],
+            ["IP công khai", v.ipStatus === "verified" ? v.ipAddress : "Chưa xác định"],
             ["Vị trí", [v.city, v.country].filter(Boolean).join(", ") || "Chưa xác định"],
-            ["Thiết bị–Hệ điều hành", `${device(v.deviceType)}–${v.operatingSystem}`],
+            ["Thiết bị–Hệ điều hành", `${device(v.deviceType)} · ${v.operatingSystem}`],
             ["Trình duyệt", v.browser],
-            ["Số phiên", v.sessionCount],
-            ["Trang khác nhau đã xem", v.distinctPageCount],
-            ["Lần đầu", dateTime(v.firstSeenAt)],
-            ["Lần gần nhất", dateTime(v.lastSeenAt)],
+            ["Số phiên trong khoảng ngày", v.sessionCount],
+            ["Trang khác nhau đã ghi nhận", v.distinctPageCount],
           ].map(([label, value]) => (
             <div key={label}>
               <dt>{label}</dt>
-              <dd>{value}</dd>
+              <dd className="a-visitor-ip">{value}</dd>
             </div>
           ))}
         </dl>
-        <p className="a-muted">
-          ID ẩn danh của trình duyệt; không xác định danh tính cá nhân. Vị trí chưa được suy đoán từ
-          IP.
-        </p>
+        {v.ipStatus !== "verified" && (
+          <p className="a-muted">
+            Nguồn IP chưa xác minh; dữ liệu cũ không có IP công khai đầy đủ.
+          </p>
+        )}
       </Card>
       <Card>
-        <h2>Phiên và sản phẩm quan tâm</h2>
-        {sessions.data!.items.map((session) => (
-          <article className="a-visitor-session" key={session.id}>
-            <strong>{dateTime(session.startedAt)}</strong>
-            <dl className="a-key-values">
-              <div>
-                <dt>Trang đầu</dt>
-                <dd>{session.landingPath}</dd>
-              </div>
-              <div>
-                <dt>Trang ghi nhận gần nhất</dt>
-                <dd>{session.lastReceivedPath}</dd>
-              </div>
-              <div>
-                <dt>Trang khác nhau đã xem</dt>
-                <dd>{session.distinctPageCount}</dd>
-              </div>
-            </dl>
-            <h3>Sản phẩm quan tâm</h3>
-            {session.products.length ? (
-              <ul>
-                {session.products.map((product) => (
-                  <li key={product.slug}>{product.name}</li>
-                ))}
-              </ul>
-            ) : (
-              <p>Chưa ghi nhận sản phẩm.</p>
-            )}
-            <details>
-              <summary>Các trang đã ghi nhận</summary>
-              <ul>
-                {session.pages.map((path) => (
-                  <li key={path.path}>{path.path}</li>
-                ))}
-              </ul>
-            </details>
-            {session.truncated && (
-              <p>Đã đạt giới hạn ghi nhận của phiên; danh sách có thể chưa đầy đủ.</p>
-            )}
-          </article>
-        ))}
-        {!sessions.data!.items.length && <p>Chưa có phiên trong thời gian lưu trữ.</p>}
-        <div className="a-actions">
-          <Button disabled={page <= 1} onClick={() => setPage(page - 1)}>
-            Phiên trước
-          </Button>
-          <span>Trang {page}</span>
-          <Button disabled={page * 20 >= sessions.data!.total} onClick={() => setPage(page + 1)}>
-            Phiên sau
-          </Button>
-        </div>
+        <h2>Các phiên truy cập</h2>
         <p className="a-muted">
-          Mỗi trang/sản phẩm chỉ ghi một liên kết trong phiên. Đây không phải lịch sử từng thao tác
-          hay thời lượng truy cập.
+          Phiên được chọn theo ngày bắt đầu; danh sách URL bao gồm cả hoạt động tiếp nối sau khoảng
+          ngày lọc.
         </p>
+        <VisitorSessionList
+          items={sessions}
+          hasMore={history.hasNextPage}
+          loading={history.isFetchingNextPage}
+          error={history.isFetchNextPageError ? history.error : undefined}
+          onMore={() => {
+            if (!history.isFetchingNextPage) void history.fetchNextPage();
+          }}
+        />
       </Card>
     </div>
   );

@@ -2817,6 +2817,9 @@
 .admin-root .a-visitor-overview h2 {
   margin-top: 0;
 }
+.admin-root .a-visitor-overview .a-chart {
+  overflow: clip;
+}
 .admin-root .a-visitor-date-filter {
   display: grid;
   gap: 12px;
@@ -2896,5 +2899,98 @@
   .admin-root .a-visitor-date-filter .a-actions {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.admin-root .a-visitor-detail {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+.admin-root .a-visitor-session-list {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+.admin-root .a-visitor-session-panel {
+  border: 1px solid var(--a-border);
+  border-radius: 8px;
+  min-width: 0;
+}
+.admin-root .a-visitor-session-panel > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px;
+  cursor: pointer;
+  list-style: none;
+}
+.admin-root .a-visitor-session-panel > summary::-webkit-details-marker {
+  display: none;
+}
+.admin-root .a-visitor-session-panel > summary::after {
+  content: "+";
+  font-size: 20px;
+}
+.admin-root .a-visitor-session-panel[open] > summary::after {
+  content: "−";
+}
+.admin-root .a-visitor-session-panel > summary > span:first-child {
+  display: grid;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+.admin-root .a-visitor-session-panel > summary small {
+  color: var(--a-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+.admin-root .a-visitor-session-count {
+  flex-shrink: 0;
+  color: var(--a-muted);
+  font-size: 12px;
+}
+.admin-root .a-visitor-session-body {
+  border-top: 1px solid var(--a-border);
+  padding: 16px;
+  overflow-wrap: anywhere;
+}
+.admin-root .a-visitor-session-body h3 {
+  margin-block: 20px 12px;
+  font-size: 13px;
+}
+.admin-root .a-visitor-product-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.admin-root .a-visitor-product-links a {
+  padding: 6px 10px;
+  border: 1px solid var(--a-border);
+  border-radius: 6px;
+}
+.admin-root .a-visitor-recorded-pages {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.admin-root .a-visitor-recorded-pages li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--a-border);
+}
+.admin-root .a-visitor-recorded-pages time {
+  color: var(--a-muted);
+  font-size: 11px;
+}
+@media (max-width: 640px) {
+  .admin-root .a-visitor-recorded-pages li {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
   }
 }

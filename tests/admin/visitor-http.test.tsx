@@ -5,6 +5,7 @@ import { AdminProvider } from "../../src/features/admin/services/context";
 import { createHttpAuthService } from "../../src/features/admin/accounts/auth/http-service";
 import { createAdminHttp } from "../../src/lib/admin-http";
 import Visitors from "../../src/features/admin/analytics/pages/visitors";
+import { ServerVisitorDetail } from "../../src/features/admin/analytics/server-visitors";
 import { profile, grant, json, immediateLock } from "./helpers/http-client";
 vi.mock("@tanstack/react-router", () => ({
   useNavigate: () => vi.fn(),
@@ -57,7 +58,7 @@ test("visitor page displays API data and product interests without fixture timel
           series: [{ startUtc: "2026-11-04T00:00:00Z", label: "04/11/2026", sessions: 1 }],
           products: [{ slug: "a", name: "Sổ máy chủ", interestedVisitors: 1 }],
         });
-      if (url.pathname.endsWith("sessions"))
+      if (url.pathname.endsWith("session-history"))
         return json({
           items: [
             {
@@ -86,9 +87,7 @@ test("visitor page displays API data and product interests without fixture timel
               ],
             },
           ],
-          total: 1,
-          page: 1,
-          pageSize: 20,
+          nextCursor: null,
         });
       if (url.pathname.endsWith(v.id)) return json(v);
       return json({ items: [v], total: 1, page: 1, pageSize: 20 });
@@ -132,10 +131,10 @@ test("visitor page displays API data and product interests without fixture timel
   });
   fireEvent.click((await screen.findAllByRole("button", { name: "Chi tiết khách 1" }))[0]);
   const dialog = await screen.findByRole("dialog");
-  expect(await within(dialog).findByText("Sổ máy chủ")).toBeInTheDocument();
-  expect(within(dialog).getByText("Trang ghi nhận gần nhất")).toBeInTheDocument();
+  expect(await within(dialog).findByRole("link", { name: "Sổ máy chủ" })).toBeInTheDocument();
+  expect(within(dialog).getByText("Các trang đã ghi nhận")).toBeInTheDocument();
   expect(within(dialog).getByText(/Đã đạt giới hạn/)).toBeInTheDocument();
-  expect(within(dialog).queryByText(/Chưa kết thúc|lượt xem|phút/)).not.toBeInTheDocument();
+  expect(within(dialog).queryByText(/Phiên trước|Phiên sau/)).not.toBeInTheDocument();
   view.unmount();
   query.clear();
 });
@@ -201,6 +200,70 @@ test("changing date window aborts old list and never displays its late response"
   expect(oldSignal?.aborted).toBe(true);
   finishOld(json({ items: [visitor("1.1.1.1")], total: 1, page: 1, pageSize: 20 }));
   await vi.waitFor(() => expect(screen.queryByText("1.1.1.1")).not.toBeInTheDocument());
+  view.unmount();
+  query.clear();
+});
+
+test("cursor load retries without losing existing expanded sessions and deduplicates IDs", async () => {
+  const session = (id: string) => ({
+    id,
+    visitorId: "visitor",
+    startedAt: "2026-11-01T01:00Z",
+    lastReceivedAt: "2026-11-01T01:10Z",
+    landingPath: "/",
+    lastReceivedPath: "/",
+    distinctPageCount: 1,
+    truncated: false,
+    pages: [
+      { path: "/", firstReceivedAt: "2026-11-01T01:00Z", lastReceivedAt: "2026-11-01T01:10Z" },
+    ],
+    products: [],
+  });
+  let retries = 0;
+  const cursors: (string | null)[] = [];
+  const client = createAdminHttp({
+    origin: "http://localhost",
+    refreshLock: immediateLock,
+    fetch: async (input) => {
+      const url = new URL(String(input));
+      if (url.pathname.endsWith("refresh")) return json(grant("memory-user"));
+      if (url.pathname.endsWith("profile")) return json(profile);
+      if (url.pathname.endsWith("session-history")) {
+        const cursor = url.searchParams.get("cursor");
+        cursors.push(cursor);
+        if (!cursor) return json({ items: [session("one")], nextCursor: "cursor-one" });
+        if (!retries++) throw new Error("Temporary network failure");
+        return json({ items: [session("one"), session("two")], nextCursor: null });
+      }
+      return json({
+        id: "visitor",
+        ipAddress: "",
+        deviceType: "desktop",
+        operatingSystem: "Windows",
+        browser: "Edge",
+        sessionCount: 2,
+        distinctPageCount: 1,
+      });
+    },
+  });
+  const query = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  const view = render(
+    <QueryClientProvider client={query}>
+      <AdminProvider authFactory={() => createHttpAuthService({ client })}>
+        <ServerVisitorDetail id="visitor" scope={{ from: "2026-11-01", to: "2026-11-13" }} />
+      </AdminProvider>
+    </QueryClientProvider>,
+  );
+  const more = await screen.findByRole("button", { name: "Xem thêm phiên" });
+  expect(view.container.querySelectorAll("details[open]")).toHaveLength(1);
+  fireEvent.click(more);
+  fireEvent.click(await screen.findByRole("button", { name: "Thử lại" }));
+  await vi.waitFor(() =>
+    expect(view.container.querySelectorAll(".a-visitor-session-panel")).toHaveLength(2),
+  );
+  expect(view.container.querySelectorAll("details[open]")).toHaveLength(1);
+  expect(screen.queryByRole("button", { name: "Xem thêm phiên" })).not.toBeInTheDocument();
+  expect(cursors).toEqual([null, "cursor-one", "cursor-one"]);
   view.unmount();
   query.clear();
 });

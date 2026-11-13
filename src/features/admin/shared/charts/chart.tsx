@@ -50,6 +50,7 @@ export default function Chart({
         minTickGap={20}
       />
       <YAxis
+        allowDecimals={unit !== "quantity"}
         axisLine={false}
         tickLine={false}
         width={42}
@@ -100,6 +101,7 @@ export default function Chart({
             <BarChart data={data} layout="vertical" margin={{ left: 4, right: 12 }}>
               <CartesianGrid horizontal={false} stroke="var(--a-border)" />
               <XAxis
+                allowDecimals={unit !== "quantity"}
                 type="number"
                 axisLine={false}
                 tickLine={false}

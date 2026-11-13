@@ -5,6 +5,7 @@ export function VisitorSessionsChart({ report }: { report: VisitorReportDto }) {
     <>
       <Chart
         kind="line"
+        unit="quantity"
         label="Lượt truy cập theo phiên"
         data={(report.series ?? []).map((point) => ({ name: point.label, value: point.sessions }))}
       />
@@ -34,6 +35,7 @@ export function VisitorProductsChart({ report }: { report: VisitorReportDto }) {
   return (
     <Chart
       kind="horizontal-bar"
+      unit="quantity"
       label="Sản phẩm được quan tâm · số trình duyệt khác nhau"
       data={report.products.map((product) => ({
         name: product.name,
