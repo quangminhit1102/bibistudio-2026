@@ -8,6 +8,51 @@ import type {
   VisitorProductPageDto,
 } from "../../../../backend/src/http/contracts";
 import type { AdminHttpClient } from "../../../lib/admin-http";
+import { resolveVisitorWindow } from "../../../../backend/src/visitors/date-window";
+
+function assertReportScope(report: VisitorReportDto, scope: VisitorScopeInput) {
+  const expected = resolveVisitorWindow({ from: scope.from, to: scope.to }, new Date());
+  const count = (value: unknown): value is number =>
+    Number.isSafeInteger(value) && Number(value) >= 0;
+  const window = report?.window;
+  if (
+    !window ||
+    window.fromDate !== scope.from ||
+    window.toDate !== scope.to ||
+    window.startUtc !== expected.startUtc ||
+    window.endUtcExclusive !== expected.endUtcExclusive ||
+    !Number.isFinite(Date.parse(window.asOf)) ||
+    !count(report.totalSessions) ||
+    !count(report.totalVisitors) ||
+    !count(report.totalInterestedVisitors) ||
+    !count(report.totalProducts) ||
+    report.totalVisitors > report.totalSessions ||
+    report.totalInterestedVisitors > report.totalVisitors ||
+    !["hour", "day", "week", "month", "year"].includes(report.bucketUnit ?? "") ||
+    !Array.isArray(report.series) ||
+    !report.series.length ||
+    report.series.length > 10000 ||
+    !report.series.every(
+      (point) =>
+        point &&
+        typeof point.label === "string" &&
+        count(point.sessions) &&
+        Number.isFinite(Date.parse(point.startUtc)),
+    ) ||
+    report.series.reduce((sum, point) => sum + point.sessions, 0) !== report.totalSessions ||
+    !Array.isArray(report.products) ||
+    report.products.length !== Math.min(10, report.totalProducts) ||
+    !report.products.every(
+      (product) =>
+        product &&
+        typeof product.slug === "string" &&
+        typeof product.name === "string" &&
+        count(product.interestedVisitors),
+    )
+  ) {
+    throw new Error("Phiên bản báo cáo không khớp khoảng ngày đã chọn. Vui lòng tải lại trang.");
+  }
+}
 export interface VisitorFilters {
   deviceTypes: string[];
   operatingSystems: string[];
@@ -63,8 +108,13 @@ export function createVisitorApi(http: AdminHttpClient) {
       params.set("pageSize", "20");
       return http.request<VisitorProductPageDto>(`${root}/report/products?${params}`, { signal });
     },
-    report: (signal?: AbortSignal, scope?: VisitorScopeInput) =>
-      http.request<VisitorReportDto>(`${root}/report?${scopeParams(scope)}`, { signal }),
+    report: async (signal?: AbortSignal, scope?: VisitorScopeInput) => {
+      const report = await http.request<VisitorReportDto>(`${root}/report?${scopeParams(scope)}`, {
+        signal,
+      });
+      if (scope) assertReportScope(report, scope);
+      return report;
+    },
     filterOptions: (signal?: AbortSignal, scope?: VisitorScopeInput) =>
       http.request<VisitorFilters>(`${root}/filter-options?${scopeParams(scope)}`, { signal }),
   };

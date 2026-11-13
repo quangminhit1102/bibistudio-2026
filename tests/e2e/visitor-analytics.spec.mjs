@@ -8,6 +8,8 @@ import { chromium } from "playwright";
 import { createProfileAuthFixture } from "./helpers/profile-fixture.mjs";
 import { createRuntime } from "../../backend/dist/runtime.js";
 import { startServer } from "../../backend/dist/server.js";
+import { legacyVisitorBackend } from "../../backend/test/helpers/legacy-visitor-backend.mjs";
+import { serve } from "../../backend/test/helpers/http.mjs";
 
 test(
   "real visitor browser/DB: full synthetic IPs, same-cohort charts, 45 sessions, old history and date-only mobile UI",
@@ -175,6 +177,51 @@ test(
         true,
       );
       await page.screenshot({ path: resolve(evidence, "session-mobile.png"), fullPage: true });
+      await page.getByRole("button", { name: "Đóng", exact: true }).click();
+      const lifecycle = { after: (fn) => cleanup.push(fn) };
+      const legacy = await legacyVisitorBackend(lifecycle);
+      const oldBase = await serve(
+        lifecycle,
+        legacy.createApp(
+          { releaseId: "rollback-v4", sourceSha: legacy.sourceSha, schemaVersion: 4 },
+          runtime.appOptions,
+        ),
+      );
+      await page.route(
+        (url) => url.pathname === "/api/customer-access/report",
+        async (route) => {
+          const response = await fetch(oldBase + "/api/customer-access/report", {
+            headers: { Authorization: route.request().headers().authorization },
+          });
+          const body = await response.json();
+          assert.equal(
+            body.totalSessions,
+            46,
+            "Pinned old backend ignores selected2020 dates and returns its90-day report",
+          );
+          await route.fulfill({
+            status: response.status,
+            contentType: "application/json",
+            body: JSON.stringify(body),
+          });
+        },
+      );
+      await page.getByRole("button", { name: "Tải lại", exact: true }).click();
+      await page
+        .getByText("Phiên bản báo cáo không khớp khoảng ngày đã chọn. Vui lòng tải lại trang.", {
+          exact: true,
+        })
+        .first()
+        .waitFor();
+      assert.equal(
+        await page.locator(".a-visitor-kpis").count(),
+        0,
+        "Old totals are never displayed under the selected historical range",
+      );
+      await page.screenshot({
+        path: resolve(evidence, "rollback-compatibility.png"),
+        fullPage: true,
+      });
       assert.deepEqual(errors, []);
     } finally {
       await browser?.close();

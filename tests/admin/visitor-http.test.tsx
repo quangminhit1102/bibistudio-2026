@@ -7,6 +7,7 @@ import { createAdminHttp } from "../../src/lib/admin-http";
 import Visitors from "../../src/features/admin/analytics/pages/visitors";
 import { ServerVisitorDetail } from "../../src/features/admin/analytics/server-visitors";
 import { profile, grant, json, immediateLock } from "./helpers/http-client";
+import { resolveVisitorWindow } from "../../backend/src/visitors/date-window";
 vi.mock("@tanstack/react-router", () => ({
   useNavigate: () => vi.fn(),
   useSearch: () => ({ view: "visitors" }),
@@ -55,6 +56,11 @@ test("visitor page displays API data and product interests without fixture timel
           totalSessions: 1,
           totalInterestedVisitors: 1,
           totalProducts: 1,
+          window: resolveVisitorWindow(
+            { from: url.searchParams.get("from")!, to: url.searchParams.get("to")! },
+            new Date(),
+          ),
+          bucketUnit: "day",
           series: [{ startUtc: "2026-11-04T00:00:00Z", label: "04/11/2026", sessions: 1 }],
           products: [{ slug: "a", name: "Sổ máy chủ", interestedVisitors: 1 }],
         });
@@ -173,8 +179,14 @@ test("changing date window aborts old list and never displays its late response"
           totalVisitors: 1,
           totalSessions: 1,
           totalInterestedVisitors: 0,
+          totalProducts: 0,
+          window: resolveVisitorWindow(
+            { from: url.searchParams.get("from")!, to: url.searchParams.get("to")! },
+            new Date(),
+          ),
+          bucketUnit: "day",
           products: [],
-          series: [],
+          series: [{ startUtc: "2026-11-01T00:00:00Z", label: "01/11/2026", sessions: 1 }],
         });
       if (url.searchParams.get("from") !== "2026-11-01") {
         oldSignal = init?.signal ?? undefined;

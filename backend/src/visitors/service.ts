@@ -1,4 +1,4 @@
-import type { Pool, RowDataPacket } from "mysql2/promise";
+import type { Pool, PoolConnection, RowDataPacket } from "mysql2/promise";
 import type { Clock } from "../config";
 import type {
   Page,
@@ -14,6 +14,26 @@ import type { Catalogue } from "./catalogue";
 import { visitorCohort, visitorScopeFingerprint, type VisitorScope } from "./report-query";
 import { visitorBuckets, selectVisitorBucket } from "./date-window";
 import { readHistoryCursor, sessionDtos, visitorIso } from "./session-history";
+
+/** One report's aggregates share a nonlocking snapshot while collectors continue writing. */
+async function reportSnapshot<T>(
+  pool: Pool,
+  read: (connection: PoolConnection) => Promise<T>,
+): Promise<T> {
+  const connection = await pool.getConnection();
+  try {
+    await connection.query("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ");
+    await connection.query("START TRANSACTION WITH CONSISTENT SNAPSHOT, READ ONLY");
+    const result = await read(connection);
+    await connection.commit();
+    return result;
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+}
 export interface VisitorQuery extends VisitorScope {
   page: number;
   pageSize: number;
@@ -150,13 +170,14 @@ export function createVisitorService(pool: Pool, catalogue: Catalogue, clock: Cl
   }
   async function productReport(
     input: VisitorScope & { page: number; pageSize: number },
+    reader: Pool | PoolConnection = pool,
   ): Promise<VisitorProductPageDto> {
     const c = cohort(input);
-    const [[total]] = await pool.query<RowDataPacket[]>(
+    const [[total]] = await reader.query<RowDataPacket[]>(
       `WITH selected AS (${c.sql}) SELECT COUNT(DISTINCT p.product_slug) n FROM selected s JOIN visitor_viewed_products p ON p.session_id=s.id`,
       c.params,
     );
-    const [rows] = await pool.query<RowDataPacket[]>(
+    const [rows] = await reader.query<RowDataPacket[]>(
       `WITH selected AS (${c.sql}) SELECT p.product_slug,COUNT(DISTINCT s.visitor_id) n FROM selected s JOIN visitor_viewed_products p ON p.session_id=s.id GROUP BY p.product_slug ORDER BY n DESC,p.product_slug LIMIT ? OFFSET ?`,
       [...c.params, input.pageSize, (input.page - 1) * input.pageSize],
     );
@@ -173,55 +194,60 @@ export function createVisitorService(pool: Pool, catalogue: Catalogue, clock: Cl
     };
   }
   async function report(input: VisitorScope = {}): Promise<Required<VisitorReportDto>> {
-    const c = cohort(input);
-    const [[total]] = await pool.query<RowDataPacket[]>(
-      `WITH selected AS (${c.sql}) SELECT COUNT(*) sessions,COUNT(DISTINCT visitor_id) visitors,COUNT(DISTINCT CASE WHEN EXISTS(SELECT 1 FROM visitor_viewed_products p WHERE p.session_id=s.id) THEN visitor_id END) interested FROM selected s`,
-      c.params,
-    );
-    const products = await productReport({
-      ...input,
-      from: c.window.fromDate,
-      to: c.window.toDate,
-      page: 1,
-      pageSize: 10,
+    return reportSnapshot(pool, async (reader) => {
+      const c = cohort(input);
+      const [[total]] = await reader.query<RowDataPacket[]>(
+        `WITH selected AS (${c.sql}) SELECT COUNT(*) sessions,COUNT(DISTINCT visitor_id) visitors,COUNT(DISTINCT CASE WHEN EXISTS(SELECT 1 FROM visitor_viewed_products p WHERE p.session_id=s.id) THEN visitor_id END) interested FROM selected s`,
+        c.params,
+      );
+      const products = await productReport(
+        {
+          ...input,
+          from: c.window.fromDate,
+          to: c.window.toDate,
+          page: 1,
+          pageSize: 10,
+        },
+        reader,
+      );
+      const unit = selectVisitorBucket(c.window),
+        local = "DATE_ADD(started_at, INTERVAL 7 HOUR)";
+      const formats = {
+        hour: "%Y-%m-%d %H:00:00",
+        day: "%Y-%m-%d 00:00:00",
+        week: "%Y-%m-%d 00:00:00",
+        month: "%Y-%m-01 00:00:00",
+        year: "%Y-01-01 00:00:00",
+      };
+      const expression =
+        unit === "week" ? `DATE_SUB(${local}, INTERVAL WEEKDAY(${local}) DAY)` : local;
+      const [counts] = await reader.query<RowDataPacket[]>(
+        `WITH selected AS (${c.sql}) SELECT DATE_FORMAT(${expression},'${formats[unit]}') bucket,COUNT(*) n FROM selected GROUP BY bucket`,
+        c.params,
+      );
+      const buckets = visitorBuckets(c.window),
+        byStart = new Map(buckets.map((b) => [b.startUtc, b]));
+      for (const row of counts) {
+        const utc = new Date(
+          Math.max(
+            Date.parse(c.window.startUtc),
+            Date.parse(row.bucket.replace(" ", "T") + "+07:00"),
+          ),
+        ).toISOString();
+        const bucket = byStart.get(utc);
+        if (bucket) bucket.sessions = Number(row.n);
+      }
+      return {
+        totalVisitors: Number(total.visitors),
+        totalSessions: Number(total.sessions),
+        totalInterestedVisitors: Number(total.interested),
+        totalProducts: products.total,
+        products: products.items,
+        window: c.window,
+        bucketUnit: unit,
+        series: buckets.map(({ startUtc, label, sessions }) => ({ startUtc, label, sessions })),
+      };
     });
-    const unit = selectVisitorBucket(c.window),
-      local = "DATE_ADD(started_at, INTERVAL 7 HOUR)";
-    const formats = {
-      hour: "%Y-%m-%d %H:00:00",
-      day: "%Y-%m-%d 00:00:00",
-      week: "%Y-%m-%d 00:00:00",
-      month: "%Y-%m-01 00:00:00",
-      year: "%Y-01-01 00:00:00",
-    };
-    const expression =
-      unit === "week" ? `DATE_SUB(${local}, INTERVAL WEEKDAY(${local}) DAY)` : local;
-    const [counts] = await pool.query<RowDataPacket[]>(
-      `WITH selected AS (${c.sql}) SELECT DATE_FORMAT(${expression},'${formats[unit]}') bucket,COUNT(*) n FROM selected GROUP BY bucket`,
-      c.params,
-    );
-    const buckets = visitorBuckets(c.window),
-      byStart = new Map(buckets.map((b) => [b.startUtc, b]));
-    for (const row of counts) {
-      const utc = new Date(
-        Math.max(
-          Date.parse(c.window.startUtc),
-          Date.parse(row.bucket.replace(" ", "T") + "+07:00"),
-        ),
-      ).toISOString();
-      const bucket = byStart.get(utc);
-      if (bucket) bucket.sessions = Number(row.n);
-    }
-    return {
-      totalVisitors: Number(total.visitors),
-      totalSessions: Number(total.sessions),
-      totalInterestedVisitors: Number(total.interested),
-      totalProducts: products.total,
-      products: products.items,
-      window: c.window,
-      bucketUnit: unit,
-      series: buckets.map(({ startUtc, label, sessions }) => ({ startUtc, label, sessions })),
-    };
   }
   async function filterOptions(input: VisitorScope = {}) {
     const c = cohort(input);

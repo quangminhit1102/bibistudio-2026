@@ -121,3 +121,64 @@ test("narrow date cohort uses its history index on 10000 sessions", async (t) =>
   });
   assert.equal(report.totalSessions, 1);
 });
+
+test("one report retains a consistent snapshot while ingestion commits between aggregate queries", async (t) => {
+  const f = await createVisitorFixture(t);
+  await f.collect(f.batch, f.cookie);
+  const [[visitor]] = await f.pool.query("SELECT id FROM visitors");
+  const rawQuery = f.pool.query.bind(f.pool),
+    rawConnection = f.pool.getConnection.bind(f.pool);
+  const restore = [];
+  let injected = false;
+  const interleave =
+    (query) =>
+    async (sql, ...args) => {
+      const result = await query(sql, ...args);
+      if (!injected && typeof sql === "string" && sql.includes("COUNT(*) sessions")) {
+        injected = true;
+        await rawQuery(
+          "INSERT INTO visitor_sessions(id,visitor_id,started_at,last_received_at,landing_path,last_received_path) VALUES('interleaved',?,?,?,'/','/')",
+          [visitor.id, f.clock.now(), f.clock.now()],
+        );
+        await rawQuery(
+          "INSERT INTO visitor_viewed_products VALUES('interleaved','product-1',?,?)",
+          [f.clock.now(), f.clock.now()],
+        );
+      }
+      return result;
+    };
+  f.pool.query = interleave(rawQuery);
+  f.pool.getConnection = async () => {
+    const c = await rawConnection(),
+      query = c.query.bind(c);
+    c.query = interleave(query);
+    restore.push(() => {
+      c.query = query;
+    });
+    return c;
+  };
+  try {
+    const report = await createVisitorService(f.pool, f.catalogue, f.clock).report({
+      from: "2026-11-01",
+      to: "2026-11-30",
+    });
+    assert.equal(injected, true, "A real concurrent commit must occur during this report");
+    assert.equal(report.totalSessions, 1);
+    assert.equal(
+      report.series.reduce((sum, point) => sum + point.sessions, 0),
+      1,
+    );
+    assert.equal(report.totalProducts, 1);
+    assert.equal(report.products.length, 1);
+    const [[count]] = await rawQuery("SELECT COUNT(*) n FROM visitor_sessions");
+    assert.equal(
+      count.n,
+      2,
+      "Concurrent ingestion succeeds without entering the earlier report snapshot",
+    );
+  } finally {
+    f.pool.query = rawQuery;
+    f.pool.getConnection = rawConnection;
+    for (const reset of restore) reset();
+  }
+});

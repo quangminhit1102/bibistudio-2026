@@ -18,7 +18,7 @@ async function main() {
     if (command === "migrate") await migrateVisitorHistory(pool, directory);
     const status = await visitorHistorySchemaStatus(pool, directory);
     console.log(JSON.stringify(status));
-    if (status.state !== "complete") process.exitCode = 1;
+    if (!["empty", "complete"].includes(status.state)) process.exitCode = 1;
   } finally {
     await pool.end();
   }
