@@ -6,7 +6,7 @@ Trạng thái: bản thiết kế chờ chủ website duyệt; chưa triển kha
 
 Trang Khách truy cập giúp chủ website biết lượt ghé website và sản phẩm được quan tâm, giữ React + Express + MySQL/MariaDB trên cPanel, không thêm dịch vụ analytics hay gateway mới.
 
-Chủ website yêu cầu: IP công khai đầy đủ; ưu tiên Tino sửa nguồn IP tại hosting; bỏ chức năng Nhật ký cPanel; bỏ cột mã khách không có ý nghĩa với người dùng; phiên hiển thị gọn với ngày giờ, sản phẩm và URL; biểu đồ tổng lượt truy cập phía trên bảng và biểu đồ sản phẩm phía sau bảng. Bộ lọc theo sản phẩm được bỏ. Prototype local đã được chủ website đồng ý về bố cục, sau đó làm rõ yêu cầu mới nhất: **giữ toàn bộ lịch sử dữ liệu; chỉ lọc hiển thị theo 1 tháng, 6 tháng, 1 năm gần nhất hoặc khoảng ngày giờ tùy chọn**. Không tự xóa lịch sử thật sau 90 ngày/12 tháng.
+Chủ website yêu cầu: IP công khai đầy đủ; ưu tiên Tino sửa nguồn IP tại hosting; bỏ chức năng Nhật ký cPanel; bỏ cột mã khách không có ý nghĩa với người dùng; phiên hiển thị gọn với ngày giờ, sản phẩm và URL; biểu đồ tổng lượt truy cập phía trên bảng và biểu đồ sản phẩm phía sau bảng. Bộ lọc theo sản phẩm được bỏ. Prototype local đã được chủ website đồng ý về bố cục, sau đó làm rõ yêu cầu mới nhất: **giữ toàn bộ lịch sử dữ liệu; chỉ lọc hiển thị theo 1 tháng, 6 tháng, 1 năm gần nhất hoặc khoảng ngày tùy chọn (không chọn giờ)**. Không tự xóa lịch sử thật sau 90 ngày/12 tháng.
 
 ## 2. Phương án đã cân nhắc
 
@@ -44,7 +44,7 @@ Một phiên là một lượt ghé: mở mới nếu chưa có phiên hoặc h�
 - Top sản phẩm = số visitor_id khác nhau đã xem từng sản phẩm trong những phiên đó. Một khách xem lại trong nhiều phiên vẫn tính một khách cho sản phẩm đó; tổng các thanh có thể lớn hơn tổng khách.
 - Các chi tiết của một phiên được trình bày đầy đủ như một lượt ghé, kể cả nó kết thúc sau mốc cuối bộ lọc; không cắt mất URL của phiên qua nửa đêm. Thời điểm Gần nhất ghi rõ thuộc các phiên đang lọc; không lấy phiên mới nhất toàn lịch sử ngoài phạm vi.
 
-Mốc giờ hiển thị/biên khoảng theo Asia/Ho_Chi_Minh; DB/query dùng UTC. Preset 1/6/12 tháng là tháng lịch lùi từ cùng ngày giờ hiện tại, clamp ngày cuối tháng khi cần, không mặc định 30/180/365 ngày. Mặc định 1 tháng. Custom có từ/đến ngày giờ đến giây; hiển thị rõ ngày giờ Việt Nam. API dùng khoảng start-inclusive/end-exclusive; chuyển lựa chọn đến hết một giây thành exclusive +1 giây. Validate from<=to, timestamp hợp lệ; không tự đảo hai giá trị. Thay preset hoặc áp dụng custom reset trang bảng/cursor chi tiết. Mọi request trong một lần tải chia sẻ chính xác from/to cố định để số liệu không lệch do đồng hồ dịch chuyển.
+Mốc giờ hiển thị/biên khoảng theo Asia/Ho_Chi_Minh; DB/query dùng UTC. Preset 1/6/12 tháng là tháng lịch lùi từ ngày hiện tại, clamp ngày cuối tháng khi cần, không mặc định 30/180/365 ngày; tính theo các ngày trọn vẹn, không hiện ô chọn giờ. Mặc định 1 tháng. Nút Khoảng ngày (thay nhãn Tùy chọn theo góp ý owner) mở hai ô Từ ngày/Đến ngày. API dùng khoảng start-inclusive/end-exclusive: từ 00:00 ngày bắt đầu đến trước 00:00 ngày kế tiếp sau ngày kết thúc, theo Asia/Ho_Chi_Minh rồi đổi UTC. Ví dụ chọn 01–13/11 bao gồm hết ngày 13/11. Validate from<=to và ngày lịch hợp lệ; không tự đảo hai giá trị. Dữ liệu trong ngày hiện tại chỉ có tới thời điểm đã thu thập, không hứa có dữ liệu tương lai. Thay preset hoặc áp dụng custom reset trang bảng/cursor chi tiết. Mọi request trong một lần tải chia sẻ chính xác from/to cố định để số liệu không lệch do đồng hồ dịch chuyển.
 
 Biểu đồ nhóm giờ/ngày/tuần/tháng/năm theo độ dài khoảng sao cho số bucket có giới hạn, điền các bucket 0. Không cắt ngầm lịch sử, không tải mọi phiên về frontend để tính số liệu. Builder chọn thresholds cụ thể và ghi vào plan/tests. Cho phép custom truy vấn lịch sử ngoài 1 năm; preset 1 năm không phải retention.
 
@@ -60,13 +60,13 @@ Theo dõi dung lượng DB và thời gian backup, cảnh báo sớm; không t�
 
 ## 7. UI theo bản thử đã review
 
-Giữ thiết kế admin hiện tại, tiếng Việt, light/dark và responsive. Bộ lọc chung: 1 tháng / 6 tháng / 1 năm / Tùy chọn ngày giờ; thiết bị/trình duyệt giữ lại, bỏ sản phẩm. Có nút Tải lại, chỉ đọc lại API; không chạy importer khi bấm.
+Giữ thiết kế admin hiện tại, tiếng Việt, light/dark và responsive. Bộ lọc chung: 1 tháng / 6 tháng / 1 năm / Khoảng ngày (không giờ); thiết bị/trình duyệt giữ lại, bỏ sản phẩm. Có nút Tải lại, chỉ đọc lại API; không chạy importer khi bấm.
 
 Thứ tự: tiêu đề + filter → ba KPI → biểu đồ đường tổng lượt truy cập → bảng khách (STT, IP công khai, vị trí, thiết bị–OS, trình duyệt, lượt ghé, gần nhất, Chi tiết) → Top sản phẩm bằng thanh ngang. Dùng Recharts đã có, không thêm chart library. Thanh ngang có tên, giá trị thật, tooltip và cách xem sản phẩm ngoài Top N; không chỉ có màu hoặc cắt mất dữ liệu mà không thông báo. Số đếm/loading/error/empty độc lập nhưng không hiển thị kết quả thuộc khoảng cũ như dữ liệu của khoảng mới.
 
 Popup chi tiết: tóm tắt IP/thiết bị/lượt ghé/sản phẩm; các phiên dạng accordion với ngày giờ, tên sản phẩm, số trang; bên trong là sản phẩm và URL cùng giờ ghi nhận đầu. Không lặp lại Trang đầu/Trang cuối thành nhiều khối dài; không có nút Phiên trước/Phiên sau. Loading thêm không đẩy mất focus/vị trí đọc. Escape, focus return, keyboard và touch phải hoạt động.
 
-Prototype hiện tại ở ignored `.superpowers/brainstorm/232-1794533887/content/visitors-review-v6.html` (các lần trước tại session `34-1794498244`); các IP là dải dành cho tài liệu và phải ghi rõ minh họa. Prototype không phải nguồn IP đã xác minh hoặc dữ liệu live.
+Prototype hiện tại ở ignored `.superpowers/brainstorm/232-1794533887/content/visitors-review-v7.html` (các lần trước tại session `34-1794498244`); các IP là dải dành cho tài liệu và phải ghi rõ minh họa. Prototype không phải nguồn IP đã xác minh hoặc dữ liệu live.
 
 ## 8. Gỡ Nhật ký cPanel, bảo toàn rollback
 
@@ -81,7 +81,7 @@ Migration analytics phải additive, không phá schema/permission auth. Giữ i
 1. Chủ website gửi/phối hợp ticket Tino; chưa có ủy quyền gửi tin nhắn thay chủ website. Thu thập phản hồi về proxy/CIDR và kiểm chứng normal/spoof/two-network. Không khẳng định chỉ đổi env là sửa được IP.
 2. Hoàn thiện thiết kế/plan và local UI owner review. Các phần FE/BE có thể chuẩn bị local trong lúc chờ Tino, nhưng không đánh dấu đạt IP hoặc phát hành toàn bộ yêu cầu nếu nguồn IP chưa qua kiểm chứng. Nếu Tino không hỗ trợ, quay lại quyết định phương án, không âm thầm thêm PHP/CDN/chuyển hosting.
 3. TDD cho cutoff/retention tách cookie, boundary datetime/tháng/quý/leap day, distinct counts/same IP/different cookies, phiên qua nửa đêm, chart totals/zero buckets, trang mới/URL trùng/truncated, cursor/retry/cancel, RBAC full IP và spoof headers. Migration/backup/rollback/cron phải có test thật giữ lịch sử trên 90 ngày và không kích hoạt lại job xóa cũ.
-4. Kiểm chứng trực tiếp local desktop/mobile/filter/custom date-time/chi tiết/sản phẩm/refresh và không còn log UI; synthetic IPv4/IPv6 ghi rõ khi review.
+4. Kiểm chứng trực tiếp local desktop/mobile/filter/custom date/chi tiết/sản phẩm/refresh và không còn log UI; synthetic IPv4/IPv6 ghi rõ khi review.
 5. Trước production: backup verified và đủ headroom, main CI/check/build và review đạt, nguồn IP được xác minh, kế hoạch rollback đã thử đúng compatible release; chỉ dùng artifact CI thành công. Production-only/manual workflow giữ nguyên. Sau deploy so FE/BE/version/ready, check public product và admin filters/charts/history/IP thật/anti-spoof. Không báo hoàn tất nếu Tino/IP/backup/rollback còn chưa đạt.
 
 ## 10. Phạm vi để builder quyết định
