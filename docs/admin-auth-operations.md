@@ -42,7 +42,7 @@ npm run analytics:cleanup
 npm run auth:cleanup
 ```
 
-Migrate/seed đọc `.env.migration.local`, status/cleanup dùng runtime `.env.local`. Analytics cleanup tối đa100 session/candidate mỗi lượt; chạy lặp theo lịch để xử lý backlog. Lệnh analytics chỉ dọn analytics/counter hết hạn; không phục hồi hoặc reset auth/audit. Với production phải dùng private env/cron của hosting đã duyệt, không copy file local sang hosting.
+Migrate/seed đọc `.env.migration.local`, status/cleanup dùng runtime `.env.local`. **Source analytics13/11:** cleanup chỉ dọn tối đa100 visitor probe phát hành hết hạn/candidate mỗi lượt và counter cũ; giữ toàn bộ lịch sử khách thật, không phục hồi hoặc reset auth/audit. Trước khi phát hành phải gỡ đúng tác vụ cleanup cũ để rollback không làm sống lại chính sách90 ngày. Không tự cài lịch mới trỏ vào release `current` cũ. Với production phải dùng private env/cron của hosting đã duyệt, không copy file local sang hosting. Chi tiết và trạng thái chưa deploy tại [vận hành analytics](visitor-analytics-operations.md).
 
 `auth:cleanup` là tác vụ riêng: mỗi lượt tối đa100 family candidate và100 token hash, chỉ sau absolute expiry30 ngày của family. Giữ consumed hash kể cả family đã revoke cho đến hạn đó để không làm yếu reuse detection. Family nhiều hash được dọn qua nhiều lượt; chỉ xóa family sau khi hết hash. Lock theo user→session→token như refresh; không xóa account hoặc audit. Cần acceptance lịch chạy trên hosting; không chạy cleanup trong request người dùng.
 

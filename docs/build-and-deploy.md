@@ -4,6 +4,8 @@
 
 Luồng hoạt động: **code → CI kiểm tra/build → Run workflow Deploy production → duyệt production → deploy → smoke test → tự phục hồi nếu lỗi**. Push main chỉ tạo artifact, không tự thay đổi website.
 
+**Analytics13/11 đang kiểm chứng local, chưa deploy:** bộ lọc ngày1/6/12 tháng/custom, biểu đồ theo phiên, chi tiết gọn và lưu lịch sử không TTL; manifest5 dùng ledger visitor riêng, auth schema vẫn4. Bỏ UI/API nhật ký cPanel mới nhưng giữ dữ liệu cũ cho backup/rollback. Chủ website xác nhận chưa gửi yêu cầu Tino, nên chưa xác minh IP công khai, chưa bật trust hoặc thay production. Trước phát hành phải kiểm chứng nguồn IP, cron thực tế, receiverv5 và dung lượng backup. Xem [vận hành analytics](visitor-analytics-operations.md) và [yêu cầu gửi Tino](visitor-ip-hosting-request.md). Các mốc production bên dưới vẫn là release cũ.
+
 Staging tạm ngừng theo yêu cầu người dùng. YAML được giữ tại `.github/workflows-disabled/staging.yml`; domain, files, credentials và lịch sử run được giữ để bật lại. Production không còn yêu cầu một deployment staging thành công. Đổi lại, release mới được thử trên hosting lần đầu ngay tại production; giữ gate duyệt, baseline/bản trước và rollback.
 
 Trạng thái website hiện tại phải đọc từ [API version](https://bibistudio.vn/api/version) hoặc [API test](https://bibistudio.vn/api-test), đối chiếu với run GitHub. Không suy luận website đã cập nhật chỉ từ một build thành công.
