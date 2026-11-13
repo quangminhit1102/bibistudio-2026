@@ -1,6 +1,6 @@
 # Khách truy cập: dữ liệu, kiểm chứng và vận hành
 
-Trạng thái ngày 13/11/2026: đang triển khai và kiểm chứng local theo [thiết kế đã duyệt](superpowers/specs/2026-11-13-visitor-analytics-design.md). Chưa phát hành production. Chủ website xác nhận **chưa gửi yêu cầu Tino**; không có bằng chứng hosting đã sửa nguồn IP. Không bật `CLIENT_IP_SOURCE_VERIFIED` chỉ để có số liệu trên UI.
+Trạng thái ngày 13/11/2026: đã triển khai và kiểm chứng local theo [thiết kế đã duyệt](superpowers/specs/2026-11-13-visitor-analytics-design.md). Chưa phát hành production. Chủ website xác nhận **chưa gửi yêu cầu Tino**; không có bằng chứng hosting đã sửa nguồn IP. Không bật `CLIENT_IP_SOURCE_VERIFIED` chỉ để có số liệu trên UI.
 
 ## Cách đọc số liệu
 
@@ -15,7 +15,7 @@ Trạng thái ngày 13/11/2026: đang triển khai và kiểm chứng local theo
 
 Mặc định 1 tháng, có 6 tháng, 1 năm và Khoảng ngày. Chỉ chọn ngày, không chọn giờ. Theo giờ Việt Nam, từ 00:00 ngày bắt đầu đến trước 00:00 ngày sau ngày kết thúc; SQL dùng UTC. Ví dụ 01–13/11/2026 tương ứng `[2026-10-31T17:00:00Z, 2026-11-13T17:00:00Z)`.
 
-Preset lấy 00:00 ngày mai làm mốc cuối rồi lùi 1/6/12 tháng lịch, clamp cuối tháng khi cần. Ngày 13/11/2026, 1 tháng hiển thị 14/10–13/11. Custom có thể truy vấn lịch sử cũ hơn một năm; bộ lọc không phải chính sách lưu trữ. Đổi khoảng ngày đưa bảng về trang đầu và làm mới chi tiết phiên. Tải lại lấy dữ liệu hiện có trong DB, không chạy importer cPanel. Không cam kết một snapshot transaction chung cho nhiều HTTP request khi dữ liệu mới đang được ghi.
+Preset lấy 00:00 ngày mai làm mốc cuối rồi lùi 1/6/12 tháng lịch, clamp cuối tháng khi cần. Ngày 13/11/2026, 1 tháng hiển thị 14/10–13/11. Custom có thể truy vấn lịch sử cũ hơn một năm; bộ lọc không phải chính sách lưu trữ. Đổi khoảng ngày đưa bảng về trang đầu và làm mới chi tiết phiên. Tải lại lấy dữ liệu hiện có trong DB, không chạy importer cPanel. Mỗi report dùng một transaction READ ONLY REPEATABLE READ cho KPI/chuỗi thời gian/sản phẩm. Không cam kết một snapshot transaction chung cho nhiều HTTP request khi dữ liệu mới đang được ghi. Client có bộ lọc từ chối response backend cũ thiếu contract hoặc không khớp khoảng ngày và yêu cầu tải lại trang.
 
 ## API và schema
 
@@ -34,7 +34,7 @@ Tham số dùng chung: `from=YYYY-MM-DD`, `to=YYYY-MM-DD`, `deviceType`, `browse
 
 Migration mới nằm trong `backend/visitor-migrations/001_history.sql`; ledger `visitor_history_schema_migrations` riêng. Auth vẫn đúng4 migration. Thêm các cột nullable metadata/IP trên phiên và hai index theo `started_at`/visitor; không backfill IP đầy đủ từ prefix. Runtime không tự chạy DDL. Local dùng lại `npm run db:setup:local`, sau đó `npm run dev`; không thêm lệnh develop hằng ngày.
 
-Tool hosting cố định: `backend/dist/visitors/cli.js migrate|status`, đọc `BIBI_PRIVATE_ENV_FILE` từ private env ngoài webroot. Dirty/checksum/DDL drift phải được kiểm tra trước khi resume qua maintenance; không tự bỏ qua hoặc sửa ledger. Manifest5 mang `visitorAnalytics` checksum SQL; readiness v5 yêu cầu visitor schema hoàn tất và giữ kiểm tra auth/profile hiện có.
+Tool hosting cố định: `backend/dist/visitors/cli.js migrate|status`, đọc `BIBI_PRIVATE_ENV_FILE` từ private env ngoài webroot. `status` trả exit0 cho trạng thái empty hợp lệ hoặc complete; dirty/incompatible trả exit1. Dirty/checksum/DDL drift phải được kiểm tra trước khi resume qua maintenance; không tự bỏ qua hoặc sửa ledger. Manifest5 mang `visitorAnalytics` checksum SQL; readiness v5 yêu cầu visitor schema hoàn tất và giữ kiểm tra auth/profile hiện có.
 
 ## IP công khai: phần còn chờ Tino
 
