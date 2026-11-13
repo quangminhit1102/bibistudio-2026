@@ -60,3 +60,43 @@ test("unrecognized history-deleting cron fails closed instead of removing unrela
     /inspect|unrecognized/i,
   );
 });
+
+test("fixed crontab child excludes the SSH receiver command without changing the receiver environment", async (t) => {
+  const root = await mkdtemp(join(tmpdir(), "bibi-visitor-cron-env-"));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const previous = process.env.SSH_ORIGINAL_COMMAND;
+  const command = "deploy " + "a".repeat(40) + "-123";
+  process.env.SSH_ORIGINAL_COMMAND = command;
+  t.after(() => {
+    if (previous === undefined) delete process.env.SSH_ORIGINAL_COMMAND;
+    else process.env.SSH_ORIGINAL_COMMAND = previous;
+  });
+  let calls = 0;
+  const receipt = await retireVisitorCrons(
+    { root },
+    {
+      execute: async (_command, args, options) => {
+        const environment = options.env ?? process.env;
+        // CageFS rejects its crontab proxy call when the receiver's command leaks into it.
+        if (environment.SSH_ORIGINAL_COMMAND) {
+          throw Object.assign(new Error("Invalid argument"), {
+            code: 1,
+            stderr: "Invalid argument\n",
+          });
+        }
+        assert.deepEqual(
+          environment,
+          Object.fromEntries(
+            Object.entries(process.env).filter(([key]) => key !== "SSH_ORIGINAL_COMMAND"),
+          ),
+        );
+        assert.equal(process.env.SSH_ORIGINAL_COMMAND, command);
+        calls += 1;
+        assert.equal(args[0], "-l");
+        return { stdout: "0 * * * * /safe/auth-cleanup\n" };
+      },
+    },
+  );
+  assert.equal(receipt.verified, true);
+  assert.equal(calls, 2);
+});

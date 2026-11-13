@@ -22,9 +22,14 @@ async function visitorHistoryEnabled(config) {
 /** Stable ops tool, outside current. Caller holds deploy.lock throughout the operation. */
 async function retireVisitorCrons(config, { execute: run = execute } = {}) {
   if (!path.isAbsolute(config.root)) throw new Error("Absolute managed root required");
+  // CageFS proxies crontab internally. The already-validated receiver command
+  // belongs to the receiver, not this fixed child operation.
+  const cronEnvironment = { ...process.env };
+  delete cronEnvironment.SSH_ORIGINAL_COMMAND;
+  const cronOptions = { encoding: "utf8", env: cronEnvironment };
   let original;
   try {
-    original = (await run("crontab", ["-l"], { encoding: "utf8" })).stdout;
+    original = (await run("crontab", ["-l"], cronOptions)).stdout;
   } catch (error) {
     if (error.code !== 1 || !/no crontab/i.test(error.stderr ?? ""))
       throw new Error("Cannot inspect existing crontab");
@@ -49,14 +54,14 @@ async function retireVisitorCrons(config, { execute: run = execute } = {}) {
   if (next !== original) {
     try {
       await fs.writeFile(pending, next, { flag: "wx", mode: 0o600 });
-      await run("crontab", [pending]);
+      await run("crontab", [pending], cronOptions);
     } finally {
       await fs.rm(pending, { force: true });
     }
   }
   let actual;
   try {
-    actual = (await run("crontab", ["-l"], { encoding: "utf8" })).stdout;
+    actual = (await run("crontab", ["-l"], cronOptions)).stdout;
   } catch (error) {
     if (next || error.code !== 1 || !/no crontab/i.test(error.stderr ?? "")) throw error;
     actual = "";
