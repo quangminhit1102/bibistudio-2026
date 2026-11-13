@@ -55,6 +55,7 @@ export interface VisitorDto {
   id: string;
   anonymousId: string;
   ipAddress: string;
+  ipStatus?: VisitorIpStatus;
   country: string | null;
   city: string | null;
   deviceType: string;
@@ -68,6 +69,11 @@ export interface VisitorDto {
 export interface VisitorSessionDto {
   id: string;
   visitorId: string;
+  ipAddress?: string;
+  ipStatus?: VisitorIpStatus;
+  deviceType?: string;
+  operatingSystem?: string;
+  browser?: string;
   startedAt: string;
   lastReceivedAt: string;
   landingPath: string;
@@ -80,7 +86,40 @@ export interface VisitorSessionDto {
 export interface VisitorReportDto {
   totalVisitors: number;
   totalSessions: number;
+  totalInterestedVisitors?: number;
+  totalProducts?: number;
+  window?: VisitorWindowDto;
+  bucketUnit?: VisitorBucketUnit;
+  series?: { startUtc: string; label: string; sessions: number }[];
   products: { slug: string; name: string; interestedVisitors: number }[];
+}
+export type VisitorIpStatus = "verified" | "legacy" | "unavailable";
+export type VisitorBucketUnit = "hour" | "day" | "week" | "month" | "year";
+export interface VisitorWindowDto {
+  fromDate: string;
+  toDate: string;
+  startUtc: string;
+  endUtcExclusive: string;
+  asOf: string;
+}
+export interface VisitorScopeInput {
+  from: string;
+  to: string;
+  deviceType?: "mobile" | "tablet" | "desktop";
+  browser?: string;
+  search?: string;
+}
+export interface VisitorSessionHistoryDto {
+  items: VisitorSessionDto[];
+  nextCursor: string | null;
+  window: VisitorWindowDto;
+}
+export interface VisitorProductPageDto extends Page<{
+  slug: string;
+  name: string;
+  interestedVisitors: number;
+}> {
+  window: VisitorWindowDto;
 }
 export interface CollectBatch {
   paths: string[];
