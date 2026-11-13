@@ -22,7 +22,7 @@ try {
  try{json_decode($body,true,32,JSON_THROW_ON_ERROR);}catch(JsonException $e){throw new BibiRelayError(400);}
  $cookie=bibi_relay_cookie($_SERVER['HTTP_COOKIE']??'');$dnt=($_SERVER['HTTP_DNT']??'')==='1';$gpc=($_SERVER['HTTP_SEC_GPC']??'')==='1';
  $ip=bibi_relay_public_ip($_SERVER['REMOTE_ADDR']??'');
- $forward=['Content-Type: application/json','Origin: '.$origin,'User-Agent: '.$ua,'DNT: '.($dnt?'1':'0'),'Sec-GPC: '.($gpc?'1':'0')];
+ $forward=['X-Bibi-Request: 1','Content-Type: application/json','Origin: '.$origin,'User-Agent: '.$ua,'DNT: '.($dnt?'1':'0'),'Sec-GPC: '.($gpc?'1':'0')];
  if($cookie!=='')$forward[]='Cookie: bibi_visitor='.$cookie;
  // Local/private peers still collect anonymously, without inventing an IP context.
  if($ip!==null){$envelope=bibi_relay_envelope(['timestamp'=>time(),'requestId'=>bin2hex(random_bytes(16)),'bodySha256'=>hash('sha256',$body),'ip'=>$ip,'origin'=>$origin,'cookieSha256'=>hash('sha256',$cookie),'userAgent'=>$ua,'dnt'=>$dnt,'gpc'=>$gpc],$config['secret']??'');$forward[]='X-Bibi-Relay-Context: '.$envelope['context'];$forward[]='X-Bibi-Relay-Signature: '.$envelope['signature'];}

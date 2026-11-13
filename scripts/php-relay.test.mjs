@@ -109,6 +109,7 @@ test(
         ]);
         const row = seen.at(-1);
         assert.equal(row.url, "/api/analytics/collect");
+        assert.equal(row.headers["x-bibi-request"], "1");
         assert.equal(row.headers.authorization, undefined);
         assert.equal(row.headers.cookie, "bibi_visitor=synthetic");
         assert.equal(row.headers.dnt, "1");
