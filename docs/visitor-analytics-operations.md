@@ -57,3 +57,7 @@ Rollback là đổi code về release trước tương thích, không restore đ
 Backup native hiện tự phát hiện và xác minh toàn bộ bảng; kiểm thử mới bao gồm ledger/IP phiên, log lưu cũ và avatar trong cùng restore. Giới hạn backup hiện tại128MiB không tự tăng hay xóa lịch sử để vừa giới hạn. Trước production phải đo dung lượng, headroom, phiên bản công cụ dump và quyền verifier thực tế. Lịch sử tăng lâu dài cần kế hoạch dung lượng từ hosting.
 
 Phát hành theo [build-and-deploy](build-and-deploy.md): artifact của main CI thành công, Run workflow thủ công, cổng duyệt production, smoke và rollback. Chưa vượt các gate IP/cron/capacity/receiver thực tế thì chưa được gọi đây là bản production đã xác minh.
+
+## Yêu cầu phát hành ngày13/11
+
+Sau kiểm tra cPanel, chủ website yêu cầu deploy source hiện tại dù nguồn IP còn chưa đạt. Giữ CLIENT_IP_SOURCE_VERIFIED=false và hiển thị chưa xác định; không coi lần deploy này là hoàn tất mục tiêu IP thật. Các gate backup/cron/capacity/receiver, CI và kiểm chứng production vẫn bắt buộc.

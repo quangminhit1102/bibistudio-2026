@@ -8,6 +8,8 @@ Website `bibistudio.vn` chạy React và Node.js/Express qua cPanel/Passenger t�
 
 Lần đo ngày05/11/2026 cho thấy socket tới Node là loopback, request thường chưa có nguồn IP đáng tin và header `X-Forwarded-For` client tự gửi có thể đi xuyên tới ứng dụng. Đây là bằng chứng lịch sử, chưa phải kết luận về cấu hình hiện tại. Express đang giữ trust proxy tắt để tránh ghi IP giả.
 
+Kiểm tra lại ngày13/11 qua cPanel: Visitors có IP công khai cho request /api. App thử Node riêng /node-test trên cùng domain vẫn nhận socket loopback, thiếu IP header ở request thường; từ nguồn hosting, XFF/X-Real-IP và cả header mang tên !~Passenger-Client-Address giả đi xuyên vào app. Probe đã gỡ và app thử đã khôi phục. Chưa đo trực tiếp header trong API chính hoặc hai mạng ngoài; nhờ kiểm tra cấu hình thực tế của /api. Biên bản: docs/superpowers/reports/2026-11-13-cpanel-client-ip-check.md.
+
 Nhờ Tino kiểm tra và hỗ trợ:
 
 1. Chuyển IP client từ kết nối thực ở LiteSpeed/Passenger/proxy vào Node. Loại bỏ hoặc ghi đè header IP không đáng tin phía client; ưu tiên cơ chế X-Forwarded-For được xử lý đúng tại proxy.
