@@ -16,6 +16,7 @@ export interface AuthConfig {
   cookieSecure: boolean;
   allowedOrigins: string[];
   trustProxy: false | string[];
+  clientIpSourceVerified?: boolean;
 }
 export const systemClock: Clock = { now: () => new Date() };
 export function readAuthConfig(env: NodeJS.ProcessEnv = process.env): AuthConfig {
@@ -50,6 +51,32 @@ export function readAuthConfig(env: NodeJS.ProcessEnv = process.env): AuthConfig
     .map((value) => value.trim())
     .filter(Boolean);
   if (proxies.some((value) => !ipaddr.isValidCIDR(value))) throw invalid();
+  if (
+    env.CLIENT_IP_SOURCE_VERIFIED !== undefined &&
+    !["true", "false"].includes(env.CLIENT_IP_SOURCE_VERIFIED)
+  )
+    throw invalid();
+  const clientIpSourceVerified = env.CLIENT_IP_SOURCE_VERIFIED === "true";
+  if (
+    clientIpSourceVerified &&
+    (!proxies.length ||
+      proxies.some((value) => {
+        const [address, bits] = ipaddr.parseCIDR(value);
+        return (
+          bits === 0 ||
+          address.toString() !==
+            ipaddr
+              .fromByteArray(
+                address.toByteArray().map((byte, i) => {
+                  const retained = Math.max(0, Math.min(8, bits - i * 8));
+                  return byte & (256 - 2 ** (8 - retained));
+                }),
+              )
+              .toString()
+        );
+      }))
+  )
+    throw invalid();
   return {
     jwtSecret: env.AUTH_JWT_SECRET,
     jwtIssuer: env.AUTH_JWT_ISSUER || "bibistudio-api",
@@ -57,6 +84,7 @@ export function readAuthConfig(env: NodeJS.ProcessEnv = process.env): AuthConfig
     cookieSecure: production,
     allowedOrigins,
     trustProxy: proxies.length ? proxies : false,
+    clientIpSourceVerified,
   };
 }
 export interface DbConfig {
