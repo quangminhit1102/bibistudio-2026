@@ -2,6 +2,8 @@
 
 ## Trạng thái
 
+**Cập nhật sau bàn giao local:** chủ website yêu cầu phát hành; CI, hosting và rollback/forward đã qua, production chạy ee12307-43382604855. Xem [biên bản production](2026-11-13-visitor-analytics-production-release.md). Những gate và trạng thái bên dưới là tại mốc nghiệm thu local; riêng IP thật vẫn pending.
+
 Tasks1–7 đã triển khai và kiểm chứng local. Task8 còn các gate hosting/production, **chưa hoàn tất toàn bộ yêu cầu IP thật**. Chủ website trả lời “Chưa gửi yêu cầu Tino” ngày13/11. Chưa gửi ticket, thay trust config, bootstrap receiver hosting, push/merge hoặc deploy production trong đợt này.
 
 Source vẫn trên worktree `codex/admin-dashboard`; không viết lại lịch sử Git. Các commit triển khai đầu: `a937d04`, `8667e9d`, `56f4b50`, `8c8fbe0`, `32c0dfc`, `80914fd`, `d5de3fa`.

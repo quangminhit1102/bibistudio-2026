@@ -1,6 +1,6 @@
 # Khách truy cập: dữ liệu, kiểm chứng và vận hành
 
-Trạng thái ngày 13/11/2026: đã triển khai và kiểm chứng local theo [thiết kế đã duyệt](superpowers/specs/2026-11-13-visitor-analytics-design.md). Chưa phát hành production. Chủ website xác nhận **chưa gửi yêu cầu Tino**; không có bằng chứng hosting đã sửa nguồn IP. Không bật `CLIENT_IP_SOURCE_VERIFIED` chỉ để có số liệu trên UI.
+Trạng thái ngày 13/11/2026: đã triển khai và kiểm chứng local theo [thiết kế đã duyệt](superpowers/specs/2026-11-13-visitor-analytics-design.md). Đã phát hành production release ee12307-43382604855 và kiểm chứng rollback/forward; xem [biên bản](superpowers/reports/2026-11-13-visitor-analytics-production-release.md). Chủ website xác nhận **chưa gửi yêu cầu Tino**; không có bằng chứng hosting đã sửa nguồn IP. Không bật `CLIENT_IP_SOURCE_VERIFIED` chỉ để có số liệu trên UI.
 
 ## Cách đọc số liệu
 
@@ -61,3 +61,7 @@ Phát hành theo [build-and-deploy](build-and-deploy.md): artifact của main CI
 ## Yêu cầu phát hành ngày13/11
 
 Sau kiểm tra cPanel, chủ website yêu cầu deploy source hiện tại dù nguồn IP còn chưa đạt. Giữ CLIENT_IP_SOURCE_VERIFIED=false và hiển thị chưa xác định; không coi lần deploy này là hoàn tất mục tiêu IP thật. Các gate backup/cron/capacity/receiver, CI và kiểm chứng production vẫn bắt buộc.
+
+## Lưu ý CageFS khi phát hành
+
+Receiver phải giữ SSH_ORIGINAL_COMMAND để validate lệnh SSH. Chỉ child crontab nhận bản sao environment đã bỏ biến này; nếu truyền nguyên biến, CageFS trên hosting đã đo trả Invalid argument. Bản sửa ee12307 có regression test và đã qua rollback/deploy GitHub thật. Không tắt kiểm tra crontab hoặc bỏ khóa deploy để né lỗi.
