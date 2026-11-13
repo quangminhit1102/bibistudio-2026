@@ -1,177 +1,235 @@
 import type { Pool, RowDataPacket } from "mysql2/promise";
 import type { Clock } from "../config";
-import type { Page, VisitorDto, VisitorReportDto, VisitorSessionDto } from "../http/contracts";
+import type {
+  Page,
+  VisitorDto,
+  VisitorSessionDto,
+  VisitorReportDto,
+  VisitorWindowDto,
+  VisitorProductPageDto,
+  VisitorSessionHistoryDto,
+} from "../http/contracts";
 import { ApiError } from "../http/errors";
-import { sqlDate } from "../auth/repository";
 import type { Catalogue } from "./catalogue";
-import { ANALYTICS_TTL_MS } from "./normalize";
-
-export interface VisitorQuery {
+import { visitorCohort, visitorScopeFingerprint, type VisitorScope } from "./report-query";
+import { visitorBuckets, selectVisitorBucket } from "./date-window";
+import { readHistoryCursor, sessionDtos, visitorIso } from "./session-history";
+export interface VisitorQuery extends VisitorScope {
   page: number;
   pageSize: number;
   search: string;
-  deviceType?: string;
-  browser?: string;
   product?: string;
 }
-const iso = (value: string) => sqlDate(value).toISOString();
 export function createVisitorService(pool: Pool, catalogue: Catalogue, clock: Clock) {
-  const cutoff = () => new Date(+clock.now() - ANALYTICS_TTL_MS);
-  function where(query: Partial<VisitorQuery> = {}) {
-    const clauses = ["v.is_probe=0", "v.last_seen_at>=?"];
-    const params: (string | Date)[] = [cutoff()];
-    if (query.search) {
-      const term = `%${query.search.replace(/[=%_]/g, (value) => "=" + value)}%`;
-      clauses.push("(v.id LIKE ? ESCAPE '=' OR v.ip_prefix LIKE ? ESCAPE '=')");
-      params.push(term, term);
-    }
-    if (query.deviceType) {
-      clauses.push("v.device_type=?");
-      params.push(query.deviceType);
-    }
-    if (query.browser) {
-      clauses.push("v.browser=?");
-      params.push(query.browser);
-    }
-    if (query.product) {
-      clauses.push(
-        "EXISTS(SELECT 1 FROM visitor_sessions fs JOIN visitor_viewed_products fp ON fp.session_id=fs.id WHERE fs.visitor_id=v.id AND fp.product_slug=? AND fp.last_received_at>=?)",
-      );
-      params.push(query.product, cutoff());
-    }
-    return { sql: clauses.join(" AND "), params };
-  }
-  const visitorSelect = `SELECT v.id,v.ip_prefix,v.country,v.city,v.device_type,v.operating_system,v.browser,v.first_seen_at,v.last_seen_at,
-    (SELECT COUNT(*) FROM visitor_sessions s WHERE s.visitor_id=v.id AND s.last_received_at>=?) session_count,
-    (SELECT COUNT(DISTINCT p.path) FROM visitor_session_pages p JOIN visitor_sessions s ON s.id=p.session_id WHERE s.visitor_id=v.id AND p.last_received_at>=?) distinct_page_count FROM visitors v`;
-  function dto(row: RowDataPacket): VisitorDto {
-    return {
-      id: row.id,
-      anonymousId: `KH-${row.id.slice(0, 8)}`,
-      ipAddress: row.ip_prefix,
-      country: row.country,
-      city: row.city,
-      deviceType: row.device_type,
-      operatingSystem: row.operating_system,
-      browser: row.browser,
-      firstSeenAt: iso(row.first_seen_at),
-      lastSeenAt: iso(row.last_seen_at),
-      sessionCount: Number(row.session_count),
-      distinctPageCount: Number(row.distinct_page_count),
-    };
-  }
-  async function get(id: string): Promise<VisitorDto> {
-    const condition = where();
+  const cohort = (input: VisitorScope = {}) => visitorCohort(input, clock.now());
+  const visitorSelect = `, ranked AS (SELECT selected.*,ROW_NUMBER() OVER(PARTITION BY visitor_id ORDER BY last_received_at DESC,id DESC) rn FROM selected), totals AS (SELECT visitor_id,COUNT(*) session_count,MIN(started_at) first_seen_at FROM selected GROUP BY visitor_id), pages AS (SELECT s.visitor_id,COUNT(DISTINCT p.path) distinct_page_count FROM selected s JOIN visitor_session_pages p ON p.session_id=s.id GROUP BY s.visitor_id)
+    SELECT r.*,t.session_count,t.first_seen_at,COALESCE(p.distinct_page_count,0) distinct_page_count FROM ranked r JOIN totals t ON t.visitor_id=r.visitor_id LEFT JOIN pages p ON p.visitor_id=r.visitor_id WHERE r.rn=1`;
+  const dto = (row: RowDataPacket): VisitorDto => ({
+    id: row.visitor_id,
+    anonymousId: `KH-${row.visitor_id.slice(0, 8)}`,
+    ipAddress: row.ip_status === "verified" ? (row.client_ip ?? "") : "",
+    ipStatus: row.ip_status ?? "legacy",
+    country: row.country,
+    city: row.city,
+    deviceType: row.selected_device,
+    operatingSystem: row.selected_os,
+    browser: row.selected_browser,
+    firstSeenAt: visitorIso(row.first_seen_at),
+    lastSeenAt: visitorIso(row.last_received_at),
+    sessionCount: Number(row.session_count),
+    distinctPageCount: Number(row.distinct_page_count),
+  });
+  async function assertVisitor(id: string) {
     const [[row]] = await pool.execute<RowDataPacket[]>(
-      `${visitorSelect} WHERE ${condition.sql} AND v.id=?`,
-      [cutoff(), cutoff(), ...condition.params, id],
+      "SELECT * FROM visitors WHERE id=? AND is_probe=0",
+      [id],
     );
     if (!row) throw new ApiError(404, "NOT_FOUND", "Không tìm thấy khách truy cập");
-    return dto(row);
+    return row;
   }
-  async function list(query: VisitorQuery): Promise<Page<VisitorDto>> {
-    const condition = where(query);
-    const [[total]] = await pool.execute<RowDataPacket[]>(
-      `SELECT COUNT(*) n FROM visitors v WHERE ${condition.sql}`,
-      condition.params,
+  async function get(
+    id: string,
+    input: VisitorScope = {},
+  ): Promise<VisitorDto & { window: VisitorWindowDto }> {
+    const known = await assertVisitor(id),
+      c = cohort(input);
+    const [[row]] = await pool.query<RowDataPacket[]>(
+      `WITH selected AS (${c.sql} AND s.visitor_id=?) ${visitorSelect}`,
+      [...c.params, id],
+    );
+    return {
+      ...(row
+        ? dto(row)
+        : {
+            id,
+            anonymousId: `KH-${id.slice(0, 8)}`,
+            ipAddress: "",
+            ipStatus: "unavailable" as const,
+            country: known.country,
+            city: known.city,
+            deviceType: known.device_type,
+            operatingSystem: known.operating_system,
+            browser: known.browser,
+            firstSeenAt: visitorIso(known.first_seen_at),
+            lastSeenAt: visitorIso(known.last_seen_at),
+            sessionCount: 0,
+            distinctPageCount: 0,
+          }),
+      window: c.window,
+    };
+  }
+  async function list(
+    input: VisitorQuery,
+  ): Promise<Page<VisitorDto> & { window: VisitorWindowDto }> {
+    const c = cohort(input);
+    const [[count]] = await pool.query<RowDataPacket[]>(
+      `WITH selected AS (${c.sql}) SELECT COUNT(DISTINCT visitor_id) n FROM selected`,
+      c.params,
     );
     const [rows] = await pool.query<RowDataPacket[]>(
-      `${visitorSelect} WHERE ${condition.sql} ORDER BY v.last_seen_at DESC,v.id DESC LIMIT ? OFFSET ?`,
-      [cutoff(), cutoff(), ...condition.params, query.pageSize, (query.page - 1) * query.pageSize],
+      `WITH selected AS (${c.sql}) ${visitorSelect} ORDER BY r.last_received_at DESC,r.visitor_id DESC LIMIT ? OFFSET ?`,
+      [...c.params, input.pageSize, (input.page - 1) * input.pageSize],
     );
     return {
       items: rows.map(dto),
-      total: Number(total.n),
-      page: query.page,
-      pageSize: query.pageSize,
+      total: Number(count.n),
+      page: input.page,
+      pageSize: input.pageSize,
+      window: c.window,
+    };
+  }
+  async function sessionHistory(
+    id: string,
+    input: VisitorScope & { cursor?: string } = {},
+  ): Promise<VisitorSessionHistoryDto> {
+    await assertVisitor(id);
+    const c = cohort(input),
+      fingerprint = visitorScopeFingerprint(id, input, c.window),
+      cursor = readHistoryCursor(input.cursor, fingerprint);
+    const [rows] = await pool.query<RowDataPacket[]>(
+      `WITH selected AS (${c.sql}) SELECT * FROM selected WHERE visitor_id=? ${cursor ? "AND (last_received_at<? OR (last_received_at=? AND id<?))" : ""} ORDER BY last_received_at DESC,id DESC LIMIT 21`,
+      [
+        ...c.params,
+        id,
+        ...(cursor ? [new Date(cursor.time), new Date(cursor.time), cursor.id] : []),
+      ],
+    );
+    const selected = rows.slice(0, 20),
+      last = selected.at(-1);
+    return {
+      items: await sessionDtos(pool, catalogue, selected),
+      nextCursor:
+        rows.length > 20 && last
+          ? Buffer.from(
+              JSON.stringify({ fingerprint, time: visitorIso(last.last_received_at), id: last.id }),
+            ).toString("base64url")
+          : null,
+      window: c.window,
     };
   }
   async function sessions(
     id: string,
-    query: { page: number; pageSize: number },
+    input: { page: number; pageSize: number } & VisitorScope,
   ): Promise<Page<VisitorSessionDto>> {
-    await get(id);
-    const [[total]] = await pool.execute<RowDataPacket[]>(
-      "SELECT COUNT(*) n FROM visitor_sessions WHERE visitor_id=? AND last_received_at>=?",
-      [id, cutoff()],
+    await assertVisitor(id);
+    const c = cohort(input);
+    const [[total]] = await pool.query<RowDataPacket[]>(
+      `WITH selected AS (${c.sql}) SELECT COUNT(*) n FROM selected WHERE visitor_id=?`,
+      [...c.params, id],
     );
     const [rows] = await pool.query<RowDataPacket[]>(
-      "SELECT * FROM visitor_sessions WHERE visitor_id=? AND last_received_at>=? ORDER BY last_received_at DESC,id DESC LIMIT ? OFFSET ?",
-      [id, cutoff(), query.pageSize, (query.page - 1) * query.pageSize],
-    );
-    const items: VisitorSessionDto[] = [];
-    for (const row of rows) {
-      const [pages] = await pool.execute<RowDataPacket[]>(
-        "SELECT path,first_received_at,last_received_at FROM visitor_session_pages WHERE session_id=? AND last_received_at>=? ORDER BY first_received_at,path LIMIT 200",
-        [row.id, cutoff()],
-      );
-      const [products] = await pool.execute<RowDataPacket[]>(
-        "SELECT product_slug,first_received_at,last_received_at FROM visitor_viewed_products WHERE session_id=? AND last_received_at>=? ORDER BY first_received_at,product_slug LIMIT 100",
-        [row.id, cutoff()],
-      );
-      items.push({
-        id: row.id,
-        visitorId: id,
-        startedAt: iso(row.started_at),
-        lastReceivedAt: iso(row.last_received_at),
-        landingPath: row.landing_path,
-        lastReceivedPath: row.last_received_path,
-        distinctPageCount: pages.length,
-        truncated: !!row.truncated,
-        pages: pages.map((page) => ({
-          path: page.path,
-          firstReceivedAt: iso(page.first_received_at),
-          lastReceivedAt: iso(page.last_received_at),
-        })),
-        products: products.map((product) => ({
-          slug: product.product_slug,
-          name: catalogue.products.get(product.product_slug) ?? product.product_slug,
-          firstReceivedAt: iso(product.first_received_at),
-          lastReceivedAt: iso(product.last_received_at),
-        })),
-      });
-    }
-    return { items, total: Number(total.n), ...query };
-  }
-  async function report(): Promise<VisitorReportDto> {
-    const condition = where();
-    const [[visitors]] = await pool.execute<RowDataPacket[]>(
-      `SELECT COUNT(*) n FROM visitors v WHERE ${condition.sql}`,
-      condition.params,
-    );
-    const [[sessions]] = await pool.execute<RowDataPacket[]>(
-      `SELECT COUNT(*) n FROM visitor_sessions s JOIN visitors v ON v.id=s.visitor_id WHERE ${condition.sql} AND s.last_received_at>=?`,
-      [...condition.params, cutoff()],
-    );
-    const [products] = await pool.execute<RowDataPacket[]>(
-      `SELECT p.product_slug,COUNT(DISTINCT v.id) n FROM visitor_viewed_products p JOIN visitor_sessions s ON s.id=p.session_id JOIN visitors v ON v.id=s.visitor_id WHERE ${condition.sql} AND p.last_received_at>=? GROUP BY p.product_slug ORDER BY n DESC,p.product_slug LIMIT 100`,
-      [...condition.params, cutoff()],
+      `WITH selected AS (${c.sql}) SELECT * FROM selected WHERE visitor_id=? ORDER BY last_received_at DESC,id DESC LIMIT ? OFFSET ?`,
+      [...c.params, id, input.pageSize, (input.page - 1) * input.pageSize],
     );
     return {
-      totalVisitors: Number(visitors.n),
-      totalSessions: Number(sessions.n),
-      products: products.map((product) => ({
-        slug: product.product_slug,
-        name: catalogue.products.get(product.product_slug) ?? product.product_slug,
-        interestedVisitors: Number(product.n),
+      items: await sessionDtos(pool, catalogue, rows),
+      total: Number(total.n),
+      page: input.page,
+      pageSize: input.pageSize,
+    };
+  }
+  async function productReport(
+    input: VisitorScope & { page: number; pageSize: number },
+  ): Promise<VisitorProductPageDto> {
+    const c = cohort(input);
+    const [[total]] = await pool.query<RowDataPacket[]>(
+      `WITH selected AS (${c.sql}) SELECT COUNT(DISTINCT p.product_slug) n FROM selected s JOIN visitor_viewed_products p ON p.session_id=s.id`,
+      c.params,
+    );
+    const [rows] = await pool.query<RowDataPacket[]>(
+      `WITH selected AS (${c.sql}) SELECT p.product_slug,COUNT(DISTINCT s.visitor_id) n FROM selected s JOIN visitor_viewed_products p ON p.session_id=s.id GROUP BY p.product_slug ORDER BY n DESC,p.product_slug LIMIT ? OFFSET ?`,
+      [...c.params, input.pageSize, (input.page - 1) * input.pageSize],
+    );
+    return {
+      items: rows.map((p) => ({
+        slug: p.product_slug,
+        name: catalogue.products.get(p.product_slug) ?? p.product_slug,
+        interestedVisitors: Number(p.n),
       })),
+      total: Number(total.n),
+      page: input.page,
+      pageSize: input.pageSize,
+      window: c.window,
     };
   }
-  async function filterOptions() {
-    const condition = where();
-    const distinct = async (column: "device_type" | "browser" | "operating_system") => {
-      const [rows] = await pool.execute<RowDataPacket[]>(
-        `SELECT DISTINCT v.${column} value FROM visitors v WHERE ${condition.sql} ORDER BY value LIMIT 100`,
-        condition.params,
-      );
-      return rows.map((row) => String(row.value));
+  async function report(input: VisitorScope = {}): Promise<Required<VisitorReportDto>> {
+    const c = cohort(input);
+    const [[total]] = await pool.query<RowDataPacket[]>(
+      `WITH selected AS (${c.sql}) SELECT COUNT(*) sessions,COUNT(DISTINCT visitor_id) visitors,COUNT(DISTINCT CASE WHEN EXISTS(SELECT 1 FROM visitor_viewed_products p WHERE p.session_id=s.id) THEN visitor_id END) interested FROM selected s`,
+      c.params,
+    );
+    const products = await productReport({ ...input, page: 1, pageSize: 10 });
+    const unit = selectVisitorBucket(c.window),
+      local = "DATE_ADD(started_at, INTERVAL 7 HOUR)";
+    const formats = {
+      hour: "%Y-%m-%d %H:00:00",
+      day: "%Y-%m-%d 00:00:00",
+      week: "%Y-%m-%d 00:00:00",
+      month: "%Y-%m-01 00:00:00",
+      year: "%Y-01-01 00:00:00",
     };
+    const expression =
+      unit === "week" ? `DATE_SUB(${local}, INTERVAL WEEKDAY(${local}) DAY)` : local;
+    const [counts] = await pool.query<RowDataPacket[]>(
+      `WITH selected AS (${c.sql}) SELECT DATE_FORMAT(${expression},'${formats[unit]}') bucket,COUNT(*) n FROM selected GROUP BY bucket`,
+      c.params,
+    );
+    const buckets = visitorBuckets(c.window),
+      byStart = new Map(buckets.map((b) => [b.startUtc, b]));
+    for (const row of counts) {
+      const utc = new Date(
+        Math.max(
+          Date.parse(c.window.startUtc),
+          Date.parse(row.bucket.replace(" ", "T") + "+07:00"),
+        ),
+      ).toISOString();
+      const bucket = byStart.get(utc);
+      if (bucket) bucket.sessions = Number(row.n);
+    }
     return {
-      deviceTypes: await distinct("device_type"),
-      operatingSystems: await distinct("operating_system"),
-      browsers: await distinct("browser"),
-      products: (await report()).products.map(({ slug, name }) => ({ slug, name })),
+      totalVisitors: Number(total.visitors),
+      totalSessions: Number(total.sessions),
+      totalInterestedVisitors: Number(total.interested),
+      totalProducts: products.total,
+      products: products.items,
+      window: c.window,
+      bucketUnit: unit,
+      series: buckets.map(({ startUtc, label, sessions }) => ({ startUtc, label, sessions })),
     };
   }
-  return { list, get, sessions, report, filterOptions };
+  async function filterOptions(input: VisitorScope = {}) {
+    const c = cohort(input);
+    const [rows] = await pool.query<RowDataPacket[]>(
+      `WITH selected AS (${c.sql}) SELECT DISTINCT selected_device,selected_os,selected_browser FROM selected LIMIT 100`,
+      c.params,
+    );
+    const unique = (key: string) => [...new Set(rows.map((r) => String(r[key])))].sort();
+    return {
+      deviceTypes: unique("selected_device"),
+      operatingSystems: unique("selected_os"),
+      browsers: unique("selected_browser"),
+      products: [],
+    };
+  }
+  return { list, get, sessions, sessionHistory, report, productReport, filterOptions };
 }

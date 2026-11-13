@@ -16,7 +16,10 @@ const filters = pagination
     search: z.string().max(100).default(""),
     deviceType: z.enum(["mobile", "tablet", "desktop"]).optional(),
     browser: z.string().max(50).optional(),
-    product: z.string().max(160).optional(),
+    // Old tabs receive a controlled validation error rather than silently ignoring this filter.
+    product: z.never().optional(),
+    from: z.string().optional(),
+    to: z.string().optional(),
   })
   .strict();
 export function visitorReadRoutes(
@@ -26,11 +29,28 @@ export function visitorReadRoutes(
   const router = Router();
   router.use(authenticate(auth), requirePermission("customer_access.view"));
   router.get("/", async (req, res) => res.json(await service.list(validate(filters, req.query))));
-  router.get("/filter-options", async (_req, res) => res.json(await service.filterOptions()));
-  router.get("/report", async (_req, res) => res.json(await service.report()));
-  router.get("/:id/sessions", async (req, res) =>
-    res.json(await service.sessions(String(req.params.id), validate(pagination, req.query))),
+  router.get("/filter-options", async (req, res) =>
+    res.json(await service.filterOptions(validate(filters, req.query))),
   );
-  router.get("/:id", async (req, res) => res.json(await service.get(String(req.params.id))));
+  router.get("/report", async (req, res) =>
+    res.json(await service.report(validate(filters, req.query))),
+  );
+  router.get("/report/products", async (req, res) =>
+    res.json(await service.productReport(validate(filters, req.query))),
+  );
+  router.get("/:id/session-history", async (req, res) =>
+    res.json(
+      await service.sessionHistory(
+        String(req.params.id),
+        validate(filters.extend({ cursor: z.string().max(600).optional() }), req.query),
+      ),
+    ),
+  );
+  router.get("/:id/sessions", async (req, res) =>
+    res.json(await service.sessions(String(req.params.id), validate(filters, req.query))),
+  );
+  router.get("/:id", async (req, res) =>
+    res.json(await service.get(String(req.params.id), validate(filters, req.query))),
+  );
   return router;
 }

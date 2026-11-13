@@ -1,8 +1,6 @@
 import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 
 export const VISITOR_COOKIE_TTL_MS = 90 * 86400000;
-/** Legacy read adapter only; never use this value to delete stored history. */
-export const ANALYTICS_TTL_MS = VISITOR_COOKIE_TTL_MS;
 const signature = (value: string, secret: string) =>
   createHmac("sha256", secret).update(value).digest("base64url");
 export function createVisitorCookie(secret: string, now: Date): string {
