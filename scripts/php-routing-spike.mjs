@@ -151,7 +151,9 @@ for name in ['config.json','baseline.json','host-test.json','host-candidate.json
  if file.exists():assert file.is_file() and not file.is_symlink();file.unlink()
 private.rmdir()
 print(json.dumps({'probeRemoved':True,'keyRemoved':True,'rulesUnchanged':True,'versionUnchanged':True,'ready':True,'releaseId':version.get('releaseId')}))
-`.replaceAll("PRIVATE", privateDir).replace('PHP_HASH',createHash('sha256').update(source).digest('hex'));
+`
+    .replaceAll("PRIVATE", privateDir)
+    .replace("PHP_HASH", createHash("sha256").update(source).digest("hex"));
   await writeFile(join(workspace, "cleanup.local.py"), clean, { mode: 0o600 });
   await writeFile(join(workspace, "probe.php"), source);
   console.log(

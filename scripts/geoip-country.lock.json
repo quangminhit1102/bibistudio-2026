@@ -1,0 +1,13 @@
+{
+  "version": "dbip-country-lite-2026-11",
+  "url": "https://download.db-ip.com/free/dbip-country-lite-2026-11.mmdb.gz",
+  "vendorSha1": "09eea8433fe3eed71984fd6aac9d8ab3d9ca51f0",
+  "vendorDigestTarget": "mmdb",
+  "archiveSha256": "75fe430010f6d38a8c4331c202bf0df6ce3221a6e6d823b9e5a6d951e4cf9758",
+  "mmdbSha256": "145ce5dfb812d8de28547e6289bb5c5f8b3df2f1dea21d324d5b575e0431311f",
+  "archiveBytes": 4205904,
+  "mmdbBytes": 8515063,
+  "license": "CC-BY-4.0",
+  "attributionUrl": "https://db-ip.com",
+  "sourceUrl": "https://db-ip.com/db/download/ip-to-country-lite"
+}

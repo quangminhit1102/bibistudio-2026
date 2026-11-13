@@ -40,3 +40,4 @@ backend/dist/
 *.njsproj
 *.sln
 *.sw?
+/backend/geoip/

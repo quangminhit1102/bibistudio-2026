@@ -2,8 +2,10 @@ import { join } from "node:path";
 import { readdir } from "node:fs/promises";
 import { root, run } from "./runtime.mjs";
 import { ensureTestDatabase } from "./test-database.mjs";
+import { prepareCountryDataset } from "./prepare-geoip.mjs";
 const node = (file, args = [], options = {}) => run(process.execPath, [file, ...args], options);
 try {
+  await prepareCountryDataset();
   await node("node_modules/typescript/bin/tsc", ["--noEmit"]);
   await node("backend/node_modules/typescript/bin/tsc", ["-p", "backend/tsconfig.build.json"]);
   console.log(

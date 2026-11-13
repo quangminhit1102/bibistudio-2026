@@ -11,6 +11,7 @@ import profileMetadata from "../ops/profile-metadata.cjs";
 import accessLogMetadata from "../ops/access-log-metadata.cjs";
 import visitorMetadata from "../ops/visitor-metadata.cjs";
 import { writeAnalyticsCatalogue } from "./analytics-catalogue.mjs";
+import { prepareCountryDataset } from "./prepare-geoip.mjs";
 
 export async function validateBundle(dir) {
   for (const name of [
@@ -70,6 +71,7 @@ export async function buildRelease({
 } = {}) {
   sourceSha ??= execFileSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).trim();
   await writeAnalyticsCatalogue(root);
+  await prepareCountryDataset();
   const manifest = makeManifest(
     sourceSha,
     ciRunId,

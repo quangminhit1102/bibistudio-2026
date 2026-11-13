@@ -26,6 +26,7 @@
     "ipaddr.js": "2.5.0",
     "jpeg-js": "0.4.4",
     "jsonwebtoken": "9.0.3",
+    "maxmind": "5.0.9",
     "mysql2": "3.24.6",
     "pngjs": "7.0.0",
     "zod": "4.6.7"
