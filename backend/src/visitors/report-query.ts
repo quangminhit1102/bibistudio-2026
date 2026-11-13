@@ -10,7 +10,7 @@ export interface VisitorScope {
   deviceType?: string;
   browser?: string;
 }
-export function visitorCohort(input: VisitorScope, now: Date) {
+export function visitorCohort(input: VisitorScope, now: Date, contextAvailable = false) {
   const window = resolveVisitorWindow({ from: input.from, to: input.to }, now);
   const clauses = ["v.is_probe=0", "s.started_at>=?", "s.started_at<?"];
   const params: (string | Date)[] = [new Date(window.startUtc), new Date(window.endUtcExclusive)];
@@ -27,8 +27,11 @@ export function visitorCohort(input: VisitorScope, now: Date) {
     if ((search.includes(":") || /^(\d+\.){3}\d+$/.test(search)) && ipaddr.isValid(search))
       search = ipaddr.process(search).toString();
     const term = `%${search.replace(/[=%_]/g, (value) => "=" + value)}%`;
+    const knownAddress = contextAvailable
+      ? "(s.ip_status IN ('verified','observed') OR (s.ip_status='unavailable' AND s.ip_source='php_relay' AND s.ip_observed_at IS NOT NULL))"
+      : "s.ip_status IN ('verified','observed')";
     clauses.push(
-      "(IF(s.ip_status='verified',s.client_ip,NULL) LIKE ? ESCAPE '=' OR (s.ip_status='legacy' AND v.ip_prefix LIKE ? ESCAPE '='))",
+      `(IF(${knownAddress},s.client_ip,NULL) LIKE ? ESCAPE '=' OR (s.ip_status='legacy' AND v.ip_prefix LIKE ? ESCAPE '='))`,
     );
     params.push(term, term);
   }

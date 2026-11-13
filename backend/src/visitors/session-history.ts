@@ -3,6 +3,7 @@ import type { VisitorSessionDto } from "../http/contracts";
 import { sqlDate } from "../auth/repository";
 import type { Catalogue } from "./catalogue";
 import { ApiError } from "../http/errors";
+import { visitorContextDto } from "./context-dto";
 export const visitorIso = (value: string) => sqlDate(value).toISOString();
 export function readHistoryCursor(value: string | undefined, fingerprint: string) {
   if (value === undefined) return null;
@@ -46,8 +47,7 @@ export async function sessionDtos(
     visitorId: row.visitor_id,
     startedAt: visitorIso(row.started_at),
     lastReceivedAt: visitorIso(row.last_received_at),
-    ipAddress: row.ip_status === "verified" ? (row.client_ip ?? "") : "",
-    ipStatus: row.ip_status,
+    ...visitorContextDto(row),
     deviceType: row.selected_device,
     operatingSystem: row.selected_os,
     browser: row.selected_browser,

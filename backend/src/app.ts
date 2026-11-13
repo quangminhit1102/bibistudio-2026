@@ -16,6 +16,7 @@ import { analyticsRoutes, type AnalyticsOptions } from "./visitors/routes";
 import { visitorReadRoutes } from "./visitors/private-routes";
 import { createVisitorService } from "./visitors/service";
 import { visitorHistorySchemaStatus } from "./visitors/schema";
+import { visitorContextSchemaStatus } from "./visitors/context-schema";
 import { profileRoutes } from "./profile/routes";
 import { createProfileService } from "./profile/service";
 import { profileSchemaStatus } from "./profile/schema";
@@ -29,6 +30,7 @@ export interface AppOptions {
   analytics?: AnalyticsOptions;
   accessLogs?: { pool: Pool; schemaDirectory: string; currentEnabled?: boolean };
   visitorHistory?: { schemaDirectory: string };
+  visitorContext?: { schemaDirectory: string };
   profiles?: { schemaDirectory: string; assetDirectory: string; assets?: AvatarStore };
 }
 
@@ -51,7 +53,12 @@ export function createApp(release: ReleaseInfo, options: AppOptions = {}): Expre
     app.use(
       "/api/customer-access",
       visitorReadRoutes(
-        createVisitorService(options.db, options.analytics.catalogue, options.clock ?? systemClock),
+        createVisitorService(
+          options.db,
+          options.analytics.catalogue,
+          options.clock ?? systemClock,
+          !!options.visitorContext,
+        ),
         auth,
       ),
     );
@@ -121,7 +128,7 @@ export function createApp(release: ReleaseInfo, options: AppOptions = {}): Expre
         throw new ApiError(503, "PROFILE_NOT_READY", "Dịch vụ hồ sơ chưa sẵn sàng");
       }
     }
-    if (release.schemaVersion === 5 && !options.visitorHistory)
+    if ((release.schemaVersion ?? 0) >= 5 && !options.visitorHistory)
       throw new ApiError(503, "VISITOR_HISTORY_NOT_READY", "Dịch vụ phân tích chưa sẵn sàng");
     if (options.visitorHistory) {
       try {
@@ -132,6 +139,24 @@ export function createApp(release: ReleaseInfo, options: AppOptions = {}): Expre
           throw new Error();
       } catch {
         throw new ApiError(503, "VISITOR_HISTORY_NOT_READY", "Dịch vụ phân tích chưa sẵn sàng");
+      }
+    }
+    if (
+      (release.schemaVersion ?? 0) >= 6 &&
+      (!options.visitorContext ||
+        !options.analytics?.relaySecret ||
+        !options.analytics.countryLookup)
+    )
+      throw new ApiError(503, "VISITOR_CONTEXT_NOT_READY", "Dịch vụ phân tích chưa sẵn sàng");
+    if (options.visitorContext) {
+      try {
+        if (
+          (await visitorContextSchemaStatus(options.db, options.visitorContext.schemaDirectory))
+            .state !== "complete"
+        )
+          throw new Error();
+      } catch {
+        throw new ApiError(503, "VISITOR_CONTEXT_NOT_READY", "Dịch vụ phân tích chưa sẵn sàng");
       }
     }
     res.json({ ok: true });

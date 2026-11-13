@@ -14,6 +14,7 @@ import type { Catalogue } from "./catalogue";
 import { visitorCohort, visitorScopeFingerprint, type VisitorScope } from "./report-query";
 import { visitorBuckets, selectVisitorBucket } from "./date-window";
 import { readHistoryCursor, sessionDtos, visitorIso } from "./session-history";
+import { visitorContextDto } from "./context-dto";
 
 /** One report's aggregates share a nonlocking snapshot while collectors continue writing. */
 async function reportSnapshot<T>(
@@ -40,17 +41,19 @@ export interface VisitorQuery extends VisitorScope {
   search: string;
   product?: string;
 }
-export function createVisitorService(pool: Pool, catalogue: Catalogue, clock: Clock) {
-  const cohort = (input: VisitorScope = {}) => visitorCohort(input, clock.now());
+export function createVisitorService(
+  pool: Pool,
+  catalogue: Catalogue,
+  clock: Clock,
+  contextAvailable = false,
+) {
+  const cohort = (input: VisitorScope = {}) => visitorCohort(input, clock.now(), contextAvailable);
   const visitorSelect = `, ranked AS (SELECT selected.*,ROW_NUMBER() OVER(PARTITION BY visitor_id ORDER BY last_received_at DESC,id DESC) rn FROM selected), totals AS (SELECT visitor_id,COUNT(*) session_count,MIN(started_at) first_seen_at FROM selected GROUP BY visitor_id), pages AS (SELECT s.visitor_id,COUNT(DISTINCT p.path) distinct_page_count FROM selected s JOIN visitor_session_pages p ON p.session_id=s.id GROUP BY s.visitor_id)
     SELECT r.*,t.session_count,t.first_seen_at,COALESCE(p.distinct_page_count,0) distinct_page_count FROM ranked r JOIN totals t ON t.visitor_id=r.visitor_id LEFT JOIN pages p ON p.visitor_id=r.visitor_id WHERE r.rn=1`;
   const dto = (row: RowDataPacket): VisitorDto => ({
     id: row.visitor_id,
     anonymousId: `KH-${row.visitor_id.slice(0, 8)}`,
-    ipAddress: row.ip_status === "verified" ? (row.client_ip ?? "") : "",
-    ipStatus: row.ip_status ?? "legacy",
-    country: row.country,
-    city: row.city,
+    ...visitorContextDto(row),
     deviceType: row.selected_device,
     operatingSystem: row.selected_os,
     browser: row.selected_browser,

@@ -10,6 +10,9 @@ import { resolveClientAddress } from "../http/client-address";
 import { type Catalogue, publicPath } from "./catalogue";
 import { createVisitorCookie, deviceLabels, visitorIdentity } from "./normalize";
 import type { VerifiedProbe } from "./probe";
+import type { RelayObservation } from "./relay-context";
+import type { CountryLookup } from "./country-lookup";
+import { recordRelayReceipt, writeVisitorContext } from "./context-write";
 
 const batchSchema = z
   .object({
@@ -30,6 +33,9 @@ export interface CollectorContext {
   peer?: string;
   sourceVerified?: boolean;
   trustedCidrs?: string[];
+  contextEnabled?: boolean;
+  relayObservation?: RelayObservation;
+  countryLookup?: CountryLookup;
 }
 export interface CollectResult {
   status: 202 | 204;
@@ -92,7 +98,7 @@ export async function collectVisitor(
   const identity = visitorIdentity(context.cookie, context.idSecret, context.now);
   if (!identity)
     return { status: 202, cookie: { value: createVisitorCookie(context.idSecret, context.now) } };
-  const prefix = networkPrefix(context.ip);
+  const prefix = networkPrefix(context.relayObservation?.ip ?? context.ip);
   for (const [key, limit] of [
     [`analytics:network:${prefix}`, 120],
     ["analytics:global", 1200],
@@ -110,6 +116,8 @@ export async function collectVisitor(
     trustedCidrs: context.trustedCidrs ?? [],
   });
   await withTransaction(pool, async (connection) => {
+    const contextEnabled = context.contextEnabled ?? !!context.relayObservation;
+    if (contextEnabled) await recordRelayReceipt(connection, context.relayObservation, context.now);
     await connection.execute(
       "INSERT INTO visitors(id,identity_hash,ip_prefix,device_type,operating_system,browser,first_seen_at,last_seen_at,is_probe) VALUES (?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE id=id",
       [
@@ -155,6 +163,7 @@ export async function collectVisitor(
     let sessionId: string;
     let pageCount = 0;
     let productCount = 0;
+    let current: RowDataPacket | undefined;
     if (!previous || +context.now - +sqlDate(previous.last_received_at) > 30 * 60000) {
       sessionId = randomUUID();
       await connection.execute(
@@ -165,23 +174,38 @@ export async function collectVisitor(
         visitor.id,
       ]);
     } else {
+      current = previous;
       sessionId = previous.id;
       pageCount = previous.page_count;
       productCount = previous.product_count;
     }
-    await connection.execute(
-      "UPDATE visitor_sessions SET client_ip=IF(?='verified',?,client_ip),ip_status=IF(?='verified','verified',IF(ip_status='verified','verified','unavailable')),device_type=?,operating_system=?,browser=? WHERE id=? AND last_received_at<=?",
-      [
-        clientAddress.status,
-        clientAddress.address,
-        clientAddress.status,
-        labels.device,
-        labels.os,
-        labels.browser,
+    if (contextEnabled) {
+      await writeVisitorContext(connection, {
         sessionId,
-        context.now,
-      ],
-    );
+        current,
+        verifiedAddress: clientAddress.address,
+        observation: context.relayObservation,
+        countryLookup: context.countryLookup,
+        now: context.now,
+      });
+      await connection.execute(
+        "UPDATE visitor_sessions SET device_type=?,operating_system=?,browser=? WHERE id=? AND last_received_at<=?",
+        [labels.device, labels.os, labels.browser, sessionId, context.now],
+      );
+    } else
+      await connection.execute(
+        "UPDATE visitor_sessions SET client_ip=IF(?='verified',?,client_ip),ip_status=IF(?='verified','verified',IF(ip_status='verified','verified','unavailable')),device_type=?,operating_system=?,browser=? WHERE id=? AND last_received_at<=?",
+        [
+          clientAddress.status,
+          clientAddress.address,
+          clientAddress.status,
+          labels.device,
+          labels.os,
+          labels.browser,
+          sessionId,
+          context.now,
+        ],
+      );
     const pages = await associations(
       connection,
       sessionId,

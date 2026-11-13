@@ -7,6 +7,8 @@ import type { Catalogue } from "./catalogue";
 import { collectVisitor } from "./collector";
 import { VISITOR_COOKIE_TTL_MS } from "./normalize";
 import { verifyProbeMarker } from "./probe";
+import { verifyRelayContext, readRelayCookie } from "./relay-context";
+import type { CountryLookup } from "./country-lookup";
 
 export interface AnalyticsOptions {
   pool: Pool;
@@ -16,6 +18,8 @@ export interface AnalyticsOptions {
   probeSecret?: string;
   clientIpSourceVerified?: boolean;
   trustedProxyCidrs?: string[];
+  relaySecret?: string;
+  countryLookup?: CountryLookup;
 }
 export const ANALYTICS_COOKIE = "bibi_visitor";
 export function analyticsRoutes(
@@ -40,11 +44,33 @@ export function analyticsRoutes(
     try {
       const marker = req.get("X-Bibi-Probe");
       const now = clock.now();
+      const signed =
+        req.headers["x-bibi-relay-context"] !== undefined ||
+        req.headers["x-bibi-relay-signature"] !== undefined;
+      const cookie = signed
+        ? readRelayCookie(req.headers.cookie)
+        : typeof req.cookies?.[ANALYTICS_COOKIE] === "string"
+          ? req.cookies[ANALYTICS_COOKIE]
+          : undefined;
+      const relayObservation = signed
+        ? verifyRelayContext({
+            context: req.headers["x-bibi-relay-context"],
+            signature: req.headers["x-bibi-relay-signature"],
+            rawBody: res.locals.analyticsRawBody ?? Buffer.alloc(0),
+            cookie: cookie ?? "",
+            origin: req.get("origin") ?? "",
+            userAgent: req.get("user-agent") ?? "",
+            dnt: req.get("DNT") === "1",
+            gpc: req.get("Sec-GPC") === "1",
+            now,
+            secret: options.relaySecret ?? "",
+          })
+        : undefined;
       const result = await collectVisitor(options.pool, req.body, {
-        cookie:
-          typeof req.cookies?.[ANALYTICS_COOKIE] === "string"
-            ? req.cookies[ANALYTICS_COOKIE]
-            : undefined,
+        cookie,
+        relayObservation,
+        countryLookup: options.countryLookup,
+        contextEnabled: !!options.relaySecret,
         ip: req.ip ?? "unknown",
         peer: req.socket.remoteAddress,
         sourceVerified: options.clientIpSourceVerified ?? false,

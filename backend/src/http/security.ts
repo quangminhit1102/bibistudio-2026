@@ -36,7 +36,14 @@ export function installSecurity(app: Express, config: SecurityConfig): void {
     }
     next();
   });
-  const json = express.json({ limit: "16kb", strict: true });
+  const json = express.json({
+    limit: "16kb",
+    strict: true,
+    verify(req, res, bytes) {
+      if (req.method === "POST" && req.url?.split("?")[0] === "/api/analytics/collect")
+        (res as express.Response).locals.analyticsRawBody = Buffer.from(bytes);
+    },
+  });
   app.use((req, res, next) => {
     // Avatar envelopes are bounded and parsed only after authentication/preflight.
     if (

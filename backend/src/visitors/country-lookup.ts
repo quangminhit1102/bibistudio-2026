@@ -1,4 +1,5 @@
 import { readFile } from "node:fs/promises";
+import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { Reader, CountryResponse } from "maxmind";
 import ipaddr from "ipaddr.js";
@@ -64,7 +65,21 @@ export async function openCountryLookup({
   sha256: string;
   version: string;
 }): Promise<CountryLookup> {
-  const bytes = await readFile(file);
+  return validatedLookup(await readFile(file), sha256, version);
+}
+/** Adapter for the existing synchronous runtime factory; shares the same validation. */
+export function openCountryLookupSync({
+  file,
+  sha256,
+  version,
+}: {
+  file: string;
+  sha256: string;
+  version: string;
+}): CountryLookup {
+  return validatedLookup(readFileSync(file), sha256, version);
+}
+function validatedLookup(bytes: Buffer, sha256: string, version: string): CountryLookup {
   if (!/^[a-f0-9]{64}$/.test(sha256) || createHash("sha256").update(bytes).digest("hex") !== sha256)
     throw new Error("Country MMDB checksum mismatch");
   if (!version || version.length > 80) throw new Error("Invalid country dataset version");

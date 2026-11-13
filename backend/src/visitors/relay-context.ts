@@ -75,3 +75,28 @@ export function verifyRelayContext(input: RelayVerification): RelayObservation {
     throw invalid();
   }
 }
+
+/** Match PHP's one anonymous-cookie value; duplicate path scopes cannot choose identity silently. */
+export function readRelayCookie(raw: unknown): string {
+  if (raw !== undefined && typeof raw !== "string")
+    throw new ApiError(403, "INVALID_RELAY_CONTEXT", "Ngữ cảnh truy cập không hợp lệ");
+  let found: string | undefined;
+  try {
+    for (const part of ((raw as string | undefined) ?? "").split(";")) {
+      const entry = part.trim(),
+        split = entry.indexOf("=");
+      if (entry.slice(0, split) !== "bibi_visitor") continue;
+      const value = decodeURIComponent(entry.slice(split + 1));
+      if (
+        value.length > 512 ||
+        !/^[A-Za-z0-9._~-]*$/.test(value) ||
+        (found !== undefined && found !== value)
+      )
+        throw new Error();
+      found = value;
+    }
+  } catch {
+    throw new ApiError(403, "INVALID_RELAY_CONTEXT", "Ngữ cảnh truy cập không hợp lệ");
+  }
+  return found ?? "";
+}

@@ -1,9 +1,10 @@
 import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { resolve, dirname } from "node:path";
 import type { AppOptions } from "./app";
 import { readAuthConfig, readDbConfig, readProfileConfig, systemClock, type Clock } from "./config";
 import { createDbPool } from "./db/pool";
 import { createCatalogue } from "./visitors/catalogue";
+import { openCountryLookupSync, type CountryLookup } from "./visitors/country-lookup";
 
 /** Synchronous app dependencies; no schema or account mutation during startup. */
 export function createRuntime(env: NodeJS.ProcessEnv = process.env, clock: Clock = systemClock) {
@@ -20,6 +21,25 @@ export function createRuntime(env: NodeJS.ProcessEnv = process.env, clock: Clock
   const catalogue = createCatalogue(
     JSON.parse(readFileSync(resolve(__dirname, "../analytics-catalogue.json"), "utf8")),
   );
+  let countryLookup: CountryLookup | undefined;
+  if (env.ANALYTICS_RELAY_SECRET || env.GEOIP_COUNTRY_FILE) {
+    if (
+      !env.ANALYTICS_RELAY_SECRET ||
+      !/^[A-Za-z0-9_-]{43}$/.test(env.ANALYTICS_RELAY_SECRET) ||
+      Buffer.from(env.ANALYTICS_RELAY_SECRET, "base64url").toString("base64url") !==
+        env.ANALYTICS_RELAY_SECRET ||
+      !env.GEOIP_COUNTRY_FILE
+    )
+      throw new Error("Analytics relay configuration missing or invalid");
+    const metadata = JSON.parse(
+      readFileSync(resolve(dirname(env.GEOIP_COUNTRY_FILE), "country.lock.json"), "utf8"),
+    );
+    countryLookup = openCountryLookupSync({
+      file: env.GEOIP_COUNTRY_FILE,
+      sha256: metadata.mmdbSha256,
+      version: metadata.version,
+    });
+  }
   const db = createDbPool(database);
   const collector = createDbPool({ ...database, connectionLimit: 2 });
   const appOptions: AppOptions = {
@@ -30,6 +50,9 @@ export function createRuntime(env: NodeJS.ProcessEnv = process.env, clock: Clock
       ? { profiles: { ...profiles, schemaDirectory: resolve(__dirname, "../profile-migrations") } }
       : {}),
     visitorHistory: { schemaDirectory: resolve(__dirname, "../visitor-migrations") },
+    ...(countryLookup
+      ? { visitorContext: { schemaDirectory: resolve(__dirname, "../visitor-context-migrations") } }
+      : {}),
     analytics: {
       pool: collector,
       catalogue,
@@ -38,8 +61,19 @@ export function createRuntime(env: NodeJS.ProcessEnv = process.env, clock: Clock
       probeSecret: env.RELEASE_PROBE_SECRET,
       clientIpSourceVerified: config.clientIpSourceVerified,
       trustedProxyCidrs: config.trustProxy || [],
+      relaySecret: env.ANALYTICS_RELAY_SECRET,
+      countryLookup,
     },
   };
   let closing: Promise<unknown> | undefined;
-  return { appOptions, close: () => (closing ??= Promise.all([db.end(), collector.end()])) };
+  return {
+    appOptions,
+    close: () => {
+      if (!closing) {
+        countryLookup?.close();
+        closing = Promise.all([db.end(), collector.end()]);
+      }
+      return closing;
+    },
+  };
 }

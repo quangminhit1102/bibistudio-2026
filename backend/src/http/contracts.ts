@@ -51,7 +51,14 @@ export interface AuditDto {
   metadata: Record<string, unknown> | null;
   createdAt: string;
 }
-export interface VisitorDto {
+export interface VisitorContextFields {
+  ipSource?: string | null;
+  observedAt?: string | null;
+  countryCode?: string | null;
+  countryDataset?: string | null;
+  countryResolvedAt?: string | null;
+}
+export interface VisitorDto extends VisitorContextFields {
   id: string;
   anonymousId: string;
   ipAddress: string;
@@ -66,11 +73,12 @@ export interface VisitorDto {
   sessionCount: number;
   distinctPageCount: number;
 }
-export interface VisitorSessionDto {
+export interface VisitorSessionDto extends VisitorContextFields {
   id: string;
   visitorId: string;
   ipAddress?: string;
   ipStatus?: VisitorIpStatus;
+  country?: string | null;
   deviceType?: string;
   operatingSystem?: string;
   browser?: string;
@@ -93,7 +101,7 @@ export interface VisitorReportDto {
   series?: { startUtc: string; label: string; sessions: number }[];
   products: { slug: string; name: string; interestedVisitors: number }[];
 }
-export type VisitorIpStatus = "verified" | "legacy" | "unavailable";
+export type VisitorIpStatus = "verified" | "observed" | "legacy" | "unavailable";
 export type VisitorBucketUnit = "hour" | "day" | "week" | "month" | "year";
 export interface VisitorWindowDto {
   fromDate: string;
