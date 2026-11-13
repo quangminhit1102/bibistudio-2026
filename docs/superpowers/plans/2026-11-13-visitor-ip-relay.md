@@ -42,7 +42,7 @@ Plan chọn feature `visitorContext` version1, ledger `visitor_context_schema_mi
 
 Env mới: `ANALYTICS_RELAY_SECRET`43ký tự base64url của32byte random; `ANALYTICS_RELAY_TARGET`URL cố định HTTPS /api/analytics/collect ở production (HTTP loopback/host.docker.internal chỉ local); `GEOIP_COUNTRY_FILE`đường MMDB private/candidate. Runtime đọc private env hiện có, PHP loader đọc config riêng0600 chỉ gồm secret/target/origin allowlist và current root. Không đưa secret vào Docker CLI args/logs; mount file0600 readonly.
 
-## Task1: Prove narrow PHP routing and cookie preservation on hosting
+### Task 1: Prove narrow PHP routing and cookie preservation on hosting
 
 **Files:** create `scripts/php-routing-spike.mjs`; report `docs/superpowers/reports/2026-11-13-visitor-relay-routing-spike.md`; ignored artifacts under this plan workspace.
 **Interfaces:** produces measured routing decision for `/api/analytics/relay/collect.php`; no app implementation until result passes. Spike is throwaway, not production code.
@@ -53,7 +53,7 @@ Env mới: `ANALYTICS_RELAY_SECRET`43ký tự base64url của32byte random; `ANA
 - [ ] Step4: Remove exact probe/key/files, verify endpoint unavailable and original hashes/ready/version unchanged. Expected: measured PASS sufficient to preserve /api/analytics cookie; otherwise STOP and bring routing alternatives back to owner. No speculative fallback broadens cookie to /.
 - [ ] Step5: Commit evidence report and reusable local spike driver only; no probe secret or public debug endpoint in release.
 
-## Task2: Pin offline country dataset and implement bounded lookup
+### Task 2: Pin offline country dataset and implement bounded lookup
 
 **Files:** create `scripts/prepare-geoip.mjs`, `scripts/geoip-country.lock.json`, `scripts/prepare-geoip.test.mjs`, `backend/src/visitors/country-lookup.ts`, `backend/test/country-lookup.test.mjs`; modify backend package/lock and build asset preparation.
 **Interfaces:** `openCountryLookup({file,sha256,version}): Promise<CountryLookup>`; `CountryLookup.lookup(ip:string): {code:string,name:string,dataset:string}|null`, `close():void`. Cache at most1024entries, key IP+dataset version; cache misses too.
@@ -64,7 +64,7 @@ Env mới: `ANALYTICS_RELAY_SECRET`43ký tự base64url của32byte random; `ANA
 - [ ] Step4: Implement downloader with size/time caps32MiB compressed/64MiB expanded, no request-time network. Store generated MMDB in ignored backend/geoip and package later. Pure reader loaded once; lookup errors return null, startup integrity failure blocks candidate.
 - [ ] Step5: Run targeted tests after backend compilation, expected GREEN; verify metadata IPv6 and real positive fixtures. Commit source/lock/package lock, not downloaded binary to Git.
 
-## Task3: Implement PHP ↔ Node signed collector envelope
+### Task 3: Implement PHP ↔ Node signed collector envelope
 
 **Files:** create PHP files above, `backend/src/visitors/relay-context.ts`, `backend/test/relay-context.test.mjs`, `scripts/php-context.test.mjs`, `scripts/php-relay.mjs`, `scripts/php-relay.test.mjs`.
 **Interfaces:** `RelayFields={version:1,timestamp:number,requestId:string,method:'POST',path:'/api/analytics/collect',bodySha256:string,ip:string,origin:string,cookieSha256:string,userAgent:string,dnt:boolean,gpc:boolean}`; `verifyRelayContext({context,signature,rawBody,cookie,origin,userAgent,dnt,gpc,now,secret}): RelayObservation` where observation `{ip,observedAt,requestId,source:'php_relay'}` or ApiError. Missing envelope is handled by routes as legacy, not by verifier.
@@ -75,7 +75,7 @@ Env mới: `ANALYTICS_RELAY_SECRET`43ký tự base64url của32byte random; `ANA
 - [ ] Step4: Implement verifier constant-time signature, recompute body/cookie/other fields against actual forwarded request, canonical public address. PHP source never becomes Express trust proxy. Raw IP is not returned to frontend by relay.
 - [ ] Step5: Run vectors plus actual PHP→HTTP fake upstream tests for cookie/timeout/body/error/privacy, expected GREEN; commit. Local source needs ability to use a private test-only fixed HTTP upstream, production HTTPS only.
 
-## Task4: Add context schema, atomic receipts and collector metadata
+### Task 4: Add context schema, atomic receipts and collector metadata
 
 **Files:** create migration/schema/CLI above and `backend/test/visitor-context-schema.test.mjs`, `visitor-context-collector.test.mjs`; modify `backend/src/visitors/{collector,routes,service,session-history,report-query}.ts`, `backend/src/{runtime,app}.ts`, `backend/src/http/{security,contracts}.ts`.
 **Interfaces:** `visitorContextSchemaStatus(pool,directory)`, `migrateVisitorContext(pool,directory)` mirror feature ledger conventions; CLI migrate/status. `CollectorContext` adds optional `relayObservation`, `countryLookup`; shared `VisitorIpStatus` adds `observed`; visitor/session DTO optional source/countryCode/countryDataset/observedAt fields for incremental compatibility.
@@ -86,7 +86,7 @@ Env mới: `ANALYTICS_RELAY_SECRET`43ký tự base64url của32byte random; `ANA
 - [ ] Step4: Update projections/search to expose observed or verified public IP; legacy prefix never claimed full IP. Snapshot country/name corresponds to selected session; old visitor country remains fallback only for legacy rows. Analytics network throttle may use validated relay IP, auth still original context. Update runtime/readiness for capability/config/dataset.
 - [ ] Step5: Run targeted DB tests and FE/BE typechecks, GREEN; commit. Preserve rollback-readable old columns and do not modify retired log feature.
 
-## Task5: Route frontend analytics through relay and show source/estimated country
+### Task 5: Route frontend analytics through relay and show source/estimated country
 
 **Files:** modify `src/lib/visitor-runtime.ts`, analytics server API/session list, shared contracts; create `tests/admin/visitor-relay-transport.test.ts`, `visitor-context-display.test.tsx` and backend route compatibility tests.
 **Interfaces:** `sendVisitorBatch(batch,options):Promise<{status:number}>` uses PHP fixed URL, sends no client IP or secret; fallback to existing Node URL at most once for network/404/502/503/504, never for validation403/409/413/429. Existing tracker controls subsequent retry count and15second batch interval.
@@ -95,7 +95,7 @@ Env mới: `ANALYTICS_RELAY_SECRET`43ký tự base64url của32byte random; `ANA
 - [ ] Step2: Implement small transport seam, preserve tracker queues/bootstrapLock/privacy logic and avoid per-click requests. Add source/estimate copy to existing table and session popup plus DB-IP attribution link; maintain selected-date contract and existing chart layout. No log source menu.
 - [ ] Step3: Run `npm run test:admin -- <new files>` and relevant tracker tests plus backend route tests, expected GREEN; check responsive rendering locally once Task6 makes real PHP available; commit.
 
-## Task6: Preserve one-command local/preview and add real browser acceptance
+### Task 6: Preserve one-command local/preview and add real browser acceptance
 
 **Files:** modify `scripts/{dev,preview,local-database,check}.mjs`, `vite.local.config.ts`, `.github/workflows/ci.yml` (upload relay browser evidence); create `scripts/visitor-relay-ui-check.mjs`; reuse `scripts/php-relay.mjs`; update dev/watcher/preview tests and `.env.example`.
 **Interfaces:** PHP helper `startPhpRelay({port,targetUrl,configFile,sourceDirectory,signal}):Promise<{url,close}>`; Node/FE own lifecycle closes relay too. Dedicated readiness verifies configured PHP relay separately from Node /api/ready.
@@ -105,7 +105,7 @@ Env mới: `ANALYTICS_RELAY_SECRET`43ký tự base64url của32byte random; `ANA
 - [ ] Step3: Browser test FE→PHP→Express→real MySQL with eligible public test peer injected only by isolated test router, server private config and deterministic clock. Assert cookie identity survives202→204, country in UI, header forgery rejected, new session metadata/order correct, no extra visit per reload within30minutes, one unavailable lookup doesn't lose interests. Test body/privacy/cookie substitutions, replay concurrency, oversize, PHP upstream failure bounded fallback, DNT/GPC and opt-out. Capture desktop/mobile/screenshots and no console errors.
 - [ ] Step4: Run lifecycle tests and real browser suite GREEN, then full `npm run check` with real DB/PHP. Clearly separate synthetic peer tests from live source measurement. Commit and document daily commands unchanged.
 
-## Task7: Package manifest6, stable PHP loader and compatible rollback
+### Task 7: Package manifest6, stable PHP loader and compatible rollback
 
 **Files:** create ops metadata/lifecycle/PHP files above; modify `ops/{release,receiver,deploy,database-lifecycle}.cjs`, `scripts/{build,release-manifest,smoke,deploy-client}.mjs`, backend release/readiness; tests `scripts/visitor-context-{release,rollback}.test.mjs` plus build/receiver/manifest suites.
 **Interfaces:** `visitorContext` metadata defined above; host tool `context-status|context-migrate` fixed allowlist. `prepareVisitorContext(config,current,candidate,{backupReceipt,run})` validates integrity, requires paired native backup, migrates/status before activation, no log/cron side effect. Stable loader uses known root/current/manifest and feature check, never request-derived path.
@@ -115,7 +115,7 @@ Env mới: `ANALYTICS_RELAY_SECRET`43ký tự base64url của32byte random; `ANA
 - [ ] Step3: RED→GREEN actual pinned v5 backend after context DDL: auth/profile/readiness work and all original visitor data/observed fields remain; active v6→v5 disables PHP capability safely and frontend availability fallback writes unknown, no loss of history or secret leak. Forward restores v6/data, no new importer/TTLcron. Never select compatible tools solely from a random retained release; use current/candidate as existing lifecycle conventions.
 - [ ] Step4: Run build/receiver/manifest/lifecycle/rollback targeted suites GREEN. Document loader/config bootstrap exact checksums and preserved old root routing. Commit.
 
-## Task8: Final acceptance, production release and handover
+### Task 8: Final acceptance, production release and handover
 
 **Files:** update `docs/{build-and-deploy,visitor-analytics-operations}.md`; create local/live acceptance report under `docs/superpowers/reports/`; ignored evidence under this plan workspace.
 
