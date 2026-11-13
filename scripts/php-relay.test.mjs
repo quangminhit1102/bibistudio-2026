@@ -219,3 +219,19 @@ test(
     }
   },
 );
+
+test("runtime image first download has its own bounded preparation deadline", async () => {
+  const { ensurePhpImage } = await import("./php-relay.mjs");
+  assert.equal(typeof ensurePhpImage, "function");
+  const calls = [];
+  const run = async (args, options) => {
+    calls.push({ args, options });
+    if (args[0] === "image") throw new Error("not cached");
+    return { stdout: "" };
+  };
+  await ensurePhpImage(run);
+  assert.equal(calls.length, 2);
+  assert.equal(calls[1].args[0], "pull");
+  assert.match(calls[1].args[1], /^php:8\.4-cli@sha256:/);
+  assert.equal(calls[1].options.timeout, 120000);
+});

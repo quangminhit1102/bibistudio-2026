@@ -21,9 +21,14 @@ export async function sendVisitorBatch(
   } catch {
     /* A network failure may use the one unsigned fallback. */
   }
-  if (response && !unavailable.has(response.status)) return { status: response.status };
-  await response?.body?.cancel().catch(() => {});
+  if (response) {
+    // A status-only API still needs its response drained to finish browser fetches.
+    // A failed body read after headers must not replay an already accepted batch.
+    await response.arrayBuffer().catch(() => {});
+    if (!unavailable.has(response.status)) return { status: response.status };
+  }
   if (!allowed()) return { status: 204 };
   const fallback = await fetcher("/api/analytics/collect", request);
+  await fallback.arrayBuffer().catch(() => {});
   return { status: fallback.status };
 }

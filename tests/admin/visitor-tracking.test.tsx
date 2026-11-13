@@ -10,7 +10,7 @@ afterEach(() => {
 });
 it("StrictMode cleans timers/listeners, tracks committed public routes and footer opt-out clears only analytics", async () => {
   vi.useFakeTimers();
-  const send = vi.fn().mockResolvedValue({ status: 204 });
+  const send = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
   vi.stubGlobal("fetch", send);
   const view = render(
     <StrictMode>
@@ -61,4 +61,10 @@ it("GPC sends nothing and provides a clear disabled control", async () => {
   } finally {
     Reflect.deleteProperty(navigator, "globalPrivacyControl");
   }
+});
+
+it("privacy copy describes full IP and retained history without promising automatic erasure", () => {
+  render(<AnalyticsPrivacyControl />);
+  expect(screen.getByText(/IP công khai/)).toBeInTheDocument();
+  expect(screen.queryByText(/Dữ liệu cũ tự hết hạn/)).not.toBeInTheDocument();
 });

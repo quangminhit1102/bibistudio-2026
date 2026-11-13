@@ -68,3 +68,15 @@ describe("visitor PHP transport", () => {
     expect(changing).toHaveBeenCalledTimes(1);
   });
 });
+
+it("drains status-only responses so browser requests can finish and release their body", async () => {
+  const relayResponse = new Response("{}", { status: 202 });
+  const fetcher = vi.fn().mockResolvedValue(relayResponse);
+  expect((await sendVisitorBatch(batch, { keepalive: false, fetch: fetcher })).status).toBe(202);
+  expect(relayResponse.bodyUsed).toBe(true);
+  const unavailable = new Response("{}", { status: 503 }),
+    fallback = new Response("{}", { status: 202 });
+  const fallbackFetch = vi.fn().mockResolvedValueOnce(unavailable).mockResolvedValueOnce(fallback);
+  await sendVisitorBatch(batch, { keepalive: false, fetch: fallbackFetch });
+  expect(fallback.bodyUsed).toBe(true);
+});

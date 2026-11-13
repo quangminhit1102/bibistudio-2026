@@ -74,7 +74,10 @@ export function ServerVisitorDetail({ id, scope }: { id: string; scope?: Visitor
             ["Số phiên trong khoảng ngày", v.sessionCount],
             ["Trang khác nhau đã ghi nhận", v.distinctPageCount],
           ].map(([label, value]) => (
-            <div key={String(label)}>
+            <div
+              key={String(label)}
+              className={label === "IP công khai" ? "a-visitor-ip-field" : undefined}
+            >
               <dt>{label}</dt>
               <dd className="a-visitor-ip">{value}</dd>
             </div>

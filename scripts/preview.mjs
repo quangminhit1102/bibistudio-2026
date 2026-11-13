@@ -4,6 +4,7 @@ import { readFile, stat, symlink, unlink } from "node:fs/promises";
 import { resolve, join, extname, sep } from "node:path";
 import { validateBundle } from "./build.mjs";
 import { isMain, root } from "./runtime.mjs";
+import { startLocalAnalyticsRelay, proxyLocalRelay } from "./local-analytics-relay.mjs";
 
 export async function previewRelease(
   bundleDir,
@@ -20,7 +21,7 @@ export async function previewRelease(
     process.platform === "win32" ? "junction" : "dir",
   );
   const require = createRequire(join(bundleDir, "backend/package.json"));
-  let runtime, api;
+  let runtime, api, relay;
   try {
     const { createApp } = require(join(bundleDir, "backend/dist/app.js"));
     if (manifest.database)
@@ -29,6 +30,7 @@ export async function previewRelease(
       throw new Error("Profile preview requires explicit local setup and private asset directory");
     api = createApp(manifest, runtime?.appOptions);
   } catch (error) {
+    await runtime?.close();
     await unlink(dependencyLink);
     throw error;
   }
@@ -47,6 +49,8 @@ export async function previewRelease(
   const server = createServer(async (req, res) => {
     try {
       const pathname = decodeURIComponent(new URL(req.url, "http://localhost").pathname);
+      if (pathname === "/api/analytics/relay/collect.php" && relay)
+        return proxyLocalRelay(req, res, relay.url);
       if (pathname === "/api" || pathname.startsWith("/api/")) return api(req, res);
       if (!["GET", "HEAD"].includes(req.method)) {
         res.writeHead(405);
@@ -94,17 +98,38 @@ export async function previewRelease(
   }
   const address = server.address();
   const url = `http://127.0.0.1:${address.port}`;
-  console.log(`BIBI_PREVIEW ${url}/api-test`);
-  return {
-    url,
-    close: async () => {
+  let closing;
+  const close = () =>
+    (closing ??= (async () => {
+      await relay?.close();
       await new Promise((done) => {
         server.closeAllConnections();
         server.close(done);
       });
       await unlink(dependencyLink);
       await runtime?.close();
-    },
+    })());
+  try {
+    if (runtime?.appOptions?.analytics?.relaySecret) {
+      const origins = runtime.appOptions.config.allowedOrigins;
+      for (const origin of [url, `http://localhost:${address.port}`])
+        if (!origins.includes(origin)) origins.push(origin);
+      relay = await startLocalAnalyticsRelay({
+        env: { ...runtimeEnv, AUTH_ALLOWED_ORIGINS: origins.join(",") },
+        backendPort: address.port,
+        frontendPort: address.port,
+        sourceDirectory: join(bundleDir, "backend/relay"),
+      });
+    }
+  } catch (error) {
+    await close();
+    throw error;
+  }
+  console.log(`BIBI_PREVIEW ${url}/api-test`);
+  return {
+    url,
+    relayUrl: relay?.url,
+    close,
   };
 }
 if (isMain(import.meta.url)) {

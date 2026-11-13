@@ -42,6 +42,7 @@ jobs:
             ops/package-lock.json
       - run: npm ci
       - run: node node_modules/playwright/cli.js install --with-deps chromium
+      - run: docker pull php:8.4-cli@sha256:d63e8b80cd4c6cfd01cfa7c910522e299cdc7ca1a2b6d6563db48df3c17e6c55
       - run: npm run check
         env:
           BIBI_TEST_DB_CONTAINER: ${{ job.services.mysql.id }}
@@ -55,6 +56,8 @@ jobs:
             .superpowers/e2e/access-logs/*.png
             .superpowers/e2e/admin-usability/*.png
             .superpowers/e2e/profile/*.png
+            .superpowers/e2e/visitor-analytics/*.png
+            .superpowers/e2e/visitor-relay/*.png
           include-hidden-files: true
           if-no-files-found: ignore
           retention-days: 7

@@ -25,7 +25,7 @@ async function capture(page, path) {
 test(
   "real MySQL/browser: public interest, visitor-only User, refresh, admin accounts and mobile UI",
   { timeout: 240000 },
-  async () => {
+  async (t) => {
     const cleanup = [];
     const f = await createAuthFixture({ after: (fn) => cleanup.push(fn) });
     f.clock.set(new Date());
@@ -75,11 +75,20 @@ test(
         else process.env.BACKEND_PORT = previous;
       }
       await frontend.listen();
+      console.log("auth-e2e: Vite ready");
       await frontend.warmupRequest("/src/main.tsx");
       await frontend.warmupRequest("/src/features/admin/shell/admin-entry.tsx");
       const base = `http://127.0.0.1:${frontend.httpServer.address().port}`;
       runtime.appOptions.config.allowedOrigins.splice(0, 1, base);
+      console.log("auth-e2e: modules warmed");
       browser = await chromium.launch();
+      t.signal.addEventListener(
+        "abort",
+        () => {
+          void browser.close().catch(() => {});
+        },
+        { once: true },
+      );
       const evidence = resolve(".superpowers/e2e/auth");
       await mkdir(evidence, { recursive: true });
       const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
@@ -99,7 +108,9 @@ test(
           () => null,
           (error) => error,
         );
+      console.log("auth-e2e: public navigation");
       await page.goto(base + "/products/da-lat-map-notebook");
+      console.log("auth-e2e: public loaded");
       await page.getByRole("heading", { level: 1 }).waitFor();
       const collectionError = await collection;
       if (collectionError) throw collectionError;

@@ -33,9 +33,9 @@ export function AnalyticsPrivacyControl() {
         Quyền riêng tư khi truy cập
       </summary>
       <p className="my-2">
-        BiBi ghi nhận các trang và sản phẩm được quan tâm bằng cookie riêng trong tối đa 90 ngày. IP
-        được che; không thu thập vị trí chính xác hoặc nội dung biểu mẫu. Không liên kết với tài
-        khoản quản trị.
+        BiBi ghi nhận các trang và sản phẩm được quan tâm bằng cookie riêng trong tối đa 90 ngày.
+        Khi có nguồn phù hợp, website lưu IP công khai và ước lượng quốc gia; không thu thập vị trí
+        chính xác hoặc nội dung biểu mẫu. Không liên kết với tài khoản quản trị.
       </p>
       <label className="flex min-h-11 cursor-pointer items-center gap-3">
         <input
@@ -49,8 +49,8 @@ export function AnalyticsPrivacyControl() {
       </label>
       {privacySignal && <p>Đã tắt theo lựa chọn DNT/GPC của trình duyệt.</p>}
       <p className="mt-2">
-        Tắt sẽ dừng ghi nhận mới và xóa cookie analytics của trình duyệt này. Dữ liệu cũ tự hết hạn;
-        cookie đăng nhập không bị ảnh hưởng.
+        Tắt sẽ dừng ghi nhận mới và xóa cookie analytics của trình duyệt này. Lịch sử đã ghi nhận
+        vẫn được giữ; cookie đăng nhập không bị ảnh hưởng.
       </p>
     </details>
   );

@@ -55,3 +55,23 @@ test("download enforces status, time and streamed byte cap without redirects", a
     /404/,
   );
 });
+
+test("cached preparation writes runtime metadata without a network request", async () => {
+  const { mkdtemp, writeFile, readFile, rm } = await import("node:fs/promises");
+  const { tmpdir } = await import("node:os");
+  const { join } = await import("node:path");
+  const { prepareCountryDataset } = await import("./prepare-geoip.mjs");
+  const dir = await mkdtemp(join(tmpdir(), "bibi-prepared-country-"));
+  try {
+    const file = join(dir, "country.mmdb"),
+      lockFile = join(dir, "source.lock.json");
+    await writeFile(file, bytes);
+    await writeFile(lockFile, JSON.stringify({ ...lock, version: "fixture" }));
+    await prepareCountryDataset({ file, lockFile });
+    const metadata = JSON.parse(await readFile(join(dir, "country.lock.json"), "utf8"));
+    assert.equal(metadata.mmdbSha256, lock.mmdbSha256);
+    assert.equal(metadata.version, "fixture");
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});

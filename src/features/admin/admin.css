@@ -3006,3 +3006,8 @@
   min-width: 0;
   overflow-wrap: anywhere;
 }
+@media (max-width: 600px) {
+  .admin-root .a-visitor-detail .a-key-values .a-visitor-ip-field {
+    grid-column: 1 / -1;
+  }
+}

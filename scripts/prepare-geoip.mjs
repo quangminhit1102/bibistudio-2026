@@ -1,7 +1,7 @@
 import { readFile, mkdir, writeFile, rename, rm } from "node:fs/promises";
 import { createHash, randomUUID } from "node:crypto";
 import { gunzipSync } from "node:zlib";
-import { dirname, resolve } from "node:path";
+import { dirname, resolve, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 const compressedLimit = 32 * 1024 * 1024,
   expandedLimit = 64 * 1024 * 1024;
@@ -52,9 +52,22 @@ export async function prepareCountryDataset({
   lockFile = new URL("./geoip-country.lock.json", import.meta.url),
 } = {}) {
   const lock = JSON.parse(await readFile(lockFile, "utf8"));
+  const metadata = async () => {
+    const target = join(dirname(file), "country.lock.json"),
+      temporary = target + "." + randomUUID() + ".tmp";
+    try {
+      await writeFile(temporary, JSON.stringify(lock, null, 2) + "\n", { flag: "wx" });
+      await rename(temporary, target);
+    } finally {
+      await rm(temporary, { force: true });
+    }
+  };
   try {
     const existing = await readFile(file);
-    if (digest(existing) === lock.mmdbSha256) return { file, ...lock };
+    if (digest(existing) === lock.mmdbSha256) {
+      await metadata();
+      return { file, ...lock };
+    }
   } catch (error) {
     if (error.code !== "ENOENT") throw error;
   }
@@ -67,6 +80,7 @@ export async function prepareCountryDataset({
   } finally {
     await rm(temporary, { force: true });
   }
+  await metadata();
   return { file, ...lock };
 }
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href)

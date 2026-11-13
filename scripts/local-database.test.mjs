@@ -59,3 +59,15 @@ test("local setup/dev refuses production targets and root runtime users", () => 
       /local/i,
     );
 });
+
+test("local visitor context setup keeps its own stable key and pinned dataset file", async () => {
+  const { prepareLocalVisitorContext } = await import("./local-database.mjs");
+  assert.equal(typeof prepareLocalVisitorContext, "function");
+  const first = await prepareLocalVisitorContext({ ANALYTICS_ID_SECRET: "separate-identity-key" });
+  assert.equal(Buffer.from(first.ANALYTICS_RELAY_SECRET, "base64url").length, 32);
+  assert.notEqual(first.ANALYTICS_RELAY_SECRET, "separate-identity-key");
+  const again = await prepareLocalVisitorContext(first);
+  assert.equal(again.ANALYTICS_RELAY_SECRET, first.ANALYTICS_RELAY_SECRET);
+  assert.match(again.GEOIP_COUNTRY_FILE, /country\.mmdb$/);
+  assert.ok((await readFile(again.GEOIP_COUNTRY_FILE)).length > 0);
+});

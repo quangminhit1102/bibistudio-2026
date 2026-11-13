@@ -18,6 +18,7 @@ import { gzipSync } from "node:zlib";
 import mysql from "../backend/node_modules/mysql2/promise.js";
 import { TEST_MYSQL_IMAGE } from "./test-database.mjs";
 import { root, isMain } from "./runtime.mjs";
+import { prepareCountryDataset } from "./prepare-geoip.mjs";
 const execute = promisify(execFile);
 const require = createRequire(import.meta.url);
 export async function prepareLocalAccessLogs(
@@ -133,6 +134,16 @@ export async function ensureLocalMysql({ create = false } = {}) {
     throw new Error("Refusing unexpected local development container");
   if (!info.State.Running) await docker(["start", name]);
 }
+export async function prepareLocalVisitorContext(configured = {}) {
+  const dataset = await prepareCountryDataset();
+  const secret = configured.ANALYTICS_RELAY_SECRET || randomBytes(32).toString("base64url");
+  if (
+    !/^[A-Za-z0-9_-]{43}$/.test(secret) ||
+    Buffer.from(secret, "base64url").toString("base64url") !== secret
+  )
+    throw new Error("Invalid local relay configuration");
+  return { ANALYTICS_RELAY_SECRET: secret, GEOIP_COUNTRY_FILE: dataset.file };
+}
 export async function setupLocalDatabase() {
   const runtimePath = join(root, ".env.local"),
     migrationPath = join(root, ".env.migration.local");
@@ -151,6 +162,7 @@ export async function setupLocalDatabase() {
     if (process.env[key]) configured[key] = process.env[key];
   const runtimeEnv = {
     ...configured,
+    ...(await prepareLocalVisitorContext(configured)),
     DB_HOST: configured.DB_HOST || "127.0.0.1",
     DB_PORT: configured.DB_PORT || "33385",
     DB_NAME: configured.DB_NAME || "bibi_local",
@@ -252,6 +264,8 @@ export async function setupLocalDatabase() {
     await migrateProfiles(pool, join(root, "backend/profile-migrations"));
     const { migrateVisitorHistory } = require("../backend/dist/visitors/schema.js");
     await migrateVisitorHistory(pool, join(root, "backend/visitor-migrations"));
+    const { migrateVisitorContext } = require("../backend/dist/visitors/context-schema.js");
+    await migrateVisitorContext(pool, join(root, "backend/visitor-context-migrations"));
     const { migrateAccessLogs } = require("../backend/dist/access-logs/schema.js");
     await migrateAccessLogs(pool, join(root, "backend/access-log-migrations"));
   } finally {
