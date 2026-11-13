@@ -54,6 +54,7 @@ test("one start-time cohort drives counts, metadata, product ranking and complet
     ["/contact"],
   );
   assert.equal((await api.report({ ...scope, search: "8.8.8.8" })).totalSessions, 2);
+  assert.equal((await api.report({ ...scope, search: "::ffff:8.8.8.8" })).totalSessions, 2);
   assert.equal((await api.report({ ...scope, deviceType: "mobile" })).totalSessions, 0);
   assert.equal(
     (await api.get(a.id, { ...scope, from: "2021-01-01", to: "2021-12-31" })).sessionCount,

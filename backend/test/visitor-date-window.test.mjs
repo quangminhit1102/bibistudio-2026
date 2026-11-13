@@ -31,6 +31,7 @@ test("rejects invalid, partial, reversed or ambiguous date input", () => {
     { preset: "1m", from: "2026-11-01", to: "2026-11-13" },
     { from: "1969-12-31", to: "2026-11-13" },
     { preset: "7d" },
+    { preset: "__proto__" },
     { from: "2026-1-01", to: "2026-11-13" },
     { from: "", to: "" },
   ])

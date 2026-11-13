@@ -164,7 +164,6 @@ export async function setupLocalDatabase() {
     RELEASE_PROBE_SECRET: configured.RELEASE_PROBE_SECRET || randomBytes(32).toString("hex"),
   };
   assertLocalDevelopmentTarget(runtimeEnv);
-  Object.assign(runtimeEnv, await prepareLocalAccessLogs());
   runtimeEnv.PROFILE_ASSET_DIR = join(root, ".superpowers/local-profile-assets");
   await mkdir(runtimeEnv.PROFILE_ASSET_DIR, { recursive: true, mode: 0o700 });
   const migrationEnv = {

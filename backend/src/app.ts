@@ -15,7 +15,7 @@ import { authenticate, requirePermission } from "./authorization/middleware";
 import { analyticsRoutes, type AnalyticsOptions } from "./visitors/routes";
 import { visitorReadRoutes } from "./visitors/private-routes";
 import { createVisitorService } from "./visitors/service";
-import { accessLogRoutes } from "./access-logs/routes";
+import { visitorHistorySchemaStatus } from "./visitors/schema";
 import { profileRoutes } from "./profile/routes";
 import { createProfileService } from "./profile/service";
 import { profileSchemaStatus } from "./profile/schema";
@@ -28,6 +28,7 @@ export interface AppOptions {
   clock?: Clock;
   analytics?: AnalyticsOptions;
   accessLogs?: { pool: Pool; schemaDirectory: string; currentEnabled?: boolean };
+  visitorHistory?: { schemaDirectory: string };
   profiles?: { schemaDirectory: string; assetDirectory: string; assets?: AvatarStore };
 }
 
@@ -43,17 +44,9 @@ export function createApp(release: ReleaseInfo, options: AppOptions = {}): Expre
         })
       : undefined;
   installSecurity(app, options.config ?? { allowedOrigins: [], trustProxy: false });
-  if (auth && options.accessLogs)
-    app.use(
-      "/api/customer-access/access-logs",
-      accessLogRoutes(
-        options.accessLogs.pool,
-        options.accessLogs.schemaDirectory,
-        options.clock ?? systemClock,
-        auth,
-        options.accessLogs.currentEnabled,
-      ),
-    );
+  app.use("/api/customer-access/access-logs", () => {
+    throw new ApiError(404, "NOT_FOUND", "Không tìm thấy chức năng");
+  });
   if (auth && options.db && options.analytics)
     app.use(
       "/api/customer-access",
@@ -115,7 +108,7 @@ export function createApp(release: ReleaseInfo, options: AppOptions = {}): Expre
       master.n !== 1
     )
       throw new ApiError(503, "NOT_READY", "Dịch vụ chưa sẵn sàng");
-    if (release.schemaVersion === 4 && !options.profiles)
+    if ((release.schemaVersion ?? 0) >= 4 && !options.profiles)
       throw new ApiError(503, "PROFILE_NOT_READY", "Dịch vụ hồ sơ chưa sẵn sàng");
     if (options.profiles) {
       try {
@@ -126,6 +119,19 @@ export function createApp(release: ReleaseInfo, options: AppOptions = {}): Expre
           throw new Error("profile schema not ready");
       } catch {
         throw new ApiError(503, "PROFILE_NOT_READY", "Dịch vụ hồ sơ chưa sẵn sàng");
+      }
+    }
+    if (release.schemaVersion === 5 && !options.visitorHistory)
+      throw new ApiError(503, "VISITOR_HISTORY_NOT_READY", "Dịch vụ phân tích chưa sẵn sàng");
+    if (options.visitorHistory) {
+      try {
+        if (
+          (await visitorHistorySchemaStatus(options.db, options.visitorHistory.schemaDirectory))
+            .state !== "complete"
+        )
+          throw new Error();
+      } catch {
+        throw new ApiError(503, "VISITOR_HISTORY_NOT_READY", "Dịch vụ phân tích chưa sẵn sàng");
       }
     }
     res.json({ ok: true });

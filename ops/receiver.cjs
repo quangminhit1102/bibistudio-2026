@@ -6,6 +6,7 @@ const { spawnSync } = require("node:child_process");
 const tar = require("tar");
 const { validateManifest } = require("./release.cjs");
 const { verifyProfileAssets } = require("./profile-metadata.cjs");
+const { verifyVisitorAssets } = require("./visitor-metadata.cjs");
 const deploy = require("./deploy.cjs");
 const { verifyAccessLogAssets } = require("./access-log-metadata.cjs");
 function parseCommand(command) {
@@ -115,6 +116,10 @@ async function acceptArchive(config, id, checksum, file) {
     }
     if (manifest.profiles)
       await verifyProfileAssets(path.join(staging, "backend"), manifest.profiles);
+    if (manifest.visitorAnalytics) {
+      await verifyVisitorAssets(path.join(staging, "backend"), manifest.visitorAnalytics);
+      await fs.access(path.join(staging, "backend/dist/visitors/cli.js"));
+    }
     await fs.writeFile(path.join(staging, ".archive-sha256"), checksum);
     await fs.rename(staging, dest);
   } catch (e) {

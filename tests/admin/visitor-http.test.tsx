@@ -103,6 +103,8 @@ test("visitor page displays API data and product interests without fixture timel
   );
   expect((await screen.findAllByText("2606:4700:4700::1111")).length).toBeGreaterThan(0);
   expect(screen.queryByText("ID khách")).not.toBeInTheDocument();
+  expect(screen.queryByText("Nhật ký cPanel")).not.toBeInTheDocument();
+  expect(screen.queryByLabelText("Phạm vi nhật ký")).not.toBeInTheDocument();
   expect(screen.getAllByText("Chưa xác định").length).toBeGreaterThan(0);
   expect(screen.queryByRole("button", { name: /Xóa|Thêm mới/ })).not.toBeInTheDocument();
   expect(screen.queryByLabelText("Sản phẩm quan tâm")).not.toBeInTheDocument();

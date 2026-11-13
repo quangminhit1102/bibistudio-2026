@@ -8,39 +8,6 @@ import type {
   VisitorProductPageDto,
 } from "../../../../backend/src/http/contracts";
 import type { AdminHttpClient } from "../../../lib/admin-http";
-import type { AccessLogRecord, AccessLogStatus } from "../../../../backend/src/http/contracts";
-export function createAccessLogApi(http: AdminHttpClient) {
-  const root = "/api/customer-access/access-logs";
-  return {
-    list: (
-      input: { page: number; pageSize: number; search: string; filters: Record<string, string> },
-      signal?: AbortSignal,
-    ) => {
-      const params = new URLSearchParams({
-        page: String(input.page),
-        pageSize: String(input.pageSize),
-        search: input.search,
-        scope: input.filters.scope || "current",
-      });
-      for (const key of [
-        "from",
-        "to",
-        "ipPrefix",
-        "pathname",
-        "status",
-        "resourceKind",
-        "isBot",
-        "parseStatus",
-      ])
-        if (input.filters[key]) params.set(key, input.filters[key]);
-      return http.request<Page<AccessLogRecord>>(`${root}?${params}`, { signal });
-    },
-    get: (id: string, scope: "current" | "archive" = "current", signal?: AbortSignal) =>
-      http.request<AccessLogRecord>(`${root}/${encodeURIComponent(id)}?scope=${scope}`, { signal }),
-    status: (scope: "current" | "archive" = "current", signal?: AbortSignal) =>
-      http.request<AccessLogStatus>(`${root}/status?scope=${scope}`, { signal }),
-  };
-}
 export interface VisitorFilters {
   deviceTypes: string[];
   operatingSystems: string[];

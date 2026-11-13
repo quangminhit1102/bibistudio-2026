@@ -15,6 +15,6 @@ export function readRelease(): ReleaseInfo {
   return {
     releaseId: data.releaseId,
     sourceSha: data.sourceSha,
-    ...(data.schemaVersion === 4 ? { schemaVersion: 4 } : {}),
+    ...([4, 5].includes(data.schemaVersion) ? { schemaVersion: data.schemaVersion } : {}),
   };
 }

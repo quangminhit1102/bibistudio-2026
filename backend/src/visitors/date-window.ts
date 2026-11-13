@@ -40,6 +40,7 @@ export function resolveVisitorWindow(
     end = last + DAY;
   } else {
     const preset = input.preset ?? "1m";
+    if (!["1m", "6m", "1y"].includes(preset)) throw invalid();
     const months = { "1m": 1, "6m": 6, "1y": 12 }[preset];
     if (!months) throw invalid();
     end = calendarDate(dateString(now.getTime() + VIETNAM_OFFSET)) + DAY;

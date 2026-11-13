@@ -7,7 +7,7 @@ import { createAuthFixture } from "./helpers/auth.mjs";
 import { migrateVisitorHistory, visitorHistorySchemaStatus } from "../dist/visitors/schema.js";
 const directory = resolve("backend/visitor-migrations");
 test("visitor metadata migration is additive, idempotent and independent of auth schema4", async (t) => {
-  const f = await createAuthFixture(t);
+  const f = await createAuthFixture(t, { visitorHistory: false });
   await f.pool.query(
     "INSERT INTO visitors(id,identity_hash,ip_prefix,device_type,operating_system,browser,first_seen_at,last_seen_at) VALUES('visitor',?,'127.0.0.0/24','desktop','Windows','Edge','2020-01-01','2020-01-01')",
     ["a".repeat(64)],
@@ -31,7 +31,7 @@ test("visitor metadata migration is additive, idempotent and independent of auth
   await assert.rejects(migrateVisitorHistory(f.pool, directory), /drift/i);
 });
 test("interrupted visitor DDL resumes explicitly and rejects changed assets", async (t) => {
-  const f = await createAuthFixture(t);
+  const f = await createAuthFixture(t, { visitorHistory: false });
   const get = f.pool.getConnection.bind(f.pool);
   let fail = true;
   f.pool.getConnection = async () => {

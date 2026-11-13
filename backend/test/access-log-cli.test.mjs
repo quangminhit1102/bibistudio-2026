@@ -131,13 +131,15 @@ test("runtime publishes only read dependencies, never source paths, migration or
   };
   const runtime = createRuntime(env, f.clock);
   try {
-    assert.equal(runtime.appOptions.accessLogs.pool, runtime.appOptions.db);
-    assert.equal("archiveDirectory" in runtime.appOptions.accessLogs, false);
+    assert.equal(runtime.appOptions.accessLogs, undefined);
+    assert.ok(runtime.appOptions.visitorHistory.schemaDirectory.endsWith("visitor-migrations"));
     const [[state]] = await f.pool.query(
       "SELECT COUNT(*) n FROM information_schema.tables WHERE table_schema=DATABASE() AND table_name='access_log_records'",
     );
     assert.equal(state.n, 0);
-    assert.throws(() => createRuntime({ ...env, ACCESS_LOG_WORK_DIR: "" }, f.clock), /config/i);
+    const withoutLegacySources = createRuntime({ ...env, ACCESS_LOG_WORK_DIR: "" }, f.clock);
+    assert.equal(withoutLegacySources.appOptions.accessLogs, undefined);
+    await withoutLegacySources.close();
   } finally {
     await runtime.close();
   }

@@ -2,12 +2,19 @@ import { randomBytes } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { createDatabaseFixture } from "./database.mjs";
 
-export async function createAuthFixture(t) {
+export async function createAuthFixture(t, { visitorHistory = true } = {}) {
   const fixture = await createDatabaseFixture(t);
   const { migrate } = await import("../../dist/db/migrate.js");
   const { seedIdentity } = await import("../../dist/db/seed.js");
   const { createAuthService } = await import("../../dist/auth/service.js");
   await migrate(fixture.pool, fileURLToPath(new URL("../../migrations", import.meta.url)));
+  if (visitorHistory) {
+    const { migrateVisitorHistory } = await import("../../dist/visitors/schema.js");
+    await migrateVisitorHistory(
+      fixture.pool,
+      fileURLToPath(new URL("../../visitor-migrations", import.meta.url)),
+    );
+  }
   const secrets = { masterPassword: "Only-test-Auth!99", userPassword: "Only-test-Auth!88" };
   await seedIdentity(fixture.pool, secrets);
   const config = {

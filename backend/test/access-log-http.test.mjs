@@ -4,12 +4,13 @@ import { fileURLToPath } from "node:url";
 import { createAuthFixture } from "./helpers/auth.mjs";
 import { archiveFixture, accessLogLine } from "./helpers/access-logs.mjs";
 import { serve } from "./helpers/http.mjs";
-import { createApp } from "../dist/app.js";
+import { legacyVisitorBackend } from "./helpers/legacy-visitor-backend.mjs";
 import { migrateAccessLogs } from "../dist/access-logs/schema.js";
 import { syncAccessLogArchives } from "../dist/access-logs/importer.js";
 
 const directory = fileURLToPath(new URL("../access-log-migrations", import.meta.url));
 async function setup(t, migrate = true) {
+  const { createApp } = await legacyVisitorBackend(t);
   const f = await createAuthFixture(t);
   if (migrate) await migrateAccessLogs(f.pool, directory);
   const base = await serve(

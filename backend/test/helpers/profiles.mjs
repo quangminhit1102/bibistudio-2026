@@ -8,9 +8,9 @@ import { createAvatarStore } from "../../dist/profile/avatar-store.js";
 import { createApp } from "../../dist/app.js";
 export async function createProfileFixture(
   t,
-  { wrapStore = (store) => store, observe = () => {} } = {},
+  { wrapStore = (store) => store, observe = () => {}, visitorHistory = true } = {},
 ) {
-  const f = await createAuthFixture(t),
+  const f = await createAuthFixture(t, { visitorHistory }),
     assetDirectory = await mkdtemp(join(tmpdir(), "bibi-profile-images-"));
   t.after(() => rm(assetDirectory, { recursive: true, force: true }));
   const schemaDirectory = resolve("backend/profile-migrations");

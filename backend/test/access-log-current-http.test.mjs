@@ -7,8 +7,9 @@ import { archiveFixture, accessLogLine } from "./helpers/access-logs.mjs";
 import { serve } from "./helpers/http.mjs";
 import { migrateAccessLogs } from "../dist/access-logs/schema.js";
 import { syncCurrentLogs } from "../dist/access-logs/current-cache.js";
-import { createApp } from "../dist/app.js";
+import { legacyVisitorBackend } from "./helpers/legacy-visitor-backend.mjs";
 test("scope defaults current, pages all1205 cached rows, archive separate, validates scope and retires inactive detail", async (t) => {
+  const { createApp } = await legacyVisitorBackend(t);
   const f = await createAuthFixture(t),
     a = await archiveFixture(t, { batchRows: 500 }),
     currentDirectory = join(a.root, "current");

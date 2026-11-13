@@ -1,6 +1,7 @@
 import type { VisitorWindowDto } from "../http/contracts";
 import { resolveVisitorWindow } from "./date-window";
 import { createHash } from "node:crypto";
+import ipaddr from "ipaddr.js";
 
 export interface VisitorScope {
   from?: string;
@@ -22,7 +23,10 @@ export function visitorCohort(input: VisitorScope, now: Date) {
     params.push(input.browser);
   }
   if (input.search?.trim()) {
-    const term = `%${input.search.trim().replace(/[=%_]/g, (value) => "=" + value)}%`;
+    let search = input.search.trim();
+    if ((search.includes(":") || /^(\d+\.){3}\d+$/.test(search)) && ipaddr.isValid(search))
+      search = ipaddr.process(search).toString();
+    const term = `%${search.replace(/[=%_]/g, (value) => "=" + value)}%`;
     clauses.push(
       "(IF(s.ip_status='verified',s.client_ip,NULL) LIKE ? ESCAPE '=' OR (s.ip_status='legacy' AND v.ip_prefix LIKE ? ESCAPE '='))",
     );

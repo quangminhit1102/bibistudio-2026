@@ -4,13 +4,11 @@ import type { AppOptions } from "./app";
 import { readAuthConfig, readDbConfig, readProfileConfig, systemClock, type Clock } from "./config";
 import { createDbPool } from "./db/pool";
 import { createCatalogue } from "./visitors/catalogue";
-import { accessLogConfigured } from "./access-logs/config";
 
 /** Synchronous app dependencies; no schema or account mutation during startup. */
 export function createRuntime(env: NodeJS.ProcessEnv = process.env, clock: Clock = systemClock) {
   const config = readAuthConfig(env);
   const database = readDbConfig(env);
-  const logEnabled = accessLogConfigured(env);
   const profiles = readProfileConfig(env);
   if (
     !env.ANALYTICS_ID_SECRET ||
@@ -31,15 +29,7 @@ export function createRuntime(env: NodeJS.ProcessEnv = process.env, clock: Clock
     ...(profiles
       ? { profiles: { ...profiles, schemaDirectory: resolve(__dirname, "../profile-migrations") } }
       : {}),
-    ...(logEnabled
-      ? {
-          accessLogs: {
-            pool: db,
-            schemaDirectory: resolve(__dirname, "../access-log-migrations"),
-            currentEnabled: Boolean(env.ACCESS_LOG_CURRENT_DIR),
-          },
-        }
-      : {}),
+    visitorHistory: { schemaDirectory: resolve(__dirname, "../visitor-migrations") },
     analytics: {
       pool: collector,
       catalogue,

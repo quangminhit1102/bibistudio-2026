@@ -6,6 +6,7 @@ const { verifyDatabaseAssets, checkDatabaseCompatibility } = require("./database
 const execute = promisify(execFile);
 const { verifyProfileAssets, checkProfileCompatibility } = require("./profile-metadata.cjs");
 const { verifyAccessLogAssets, checkAccessLogCompatibility } = require("./access-log-metadata.cjs");
+const { verifyVisitorAssets, checkVisitorCompatibility } = require("./visitor-metadata.cjs");
 
 /** Fixed host-only commands. No SQL, password or arbitrary executable from SSH input. */
 async function runDatabaseTool(config, dir, command, manifest) {
@@ -16,6 +17,8 @@ async function runDatabaseTool(config, dir, command, manifest) {
       "profile-status",
       "profile-migrate",
       "profile-cleanup",
+      "visitor-status",
+      "visitor-migrate",
       "migrate",
       "seed",
       "status",
@@ -28,6 +31,7 @@ async function runDatabaseTool(config, dir, command, manifest) {
   )
     throw new Error("Unsupported database operation");
   const profileCommand = command.startsWith("profile-");
+  const visitorAction = command.startsWith("visitor-") ? command.slice(8) : null;
   const profileAction = profileCommand ? command.slice(8) : null;
   const logCommand = command.startsWith("access-log-");
   const logAction = logCommand ? command.slice("access-log-".length) : null;
@@ -39,29 +43,31 @@ async function runDatabaseTool(config, dir, command, manifest) {
   );
   const backup = command === "backup" || profileAction === "backup";
   const probe = command === "probe";
-  const args = profileCommand
-    ? profileAction === "backup"
-      ? [path.join(dir, "backend/dist/profile/backup-cli.js"), manifest.releaseId]
-      : [path.join(dir, "backend/dist/profile/cli.js"), profileAction]
-    : logCommand
-      ? logAction === "probe"
-        ? [
-            path.join(dir, "backend/dist/access-logs/probe-cli.js"),
-            manifest.releaseId,
-            manifest.sourceSha,
-            config.baseUrl,
-          ]
-        : [path.join(dir, "backend/dist/access-logs/cli.js"), logAction]
-      : probe
-        ? [
-            path.join(dir, "backend/dist/db/probe-cli.js"),
-            manifest.releaseId,
-            manifest.sourceSha,
-            config.baseUrl,
-          ]
-        : backup
-          ? [path.join(dir, "backend/dist/db/backup-cli.js"), manifest.releaseId]
-          : [path.join(dir, "backend/dist/db/cli.js"), command];
+  const args = visitorAction
+    ? [path.join(dir, "backend/dist/visitors/cli.js"), visitorAction]
+    : profileCommand
+      ? profileAction === "backup"
+        ? [path.join(dir, "backend/dist/profile/backup-cli.js"), manifest.releaseId]
+        : [path.join(dir, "backend/dist/profile/cli.js"), profileAction]
+      : logCommand
+        ? logAction === "probe"
+          ? [
+              path.join(dir, "backend/dist/access-logs/probe-cli.js"),
+              manifest.releaseId,
+              manifest.sourceSha,
+              config.baseUrl,
+            ]
+          : [path.join(dir, "backend/dist/access-logs/cli.js"), logAction]
+        : probe
+          ? [
+              path.join(dir, "backend/dist/db/probe-cli.js"),
+              manifest.releaseId,
+              manifest.sourceSha,
+              config.baseUrl,
+            ]
+          : backup
+            ? [path.join(dir, "backend/dist/db/backup-cli.js"), manifest.releaseId]
+            : [path.join(dir, "backend/dist/db/cli.js"), command];
   try {
     const { stdout } = await execute(path.join(config.runtimeBin, "node"), args, {
       cwd: path.join(dir, "backend"),
@@ -107,7 +113,14 @@ async function verifyReleaseProbe(config, { dir, manifest }, { run = runDatabase
       await run(config, dir, "profile-status", manifest),
     );
   }
-  if (manifest.accessLogs) {
+  if (manifest.visitorAnalytics) {
+    await verifyVisitorAssets(path.join(dir, "backend"), manifest.visitorAnalytics);
+    checkVisitorCompatibility(
+      manifest.visitorAnalytics,
+      await run(config, dir, "visitor-status", manifest),
+    );
+  }
+  if (manifest.accessLogs && !manifest.visitorAnalytics) {
     await verifyAccessLogAssets(path.join(dir, "backend"), manifest.accessLogs);
     const logs = await run(config, dir, "access-log-probe", manifest);
     if (logs?.ok !== true || logs.accessLogs !== true || logs.releaseId !== manifest.releaseId)
@@ -127,11 +140,18 @@ async function prepareDatabase(config, release, { run = runDatabaseTool, backupR
   if (manifest.accessLogs)
     await verifyAccessLogAssets(path.join(dir, "backend"), manifest.accessLogs);
   const before = await run(config, dir, "status", manifest);
+  if (manifest.visitorAnalytics) {
+    await verifyVisitorAssets(path.join(dir, "backend"), manifest.visitorAnalytics);
+    const history = await run(config, dir, "visitor-status", manifest);
+    if (!["empty", "complete"].includes(history?.state))
+      throw new Error("Unknown/dirty visitor history schema");
+    if (history.state === "complete") checkVisitorCompatibility(manifest.visitorAnalytics, history);
+  }
   if (!["empty", "complete"].includes(before.state))
     throw new Error("Dirty or unknown schema; inspect before deployment");
   if (before.version > manifest.database.compatibleMax)
     throw new Error("Newer schema cannot be migrated by this release");
-  if (manifest.accessLogs) {
+  if (manifest.accessLogs && !manifest.visitorAnalytics) {
     const feature = await run(config, dir, "access-log-status", manifest);
     if (!["empty", "complete"].includes(feature?.state) || feature.version > 2)
       throw new Error("Dirty or unknown access log schema");
@@ -152,7 +172,7 @@ async function prepareDatabase(config, release, { run = runDatabaseTool, backupR
   const schema = await run(config, dir, "status", manifest);
   checkDatabaseCompatibility(manifest, schema);
   let accessLogs;
-  if (manifest.accessLogs) {
+  if (manifest.accessLogs && !manifest.visitorAnalytics) {
     await run(config, dir, "access-log-migrate", manifest);
     checkAccessLogCompatibility(
       manifest.accessLogs,
@@ -168,6 +188,13 @@ async function prepareDatabase(config, release, { run = runDatabaseTool, backupR
     checkProfileCompatibility(
       manifest.profiles,
       await run(config, dir, "profile-status", manifest),
+    );
+  }
+  if (manifest.visitorAnalytics) {
+    await run(config, dir, "visitor-migrate", manifest);
+    checkVisitorCompatibility(
+      manifest.visitorAnalytics,
+      await run(config, dir, "visitor-status", manifest),
     );
   }
   return {

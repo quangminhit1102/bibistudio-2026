@@ -9,6 +9,7 @@ import { makeManifest, validateManifest } from "./release-manifest.mjs";
 import databaseMetadata from "../ops/database-metadata.cjs";
 import profileMetadata from "../ops/profile-metadata.cjs";
 import accessLogMetadata from "../ops/access-log-metadata.cjs";
+import visitorMetadata from "../ops/visitor-metadata.cjs";
 import { writeAnalyticsCatalogue } from "./analytics-catalogue.mjs";
 
 export async function validateBundle(dir) {
@@ -40,6 +41,10 @@ export async function validateBundle(dir) {
   }
   if (manifest.profiles)
     await profileMetadata.verifyProfileAssets(join(dir, "backend"), manifest.profiles);
+  if (manifest.visitorAnalytics) {
+    await visitorMetadata.verifyVisitorAssets(join(dir, "backend"), manifest.visitorAnalytics);
+    await stat(join(dir, "backend/dist/visitors/cli.js"));
+  }
   if (fe.releaseId !== manifest.releaseId || fe.sourceSha !== manifest.sourceSha)
     throw new Error("FE/BE release mismatch");
   async function scan(path) {
@@ -71,6 +76,7 @@ export async function buildRelease({
     await databaseMetadata.createDatabaseMetadata(join(root, "backend")),
     await accessLogMetadata.createAccessLogMetadata(join(root, "backend")),
     await profileMetadata.createProfileMetadata(join(root, "backend")),
+    await visitorMetadata.createVisitorMetadata(join(root, "backend")),
   );
   const base = resolve(outputDir);
   const bundleDir = join(base, manifest.releaseId);
@@ -122,6 +128,11 @@ export async function buildRelease({
   await cp(
     join(root, "backend/profile-migrations"),
     join(bundleDir, "backend/profile-migrations"),
+    { recursive: true },
+  );
+  await cp(
+    join(root, "backend/visitor-migrations"),
+    join(bundleDir, "backend/visitor-migrations"),
     { recursive: true },
   );
   await cp(

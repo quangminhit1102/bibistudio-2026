@@ -374,6 +374,7 @@ export function ServerVisitors() {
       <Modal
         open={allProducts}
         title="Tất cả sản phẩm được quan tâm"
+        description="Số trình duyệt quan tâm đến từng sản phẩm trong khoảng ngày đã chọn."
         onOpenChange={setAllProducts}
         wide
       >

@@ -7,6 +7,7 @@ const { promisify } = require("node:util");
 const { inspectRelease } = require("./deploy.cjs");
 const { runDatabaseTool } = require("./database-lifecycle.cjs");
 const execute = promisify(execFile);
+const { visitorHistoryEnabled } = require("./visitor-cron-policy.cjs");
 const shellQuote = (value) => "'" + String(value).replace(/'/g, "'\\''") + "'";
 function lockArguments(config, configFile, install = false) {
   return [
@@ -25,6 +26,8 @@ function intervalSchedule() {
   return "*/15 * * * *";
 }
 async function installAccessLogCron(config, configFile, { execute: run = execute } = {}) {
+  if (await visitorHistoryEnabled(config))
+    throw new Error("Access log collection is retired for visitor history");
   if (
     !path.isAbsolute(config.root) ||
     !path.isAbsolute(config.runtimeBin) ||
@@ -77,10 +80,12 @@ async function installAccessLogCron(config, configFile, { execute: run = execute
 }
 /** Caller holds deploy.lock until this promise settles, including all source reads. */
 async function runCurrentSync(config, { run = runDatabaseTool } = {}) {
+  if (await visitorHistoryEnabled(config))
+    return { state: "skipped", reason: "Access log collection retired" };
   const current = await fs.realpath(path.join(config.root, "current"));
   const release = await inspectRelease(config, path.basename(current));
   if (release.dir !== current) throw new Error("Current release outside managed releases");
-  if (!release.manifest.accessLogs)
+  if (!release.manifest.accessLogs || release.manifest.visitorAnalytics)
     return { state: "skipped", reason: "Release has no access log capability" };
   await fs.access(path.join(current, "backend/dist/access-logs/cli.js"));
   return run(config, current, "access-log-sync", release.manifest);

@@ -15,6 +15,7 @@ const { verifyDatabaseAssets } = require("./database-metadata.cjs");
 const { verifyAccessLogAssets, checkAccessLogCompatibility } = require("./access-log-metadata.cjs");
 const execute = promisify(execFile);
 const { prepareProfileLifecycle } = require("./profile-lifecycle.cjs");
+const { prepareVisitorLifecycle } = require("./visitor-lifecycle.cjs");
 function inside(base, target) {
   const relative = path.relative(path.resolve(base), path.resolve(target));
   if (!relative || relative.startsWith("..") || path.isAbsolute(relative))
@@ -230,6 +231,12 @@ async function activateRelease(config, id, hooks = {}) {
     { dir, manifest },
     { run: hooks.profileRun },
   );
+  await prepareVisitorLifecycle(
+    config,
+    old ? { dir: old, manifest: oldManifest } : null,
+    { dir, manifest },
+    { run: hooks.visitorRun, retire: hooks.retireVisitorCrons, backupReceipt: profileBackup },
+  );
   if (manifest.database) {
     if (oldManifest?.database)
       assertRollbackCompatible(oldManifest, {
@@ -325,11 +332,17 @@ async function rollbackRelease(config, id, hooks = {}) {
   const active = current
     ? JSON.parse(await fs.readFile(path.join(current, "manifest.json"), "utf8"))
     : null;
-  await prepareProfileLifecycle(
+  const profileBackup = await prepareProfileLifecycle(
     config,
     current ? { dir: current, manifest: active } : null,
     { dir, manifest },
     { run: hooks.profileRun },
+  );
+  await prepareVisitorLifecycle(
+    config,
+    current ? { dir: current, manifest: active } : null,
+    { dir, manifest },
+    { run: hooks.visitorRun, retire: hooks.retireVisitorCrons, backupReceipt: profileBackup },
   );
   let degradedAdmin = false;
   if (manifest.database || active?.database) {

@@ -1,16 +1,14 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { randomBytes } from "node:crypto";
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir } from "node:fs/promises";
 import { resolve } from "node:path";
 import { createServer as createViteServer } from "vite";
 import { chromium } from "playwright";
 import { createProfileAuthFixture as createAuthFixture } from "./helpers/profile-fixture.mjs";
 import { createRuntime } from "../../backend/dist/runtime.js";
 import { startServer } from "../../backend/dist/server.js";
-import { archiveFixture, accessLogLine } from "../../backend/test/helpers/access-logs.mjs";
-import { migrateAccessLogs } from "../../backend/dist/access-logs/schema.js";
-import { syncAccessLogs } from "../../backend/dist/access-logs/sync-service.js";
+
 async function capture(page, path) {
   await page.waitForFunction(() =>
     document
@@ -31,27 +29,6 @@ test(
     const cleanup = [];
     const f = await createAuthFixture({ after: (fn) => cleanup.push(fn) });
     f.clock.set(new Date());
-    const archive = await archiveFixture({ after: (fn) => cleanup.push(fn) });
-    archive.config.currentDirectory = resolve(archive.root, "current");
-    await mkdir(archive.config.currentDirectory);
-    await writeFile(resolve(archive.config.currentDirectory, archive.config.domainAlias), "");
-    await writeFile(
-      resolve(archive.config.currentDirectory, archive.config.domainAlias + "-ssl_log"),
-      Buffer.concat([accessLogLine(), Buffer.from("\n")]),
-    );
-    await migrateAccessLogs(f.pool, resolve("backend/access-log-migrations"));
-    await archive.write([accessLogLine()]);
-    assert.equal(
-      (
-        await syncAccessLogs({
-          pool: f.pool,
-          config: archive.config,
-          clock: f.clock,
-          signal: AbortSignal.timeout(120000),
-        })
-      ).state,
-      "complete",
-    );
     let runtime, backend, frontend, browser;
     const username = `bt_${randomBytes(8).toString("hex")}`;
     const password = randomBytes(24).toString("hex");
@@ -72,10 +49,6 @@ test(
           AUTH_JWT_SECRET: f.config.jwtSecret,
           AUTH_ALLOWED_ORIGINS: "http://127.0.0.1:1",
           ANALYTICS_ID_SECRET: randomBytes(32).toString("hex"),
-          ACCESS_LOG_ARCHIVE_DIR: archive.config.archiveDirectory,
-          ACCESS_LOG_DOMAIN_ALIAS: archive.config.domainAlias,
-          ACCESS_LOG_WORK_DIR: archive.config.workDirectory,
-          ACCESS_LOG_CURRENT_DIR: archive.config.currentDirectory,
         },
         f.clock,
       );
@@ -139,13 +112,8 @@ test(
       await page.getByLabel("Mật khẩu", { exact: true }).fill(f.secrets.userPassword);
       await page.getByRole("button", { name: "Đăng nhập", exact: true }).click();
       await page.getByRole("heading", { name: "Khách truy cập", exact: true }).waitFor();
-      await page
-        .getByRole("heading", { name: "Kiểm tra cập nhật mỗi 15 phút", exact: true })
-        .waitFor();
       await page.getByText("1 bản ghi", { exact: true }).first().waitFor();
-      await capture(page, resolve(evidence, "user-access-logs-mobile.png"));
-      await page.getByRole("button", { name: "Khách và sản phẩm", exact: true }).click();
-      await page.getByText("Sổ tay bản đồ Đà Lạt · 1 khách", { exact: true }).waitFor();
+      assert.equal(await page.getByText("Nhật ký cPanel", { exact: true }).count(), 0);
       assert.equal(
         await page
           .locator("#admin-sidebar")
@@ -154,10 +122,10 @@ test(
         0,
       );
       await capture(page, resolve(evidence, "user-visitors-mobile.png"));
-      await page.getByRole("button", { name: /^Xem KH-/ }).click();
+      await page.getByRole("button", { name: "Chi tiết", exact: true }).first().click();
       await page
         .getByRole("dialog", { name: "Chi tiết khách truy cập" })
-        .getByText("Sổ tay bản đồ Đà Lạt", { exact: true })
+        .getByRole("link", { name: "Sổ tay bản đồ Đà Lạt", exact: true })
         .waitFor();
       await capture(page, resolve(evidence, "visitor-interest-mobile.png"));
       await page.keyboard.press("Escape");
@@ -175,7 +143,10 @@ test(
       );
       await page.getByRole("button", { name: "Tải lại", exact: true }).click();
       await refreshed;
-      await page.getByText("Sổ tay bản đồ Đà Lạt · 1 khách", { exact: true }).waitFor();
+      await page
+        .locator(".a-chart-ranking")
+        .getByText("Sổ tay bản đồ Đà Lạt", { exact: true })
+        .waitFor();
       assert.equal(refreshes, 1, "Concurrent UI401 requests share one refresh");
       await page.reload();
       await page.getByRole("heading", { name: "Khách truy cập", exact: true }).waitFor();

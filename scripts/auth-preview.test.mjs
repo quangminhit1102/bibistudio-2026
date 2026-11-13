@@ -24,7 +24,7 @@ test("auth release preview uses supplied private runtime env and closes pools/de
   );
   for (const name of ["manifest.json", "frontend/version.json"])
     await writeFile(join(directory, name), JSON.stringify(manifest));
-  for (const name of ["dist", "migrations"])
+  for (const name of ["dist", "migrations", "visitor-migrations"])
     await cp(join(root, "backend", name), join(directory, "backend", name), { recursive: true });
   for (const name of ["package.json", "package-lock.json", "analytics-catalogue.json"])
     await cp(join(root, "backend", name), join(directory, "backend", name));

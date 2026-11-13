@@ -178,7 +178,13 @@ export function createVisitorService(pool: Pool, catalogue: Catalogue, clock: Cl
       `WITH selected AS (${c.sql}) SELECT COUNT(*) sessions,COUNT(DISTINCT visitor_id) visitors,COUNT(DISTINCT CASE WHEN EXISTS(SELECT 1 FROM visitor_viewed_products p WHERE p.session_id=s.id) THEN visitor_id END) interested FROM selected s`,
       c.params,
     );
-    const products = await productReport({ ...input, page: 1, pageSize: 10 });
+    const products = await productReport({
+      ...input,
+      from: c.window.fromDate,
+      to: c.window.toDate,
+      page: 1,
+      pageSize: 10,
+    });
     const unit = selectVisitorBucket(c.window),
       local = "DATE_ADD(started_at, INTERVAL 7 HOUR)";
     const formats = {
