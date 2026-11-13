@@ -21,7 +21,7 @@ it("StrictMode cleans timers/listeners, tracks committed public routes and foote
   await act(() => vi.dynamicImportSettled());
   await act(() => vi.advanceTimersByTimeAsync(15000));
   expect(send).toHaveBeenCalledTimes(1);
-  expect(send.mock.calls[0][0]).toBe("/api/analytics/collect");
+  expect(send.mock.calls[0][0]).toBe("/api/analytics/relay/collect.php");
   expect(send.mock.calls[0][1].credentials).toBe("include");
   expect(send.mock.calls[0][1].headers.Authorization).toBeUndefined();
   view.rerender(

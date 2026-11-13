@@ -7,6 +7,7 @@ import { VisitorFilters } from "./components/visitor-filters";
 import { resolveFilterDates } from "./visitor-date-filter";
 import { VisitorSessionsChart, VisitorProductsChart } from "./visitor-charts";
 import { VisitorSessionList } from "./components/visitor-session-list";
+import { VisitorIp, VisitorLocation, VisitorGeoAttribution } from "./components/visitor-context";
 import { useAdmin } from "../services/context";
 import { canCode } from "../accounts/permissions";
 import { createVisitorApi } from "./http-api";
@@ -66,14 +67,14 @@ export function ServerVisitorDetail({ id, scope }: { id: string; scope?: Visitor
         <h2>Thông tin truy cập</h2>
         <dl className="a-key-values">
           {[
-            ["IP công khai", v.ipStatus === "verified" ? v.ipAddress : "Chưa xác định"],
-            ["Vị trí", [v.city, v.country].filter(Boolean).join(", ") || "Chưa xác định"],
+            ["IP công khai", <VisitorIp value={v} />],
+            ["Quốc gia", <VisitorLocation value={v} />],
             ["Thiết bị–Hệ điều hành", `${device(v.deviceType)} · ${v.operatingSystem}`],
             ["Trình duyệt", v.browser],
             ["Số phiên trong khoảng ngày", v.sessionCount],
             ["Trang khác nhau đã ghi nhận", v.distinctPageCount],
           ].map(([label, value]) => (
-            <div key={label}>
+            <div key={String(label)}>
               <dt>{label}</dt>
               <dd className="a-visitor-ip">{value}</dd>
             </div>
@@ -81,9 +82,12 @@ export function ServerVisitorDetail({ id, scope }: { id: string; scope?: Visitor
         </dl>
         {v.ipStatus !== "verified" && (
           <p className="a-muted">
-            Nguồn IP chưa xác minh; dữ liệu cũ không có IP công khai đầy đủ.
+            {v.ipStatus === "observed"
+              ? "IP do website ghi nhận, chưa xác minh nguồn từ hosting."
+              : "Phiên chưa có IP công khai đầy đủ; không thể suy ngược IP từ bản ghi cũ."}
           </p>
         )}
+        <VisitorGeoAttribution />
       </Card>
       <Card>
         <h2>Các phiên truy cập</h2>
@@ -156,18 +160,13 @@ export function ServerVisitors() {
         id: "ip",
         header: "IP công khai",
         enableSorting: false,
-        cell: ({ row }) => (
-          <span className="a-visitor-ip">
-            {row.original.ipStatus === "verified" ? row.original.ipAddress : "Chưa xác định"}
-          </span>
-        ),
+        cell: ({ row }) => <VisitorIp value={row.original} />,
       },
       {
         id: "location",
-        header: "Vị trí",
+        header: "Quốc gia",
         enableSorting: false,
-        cell: ({ row }) =>
-          [row.original.city, row.original.country].filter(Boolean).join(", ") || "Chưa xác định",
+        cell: ({ row }) => <VisitorLocation value={row.original} />,
       },
       {
         id: "device",
@@ -304,8 +303,7 @@ export function ServerVisitors() {
       <Card>
         <h2>Danh sách khách truy cập</h2>
         <p className="a-muted">
-          IP chỉ hiển thị khi nguồn từ hosting đã được xác minh. Lịch sử cũ không thể khôi phục IP
-          đầy đủ.
+          IP ghi nhận được hiển thị kèm trạng thái nguồn. Lịch sử cũ không thể khôi phục IP đầy đủ.
         </p>
         <DataTable
           columns={columns}
@@ -321,8 +319,11 @@ export function ServerVisitors() {
           mobileRow={(v) => (
             <article className="a-visitor-card">
               <strong className="a-visitor-ip">
-                {v.ipStatus === "verified" ? v.ipAddress : "Chưa xác định"}
+                <VisitorIp value={v} />
               </strong>
+              <p>
+                <VisitorLocation value={v} />
+              </p>
               <p>
                 {device(v.deviceType)} · {v.operatingSystem} · {v.browser}
               </p>
@@ -333,6 +334,7 @@ export function ServerVisitors() {
             </article>
           )}
         />
+        <VisitorGeoAttribution />
       </Card>
       <Card>
         <div className="a-visitor-section-heading">

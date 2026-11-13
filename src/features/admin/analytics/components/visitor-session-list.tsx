@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { VisitorSessionDto } from "../../../../../backend/src/http/contracts";
 import { Button, ErrorState } from "../../shared/ui/primitives";
 import { dateTime } from "../../shared/lib/text";
+import { VisitorIp, VisitorLocation } from "./visitor-context";
 
 function safePath(path: string) {
   try {
@@ -74,7 +75,10 @@ export function VisitorSessionList({
               · {session.operatingSystem || "Chưa xác định"} · {session.browser || "Chưa xác định"}
             </p>
             <p className="a-visitor-ip">
-              IP: {session.ipStatus === "verified" ? session.ipAddress : "Chưa xác định"}
+              IP: <VisitorIp value={session} />
+            </p>
+            <p>
+              Quốc gia: <VisitorLocation value={session} />
             </p>
             <h3>Sản phẩm quan tâm</h3>
             <div className="a-visitor-product-links">

@@ -1,5 +1,6 @@
 import catalogue from "../data/analytics-catalogue.generated.json";
 import { createVisitorTracker } from "./visitor-tracker";
+import { sendVisitorBatch } from "./visitor-transport";
 import {
   analyticsOptedOut,
   browserPrivacySignal,
@@ -20,13 +21,7 @@ export function startVisitorTracking(getPath: () => string) {
     privacy: () => !optedOut && !browserPrivacySignal(),
     bootstrapLock: lock,
     send: (batch, options) =>
-      fetch("/api/analytics/collect", {
-        method: "POST",
-        headers,
-        credentials: "include",
-        body: JSON.stringify(batch),
-        keepalive: options.keepalive,
-      }),
+      sendVisitorBatch(batch, { ...options, allowed: () => !optedOut && !browserPrivacySignal() }),
     clear: () =>
       fetch("/api/analytics/opt-out", {
         method: "POST",
