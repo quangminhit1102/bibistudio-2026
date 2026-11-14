@@ -45,10 +45,11 @@ export function installSecurity(app: Express, config: SecurityConfig): void {
     },
   });
   app.use((req, res, next) => {
-    // Avatar envelopes are bounded and parsed only after authentication/preflight.
+    // These route-specific envelopes are parsed only after authenticated preflight.
     if (
-      req.method === "PUT" &&
-      /^\/api\/(?:profile|accounts\/[a-f0-9-]{36})\/avatar\/?$/i.test(req.path)
+      (req.method === "POST" && /^\/api\/content\/media\/?$/i.test(req.path)) ||
+      (req.method === "PUT" &&
+        /^\/api\/(?:profile|accounts\/[a-f0-9-]{36})\/avatar\/?$/i.test(req.path))
     )
       return next();
     json(req, res, next);

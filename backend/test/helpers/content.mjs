@@ -88,3 +88,16 @@ export const validCategory = (patch = {}) => ({
   seoDescription: "",
   ...patch,
 });
+
+export async function createContentMediaFixture(t, options = {}) {
+  const fixture = await createContentFixture(t);
+  const { createContentMedia } = await import("../../dist/content/media/service.js");
+  fixture.paths.managedRoots = [fixture.paths.root];
+  const media = createContentMedia({
+    pool: fixture.pool,
+    paths: fixture.paths,
+    clock: fixture.clock,
+    codec: options.codec,
+  });
+  return { ...fixture, media };
+}

@@ -152,6 +152,7 @@ export interface ContentPaths {
   generations: string;
   active: string;
   deployLock: string;
+  managedRoots: string[];
   maxManagedBytes: number;
   maxContentBytes: number;
   maxGenerationBytes: number;
