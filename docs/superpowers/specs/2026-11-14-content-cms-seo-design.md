@@ -1,6 +1,6 @@
 # BiBi Studio — Bài viết, Danh mục và xuất bản HTML phục vụ SEO
 
-Ngày: 14/11/2026. Trạng thái: **bản thiết kế chờ chủ website duyệt**. Chỉ phương án đã được chọn; chưa cho phép bắt đầu implementation từ tài liệu này. Không có thay đổi code, dependency, DB hoặc hosting trong bước thiết kế.
+Ngày: 14/11/2026. Trạng thái: **đã được chủ website duyệt toàn bộ** trong chat: “Giữ 3 cấp, tiếp tục duyệt toàn bộ”. Giữ danh mục tối đa3cấp. Đang chuyển thành kế hoạch triển khai; việc duyệt thiết kế không thay thế handoff thực thi hoặc quyền thay hosting/credential. Bước thiết kế và lập plan chỉ thay tài liệu.
 
 ## 1. Mục tiêu và các quyết định từ cuộc trao đổi
 
@@ -27,7 +27,7 @@ SEO kỹ thuật giúp máy tìm kiếm đọc và khám phá URL; không bảo 
 | B. Render Blog trên server mỗi request, có cache    | Linh hoạt nhưng phải bổ sung cách mount public Node runtime/cache và khả năng phục hồi request         | Đã trình bày; không chọn trong đợt này                            |
 | Chỉ thêm API rồi fetch bài bằng CSR                 | Ít thay đổi frontend hơn, nhưng vẫn phụ thuộc bước chạy JavaScript để có bài trong HTML                | Không đáp ứng ưu tiên đã chọn                                     |
 
-Các lựa chọn kỹ thuật sau đây là **đề xuất của người viết**, không phải điều chủ website đã mô tả chi tiết: bộ đọc PHP nhỏ; con trỏ generation làm mốc công khai; danh mục chính duy nhất; tác giả chọn từ danh sách tối thiểu hoặc thương hiệu; tags đơn giản; giới hạn ảnh; chưa có tự lưu nền/hẹn giờ/duyệt nhiều bước. Chủ website kiểm tra các lựa chọn này khi duyệt tài liệu.
+Các lựa chọn kỹ thuật sau đây là **đề xuất của người viết**, không phải điều chủ website đã mô tả chi tiết: bộ đọc PHP nhỏ; con trỏ generation làm mốc công khai; danh mục chính duy nhất; tác giả chọn từ danh sách tối thiểu hoặc thương hiệu; tags đơn giản; giới hạn ảnh; chưa có tự lưu nền/hẹn giờ/duyệt nhiều bước. Các lựa chọn này đã được chấp nhận trong lần duyệt toàn bộ ngày14/11/2026; ghi rõ nguồn đề xuất để phân biệt với yêu cầu ban đầu.
 
 ## 4. Phạm vi và điều không làm
 
@@ -185,7 +185,7 @@ Giữ active/previous content generations và các generation cần job recovery
 
 Builder được quyết định tên file/module, SQL index chi tiết, HTTP verb/DTO cụ thể trong contract, codec/sanitizer được duy trì và chạy được trên host, template/render tooling và cơ chế worker wakeup trong các bất biến trên. Có thể chia plan thành nền tảng CMS/media, publisher/SEO và vận hành; mỗi phần phải tích hợp qua các interface đã nêu, không phát hành từng phần làm website đọc nháp.
 
-Các lựa chọn cần chủ website kiểm khi duyệt: một danh mục chính; tối đa3cấp; tác giả account hoặc thương hiệu, không có module tác giả mới; tags trong form, chưa tag public/full tags manager; không tự lưu nền/hẹn giờ/phê duyệt; thùng rác không hard-delete; ảnh5MiB/16MP; public PHP reader; chuẩn hóa URL phân trang mới với301 từ query cũ. Ownership Search Console và kết quả routing/codec/quota hosting là gate vận hành còn chưa đo cho feature này, không được ghi là đã đạt.
+Các mặc định đã được duyệt: một danh mục chính; tối đa3cấp; tác giả account hoặc thương hiệu, không có module tác giả mới; tags trong form, chưa tag public/full tags manager; không tự lưu nền/hẹn giờ/phê duyệt; thùng rác không hard-delete; ảnh5MiB/16MP; public PHP reader; chuẩn hóa URL phân trang mới với301 từ query cũ. Ownership Search Console và kết quả routing/codec/quota hosting là gate vận hành còn chưa đo cho feature này, không được ghi là đã đạt.
 
 ## Kiểm tra trước bàn giao
 
