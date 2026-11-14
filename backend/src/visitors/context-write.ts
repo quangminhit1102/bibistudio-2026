@@ -61,11 +61,30 @@ export async function writeVisitorContext(
   if (chosen) {
     if (currentStatus === "verified" && chosen.status !== "verified") return;
     if (current?.ip_observed_at && +sqlDate(current.ip_observed_at) > +chosen.at) return;
-    let country = null;
-    try {
-      country = input.countryLookup?.lookup(chosen.ip) ?? null;
-    } catch {
-      /* Preserve the visit on lookup failure. */
+    // A session snapshot remains tied to its IP and original resolution time.
+    const retained =
+      current &&
+      current.client_ip === chosen.ip &&
+      current.country_code &&
+      current.country_name &&
+      current.country_dataset &&
+      current.country_resolved_at
+        ? {
+            code: current.country_code,
+            name: current.country_name,
+            dataset: current.country_dataset,
+            resolvedAt: current.country_resolved_at,
+          }
+        : null;
+    let country = retained
+      ? { code: retained.code, name: retained.name, dataset: retained.dataset }
+      : null;
+    if (!retained) {
+      try {
+        country = input.countryLookup?.lookup(chosen.ip) ?? null;
+      } catch {
+        /* A changed IP never inherits the previous IP's country. */
+      }
     }
     await c.execute(
       "UPDATE visitor_sessions SET client_ip=?,ip_status=?,ip_source=?,ip_observed_at=?,country_code=?,country_name=?,country_dataset=?,country_resolved_at=? WHERE id=?",
@@ -77,7 +96,7 @@ export async function writeVisitorContext(
         country?.code ?? null,
         country?.name ?? null,
         country?.dataset ?? null,
-        country ? now : null,
+        retained?.resolvedAt ?? (country ? now : null),
         input.sessionId,
       ],
     );

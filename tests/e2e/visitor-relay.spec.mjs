@@ -254,12 +254,23 @@ test(
         (
           await f.pool.query("SELECT country_code FROM visitor_sessions ORDER BY started_at DESC")
         )[0][0].country_code,
+        "CA",
+        "same IP retains its resolved country",
+      );
+      await setPeer("1.1.1.1");
+      await go(page, "/products/da-lat-map-notebook");
+      assert.equal((await tick()).status(), 204);
+      assert.equal(
+        (
+          await f.pool.query("SELECT country_code FROM visitor_sessions ORDER BY started_at DESC")
+        )[0][0].country_code,
         null,
       );
       assert.ok(
         (await f.pool.query("SELECT COUNT(*) n FROM visitor_viewed_products"))[0][0].n >= 2,
       );
       failLookup = false;
+      await setPeer("2001:4860:4860::8888");
       await go(page, "/products/ha-giang-map-notebook");
       assert.equal((await tick()).status(), 204);
       await go(page, "/admin/analytics/visitors");

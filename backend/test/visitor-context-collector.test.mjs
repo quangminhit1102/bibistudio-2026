@@ -166,3 +166,32 @@ test("privacy writes nothing; expired receipt cleanup bounded to 100 and history
   assert.equal((await f.pool.query("SELECT COUNT(*) n FROM analytics_relay_receipts"))[0][0].n, 51);
   assert.equal((await session(f)).page_count, 1);
 });
+
+test("collector preserves the resolved country/time for unchanged IP during lookup failure", async (t) => {
+  const f = await fixture(t);
+  await f.collect(f.batch, f.cookie, context(f));
+  const before = await session(f);
+  f.clock.advance(1000);
+  let calls = 0;
+  await f.collect(f.batch, f.cookie, {
+    ...context(f),
+    countryLookup: {
+      lookup() {
+        calls++;
+        throw new Error("temporary fixture lookup failure");
+      },
+      close() {},
+    },
+  });
+  const after = await session(f);
+  assert.equal(calls, 0);
+  for (const field of [
+    "client_ip",
+    "country_code",
+    "country_name",
+    "country_dataset",
+    "country_resolved_at",
+  ])
+    assert.equal(after[field], before[field], field);
+  assert.ok(new Date(after.ip_observed_at) > new Date(before.ip_observed_at));
+});

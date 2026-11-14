@@ -24,7 +24,11 @@ if (manifest.isBaseline) {
   }
   const server = http.createServer(
     createApp(
-      { releaseId: manifest.releaseId, sourceSha: manifest.sourceSha },
+      {
+        releaseId: manifest.releaseId,
+        sourceSha: manifest.sourceSha,
+        schemaVersion: manifest.schemaVersion,
+      },
       runtime?.appOptions,
     ),
   );

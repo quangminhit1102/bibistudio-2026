@@ -45,9 +45,12 @@ async function validateRelayConfiguration(config) {
     if (
       env.ANALYTICS_RELAY_SECRET !== json.secret ||
       env.GEOIP_COUNTRY_FILE !== expectedGeo ||
-      [env.AUTH_JWT_SECRET, env.ANALYTICS_ID_SECRET, env.RELEASE_PROBE_PASSWORD].includes(
-        json.secret,
-      ) ||
+      [
+        env.AUTH_JWT_SECRET,
+        env.ANALYTICS_ID_SECRET,
+        env.RELEASE_PROBE_SECRET,
+        env.RELEASE_PROBE_PASSWORD,
+      ].includes(json.secret) ||
       env.CLIENT_IP_SOURCE_VERIFIED !== "false" ||
       JSON.stringify((env.AUTH_ALLOWED_ORIGINS ?? "").split(",").filter(Boolean).sort()) !==
         JSON.stringify([...json.origins].sort())

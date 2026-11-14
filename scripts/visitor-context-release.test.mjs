@@ -251,6 +251,7 @@ test("private relay configuration requires separate keys, matching origins and t
   for (const env of [
     valid.replace("false", "true"),
     valid.replace("separate-auth-key", secret),
+    valid + `RELEASE_PROBE_SECRET=${secret}\n`,
     valid.replace("https://www.bibistudio.vn", "https://other.invalid"),
   ]) {
     await save(env);
