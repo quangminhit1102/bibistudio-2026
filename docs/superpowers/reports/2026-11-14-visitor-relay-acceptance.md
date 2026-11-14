@@ -1,56 +1,43 @@
-# Visitor IP relay — kiểm chứng local/CI, chờ production
+# Visitor IP relay — production và rollback đã kiểm chứng
 
-Ngày 14/11/2026. **Chưa deploy relay lên production.** Source đã push `main` và `codex/admin-dashboard`: `032ec991fe11673b8a00298c0276fbcad59fa83b`. [CI main 43563390060](https://github.com/quangminhit1102/bibistudio-2026/actions/runs/43563390060) đã Success, event push/main và đúng source SHA. Không lấy kết quả local/CI làm bằng chứng IP thật đã hoạt động trên hosting.
+Ngày 14/11/2026. Production đang chạy release `032ec991fe11673b8a00298c0276fbcad59fa83b-43563390060`, source `032ec991fe11673b8a00298c0276fbcad59fa83b`. Đã kiểm tra trực tiếp sau deploy, rollback về v5 rồi khôi phục cùng artifact v6. IP được ghi là **observed / Chưa xác minh**; quốc gia là **Ước lượng**. `CLIENT_IP_SOURCE_VERIFIED=false` được giữ nguyên.
 
-## Artifact sẵn sàng
+## Source, artifact và workflow
 
-- Release ID: `032ec991fe11673b8a00298c0276fbcad59fa83b-43563390060`.
-- GitHub artifact ID: `14101850882`; tên `release-032ec991fe11673b8a00298c0276fbcad59fa83b-43563390060`; chưa hết hạn, lưu đến14/12/2026.
-- Kích thước artifact GitHub ZIP:199028239byte (~189.8MiB), dưới ngân sách archive256MiB được builder kiểm tra.
-- Digest của **artifact ZIP**, không phải checksum `.tgz`: `sha256:442fee41a88b8bc3fb27a07d526ed609c2857780673e3103db686017239cb9dd`.
-- Gói cập nhật22file ops từ đúng Git object (không lấy working tree): `.superpowers/sdd/2026-11-13-visitor-ip-relay/relay-host-tools-032ec99.zip`,31565byte; SHA256 `9f6687a40fe5d1b5dfea6c8139365d10ce8cc3bce3477b52d6ddf3b99ea851b8`. Manifest bên trong ghi hash từng file. Chưa upload/cài lên hosting.
+| Bước                                                                                                  | Kết quả                                                                                |
+| ----------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| [Main CI 43563390060](https://github.com/quangminhit1102/bibistudio-2026/actions/runs/43563390060)    | Success, push/main, đúng source; check/build/compiled browser acceptance               |
+| [Production 43566445860](https://github.com/quangminhit1102/bibistudio-2026/actions/runs/43566445860) | Success; FE/BE, browser ảnh, API test, tab cũ tải 2 assets không cache                 |
+| [Rollback 43567948441](https://github.com/quangminhit1102/bibistudio-2026/actions/runs/43567948441)   | Success về `ee12307cf68f45484d59c3b77c2f6f7f83a07f47-43382604855`; degradedAdmin=false |
+| [Khôi phục 43568216450](https://github.com/quangminhit1102/bibistudio-2026/actions/runs/43568216450)  | Success; promote lại đúng artifact v6, không build lại                                 |
 
-## Kết quả đã đo
+Artifact ID `14101850882`, ZIP 199028239 byte, ZIP digest `sha256:442fee41a88b8bc3fb27a07d526ed609c2857780673e3103db686017239cb9dd`; không nhầm ZIP digest với checksum tgz. Ops và stable Passenger đã bootstrap từ source này, đối chiếu SHA256 từng file. Bản sao công cụ/config trước bootstrap nằm ngoài webroot. Khóa relay tạo riêng sau xác nhận của chủ website; không in khóa, không đổi quyền SSH/RBAC.
 
-| Kiểm tra trên final CI Linux | Kết quả |
-| --- | --- |
-| TypeScript FE/BE, lint, ảnh catalogue | Đạt; lint0error,10warning hiện có |
-| Frontend Vitest |108file,301test đạt |
-| Backend/tooling/PHP/MySQL |323test đạt,0skip |
-| Watcher phục hồi lỗi và dev FE/BE/PHP |2test đạt |
-| Browser auth, analytics, usability, profile, relay |5luồng đạt |
-| Build manifest6 và compiled bundle browser/PHP/MySQL |Đạt trên chính release ID phía trên |
+## Kết quả chạy thật
 
-Compiled acceptance kiểm tra cookie202→204/HttpOnly/path, readiness, API dữ liệu từ chối thiếu token, User chỉ thấy menu được phép, không đưa khóa runtime/MMDB vào frontend, screenshot desktop/mobile và không tràn ngang. Browser evidence ở artifact `browser-evidence-032ec991fe11673b8a00298c0276fbcad59fa83b-43563390060` (ID14101835881, lưu7ngày). IP công khai trong fixture là dữ liệu thử nghiệm riêng, không phải bằng chứng nguồn IP hosting.
+- Windows/external: cả `bibistudio.vn` và `www.bibistudio.vn` trả cookie bootstrap202 rồi batch hợp lệ204; Secure/HttpOnly/SameSite=Lax và Path=/api/analytics. Hai khách thử nghiệm mới có IP observed, source php_relay và quốc gia VN ngay sau batch, không đợi log/cron.
+- Nguồn hosting độc lập: hai hostname cũng202→204. IP PHP lưu trong DB khớp địa chỉ nguồn do curl lấy từ hệ điều hành trên chính kết nối HTTPS, không dùng header do client khai. Chỉ đối chiếu trong bộ nhớ; không đưa raw IP vào report.
+- Mỗi hostname chặn10 loại header forwarding/envelope giả mạo, body quá16KiB trả413 và origin sai trả403. HMAC backend thật: hợp lệ204, phát lại cùng request409; sửa body/cookie/origin/User-Agent/privacy/signature hoặc thời gian quá hạn/tương lai đều403. Kết quả xác minh lại với JSON error code của ứng dụng, không tính một403 của lớp ngoài là pass.
+- Collector Node không ký vẫn ghi số liệu với IP chưa xác định, không lấy8.8.8.8 từ XFF. Envelope giả bị từ chối. DNT và GPC trả204, không cấp cookie theo dõi mới.
+- Login/refresh/profile/logout, readiness200 và analytics thiếu token401 đạt trước và sau rollback. Sản phẩm deep link, ảnh, FE/BE version và old-client assets đạt.
+- Khi chạy v5, cookie đã có vẫn gửi batch204 và đọc được lịch sử. Sau forward v6, cùng 2 khách còn nguyên IP/source/thời điểm/quốc gia/dataset/số phiên/số trang. Hash snapshot trước/sau cùng `523f8c04ca0bd7f9c5e309735c5a4747967e3824ad94cedee7bd1bb91c5408af`. Không down migration hoặc restore đè DB live.
+- UI production đăng nhập bằng HTTP thật: chi tiết khách hiển thị Chưa xác minh, Việt Nam và Ước lượng; desktop/mobile390px không tràn ngang, ảnh sản phẩm decode được. Screenshot riêng đã che IP; không commit dữ liệu khách hoặc screenshot quản trị vào repo.
 
-Local trước final CI cũng đã chạy toàn bộ check, build và compiled preview thật. Bản local exact `16ac152` có buildExit0/previewExit0; thay đổi sau đó chỉ ở loader ops/cache và fixture, được final CI `032ec991fe11673b8a00298c0276fbcad59fa83b` kiểm chứng lại đầy đủ. Lệnh hằng ngày vẫn `npm run dev`, `npm run check`, `npm run build`; setup một lần `npm run db:setup:local` khi nâng feature schema.
+## Hosting, backup và cấu hình
 
-## Review và lỗi đã tái hiện rồi sửa
+PHP8.3.36, Node24; MMDB 8515063 byte, DB-IP Country Lite11/2026. Context ledgerversion1 complete/checksum đúng; auth4/profile1/history1 được giữ. Paired backup native trước activation gồm DB 3861614 byte và 2 avatar, manifest/SQL checksum khớp; activation chỉ chạy sau verifier restore thành công. Lần forward tiếp tục dùng cùng gate paired restore.
 
-Một review toàn bộ thay đổi bằng fresh context (gpt-6-astra), không có Critical. Đã xử lý trong một fix pass:
+Private runtime.env, maintenance.env và analytics-relay.json ở0600, ngoài webroot; relay secret tách identity/JWT/probe. Hash cấu hình được đối chiếu sau rollback/forward. Giữ nguyên /api/.htaccess, /node-test và các website khác. Importer cPanel và analytics:cleanup đã retired vẫn không có trong crontab; lịch sử thật không TTL. Disk/quota được kiểm tra bởi receiver, không tăng giới hạn hoặc dọn dữ liệu để phát hành.
 
-- Cùng IP đã có quốc gia: không tra lại/xóa snapshot khi lookup lỗi; giữ thời điểm resolve. Đổi IP mà lookup miss vẫn xóa quốc gia cũ; chưa resolve thì được thử lại. Unit RED→GREEN, MySQL và browser thật.
-- Kiểm tra khóa riêng phải so với `RELEASE_PROBE_SECRET`, không chỉ password probe. Config regression RED→GREEN.
-- Stable Passenger chuyển `schemaVersion` vào app; test DB từng trảready200 khi thiếu context của manifest6, sau sửa trả503đúng. Startup/auth cũ vẫn đạt.
-- CI đầu phát hiện PHP opcode cache giữ router fixture cũ. Đã đo cache bật/revalidate2giây; fixture hiện đọc IP từ JSON riêng, source PHP bất biến, không tắt cache hay thêm override production.
-- Đổi symlink `current` từ Node ngoài PHP worker có thể bị realpath cache giữ release cũ. Persistent PHP test từng trả405sai khi đã rollback vềv5; loader `clearstatcache(true)` rồi đạt405→404→405 trên cùng worker.
+## Phạm vi bằng chứng và điểm còn giới hạn
 
-Pinned backend productionv5 `ee12307cf68f45484d59c3b77c2f6f7f83a07f47` đã chạy thật sau DDL context trong DB local riêng: auth/profile/readiness vẫn đạt, IP/country/history còn nguyên; forward phục hồi ý nghĩa observed. Native MariaDB backup đã restore và xác minh ledger, snapshot, receipt còn hạn trong verifier riêng, không restore đè DB nguồn. **Chưa diễn tập rollback v6 trên production.**
+Đây là IP do PHP quan sát sau bộ chặn ingress, chưa chứng minh toàn bộ topology proxy/CDN của Tino; không bật trust header và không ghi nhãn verified. Quốc gia là ước lượng offline, không phải GPS; không gọi API định vị bên ngoài. Hai nguồn live đã đo là máy Windows bên ngoài và hosting, chưa có mạng ngoài thứ hai hoặc IPv6 live. Lookup-miss/private/IPv6 dataset và lỗi timeout/upstream được kiểm thử local/CI; không gây hỏng upstream production để diễn tập timeout. Các giới hạn này không được tính là kết quả live đã đo.
 
-## Trạng thái production và phần còn chờ
+CI cuối:301test frontend,323Node/PHP/MySQL (0skip),2dev và5browser, cùng build/compiled acceptance đạt. Một fresh review toàn thay đổi không có Critical; đã sửa country snapshot/probe-secret guard/Passenger readiness/PHP realpath cache bằng hồi quy RED→GREEN rồi CI cuối xanh. Chi tiết quyết định triển khai nằm trong ledger của kế hoạch. Không có thay đổi product code sau CI này.
 
-Baseline HTTP/SSH đã đo: production vẫn `ee12307cf68f45484d59c3b77c2f6f7f83a07f47-43382604855`; `/api/ready`200, profile thiếu token401, ảnh catalogue200. Receiver check qua SSH key hiện có trảok, Nodev24.22.3. Không thay đổi current, DB, cron, receiver hay private key/config production trong đợt relay này.
+Trong lần tiếp tục, helper kiểm chứng cũ kỳ vọng204 cho request mang header giả; source PHP quy định403. Đã tách request giả403 và request hợp lệ204, không sửa product để nới guard. Query thử nghiệm hosting ban đầu nhầm identity_hash với visitor UUID; sửa JOIN theo schema rồi đạt. Hai lỗi helper này không được tính là lỗi runtime hay pass giả.
 
-Công cụ hiện báo không truy cập được browser của chat, nên chưa thể thao tác cPanel. Cần khôi phục kết nối Edge/cPanel để:
-
-1. Đo quota, PHP SAPI/version, routing/nguồn từ hai phía và hai hostname; giữ kết quả IPv6 chưa đo là pending nếu mạng không có.
-2. Backup rồi cài đúng ops và stable `production/app/app.cjs`; tạo khóa HMAC riêng/private config0600, giữ `CLIENT_IP_SOURCE_VERIFIED=false`. Chi tiết [vận hành](../../visitor-analytics-operations.md).
-3. Kiểm tra native paired backup/verifier, chạy workflow production thủ công với đúng artifact, xác minh PHP thực và IP/quốc gia mới trong UI; kiểm tra auth/profile/ảnh/tab cũ.
-4. Rollback vềv5 rồi forward cùng artifact khi được phép; không down migration, không restore đè DB live, không bật importer/TTLcron đã retired.
-
-Chỉ ghi nhận IP là **observed/chưa xác minh**. Quốc gia là ước lượng offline DB-IP Country Lite11/2026, CC-BY-4.0; không phải GPS. Không gửi IP đến API định vị bên ngoài. Không cron enrichment; batch15giây và phiên30phút giữ nguyên; lịch sử thật không TTL. Bản cũ đã che IP không thể khôi phục IP đầy đủ bằng migration này.
-
-Environment mới: `ANALYTICS_RELAY_SECRET`, `GEOIP_COUNTRY_FILE`; PHP private JSON có environment/secret/targetUrl/origins. Không có key trong source/frontend/report. Hostnames/origins, key separation và quyền đọc dữ liệu vẫn phải qua kiểm tra backend.
+Bằng chứng riêng: checkout gốc `.superpowers/recovered-relay/` chứa summary JSON, workflow logs và screenshot đã che IP; hosting `private/relay-live-audit.json` chứa summary không có khóa/rawIP. Cookie và snapshot dùng so sánh chỉ ở file private bị Git bỏ qua. Lệnh hằng ngày vẫn npm run dev / check / build; xem [vận hành](../../visitor-analytics-operations.md) và [phát hành](../../build-and-deploy.md).
 
 ## Danh sách file implementation
 

@@ -1,5 +1,7 @@
 # Khách truy cập: dữ liệu, kiểm chứng và vận hành
 
+**Cập nhật 14/11/2026:** relay manifest6 đã phát hành và rollback/forward thật đã đạt; IP quan sát và quốc gia ước lượng có trên UI. Giữ trust=false. Xem [biên bản hiện tại](superpowers/reports/2026-11-14-visitor-relay-acceptance.md); đoạn 13/11 dưới đây là mốc lịch sử.
+
 Trạng thái ngày 13/11/2026: đã triển khai và kiểm chứng local theo [thiết kế đã duyệt](superpowers/specs/2026-11-13-visitor-analytics-design.md). Đã phát hành production release ee12307-43382604855 và kiểm chứng rollback/forward; xem [biên bản](superpowers/reports/2026-11-13-visitor-analytics-production-release.md). Chủ website xác nhận **chưa gửi yêu cầu Tino**; không có bằng chứng hosting đã sửa nguồn IP. Không bật `CLIENT_IP_SOURCE_VERIFIED` chỉ để có số liệu trên UI.
 
 ## Cách đọc số liệu
@@ -66,7 +68,7 @@ Sau kiểm tra cPanel, chủ website yêu cầu deploy source hiện tại dù n
 
 Receiver phải giữ SSH_ORIGINAL_COMMAND để validate lệnh SSH. Chỉ child crontab nhận bản sao environment đã bỏ biến này; nếu truyền nguyên biến, CageFS trên hosting đã đo trả Invalid argument. Bản sửa ee12307 có regression test và đã qua rollback/deploy GitHub thật. Không tắt kiểm tra crontab hoặc bỏ khóa deploy để né lỗi.
 
-## Relay IP/quốc gia — manifest6 đang kiểm chứng, chưa phát hành
+## Relay IP/quốc gia — manifest6 đã phát hành 14/11
 
 Không dùng cron hoặc importer. Browser gửi batch hiện có qua `/api/analytics/relay/collect.php`; PHP ký IP quan sát được, Express ghi snapshot phiên và tra quốc gia offline. UI ghi “Chưa xác minh” và “Ước lượng”. `CLIENT_IP_SOURCE_VERIFIED=false`; auth và trust proxy không đổi. MMDB DB-IP Country Lite 11/2026, CC-BY-4.0; attribution nằm trong UI và `backend/geoip/country.lock.json`.
 
@@ -83,4 +85,4 @@ Trình tự: paired native backup/restore có avatar → auth/history migrations
 
 Rollback v6→v5 dùng context tool của current v6 để kiểm tra trước khi chuyển. Dữ liệu session mới vẫn ở DB; v5 có thể đổi cột ip_status thành unavailable nhưng không xóa IP/country snapshot, v6 khôi phục ý nghĩa observed khi forward. Old→old không có context tool ở current/candidate bị chặn sau khi relay đã cài; giữ release v6 cho forward. Không chọn tool ngẫu nhiên từ một release retained khác. Importer và TTLcron đã retired giữ nguyên trạng thái tắt.
 
-Local đã đo: PHP loader v6/old/tampered trả405/404/503; pinned backend productionv5 vẫn chạy auth/profile sau DDL mới; backup native phục hồi snapshot/ledger/receipt trong verifier riêng. Artifact local đầu tiên199025808byte (~189.8MiB), dưới256MiB; đây chưa phải artifact CI/production. Chưa có kết quả deploy/live cho manifest6 ở thời điểm ghi mục này.
+Local đã đo: PHP loader v6/old/tampered trả405/404/503; pinned backend productionv5 vẫn chạy auth/profile sau DDL mới; backup native phục hồi snapshot/ledger/receipt trong verifier riêng. Artifact local đầu tiên199025808byte (~189.8MiB), dưới256MiB; đây chưa phải artifact CI/production. Manifest6 đã deploy production và diễn tập rollback/forward ngày14/11; xem [biên bản live](superpowers/reports/2026-11-14-visitor-relay-acceptance.md). Hai nguồn Windows/hosting và hai hostname có IP observed/quốc gia ước lượng; trust=false. IPv6 live và mạng ngoài thứ hai chưa đo.

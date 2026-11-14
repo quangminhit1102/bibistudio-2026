@@ -4,7 +4,7 @@
 
 Luồng hoạt động: **code → CI kiểm tra/build → Run workflow Deploy production → duyệt production → deploy → smoke test → tự phục hồi nếu lỗi**. Push main chỉ tạo artifact, không tự thay đổi website.
 
-**Relay IP/quốc gia chưa phát hành:** source `032ec99`, CI main43563390060 đã Success (check/build/compiled browser acceptance). Artifact manifest6 đã sẵn sàng nhưng cần bootstrap receiver/stable Passenger/private relay config qua cPanel trước khi chạy production; chưa đổi website thật. Xem [kết quả và các gate còn chờ](superpowers/reports/2026-11-14-visitor-relay-acceptance.md).
+**Relay IP/quốc gia đã phát hành 14/11:** release `032ec991fe11673b8a00298c0276fbcad59fa83b-43563390060`, production43566445860 và forward43568216450 Success; rollback43567948441 về v5 đã kiểm chứng. Hai nguồn Windows/hosting, hai hostname, HMAC/replay/privacy/auth và UI desktop/mobile đạt. Giữ trust=false; IP Chưa xác minh, quốc gia Ước lượng. Xem [biên bản và giới hạn](superpowers/reports/2026-11-14-visitor-relay-acceptance.md).
 
 **Analytics13/11 đã phát hành production:** release `ee12307cf68f45484d59c3b77c2f6f7f83a07f47-43382604855`, [workflow43383614666](https://github.com/quangminhit1102/bibistudio-2026/actions/runs/43383614666) Success. Có bộ lọc ngày1/6/12tháng/custom, chart theo phiên, chi tiết gọn và lịch sử không TTL. Manifest5 dùng visitor ledger1 riêng, auth schema vẫn4. Đã nâng receiver, native backup/restore, gỡ đúng importer/TTLcron và rollback thật về3beb58f rồi forward; giữ dữ liệu log cũ. Sửa CageFS bằng cách bỏ SSH_ORIGINAL_COMMAND chỉ khỏi child crontab, không khỏi receiver. **IP thật vẫn chưa đạt; trust=false, UI hiển thị Chưa xác định** theo phạm vi chủ website yêu cầu deploy. Xem [biên bản production](superpowers/reports/2026-11-13-visitor-analytics-production-release.md), [vận hành analytics](visitor-analytics-operations.md) và [yêu cầu Tino](visitor-ip-hosting-request.md).
 
@@ -103,7 +103,7 @@ Quota hiện cấu hình 4 GiB/môi trường, kiểm tra thêm disk space/extra
 
 Secret hoạt động là `DEPLOY_SSH_KEY` trong GitHub environment `production`. Key riêng có `restrict` và forced-command receiver cố định config production; không phải shell tùy ý. Private key không nằm trong Git/chat/log. Host ED25519 được pin trong deploy client, fingerprint đã đối chiếu qua cPanel: `SHA256:92PBre+MLZdaWoqr7qS8vtHaj8aiCXIDpKlOrZJ5p90`. Không dùng `StrictHostKeyChecking=no`.
 
-Deploy tools ở `/home/vhplasti/bibi-deploy/tools`, ngoài archive ứng dụng. Sửa `ops` cần kiểm tra source và bootstrap qua cPanel với đúng commit/checksum; deploy ứng dụng không tự ghi đè receiver. Bản `deploy.cjs` đã kiểm chứng là `de98fdffdf38e8dbcd96f4abdec69077f16f4d8e`, SHA256 `2186f97d95e127c7a5c30d00437774efed73f60959ea4ba22ae8c4e45a4a7ede`. Thay đổi production-only ở workflow/scripts không cần đổi tool này.
+Deploy tools ở `/home/vhplasti/bibi-deploy/tools`, ngoài archive ứng dụng. Sửa `ops` cần kiểm tra source và bootstrap qua cPanel với đúng commit/checksum; deploy ứng dụng không tự ghi đè receiver. Bản `deploy.cjs` hiện đã bootstrap từ `032ec991fe11673b8a00298c0276fbcad59fa83b`, SHA256 `52132e6231d0360f61608fd12e8b6431780342f4e4402fbc6bc8950ab93bba53`; stable Passenger và visitor-context/PHP tools cùng source. Thay đổi production-only ở workflow/scripts không cần đổi tool này.
 
 Tạo/cấp quyền key mới, mở rộng truy cập hoặc chuyển production lần đầu cần xác nhận phù hợp. Không đọc/in private key để điều tra một job lỗi.
 
