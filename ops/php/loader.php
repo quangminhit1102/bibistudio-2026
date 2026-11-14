@@ -9,6 +9,8 @@ function bibi_loader_fail(int $status): never {
 }
 try {
  $root = __BIBI_DEPLOY_ROOT__;
+ // Node changes current outside this persistent PHP worker. Resolve the pointer afresh.
+ clearstatcache(true);
  $current = realpath($root.'/current');
  $releases = realpath($root.'/releases');
  if ($current === false || $releases === false || !str_starts_with($current, $releases.'/') || dirname($current) !== $releases) bibi_loader_fail(503);

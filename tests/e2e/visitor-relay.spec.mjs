@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { randomBytes } from "node:crypto";
 import { createServer } from "node:http";
-import { mkdir, mkdtemp, writeFile, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, writeFile, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { once } from "node:events";
@@ -26,12 +26,18 @@ test(
     const dataset = await prepareCountryDataset();
     const dir = await mkdtemp(join(tmpdir(), "bibi-relay-browser-"));
     const routerFile = join(dir, "router.php");
-    const setPeer = (ip) =>
-      writeFile(
-        routerFile,
-        `<?php $_SERVER['REMOTE_ADDR']='${ip}'; require '/router/default.php';`,
-      );
-    await setPeer("8.8.8.8");
+    // Keep PHP source immutable: opcode cache may retain a rewritten router for two seconds.
+    // Only this private test router reads fixturePeer; deployable PHP has no such hook.
+    await writeFile(
+      routerFile,
+      `<?php $fixture=json_decode(file_get_contents(getenv('BIBI_RELAY_CONFIG_FILE')),true); $_SERVER['REMOTE_ADDR']=$fixture['fixturePeer']??'8.8.8.8'; require '/router/default.php';`,
+    );
+    const setPeer = async (ip) => {
+      const config = JSON.parse(await readFile(relay.configFile, "utf8"));
+      await writeFile(relay.configFile, JSON.stringify({ ...config, fixturePeer: ip }), {
+        mode: 0o600,
+      });
+    };
     let runtime, backend, frontend, relay, browser;
     let failLookup = false;
     const captured = [];
@@ -260,12 +266,15 @@ test(
       await setPeer("1.1.1.1");
       await go(page, "/products/da-lat-map-notebook");
       assert.equal((await tick()).status(), 204);
-      assert.equal(
-        (
-          await f.pool.query("SELECT country_code FROM visitor_sessions ORDER BY started_at DESC")
-        )[0][0].country_code,
-        null,
+      const [[missingCountry]] = await f.pool.query(
+        "SELECT client_ip,country_code FROM visitor_sessions ORDER BY started_at DESC",
       );
+      assert.equal(
+        missingCountry.client_ip,
+        "1.1.1.1",
+        "fixture peer change must reach actual PHP before testing a lookup miss",
+      );
+      assert.equal(missingCountry.country_code, null);
       assert.ok(
         (await f.pool.query("SELECT COUNT(*) n FROM visitor_viewed_products"))[0][0].n >= 2,
       );

@@ -361,3 +361,121 @@ test("failed context migration leaves production pointer and parent routing on o
     code: "ENOENT",
   });
 });
+test(
+  "persistent PHP loader follows external rollback and forward of current without stale realpath cache",
+  { timeout: 60000 },
+  async (t) => {
+    const { readFile, mkdir } = await import("node:fs/promises");
+    const { randomUUID } = await import("node:crypto");
+    const { promisify } = await import("node:util");
+    const { execFile } = await import("node:child_process");
+    const exec = promisify(execFile);
+    const dir = await mkdtemp(join(tmpdir(), "bibi-loader-live-"));
+    const id = randomUUID(),
+      name = "bibi-loader-live-" + id;
+    const label = "com.bibi.loader-live";
+    const docker = (args) =>
+      exec(
+        "docker",
+        [...(process.platform === "win32" ? ["--context", "desktop-linux"] : []), ...args],
+        {
+          env: { ...process.env, DOCKER_API_VERSION: process.env.DOCKER_API_VERSION ?? "1.43" },
+          windowsHide: true,
+          timeout: 25000,
+        },
+      );
+    try {
+      await cp("backend/relay", join(dir, "relay"), { recursive: true });
+      const feature = await context().createVisitorContextMetadata(resolve("backend"));
+      await writeFile(
+        join(dir, "new.json"),
+        JSON.stringify({ schemaVersion: 6, visitorContext: feature }),
+      );
+      await writeFile(join(dir, "old.json"), JSON.stringify({ schemaVersion: 5 }));
+      await writeFile(
+        join(dir, "config.json"),
+        JSON.stringify({
+          environment: "production",
+          targetUrl: "https://example.invalid/api/analytics/collect",
+          secret: Buffer.alloc(32, 8).toString("base64url"),
+          origins: ["https://example.invalid"],
+        }),
+      );
+      await writeFile(
+        join(dir, "loader.php"),
+        (await readFile("ops/php/loader.php", "utf8")).replace(
+          "__BIBI_DEPLOY_ROOT__",
+          "'/tmp/bibi-loader'",
+        ),
+      );
+      await writeFile(
+        join(dir, "router.php"),
+        `<?php $root='/tmp/bibi-loader';if(!is_dir($root)){mkdir($root.'/releases/new/backend/relay',0700,true);mkdir($root.'/releases/old',0700,true);mkdir($root.'/private',0700,true);foreach(['collect.php','context.php'] as $name)copy('/fixture/relay/'.$name,$root.'/releases/new/backend/relay/'.$name);copy('/fixture/new.json',$root.'/releases/new/manifest.json');copy('/fixture/old.json',$root.'/releases/old/manifest.json');copy('/fixture/config.json',$root.'/private/analytics-relay.json');chmod($root.'/private/analytics-relay.json',0600);symlink($root.'/releases/new',$root.'/current');}if(($_SERVER['REQUEST_URI']??'')==='/__relay-ready'){header('Content-Type: application/json');echo '{"runtime":"php"}';return;}require '/fixture/loader.php';`,
+      );
+      await docker([
+        "run",
+        "--detach",
+        "--rm",
+        "--name",
+        name,
+        "--label",
+        label + "=" + id,
+        "--read-only",
+        "--cap-drop",
+        "ALL",
+        "--security-opt",
+        "no-new-privileges",
+        "--user",
+        `${process.getuid?.() ?? 1000}:${process.getgid?.() ?? 1000}`,
+        "--tmpfs",
+        "/tmp:rw,noexec,nosuid,size=16m,mode=1777",
+        "--publish",
+        "127.0.0.1::8080",
+        "--mount",
+        `type=bind,source=${dir},target=/fixture,readonly`,
+        (await import("./php-relay.mjs")).PHP_IMAGE,
+        "php",
+        "-S",
+        "0.0.0.0:8080",
+        "/fixture/router.php",
+      ]);
+      const { stdout } = await docker(["port", name, "8080/tcp"]);
+      const url = "http://" + stdout.trim();
+      const deadline = Date.now() + 15000;
+      for (;;) {
+        try {
+          if ((await fetch(url + "/__relay-ready", { signal: AbortSignal.timeout(1000) })).ok)
+            break;
+        } catch {}
+        if (Date.now() > deadline) throw new Error("Owned loader fixture readiness timeout");
+        await new Promise((r) => setTimeout(r, 100));
+      }
+      assert.equal((await fetch(url + "/collect.php")).status, 405);
+      const switchTo = (target) =>
+        docker([
+          "exec",
+          name,
+          "php",
+          "-r",
+          `unlink('/tmp/bibi-loader/current');symlink('/tmp/bibi-loader/releases/${target}','/tmp/bibi-loader/current');`,
+        ]);
+      await switchTo("old");
+      const old = await fetch(url + "/collect.php");
+      assert.equal(old.status, 404);
+      assert.equal((await old.json()).error.code, "ANALYTICS_RELAY_UNAVAILABLE");
+      await switchTo("new");
+      assert.equal((await fetch(url + "/collect.php")).status, 405);
+    } finally {
+      try {
+        const { stdout } = await docker([
+          "inspect",
+          "--format",
+          `{{index .Config.Labels "${label}"}}`,
+          name,
+        ]);
+        if (stdout.trim() === id) await docker(["rm", "--force", name]);
+      } catch {}
+      await rm(dir, { recursive: true, force: true });
+    }
+  },
+);
