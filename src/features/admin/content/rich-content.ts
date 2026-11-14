@@ -1,4 +1,5 @@
 import DOMPurify from "dompurify";
+import { RICH_TAGS, RICH_ATTRIBUTES } from "../../../../backend/src/content/rich-policy";
 
 export interface LegacyNode {
   type?: string;
@@ -66,60 +67,8 @@ function legacyHtml(node: LegacyNode, depth = 0): string {
 /** Only durable media references survive. Runtime src values never reach storage. */
 export function sanitizeRichHtml(html: string): string {
   const fragment = DOMPurify.sanitize(html, {
-    ALLOWED_TAGS: [
-      "p",
-      "br",
-      "h1",
-      "h2",
-      "h3",
-      "h4",
-      "sub",
-      "sup",
-      "table",
-      "caption",
-      "colgroup",
-      "col",
-      "thead",
-      "tbody",
-      "tfoot",
-      "tr",
-      "th",
-      "td",
-      "strong",
-      "b",
-      "em",
-      "i",
-      "u",
-      "s",
-      "strike",
-      "ul",
-      "ol",
-      "li",
-      "blockquote",
-      "pre",
-      "code",
-      "hr",
-      "a",
-      "img",
-      "figure",
-      "figcaption",
-      "span",
-    ],
-    ALLOWED_ATTR: [
-      "href",
-      "target",
-      "rel",
-      "alt",
-      "title",
-      "data-media-id",
-      "style",
-      "start",
-      "width",
-      "colspan",
-      "rowspan",
-      "scope",
-      "border",
-    ],
+    ALLOWED_TAGS: RICH_TAGS,
+    ALLOWED_ATTR: RICH_ATTRIBUTES,
     ALLOW_DATA_ATTR: false,
     RETURN_DOM_FRAGMENT: true,
   });

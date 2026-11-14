@@ -1,3 +1,6 @@
+# Keep source formatting and build checksums identical in every worktree.
+* text=auto eol=lf
+
 # Feature migration checksums must remain byte-identical across Windows and Linux.
 backend/access-log-migrations/*.sql text eol=lf
 backend/visitor-migrations/*.sql text eol=lf
