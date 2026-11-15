@@ -214,6 +214,7 @@ function sanitize(raw: string): SanitizedContent {
     window.close();
   }
 }
+parentPort?.postMessage({ ready: true });
 try {
   parentPort?.postMessage({ value: sanitize(workerData) });
 } catch (error) {

@@ -101,3 +101,35 @@ export async function createContentMediaFixture(t, options = {}) {
   });
   return { ...fixture, media };
 }
+
+export async function createContentEditingFixture(t) {
+  const fixture = await createContentMediaFixture(t);
+  const { createContentEditing } = await import("../../dist/content/editing.js");
+  const { createContentLookups } = await import("../../dist/content/lookups.js");
+  let snapshot = null;
+  const activeRead = async () => (snapshot === null ? null : structuredClone(snapshot));
+  const editing = createContentEditing({
+    pool: fixture.pool,
+    paths: fixture.paths,
+    clock: fixture.clock,
+    media: fixture.media,
+    activeRead,
+  });
+  const lookups = createContentLookups({ pool: fixture.pool, clock: fixture.clock });
+  const release = {
+    releaseId: "local-content-fixture",
+    sourceSha: "test",
+    schemaVersion: 7,
+    content: { mode: "cms", publicReaderVersion: 1 },
+  };
+  return {
+    ...fixture,
+    editing,
+    lookups,
+    activeRead,
+    release,
+    setActive(value) {
+      snapshot = structuredClone(value);
+    },
+  };
+}

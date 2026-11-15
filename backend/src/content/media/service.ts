@@ -28,12 +28,7 @@ export function createContentMedia({
 }) {
   const store = createContentMediaStore(paths);
   async function authorize(c: PoolConnection, actor: AuthPrincipal, upload = false) {
-    const { principal } = await lockAuthorizedUsers(
-      c,
-      actor,
-      upload ? undefined : "post.view",
-      clock,
-    );
+    const { principal } = await lockAuthorizedUsers(c, actor, "post.view", clock);
     await assertContentSchemaReady(c);
     if (
       upload &&

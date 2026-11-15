@@ -22,6 +22,14 @@ import { createProfileService } from "./profile/service";
 import { profileSchemaStatus } from "./profile/schema";
 import { createAvatarStore, type AvatarStore } from "./profile/avatar-store";
 import { avatarRoutes } from "./profile/avatar-routes";
+import type { ContentPaths } from "./content/contracts";
+import { createContentEditing, type ActiveContentRead } from "./content/editing";
+import { createContentLookups } from "./content/lookups";
+import { createContentMedia } from "./content/media/service";
+import { mediaRoutes } from "./content/media/routes";
+import { contentRoutes } from "./content/routes";
+import { readContentCapabilities } from "./content/capabilities";
+import { contentSchemaStatus } from "./content/schema";
 
 export interface AppOptions {
   db?: Pool;
@@ -32,10 +40,12 @@ export interface AppOptions {
   visitorHistory?: { schemaDirectory: string };
   visitorContext?: { schemaDirectory: string };
   profiles?: { schemaDirectory: string; assetDirectory: string; assets?: AvatarStore };
+  content?: { paths: ContentPaths; schemaDirectory: string; activeRead: ActiveContentRead };
 }
 
 export function createApp(release: ReleaseInfo, options: AppOptions = {}): Express {
   const app = express();
+  const contentCapabilities = readContentCapabilities(release);
   const authConfig = options.config && "jwtSecret" in options.config ? options.config : undefined;
   const auth =
     options.db && authConfig
@@ -159,8 +169,33 @@ export function createApp(release: ReleaseInfo, options: AppOptions = {}): Expre
         throw new ApiError(503, "VISITOR_CONTEXT_NOT_READY", "Dịch vụ phân tích chưa sẵn sàng");
       }
     }
+    if (contentCapabilities.canWrite) {
+      try {
+        if (
+          !options.content ||
+          (await contentSchemaStatus(options.db, options.content.schemaDirectory)).state !==
+            "complete"
+        )
+          throw new Error();
+        await options.content.activeRead();
+      } catch {
+        throw new ApiError(503, "CONTENT_NOT_READY", "Dịch vụ nội dung chưa sẵn sàng");
+      }
+    }
     res.json({ ok: true });
   });
+  if (auth && authConfig && options.db && options.content) {
+    const shared = { pool: options.db, clock: options.clock ?? systemClock };
+    const media = createContentMedia({ ...shared, paths: options.content.paths });
+    const editing = createContentEditing({ ...shared, ...options.content, media });
+    app.use(
+      contentRoutes(editing, createContentLookups(shared), auth, authConfig, contentCapabilities),
+    );
+    app.use(mediaRoutes(media, auth, authConfig, shared));
+  } else
+    app.use("/api/content", ...(auth ? [authenticate(auth)] : []), () => {
+      throw new ApiError(503, "CONTENT_NOT_READY", "Dịch vụ nội dung chưa sẵn sàng");
+    });
   if (auth && authConfig && options.db && options.profiles) {
     const service = createProfileService({
       pool: options.db,

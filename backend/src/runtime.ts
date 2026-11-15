@@ -5,12 +5,15 @@ import { readAuthConfig, readDbConfig, readProfileConfig, systemClock, type Cloc
 import { createDbPool } from "./db/pool";
 import { createCatalogue } from "./visitors/catalogue";
 import { openCountryLookupSync, type CountryLookup } from "./visitors/country-lookup";
+import { readContentPaths } from "./content/capabilities";
+import { ApiError } from "./http/errors";
 
 /** Synchronous app dependencies; no schema or account mutation during startup. */
 export function createRuntime(env: NodeJS.ProcessEnv = process.env, clock: Clock = systemClock) {
   const config = readAuthConfig(env);
   const database = readDbConfig(env);
   const profiles = readProfileConfig(env);
+  const contentPaths = readContentPaths(env);
   if (
     !env.ANALYTICS_ID_SECRET ||
     Buffer.byteLength(env.ANALYTICS_ID_SECRET) < 32 ||
@@ -46,6 +49,17 @@ export function createRuntime(env: NodeJS.ProcessEnv = process.env, clock: Clock
     db,
     config,
     clock,
+    ...(contentPaths
+      ? {
+          content: {
+            paths: contentPaths,
+            schemaDirectory: resolve(__dirname, "../content-migrations"),
+            activeRead: async () => {
+              throw new ApiError(503, "CONTENT_NOT_READY", "Bộ đọc nội dung chưa sẵn sàng");
+            },
+          },
+        }
+      : {}),
     ...(profiles
       ? { profiles: { ...profiles, schemaDirectory: resolve(__dirname, "../profile-migrations") } }
       : {}),

@@ -48,6 +48,11 @@ export function installSecurity(app: Express, config: SecurityConfig): void {
     // These route-specific envelopes are parsed only after authenticated preflight.
     if (
       (req.method === "POST" && /^\/api\/content\/media\/?$/i.test(req.path)) ||
+      (req.method === "POST" && /^\/api\/content\/(?:posts|categories)\/?$/i.test(req.path)) ||
+      (["PUT", "DELETE"].includes(req.method) &&
+        /^\/api\/content\/(?:posts|categories)\/[a-f0-9-]{36}\/?$/i.test(req.path)) ||
+      (req.method === "POST" &&
+        /^\/api\/content\/posts\/[a-f0-9-]{36}\/(?:duplicate|trash|restore)\/?$/i.test(req.path)) ||
       (req.method === "PUT" &&
         /^\/api\/(?:profile|accounts\/[a-f0-9-]{36})\/avatar\/?$/i.test(req.path))
     )

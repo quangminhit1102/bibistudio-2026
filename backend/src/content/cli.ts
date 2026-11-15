@@ -3,6 +3,7 @@ import { readDbConfig } from "../config";
 import { readPrivateEnvironment } from "../db/private-env";
 import { createDbPool } from "../db/pool";
 import { migrateContent, contentSchemaStatus } from "./schema";
+import { syncContentPermissions } from "./capabilities";
 export function contentEnvironment(file: string | undefined, env: NodeJS.ProcessEnv): void {
   if (
     env.NODE_ENV === "production" &&
@@ -24,7 +25,10 @@ async function main() {
   const pool = createDbPool({ ...readDbConfig(env), connectionLimit: 2 }),
     directory = resolve(__dirname, "../../content-migrations");
   try {
-    if (command === "migrate") await migrateContent(pool, directory);
+    if (command === "migrate") {
+      await migrateContent(pool, directory);
+      await syncContentPermissions(pool);
+    }
     const status = await contentSchemaStatus(pool, directory);
     console.log(JSON.stringify(status));
     if (status.state === "dirty") process.exitCode = 1;

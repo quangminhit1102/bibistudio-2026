@@ -21,7 +21,14 @@ const resources: Record<string, { label: string; actions: string[] }> = {
   product: { label: "sản phẩm", actions: ["view", "create", "update", "delete", "export"] },
   customer: { label: "khách mua hàng", actions: ["view", "create", "update", "delete", "export"] },
   sales_slip: { label: "kinh doanh", actions: ["view", "create", "update", "delete", "export"] },
-  post: { label: "nội dung", actions: ["view", "create", "update", "delete", "export"] },
+  post: {
+    label: "nội dung",
+    actions: ["view", "create", "update", "delete", "export", "publish", "restore"],
+  },
+  content_category: {
+    label: "danh mục nội dung",
+    actions: ["view", "create", "update", "delete", "publish"],
+  },
   notification: { label: "thông báo", actions: ["view", "update"] },
   settings: { label: "cài đặt", actions: ["view", "update", "settings"] },
   components: { label: "thành phần giao diện", actions: ["view"] },
@@ -38,6 +45,8 @@ const actions: Record<string, string> = {
   assign_permission: "Cấp quyền cho",
   revoke_session: "Thu hồi phiên của",
   settings: "Quản lý",
+  publish: "Xuất bản",
+  restore: "Khôi phục",
 };
 export const permissionDefinitions = Object.entries(resources).flatMap(([resource, config]) =>
   config.actions.map((action) => ({

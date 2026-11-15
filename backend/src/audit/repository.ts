@@ -8,6 +8,9 @@ export interface AuditInput {
 }
 export async function writeAudit(connection: PoolConnection, event: AuditInput): Promise<void> {
   const metadata: Record<string, unknown> = {};
+  const revision = event.metadata?.revision;
+  if (typeof revision === "number" && Number.isSafeInteger(revision) && revision > 0)
+    metadata.revision = revision;
   for (const key of [
     "reason",
     "changedFields",

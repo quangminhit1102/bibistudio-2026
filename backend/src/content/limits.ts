@@ -10,6 +10,7 @@ export const CONTENT_LIMITS = Object.freeze({
   nodes: 1000,
   depth: 32,
   sanitizerTimeoutMs: 5000,
+  sanitizerStartupMs: 15000,
   sanitizerConcurrency: 2,
   mediaBytes: 5242880,
   mediaBase64Bytes: 6990508,

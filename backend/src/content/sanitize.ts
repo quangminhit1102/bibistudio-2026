@@ -25,23 +25,35 @@ export async function sanitizePostContent(raw: string): Promise<SanitizedContent
         if (error) reject(error);
         else resolve(value!);
       };
-      const timer = setTimeout(
-        () =>
-          finish(new ApiError(503, "CONTENT_SANITIZER_TIMEOUT", "Xử lý nội dung quá thời gian")),
-        L.sanitizerTimeoutMs,
+      const expired = () =>
+        finish(new ApiError(503, "CONTENT_SANITIZER_TIMEOUT", "Xử lý nội dung quá thời gian"));
+      let timer = setTimeout(expired, L.sanitizerStartupMs),
+        ready = false;
+      worker.on(
+        "message",
+        (message: { ready?: boolean; value?: SanitizedContent; error?: string }) => {
+          if (message.ready && !ready) {
+            ready = true;
+            clearTimeout(timer);
+            timer = setTimeout(expired, L.sanitizerTimeoutMs);
+            return;
+          }
+          if (!ready) {
+            finish(new ApiError(503, "CONTENT_SANITIZER_FAILED", "Không xử lý được nội dung"));
+            return;
+          }
+          if (message.error)
+            finish(
+              new ApiError(
+                message.error === "CONTENT_TOO_LARGE" ? 413 : 400,
+                message.error,
+                "Nội dung không hợp lệ hoặc vượt giới hạn",
+              ),
+            );
+          else if (message.value) finish(null, message.value);
+          else finish(new ApiError(503, "CONTENT_SANITIZER_FAILED", "Không xử lý được nội dung"));
+        },
       );
-      worker.once("message", (message: { value?: SanitizedContent; error?: string }) => {
-        if (message.error)
-          finish(
-            new ApiError(
-              message.error === "CONTENT_TOO_LARGE" ? 413 : 400,
-              message.error,
-              "Nội dung không hợp lệ hoặc vượt giới hạn",
-            ),
-          );
-        else if (message.value) finish(null, message.value);
-        else finish(new ApiError(503, "CONTENT_SANITIZER_FAILED", "Không xử lý được nội dung"));
-      });
       worker.once("error", () =>
         finish(new ApiError(503, "CONTENT_SANITIZER_FAILED", "Không xử lý được nội dung")),
       );
