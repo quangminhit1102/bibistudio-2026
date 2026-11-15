@@ -172,6 +172,41 @@ test("category public dependencies and delete plus publish authority cannot be b
   assert.equal(active.manifest.routes["/blog/renamed"].location, "/blog/final-name");
 });
 
+test("an existing public article can keep its inactive category when updated", async (t) => {
+  const f = await createPublicationFixture(t),
+    post = await f.makePost("inactive-retained");
+  await f.publication.request(f.admin, publicationRequest(post));
+  await runNextPublication(f.context);
+  const category = await f.editing.getCategory(f.admin, post.categoryId),
+    input = Object.fromEntries(Object.keys(validCategory()).map((key) => [key, category[key]])),
+    saved = await f.editing.saveCategory(
+      f.admin,
+      category.id,
+      { ...input, active: false },
+      category.revision,
+    );
+  await f.publication.request(f.admin, {
+    action: "apply-category",
+    targetId: saved.id,
+    expectedRevision: saved.revision,
+    idempotencyKey: randomUUID(),
+  });
+  await runNextPublication(f.context);
+  const updated = await f.editing.saveDraft(
+      f.admin,
+      post.id,
+      postInput(post, { title: "Updated in hidden category" }),
+      post.revision,
+    ),
+    job = await f.publication.request(f.admin, publicationRequest(updated));
+  await runNextPublication(f.context);
+  assert.equal((await f.publication.status(f.admin, job.id)).status, "succeeded");
+  assert.equal(
+    (await readActiveContent(f.paths)).snapshot.posts.find((p) => p.id === post.id).title,
+    updated.title,
+  );
+});
+
 test("public trash and unused category deletion finalize only after canary", async (t) => {
   const f = await createPublicationFixture(t),
     post = await f.makePost("trash-post");

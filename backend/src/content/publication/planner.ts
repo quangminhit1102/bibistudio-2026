@@ -139,8 +139,28 @@ export async function planPublication(
     );
   } else if (input.action === "publish") {
     const draft = jsonValue<PostDraftInput>(row.draft_json),
-      category = snapshot.categories.find((item) => item.id === draft.categoryId);
-    if (!category || !category.active || !draft.coverMediaId || !draft.coverAlt.trim())
+      category = snapshot.categories.find((item) => item.id === draft.categoryId),
+      old = snapshot.posts.find((item) => item.id === input.targetId);
+    let current = category,
+      available = true;
+    const visited = new Set<string>();
+    while (current) {
+      if (visited.has(current.id)) {
+        available = false;
+        break;
+      }
+      visited.add(current.id);
+      if (!current.active) available = false;
+      current = current.parentId
+        ? snapshot.categories.find((item) => item.id === current!.parentId)
+        : undefined;
+    }
+    if (
+      !category ||
+      (!available && old?.categoryId !== category.id) ||
+      !draft.coverMediaId ||
+      !draft.coverAlt.trim()
+    )
       throw new ApiError(
         400,
         "PUBLICATION_INCOMPLETE",
@@ -150,8 +170,7 @@ export async function planPublication(
     if (!sanitized.plainText.trim())
       throw new ApiError(400, "PUBLICATION_INCOMPLETE", "Bài viết cần nội dung");
     const ids = [...new Set([draft.coverMediaId, ...sanitized.mediaIds])],
-      resolved = await media.references(ids),
-      old = snapshot.posts.find((item) => item.id === input.targetId);
+      resolved = await media.references(ids);
     newPost = captured.existing ?? {
       id: input.targetId,
       snapshotId: randomUUID(),
