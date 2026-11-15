@@ -1,9 +1,11 @@
-import { resolve, dirname, basename } from "node:path";
-import { readDbConfig } from "../config";
+import { resolve, dirname, basename, isAbsolute } from "node:path";
+import { readDbConfig, systemClock } from "../config";
 import { readPrivateEnvironment } from "../db/private-env";
 import { createDbPool } from "../db/pool";
 import { migrateContent, contentSchemaStatus } from "./schema";
-import { syncContentPermissions } from "./capabilities";
+import { syncContentPermissions, readContentPaths } from "./capabilities";
+import { createContentMedia } from "./media/service";
+import { importContentSeed } from "./seed";
 export function contentEnvironment(file: string | undefined, env: NodeJS.ProcessEnv): void {
   if (
     env.NODE_ENV === "production" &&
@@ -16,7 +18,7 @@ export function contentEnvironment(file: string | undefined, env: NodeJS.Process
 }
 async function main() {
   const [command, ...extra] = process.argv.slice(2);
-  if (extra.length || !["migrate", "status"].includes(command))
+  if (extra.length || !["migrate", "status", "seed"].includes(command))
     throw Error("Invalid content command");
   const file = process.env.BIBI_PRIVATE_ENV_FILE,
     env = readPrivateEnvironment(file);
@@ -28,6 +30,23 @@ async function main() {
     if (command === "migrate") {
       await migrateContent(pool, directory);
       await syncContentPermissions(pool);
+    }
+    if (command === "seed") {
+      const paths = readContentPaths(env);
+      if (!paths || (await contentSchemaStatus(pool, directory)).state !== "complete")
+        throw Error("Migrated private content storage required");
+      const localSource =
+        env.NODE_ENV !== "production" ? env.BIBI_CONTENT_SEED_DIRECTORY : undefined;
+      if (localSource && !isAbsolute(localSource))
+        throw Error("Absolute local seed directory required");
+      const receipt = await importContentSeed({
+        pool,
+        media: createContentMedia({ pool, paths, clock: systemClock }),
+        seedDirectory: localSource ?? resolve(__dirname, "../../content-seed"),
+        clock: systemClock,
+      });
+      console.log(JSON.stringify(receipt));
+      return;
     }
     const status = await contentSchemaStatus(pool, directory);
     console.log(JSON.stringify(status));

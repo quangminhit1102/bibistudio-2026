@@ -1,4 +1,6 @@
 import { randomUUID } from "node:crypto";
+import { lstat } from "node:fs/promises";
+import { join } from "node:path";
 import type { Pool, PoolConnection, RowDataPacket } from "mysql2/promise";
 import type { Clock } from "../../config";
 import type { AuthPrincipal } from "../../auth/service";
@@ -70,6 +72,110 @@ export function createContentMedia({
   }
   return {
     preflight,
+    /** Trusted seed CLI only. HTTP routes never expose this method. */
+    async importSeedImage(input: {
+      id: string;
+      bytes: Buffer;
+      mimeType: string;
+      originalName: string;
+      createdBy: string;
+    }): Promise<MediaDto> {
+      if (
+        !serverMediaId(input.id) ||
+        !serverMediaId(input.createdBy) ||
+        !input.originalName ||
+        input.originalName.length > 255 ||
+        /[\\/]/.test(input.originalName)
+      )
+        throw new ApiError(400, "INVALID_CONTENT_INPUT", "Ảnh nguồn không hợp lệ");
+      await assertContentSchemaReady(pool);
+      async function existing(): Promise<MediaDto | null> {
+        let value: MediaDto;
+        try {
+          value = await dto(pool, input.id);
+        } catch (error) {
+          if (error instanceof ApiError && error.status === 404) return null;
+          throw error;
+        }
+        for (const variant of value.variants) await store.read(input.id, variant);
+        return value;
+      }
+      const before = await existing();
+      if (before) return before;
+      const image = await codec(input.bytes, input.mimeType);
+      return withContentEnvironmentLock(paths, async (lease) => {
+        const current = await existing();
+        if (current) return current;
+        let found = false;
+        try {
+          const info = await lstat(join(paths.media, input.id));
+          if (!info.isDirectory() || info.isSymbolicLink())
+            throw Error("Invalid retained seed media directory");
+          found = true;
+        } catch (error) {
+          if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+        }
+        const variants: MediaVariant[] = found
+          ? image.variants.map((variant) => ({
+              hash: variant.hash,
+              file: `${input.id}/${variant.hash}.webp`,
+              mime: "image/webp",
+              width: variant.width,
+              height: variant.height,
+              bytes: variant.data.length,
+            }))
+          : await store.write(input.id, image, lease);
+        if (found) for (const variant of variants) await store.read(input.id, variant);
+        return withRbacWrite(
+          pool,
+          async (c) => {
+            await assertContentSchemaReady(c);
+            lease.assertActive();
+            await c.execute(
+              "INSERT INTO content_media(id,original_name,mime,width,height,original_bytes,state,created_by,created_at) VALUES(?,?,?,?,?,?,'complete',?,?)",
+              [
+                input.id,
+                input.originalName,
+                "image/webp",
+                image.width,
+                image.height,
+                input.bytes.length,
+                input.createdBy,
+                clock.now(),
+              ],
+            );
+            for (let n = 0; n < variants.length; n++) {
+              const variant = variants[n];
+              await c.execute(
+                "INSERT INTO content_media_variants(media_id,name,hash,file,mime,width,height,bytes) VALUES(?,?,?,?,?,?,?,?)",
+                [
+                  input.id,
+                  image.variants[n].name,
+                  variant.hash,
+                  variant.file,
+                  variant.mime,
+                  variant.width,
+                  variant.height,
+                  variant.bytes,
+                ],
+              );
+            }
+            await writeAudit(c, {
+              action: "content.media.import",
+              targetType: "content_media",
+              targetId: input.id,
+              metadata: { reason: "legacy-blog-seed" },
+            });
+            return dto(c, input.id);
+          },
+          {
+            beforeCommit() {
+              lease.assertActive();
+            },
+          },
+        );
+      });
+    },
     async upload(
       actor: AuthPrincipal,
       input: { bytes: Buffer; mimeType: string; originalName: string },

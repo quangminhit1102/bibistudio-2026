@@ -13,6 +13,7 @@ import visitorMetadata from "../ops/visitor-metadata.cjs";
 import contextMetadata from "../ops/visitor-context-metadata.cjs";
 import { writeAnalyticsCatalogue } from "./analytics-catalogue.mjs";
 import { prepareCountryDataset } from "./prepare-geoip.mjs";
+import { buildContentSeed } from "./build-content-seed.mjs";
 
 export async function validateBundle(dir) {
   for (const name of [
@@ -128,6 +129,14 @@ export async function buildRelease({
   await cp(join(root, "backend/migrations"), join(bundleDir, "backend/migrations"), {
     recursive: true,
   });
+  await cp(
+    join(root, "backend/content-migrations"),
+    join(bundleDir, "backend/content-migrations"),
+    {
+      recursive: true,
+    },
+  );
+  await buildContentSeed({ outputDir: join(bundleDir, "backend/content-seed") });
   await cp(
     join(root, "backend/access-log-migrations"),
     join(bundleDir, "backend/access-log-migrations"),
