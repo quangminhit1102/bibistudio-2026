@@ -10,6 +10,8 @@ import { validatePostDraft, validateCategory } from "./validation";
 import type { ContentEditing } from "./editing";
 import type { ContentLookups } from "./lookups";
 import type { readContentCapabilities } from "./capabilities";
+import type { ContentPublication } from "./publication/publisher";
+import { validatePublicationRequest, isCategory } from "./publication/jobs";
 const query = z.object({
   page: z.coerce.number().int().min(1).max(1000000).default(1),
   pageSize: z.coerce.number().int().min(1).max(100).default(20),
@@ -21,6 +23,7 @@ export function contentRoutes(
   auth: AuthService,
   config: SecurityConfig,
   capabilities: ReturnType<typeof readContentCapabilities>,
+  publication?: ContentPublication,
 ): Router {
   const router = Router(),
     base = "/api/content",
@@ -49,6 +52,35 @@ export function contentRoutes(
     },
     parser,
   ];
+  router.post(
+    base + "/publications",
+    browser,
+    async (req, _res, next) => {
+      try {
+        await editing.preflight(req.auth!, "post.publish");
+      } catch (error) {
+        if (!(error instanceof ApiError) || error.status !== 403) throw error;
+        await editing.preflight(req.auth!, "content_category.publish");
+      }
+      next();
+    },
+    express.json({ limit: "4kb", strict: true }),
+    async (req, res) => {
+      const input = validatePublicationRequest(req.body);
+      await editing.preflight(
+        req.auth!,
+        isCategory(input) ? "content_category.publish" : "post.publish",
+      );
+      if (!publication)
+        throw new ApiError(503, "CONTENT_NOT_READY", "Dịch vụ xuất bản chưa sẵn sàng");
+      res.status(202).json(await publication.request(req.auth!, input));
+    },
+  );
+  router.get(base + "/publications/:id", async (req, res) => {
+    if (!publication)
+      throw new ApiError(503, "CONTENT_NOT_READY", "Dịch vụ xuất bản chưa sẵn sàng");
+    res.json(await publication.status(req.auth!, validate(z.uuid(), req.params.id)));
+  });
   router.get(base + "/posts", async (req, res) =>
     res.json(
       await editing.list(

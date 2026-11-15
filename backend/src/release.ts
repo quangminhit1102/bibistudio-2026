@@ -6,8 +6,8 @@ export interface ReleaseInfo {
   schemaVersion?: number;
   content?: { mode: "bridge" | "cms"; publicReaderVersion: 1 };
 }
-export function readRelease(): ReleaseInfo {
-  const file = process.env.BIBI_RELEASE_MANIFEST;
+export function readRelease(env: NodeJS.ProcessEnv = process.env): ReleaseInfo {
+  const file = env.BIBI_RELEASE_MANIFEST;
   if (!file) return { releaseId: "local", sourceSha: "local" };
   const data = JSON.parse(readFileSync(file, "utf8"));
   if (typeof data.releaseId !== "string" || typeof data.sourceSha !== "string") {

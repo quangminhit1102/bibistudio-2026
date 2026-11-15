@@ -6,7 +6,16 @@ import { createDbPool } from "./db/pool";
 import { createCatalogue } from "./visitors/catalogue";
 import { openCountryLookupSync, type CountryLookup } from "./visitors/country-lookup";
 import { readContentPaths } from "./content/capabilities";
-import { ApiError } from "./http/errors";
+import { readActiveContent } from "./content/publication/active-read";
+import { createContentPublication } from "./content/publication/publisher";
+import {
+  publicationBuildConfig,
+  createPublicationWakeup,
+  publicationAuthority,
+} from "./content/publication/cli";
+import { createContentMedia } from "./content/media/service";
+import { readRelease } from "./release";
+import { readContentCapabilities } from "./content/capabilities";
 
 /** Synchronous app dependencies; no schema or account mutation during startup. */
 export function createRuntime(env: NodeJS.ProcessEnv = process.env, clock: Clock = systemClock) {
@@ -45,6 +54,21 @@ export function createRuntime(env: NodeJS.ProcessEnv = process.env, clock: Clock
   }
   const db = createDbPool(database);
   const collector = createDbPool({ ...database, connectionLimit: 2 });
+  const wake = createPublicationWakeup(env);
+  const publication =
+    contentPaths &&
+    env.BIBI_CONTENT_ASSET_ROOT &&
+    readContentCapabilities(readRelease(env)).canWrite
+      ? createContentPublication({
+          pool: db,
+          clock,
+          paths: contentPaths,
+          media: createContentMedia({ pool: db, clock, paths: contentPaths }),
+          ...publicationBuildConfig(env),
+          wake,
+          assertWritable: publicationAuthority(env),
+        })
+      : undefined;
   const appOptions: AppOptions = {
     db,
     config,
@@ -54,9 +78,8 @@ export function createRuntime(env: NodeJS.ProcessEnv = process.env, clock: Clock
           content: {
             paths: contentPaths,
             schemaDirectory: resolve(__dirname, "../content-migrations"),
-            activeRead: async () => {
-              throw new ApiError(503, "CONTENT_NOT_READY", "Bộ đọc nội dung chưa sẵn sàng");
-            },
+            activeRead: async () => (await readActiveContent(contentPaths))?.snapshot ?? null,
+            publication,
           },
         }
       : {}),
@@ -82,6 +105,9 @@ export function createRuntime(env: NodeJS.ProcessEnv = process.env, clock: Clock
   let closing: Promise<unknown> | undefined;
   return {
     appOptions,
+    start: () => {
+      if (publication) wake();
+    },
     close: () => {
       if (!closing) {
         countryLookup?.close();

@@ -4,6 +4,57 @@ import { createApp } from "../dist/app.js";
 import { serve } from "./helpers/http.mjs";
 import { fileURLToPath } from "node:url";
 import { createContentEditingFixture, validDraft, validCategory } from "./helpers/content.mjs";
+import { createPublicationFixture, publicationRequest } from "./helpers/content-publication.mjs";
+import { runNextPublication } from "../dist/content/publication/worker.js";
+import { readActiveContent } from "../dist/content/publication/active-read.js";
+
+test("HTTP queues an exact revision and authenticated polling observes the durable result", async (t) => {
+  const f = await createPublicationFixture(t),
+    post = await f.makePost("http-post"),
+    base = await serve(
+      t,
+      createApp(
+        {
+          releaseId: "fixture",
+          sourceSha: "test",
+          schemaVersion: 7,
+          content: { mode: "cms", publicReaderVersion: 1 },
+        },
+        {
+          db: f.pool,
+          config: f.config,
+          clock: f.clock,
+          content: {
+            paths: f.paths,
+            schemaDirectory: fileURLToPath(new URL("../content-migrations", import.meta.url)),
+            activeRead: async () => (await readActiveContent(f.paths))?.snapshot ?? null,
+            publication: f.publication,
+          },
+        },
+      ),
+    ),
+    grant = await f.auth.login({ username: "admin", password: f.secrets.masterPassword }),
+    headers = {
+      Origin: f.config.allowedOrigins[0],
+      "X-Bibi-Request": "1",
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + grant.accessToken,
+    };
+  const response = await fetch(base + "/api/content/publications", {
+    method: "POST",
+    headers,
+    body: JSON.stringify(publicationRequest(post)),
+  });
+  assert.equal(response.status, 202);
+  const job = await response.json();
+  assert.equal(job.status, "queued");
+  assert.equal((await fetch(base + "/api/content/publications/" + job.id)).status, 401);
+  await runNextPublication(f.context);
+  const poll = await fetch(base + "/api/content/publications/" + job.id, { headers });
+  assert.equal(poll.status, 200);
+  assert.equal((await poll.json()).status, "succeeded");
+  assert.match(poll.headers.get("cache-control"), /no-store/);
+});
 async function fixture(t, mode = "cms") {
   const f = await createContentEditingFixture(t),
     release = { ...f.release, content: { ...f.release.content, mode } },

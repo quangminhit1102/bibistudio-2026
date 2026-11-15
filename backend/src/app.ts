@@ -30,6 +30,7 @@ import { mediaRoutes } from "./content/media/routes";
 import { contentRoutes } from "./content/routes";
 import { readContentCapabilities } from "./content/capabilities";
 import { contentSchemaStatus } from "./content/schema";
+import type { ContentPublication } from "./content/publication/publisher";
 
 export interface AppOptions {
   db?: Pool;
@@ -40,7 +41,12 @@ export interface AppOptions {
   visitorHistory?: { schemaDirectory: string };
   visitorContext?: { schemaDirectory: string };
   profiles?: { schemaDirectory: string; assetDirectory: string; assets?: AvatarStore };
-  content?: { paths: ContentPaths; schemaDirectory: string; activeRead: ActiveContentRead };
+  content?: {
+    paths: ContentPaths;
+    schemaDirectory: string;
+    activeRead: ActiveContentRead;
+    publication?: ContentPublication;
+  };
 }
 
 export function createApp(release: ReleaseInfo, options: AppOptions = {}): Express {
@@ -189,7 +195,14 @@ export function createApp(release: ReleaseInfo, options: AppOptions = {}): Expre
     const media = createContentMedia({ ...shared, paths: options.content.paths });
     const editing = createContentEditing({ ...shared, ...options.content, media });
     app.use(
-      contentRoutes(editing, createContentLookups(shared), auth, authConfig, contentCapabilities),
+      contentRoutes(
+        editing,
+        createContentLookups(shared),
+        auth,
+        authConfig,
+        contentCapabilities,
+        options.content.publication,
+      ),
     );
     app.use(mediaRoutes(media, auth, authConfig, shared));
   } else

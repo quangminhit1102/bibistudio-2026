@@ -28,6 +28,7 @@ if (require.main === module) {
     appOptions: runtime.appOptions,
   })
     .then((server) => {
+      runtime.start();
       const address = server.address();
       console.log(
         `BIBI_API_READY http://127.0.0.1:${typeof address === "object" && address ? address.port : port}`,

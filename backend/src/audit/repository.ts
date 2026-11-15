@@ -11,6 +11,11 @@ export async function writeAudit(connection: PoolConnection, event: AuditInput):
   const revision = event.metadata?.revision;
   if (typeof revision === "number" && Number.isSafeInteger(revision) && revision > 0)
     metadata.revision = revision;
+  for (const key of ["generationId", "jobId"]) {
+    const value = event.metadata?.[key];
+    if (typeof value === "string" && /^[a-f0-9]{8}-(?:[a-f0-9]{4}-){3}[a-f0-9]{12}$/i.test(value))
+      metadata[key] = value;
+  }
   for (const key of [
     "reason",
     "changedFields",
