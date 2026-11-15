@@ -95,6 +95,7 @@ export interface PublicAssetManifest {
   rendererVersion: string;
   css: string[];
   script: string;
+  assets: string[];
   staticRoutes: Array<{ path: string; lastmod?: string }>;
 }
 export interface PublicSnapshot {

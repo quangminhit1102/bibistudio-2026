@@ -23,7 +23,9 @@ export function normalizeContentSlug(value: string): string {
   if (
     !slug ||
     slug.length > L.slug ||
-    ["page", "danh-muc", "preview", "sitemap", "feed"].includes(slug)
+    ["category", "page", "tag", "danh-muc", "preview", "sitemap", "sitemap-xml", "feed"].includes(
+      slug,
+    )
   )
     throw new ApiError(400, "INVALID_CONTENT_INPUT", "Slug không hợp lệ hoặc đã dành riêng");
   return slug;

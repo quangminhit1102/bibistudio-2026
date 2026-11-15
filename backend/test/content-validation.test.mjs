@@ -4,6 +4,14 @@ import { validatePostDraft, validateCategory } from "../dist/content/validation.
 import { CONTENT_LIMITS } from "../dist/content/limits.js";
 import { validDraft, validCategory } from "./helpers/content.mjs";
 
+test("content slugs reserve publication route prefixes", () => {
+  for (const slug of ["category", "tag", "sitemap.xml"])
+    assert.throws(
+      () => validatePostDraft(validDraft({ slug })),
+      (error) => error.code === "INVALID_CONTENT_INPUT",
+    );
+});
+
 test("accepts bounded drafts and normalizes Vietnamese slugs and tags", () => {
   const value = validatePostDraft(
     validDraft({ slug: "Đồ Gỗ Bền Vững", tags: [" Thiết kế ", "thiết kế", "Nhà"] }),

@@ -1,6 +1,64 @@
 @import "tailwindcss" source(none);
 @source "../src";
+@source "../backend/src/content/render";
 @import "tw-animate-css";
+
+.content-prose {
+  line-height: 1.9;
+  overflow-wrap: anywhere;
+}
+.content-prose > * + * {
+  margin-top: 1.4rem;
+}
+.content-prose h2,
+.content-prose h3,
+.content-prose h4 {
+  font-weight: 600;
+  line-height: 1.35;
+  scroll-margin-top: 2rem;
+}
+.content-prose h2 {
+  font-size: 1.6rem;
+}
+.content-prose h3 {
+  font-size: 1.3rem;
+}
+.content-prose h4 {
+  font-size: 1.1rem;
+}
+.content-prose a {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+.content-prose ul {
+  padding-left: 1.5rem;
+  list-style: disc;
+}
+.content-prose ol {
+  padding-left: 1.5rem;
+  list-style: decimal;
+}
+.content-prose blockquote {
+  border-left: 2px solid var(--border);
+  padding-left: 1.2rem;
+  font-style: italic;
+}
+.content-prose table {
+  border-collapse: collapse;
+  min-width: 100%;
+}
+.content-prose th,
+.content-prose td {
+  border: 1px solid var(--border);
+  padding: 0.65rem;
+  text-align: start;
+}
+.content-prose figcaption {
+  margin-top: 0.5rem;
+  color: var(--muted-foreground);
+  font-size: 0.85rem;
+  text-align: center;
+}
 
 @custom-variant dark (&:is(.dark *));
 
