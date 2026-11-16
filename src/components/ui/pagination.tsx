@@ -2,6 +2,7 @@
 import { Link } from "@tanstack/react-router";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { ReactNode } from "react";
+import { isBlogDocumentPath } from "@/lib/blog-navigation";
 
 type PaginationProps = {
   to: string;
@@ -39,6 +40,7 @@ export function Pagination({ to, page, totalPages, search }: PaginationProps) {
     <Link
       key={n}
       to={to}
+      reloadDocument={isBlogDocumentPath(to)}
       search={search(n)}
       aria-label={`Trang ${n}`}
       className={`${itemClass} ${n === page ? activeClass : idleClass} ${extraClass}`}

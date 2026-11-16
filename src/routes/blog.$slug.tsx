@@ -4,19 +4,31 @@ import { SiteFooter } from "@/components/site-footer";
 import { SimpleBreadcrumb } from "@/components/ui/simple-breadcrumb";
 import { getBlogPost } from "@/data/blog";
 import { LazyImage } from "@/components/ui/lazy-image";
+import { loadPublicReadMode } from "@/lib/public-content";
+import { BlogDocumentAdapter } from "@/components/blog-document-adapter";
+import { SITE_URL } from "@/lib/seo";
 
-const SITE = "https://bibistudio-2026.lovable.app";
+const SITE = SITE_URL;
 
 export const Route = createFileRoute("/blog/$slug")({
-  loader: ({ params }) => {
+  loader: async ({ params, abortController }) => {
+    const mode = await loadPublicReadMode({ signal: abortController.signal });
+    if (mode.mode === "cms") return { post: null, related: [], fixture: false };
     const post = getBlogPost(params.slug);
     if (!post) throw notFound();
-    return { post, related: [] as never[] };
+    return {
+      post,
+      related: [] as NonNullable<ReturnType<typeof getBlogPost>>[],
+      fixture: Boolean(mode.fixture),
+    };
   },
   head: ({ params, loaderData }) => {
-    if (!loaderData) {
+    if (!loaderData?.post) {
       return {
-        meta: [{ title: "Không tìm thấy bài viết — BiBi Studio" }, { name: "robots", content: "noindex" }],
+        meta: [
+          { title: "Không tìm thấy bài viết — BiBi Studio" },
+          { name: "robots", content: "noindex" },
+        ],
       };
     }
     const { post } = loaderData;
@@ -47,7 +59,7 @@ function PostNotFound() {
       <SiteHeader />
       <main className="mx-auto max-w-[1280px] px-4 py-24 text-center lg:px-12">
         <h1 className="text-2xl font-bold">Không tìm thấy bài viết</h1>
-        <Link to="/blog" className="mt-4 inline-block text-accent underline">
+        <Link to="/blog" reloadDocument className="mt-4 inline-block text-accent underline">
           Xem tất cả bài viết
         </Link>
       </main>
@@ -75,9 +87,17 @@ function slugifyHeading(text: string, index: number) {
   return `${base || "muc"}-${index}`;
 }
 
-
 function PostPage() {
-  const { post, related }: { post: NonNullable<ReturnType<typeof getBlogPost>>; related: NonNullable<ReturnType<typeof getBlogPost>>[] } = Route.useLoaderData();
+  const {
+    post,
+    related,
+    fixture,
+  }: {
+    post: ReturnType<typeof getBlogPost> | null;
+    related: NonNullable<ReturnType<typeof getBlogPost>>[];
+    fixture: boolean;
+  } = Route.useLoaderData();
+  if (!post) return <BlogDocumentAdapter />;
 
   const toc = post.content
     .map((block, index) =>
@@ -87,11 +107,12 @@ function PostPage() {
     )
     .filter((item): item is { id: string; text: string; level: 2 | 3 } => item !== null);
 
-
-
   return (
     <div className="min-h-screen bg-background">
       <SiteHeader />
+      {fixture && (
+        <p className="px-4 py-2 text-center text-xs">Nội dung mẫu dành cho bản xem trước.</p>
+      )}
       <main>
         {/* Cover image full-width */}
         <div className="relative w-full overflow-hidden bg-secondary">
@@ -101,7 +122,7 @@ function PostPage() {
               alt={post.title}
               aspectRatio="auto"
               priority
-              className="aspect-[21/9] w-full object-cover md:aspect-[21/8]"
+              className="aspect-[3/2] w-full object-cover"
             />
           </div>
         </div>
@@ -121,9 +142,7 @@ function PostPage() {
           <h1 className="mt-4 text-[26px] font-semibold leading-[1.25] tracking-tight text-foreground md:text-[34px]">
             {post.title}
           </h1>
-          <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">
-            {post.excerpt}
-          </p>
+          <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">{post.excerpt}</p>
           <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] text-muted-foreground">
             <span className="font-medium text-foreground">{post.author}</span>
             <span>•</span>
@@ -145,10 +164,7 @@ function PostPage() {
               </h2>
               <ol className="mt-3 space-y-1.5">
                 {toc.map((item) => (
-                  <li
-                    key={item.id}
-                    className={item.level === 3 ? "pl-4" : ""}
-                  >
+                  <li key={item.id} className={item.level === 3 ? "pl-4" : ""}>
                     <a
                       href={`#${item.id}`}
                       className={`text-[14px] leading-snug text-foreground hover:text-accent hover:underline ${
@@ -228,13 +244,13 @@ function PostPage() {
             </div>
             <Link
               to="/blog"
+              reloadDocument
               className="text-[13px] font-medium text-accent hover:underline"
             >
               ← Quay lại Nhật ký
             </Link>
           </div>
         </article>
-
       </main>
       <SiteFooter />
     </div>

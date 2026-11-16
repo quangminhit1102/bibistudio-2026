@@ -14,6 +14,7 @@ export interface AnalyticsOptions {
   pool: Pool;
   idSecret: string;
   catalogue: Catalogue;
+  readCatalogue?: () => Promise<Catalogue>;
   cookieSecure: boolean;
   probeSecret?: string;
   clientIpSourceVerified?: boolean;
@@ -78,7 +79,10 @@ export function analyticsRoutes(
         userAgent: req.get("user-agent") ?? "",
         now,
         idSecret: options.idSecret,
-        catalogue: options.catalogue,
+        catalogue:
+          req.get("DNT") === "1" || req.get("Sec-GPC") === "1"
+            ? options.catalogue
+            : ((await options.readCatalogue?.()) ?? options.catalogue),
         doNotTrack: req.get("DNT") === "1" || req.get("Sec-GPC") === "1",
         probe: marker ? verifyProbeMarker(marker, options.probeSecret, releaseId, now) : undefined,
       });

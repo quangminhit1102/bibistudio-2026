@@ -11,7 +11,22 @@ afterEach(() => {
 it("StrictMode cleans timers/listeners, tracks committed public routes and footer opt-out clears only analytics", async () => {
   vi.useFakeTimers();
   const send = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
-  vi.stubGlobal("fetch", send);
+  const catalogueRead = vi.fn(() =>
+    Promise.resolve(
+      new Response(
+        JSON.stringify({
+          schemaVersion: 1,
+          mode: "cms",
+          generationId: "c43f6ac7-d46d-488b-96af-4db12ca736ef",
+          routes: [],
+        }),
+        { status: 200 },
+      ),
+    ),
+  );
+  vi.stubGlobal("fetch", (path: string, options?: RequestInit) =>
+    path === "/api/public/content/routes" ? catalogueRead() : send(path, options),
+  );
   const view = render(
     <StrictMode>
       <VisitorTracking pathname="/products/da-lat-map-notebook" />
@@ -21,6 +36,7 @@ it("StrictMode cleans timers/listeners, tracks committed public routes and foote
   await act(() => vi.dynamicImportSettled());
   await act(() => vi.advanceTimersByTimeAsync(15000));
   expect(send).toHaveBeenCalledTimes(1);
+  expect(catalogueRead).toHaveBeenCalled();
   expect(send.mock.calls[0][0]).toBe("/api/analytics/relay/collect.php");
   expect(send.mock.calls[0][1].credentials).toBe("include");
   expect(send.mock.calls[0][1].headers.Authorization).toBeUndefined();

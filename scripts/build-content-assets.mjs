@@ -1,6 +1,7 @@
 import { readFile, writeFile, realpath, lstat, mkdir } from "node:fs/promises";
 import { resolve, join, sep, dirname } from "node:path";
-const forbidden = /(?:^|[\/_-])(?:admin|tinymce|cpanel|main|index)(?:[\/_\-.]|$)/i;
+const forbidden =
+  /(?:^|[\/_-])(?:admin|tinymce|cpanel|main|index|react|jsx-runtime)(?:[\/_\-.]|$)/i;
 export async function buildContentAssets({
   frontendDir,
   outputFile,
@@ -30,13 +31,13 @@ export async function buildContentAssets({
       throw Error("Invalid public asset path or size");
     if (
       file.endsWith(".js") &&
-      /tinymce|admin-entry|features\/admin|AUTH_JWT_SECRET|DB_PASSWORD|PRIVATE KEY/i.test(
+      /tinymce|admin-entry|features\/admin|react\.transitional\.element|react\.production|AUTH_JWT_SECRET|DB_PASSWORD|PRIVATE KEY/i.test(
         await readFile(actual, "utf8"),
       )
     )
       throw Error("Forbidden editor or private code in public entry");
   }
-  const manifest = JSON.parse(await readFile(join(root, ".vite/manifest.json"), "utf8")),
+  const manifest = JSON.parse(await readFile(join(root, ".vite/blog-manifest.json"), "utf8")),
     entry = manifest["src/blog-client.ts"];
   if (!entry || entry.isEntry !== true)
     throw Error("Dedicated blog entry missing; SPA entry is not supported");

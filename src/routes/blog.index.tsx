@@ -9,6 +9,8 @@ import { useScrollToOnPage } from "@/hooks/use-scroll-to-on-page";
 import { getBlogPostsPage } from "@/data/blog";
 import { POSTS_PER_PAGE } from "@/data/pagination";
 import { SITE_URL, appendPageParam } from "@/lib/seo";
+import { loadPublicReadMode } from "@/lib/public-content";
+import { BlogDocumentAdapter } from "@/components/blog-document-adapter";
 
 const title = "Nhật ký — BiBi Studio";
 const description =
@@ -23,7 +25,9 @@ export const Route = createFileRoute("/blog/")({
   loaderDeps: ({ search }) => ({
     page: search.page,
   }),
-  loader: ({ deps }) => {
+  loader: async ({ deps, abortController }) => {
+    const mode = await loadPublicReadMode({ signal: abortController.signal });
+    if (mode.mode === "cms") return { postPage: null, fixture: false };
     const postPage = getBlogPostsPage(deps.page, POSTS_PER_PAGE);
     if (deps.page > postPage.totalPages) {
       throw redirect({
@@ -31,10 +35,10 @@ export const Route = createFileRoute("/blog/")({
         search: { page: postPage.totalPages },
       });
     }
-    return { postPage };
+    return { postPage, fixture: Boolean(mode.fixture) };
   },
   head: ({ loaderData }) => {
-    const url = appendPageParam(`${SITE_URL}/blog`, loaderData?.postPage.page ?? 1);
+    const url = appendPageParam(`${SITE_URL}/blog`, loaderData?.postPage?.page ?? 1);
     return {
       meta: [
         { title },
@@ -59,16 +63,23 @@ function formatDate(iso: string) {
 }
 
 function BlogIndexPage() {
-  const { postPage }: { postPage: ReturnType<typeof getBlogPostsPage> } = Route.useLoaderData();
+  const {
+    postPage,
+    fixture,
+  }: { postPage: ReturnType<typeof getBlogPostsPage> | null; fixture: boolean } =
+    Route.useLoaderData();
   const search = Route.useSearch();
-
   useScrollToOnPage(search.page, "blog-listing");
+  if (!postPage) return <BlogDocumentAdapter />;
 
   const pageSearch = (targetPage: number) => ({ page: targetPage });
 
   return (
     <div className="min-h-screen bg-background">
       <SiteHeader />
+      {fixture && (
+        <p className="px-4 py-2 text-center text-xs">Nội dung mẫu dành cho bản xem trước.</p>
+      )}
       <main>
         <div className="border-b border-border bg-secondary/60">
           <div className="mx-auto flex max-w-[1280px] flex-col gap-2 px-4 py-10 lg:px-12">
@@ -93,7 +104,7 @@ function BlogIndexPage() {
                 key={post.slug}
                 className="group flex flex-col overflow-hidden border border-border bg-card transition hover:shadow-md"
               >
-                <Link to="/blog/$slug" params={{ slug: post.slug }}>
+                <Link to="/blog/$slug" reloadDocument params={{ slug: post.slug }}>
                   <LazyImage
                     src={post.coverImage}
                     alt={post.title}
@@ -107,6 +118,7 @@ function BlogIndexPage() {
                   <h2 className="mt-2 text-[17px] font-semibold leading-snug text-foreground">
                     <Link
                       to="/blog/$slug"
+                      reloadDocument
                       params={{ slug: post.slug }}
                       className="hover:text-accent"
                     >

@@ -26,7 +26,7 @@ async function fixture(t) {
     },
     _transport: { file: "assets/transport-b.js" },
   };
-  await writeFile(join(dir, ".vite/manifest.json"), JSON.stringify(manifest));
+  await writeFile(join(dir, ".vite/blog-manifest.json"), JSON.stringify(manifest));
   return { dir, manifest };
 }
 test("public asset manifest includes the complete dedicated entry closure", async (t) => {
@@ -55,13 +55,13 @@ test("public entry refuses admin editor closure and paths outside the frontend",
   const { dir, manifest } = await fixture(t);
   manifest._transport.file = "assets/admin-entry-b.js";
   await writeFile(join(dir, "assets/admin-entry-b.js"), "export const admin=true");
-  await writeFile(join(dir, ".vite/manifest.json"), JSON.stringify(manifest));
+  await writeFile(join(dir, ".vite/blog-manifest.json"), JSON.stringify(manifest));
   await assert.rejects(
     buildContentAssets({ frontendDir: dir, outputFile: join(dir, "a.json"), staticRoutes: [] }),
     /admin|public|forbidden/i,
   );
   manifest._transport.file = "../private.env";
-  await writeFile(join(dir, ".vite/manifest.json"), JSON.stringify(manifest));
+  await writeFile(join(dir, ".vite/blog-manifest.json"), JSON.stringify(manifest));
   await assert.rejects(
     buildContentAssets({ frontendDir: dir, outputFile: join(dir, "b.json"), staticRoutes: [] }),
     /path|asset|public|forbidden/i,
@@ -70,11 +70,22 @@ test("public entry refuses admin editor closure and paths outside the frontend",
 test("a missing dedicated entry never uses the application's SPA entry", async (t) => {
   const { dir } = await fixture(t);
   await writeFile(
-    join(dir, ".vite/manifest.json"),
+    join(dir, ".vite/blog-manifest.json"),
     JSON.stringify({ "index.html": { file: "assets/main-a.js", isEntry: true } }),
   );
   await assert.rejects(
     buildContentAssets({ frontendDir: dir, outputFile: join(dir, "a.json"), staticRoutes: [] }),
     /dedicated|entry|blog/i,
+  );
+});
+test("the progressive document entry rejects a shared React runtime", async (t) => {
+  const { dir } = await fixture(t);
+  await writeFile(
+    join(dir, "assets/transport-b.js"),
+    "const element = Symbol.for('react.transitional.element');",
+  );
+  await assert.rejects(
+    buildContentAssets({ frontendDir: dir, outputFile: join(dir, "react.json") }),
+    /public|react|forbidden/i,
   );
 });

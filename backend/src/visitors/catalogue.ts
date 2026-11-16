@@ -13,6 +13,18 @@ export function createCatalogue(input: unknown) {
   };
 }
 export type Catalogue = ReturnType<typeof createCatalogue>;
+export function mergePublishedCatalogue(
+  base: Catalogue,
+  active: {
+    routes: Array<{ path: string; label: string }>;
+    products?: Array<{ slug: string; name: string }>;
+  },
+): Catalogue {
+  const routes = new Map([...base.routes].filter(([path]) => !/^\/blog(?:[/?#]|$)/.test(path)));
+  for (const route of active.routes)
+    if (/^\/blog(?:\/[a-z0-9-]+)*$/.test(route.path)) routes.set(route.path, route.label);
+  return { routes, products: base.products };
+}
 export function publicPath(value: string, catalogue: Catalogue): string | undefined {
   const path = value.split(/[?#]/, 1)[0];
   return catalogue.routes.has(path) ? path : undefined;

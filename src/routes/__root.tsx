@@ -83,8 +83,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "BiBi Studio" },
-      { name: "description", content: "BiBi Studio — sổ tay, thiệp, postcard và giấy viết thư lấy cảm hứng từ Việt Nam." },
+      {
+        name: "description",
+        content: "BiBi Studio — sổ tay, thiệp, postcard và giấy viết thư lấy cảm hứng từ Việt Nam.",
+      },
       { name: "author", content: "BiBi Studio" },
+      ...(import.meta.env.VITE_PUBLIC_CONTENT_MODE === "fixture"
+        ? [{ name: "robots", content: "noindex, nofollow" }]
+        : []),
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -111,7 +117,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   if (import.meta.env.VITE_BIBI_CSR === "true") {
-    return <><HeadContent />{children}</>;
+    return (
+      <>
+        <HeadContent />
+        {children}
+      </>
+    );
   }
   return (
     <html lang="vi">
@@ -139,10 +150,14 @@ function ImageFade() {
       img.addEventListener("error", done, { once: true });
     };
     document.querySelectorAll("img").forEach(mark);
-    const mo = new MutationObserver((ms) => ms.forEach((m) => m.addedNodes.forEach((n) => {
-      if (n instanceof HTMLImageElement) mark(n);
-      else if (n instanceof HTMLElement) n.querySelectorAll("img").forEach(mark);
-    })));
+    const mo = new MutationObserver((ms) =>
+      ms.forEach((m) =>
+        m.addedNodes.forEach((n) => {
+          if (n instanceof HTMLImageElement) mark(n);
+          else if (n instanceof HTMLElement) n.querySelectorAll("img").forEach(mark);
+        }),
+      ),
+    );
     mo.observe(document.body, { childList: true, subtree: true });
     return () => mo.disconnect();
   }, []);
@@ -151,8 +166,14 @@ function ImageFade() {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
-  const pathname = useRouterState({ select: (state) => state.matches.every(match => match.status === "success") ? state.location.pathname : "" });
-  const admin = useRouterState({ select: (state) => isAdminPath(state.location.pathname, import.meta.env.VITE_ROUTER_BASEPATH || '/') });
+  const pathname = useRouterState({
+    select: (state) =>
+      state.matches.every((match) => match.status === "success") ? state.location.pathname : "",
+  });
+  const admin = useRouterState({
+    select: (state) =>
+      isAdminPath(state.location.pathname, import.meta.env.VITE_ROUTER_BASEPATH || "/"),
+  });
 
   return (
     <QueryClientProvider client={queryClient}>

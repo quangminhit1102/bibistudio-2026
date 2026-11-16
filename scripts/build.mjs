@@ -116,6 +116,11 @@ export async function buildRelease({
     ["node_modules/vite/bin/vite.js", "build", "--config", "vite.cpanel.config.ts"],
     { env },
   );
+  await run(
+    process.execPath,
+    ["node_modules/vite/bin/vite.js", "build", "--config", "vite.blog.config.ts"],
+    { env },
+  );
   await run(process.execPath, [
     "backend/node_modules/typescript/bin/tsc",
     "-p",

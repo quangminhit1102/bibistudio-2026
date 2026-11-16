@@ -3,7 +3,8 @@ import { resolve, dirname } from "node:path";
 import type { AppOptions } from "./app";
 import { readAuthConfig, readDbConfig, readProfileConfig, systemClock, type Clock } from "./config";
 import { createDbPool } from "./db/pool";
-import { createCatalogue } from "./visitors/catalogue";
+import { createCatalogue, mergePublishedCatalogue, type Catalogue } from "./visitors/catalogue";
+import { lstat } from "node:fs/promises";
 import { openCountryLookupSync, type CountryLookup } from "./visitors/country-lookup";
 import { readContentPaths } from "./content/capabilities";
 import { readActiveContent } from "./content/publication/active-read";
@@ -23,6 +24,20 @@ export function createRuntime(env: NodeJS.ProcessEnv = process.env, clock: Clock
   const database = readDbConfig(env);
   const profiles = readProfileConfig(env);
   const contentPaths = readContentPaths(env);
+  const contentCapabilities = readContentCapabilities(readRelease(env));
+  const activeRead = async () =>
+    contentPaths ? ((await readActiveContent(contentPaths))?.snapshot ?? null) : null;
+  const legacyAllowed = async () => {
+    if (contentCapabilities.canWrite) return false;
+    if (!env.BIBI_PRIVATE_ENV_FILE) return env.NODE_ENV !== "production";
+    try {
+      await lstat(resolve(dirname(env.BIBI_PRIVATE_ENV_FILE), "content-routing.json"));
+      return false;
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") return true;
+      throw error;
+    }
+  };
   if (
     !env.ANALYTICS_ID_SECRET ||
     Buffer.byteLength(env.ANALYTICS_ID_SECRET) < 32 ||
@@ -33,6 +48,23 @@ export function createRuntime(env: NodeJS.ProcessEnv = process.env, clock: Clock
   const catalogue = createCatalogue(
     JSON.parse(readFileSync(resolve(__dirname, "../analytics-catalogue.json"), "utf8")),
   );
+  let cachedCatalogue: Catalogue | undefined, cachedGeneration: string | undefined;
+  const readCatalogue = async () => {
+    try {
+      const snapshot = await activeRead();
+      if (!snapshot)
+        return (await legacyAllowed())
+          ? catalogue
+          : mergePublishedCatalogue(catalogue, { routes: [] });
+      if (cachedGeneration !== snapshot.generationId) {
+        cachedCatalogue = mergePublishedCatalogue(catalogue, snapshot);
+        cachedGeneration = snapshot.generationId;
+      }
+      return cachedCatalogue!;
+    } catch {
+      return mergePublishedCatalogue(catalogue, { routes: [] });
+    }
+  };
   let countryLookup: CountryLookup | undefined;
   if (env.ANALYTICS_RELAY_SECRET || env.GEOIP_COUNTRY_FILE) {
     if (
@@ -73,12 +105,13 @@ export function createRuntime(env: NodeJS.ProcessEnv = process.env, clock: Clock
     db,
     config,
     clock,
+    publicContent: { activeRead, legacyAllowed },
     ...(contentPaths
       ? {
           content: {
             paths: contentPaths,
             schemaDirectory: resolve(__dirname, "../content-migrations"),
-            activeRead: async () => (await readActiveContent(contentPaths))?.snapshot ?? null,
+            activeRead,
             publication,
           },
         }
@@ -93,6 +126,7 @@ export function createRuntime(env: NodeJS.ProcessEnv = process.env, clock: Clock
     analytics: {
       pool: collector,
       catalogue,
+      readCatalogue,
       idSecret: env.ANALYTICS_ID_SECRET,
       cookieSecure: config.cookieSecure,
       probeSecret: env.RELEASE_PROBE_SECRET,

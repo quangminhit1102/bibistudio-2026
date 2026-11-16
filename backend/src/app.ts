@@ -31,6 +31,7 @@ import { contentRoutes } from "./content/routes";
 import { readContentCapabilities } from "./content/capabilities";
 import { contentSchemaStatus } from "./content/schema";
 import type { ContentPublication } from "./content/publication/publisher";
+import { publicContentRoutes, type PublicContentRead } from "./content/publication/public-routes";
 
 export interface AppOptions {
   db?: Pool;
@@ -47,6 +48,7 @@ export interface AppOptions {
     activeRead: ActiveContentRead;
     publication?: ContentPublication;
   };
+  publicContent?: PublicContentRead;
 }
 
 export function createApp(release: ReleaseInfo, options: AppOptions = {}): Express {
@@ -95,6 +97,14 @@ export function createApp(release: ReleaseInfo, options: AppOptions = {}): Expre
     res.setHeader("Cache-Control", "no-store");
     next();
   });
+  app.use(
+    publicContentRoutes(
+      options.publicContent ?? {
+        activeRead: options.content?.activeRead ?? (async () => null),
+        legacyAllowed: async () => !contentCapabilities.canWrite,
+      },
+    ),
+  );
   app.use((req, res, next) => {
     if (process.env.NODE_ENV !== "production") {
       const start = performance.now();
@@ -205,10 +215,22 @@ export function createApp(release: ReleaseInfo, options: AppOptions = {}): Expre
       ),
     );
     app.use(mediaRoutes(media, auth, authConfig, shared));
-  } else
+  } else {
+    if (auth)
+      app.get("/api/content/capabilities", authenticate(auth), (req, res) => {
+        if (
+          !req.auth!.principal.fullAccess &&
+          !req.auth!.principal.permissions.some((code) =>
+            ["post.view", "content_category.view"].includes(code),
+          )
+        )
+          throw new ApiError(403, "FORBIDDEN", "Bạn không có quyền xem nội dung");
+        res.json(contentCapabilities);
+      });
     app.use("/api/content", ...(auth ? [authenticate(auth)] : []), () => {
       throw new ApiError(503, "CONTENT_NOT_READY", "Dịch vụ nội dung chưa sẵn sàng");
     });
+  }
   if (auth && authConfig && options.db && options.profiles) {
     const service = createProfileService({
       pool: options.db,

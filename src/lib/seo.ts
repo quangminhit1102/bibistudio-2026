@@ -1,10 +1,10 @@
 // src/lib/seo.ts
 // Centralized SEO configuration & Structured Data (JSON-LD) generators.
 
-export const SITE_URL = "https://bibistudio-2026.lovable.app";
+export const SITE_URL = "https://bibistudio.vn";
 export const SITE_NAME = "BiBi Studio";
 export const DEFAULT_OG_IMAGE =
-  "https://placehold.co/1200x630?text=1200x630";
+  SITE_URL + "/catalogue/womens-day-pink-garden.jpg";
 
 export function appendPageParam(url: string, page: number): string {
   return page > 1 ? `${url}?page=${page}` : url;

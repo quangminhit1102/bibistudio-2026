@@ -13,7 +13,7 @@ interface TrackerOptions {
 }
 /** Anonymous, bounded route interests only. No authentication or admin imports. */
 export function createVisitorTracker(options: TrackerOptions) {
-  const routes = new Set(options.catalogue.routes.map((route) => route.path));
+  let routes = new Set(options.catalogue.routes.map((route) => route.path));
   const products = new Set(options.catalogue.products.map((product) => product.slug));
   const paths = new Map<string, number>();
   const interests = new Map<string, number>();
@@ -142,6 +142,12 @@ export function createVisitorTracker(options: TrackerOptions) {
     paths.clear();
     interests.clear();
   }
-  return { visit, flush, setEnabled, dispose };
+  function updateCatalogue(catalogue: TrackerOptions["catalogue"]) {
+    routes = new Set(catalogue.routes.map((route) => route.path));
+    for (const path of paths.keys()) if (!routes.has(path)) paths.delete(path);
+    if (!routes.has(lastPath)) lastPath = [...paths.keys()].at(-1) ?? "/";
+    if (!paths.size) cancelTimer();
+  }
+  return { visit, flush, setEnabled, dispose, updateCatalogue };
 }
 export type VisitorTracker = ReturnType<typeof createVisitorTracker>;
