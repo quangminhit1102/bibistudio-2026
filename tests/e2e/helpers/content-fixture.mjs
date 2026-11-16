@@ -1,5 +1,5 @@
 import { createRequire } from "node:module";
-import { mkdir, readFile, writeFile, cp } from "node:fs/promises";
+import { mkdir, writeFile, cp } from "node:fs/promises";
 import { join } from "node:path";
 import { randomBytes, randomUUID } from "node:crypto";
 import { createServer } from "node:net";
@@ -40,7 +40,7 @@ export async function createContentE2eFixture(t, { bundleDir, mode = "bridge" } 
     actor = await f.auth.authenticate(grant.accessToken);
   const directory = join(f.paths.root, "cms-e2e"),
     profileRoot = join(directory, "profiles");
-  await mkdir(profileRoot, { recursive: true });
+  await mkdir(profileRoot, { recursive: true, mode: 0o700 });
   const dataset = await prepareCountryDataset();
   const initialEnv = {
     DB_HOST: f.dbConfig.host,
@@ -107,11 +107,15 @@ export async function createContentE2eFixture(t, { bundleDir, mode = "bridge" } 
       await mkdir(join(bundleDir, "backend"));
       await writeFile(
         join(bundleDir, "frontend/index.html"),
-        await readFile(join(root, "dist-cpanel/index.html")),
+        '<!doctype html><html><body><div id="root">Preview shell fixture</div></body></html>',
       );
-      await cp(join(root, "dist-cpanel/assets"), join(bundleDir, "frontend/assets"), {
-        recursive: true,
-      });
+      await cp(
+        join(setup.env.BIBI_CONTENT_ASSET_ROOT, "assets"),
+        join(bundleDir, "frontend/assets"),
+        {
+          recursive: true,
+        },
+      );
       for (const name of [
         "dist",
         "migrations",

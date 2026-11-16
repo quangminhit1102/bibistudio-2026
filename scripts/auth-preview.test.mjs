@@ -35,7 +35,7 @@ test("auth release preview uses supplied private runtime env and closes pools/de
         unexpected = app;
         return app;
       }),
-      /configuration/i,
+      /isolated local database/i,
     );
   } finally {
     await unexpected?.close();
