@@ -48,6 +48,7 @@ jobs:
           BIBI_TEST_DB_CONTAINER: ${{ job.services.mysql.id }}
       - run: npm run build
       - run: node scripts/visitor-context-bundle-check.mjs
+      - run: node scripts/content-bundle-check.mjs
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
@@ -60,6 +61,8 @@ jobs:
             .superpowers/e2e/visitor-analytics/*.png
             .superpowers/e2e/visitor-relay/*.png
             .superpowers/e2e/visitor-context-bundle/*.png
+            .superpowers/e2e/content-source/*
+            .superpowers/e2e/content-compiled/**/*
           include-hidden-files: true
           if-no-files-found: ignore
           retention-days: 7

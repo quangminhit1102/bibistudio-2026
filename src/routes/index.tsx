@@ -4,6 +4,7 @@ import { PageShell } from "@/components/page-shell";
 import { Reveal } from "@/components/brand/reveal";
 import { PaperPlaceholder } from "@/components/brand/paper-placeholder";
 import { ContactBand } from "@/components/contact-cta";
+import { BlogHighlights } from "@/components/blog-highlights";
 import { CatalogueCard } from "@/components/catalogue-card";
 import { BrandMark } from "@/components/brand-logo";
 import { collections, getAllProducts, productTypes, productsByCollection, tx, type Collection } from "@/data/catalogue";
@@ -256,6 +257,7 @@ function Home() {
         </Reveal>
       </section>
 
+      <BlogHighlights />
       <ContactBand />
     </PageShell>
   );

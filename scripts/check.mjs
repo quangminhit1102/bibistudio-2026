@@ -16,6 +16,12 @@ try {
     "src/lib/admin-boundary.ts",
     "src/lib/admin-http.ts",
     "src/lib/route-leaf.tsx",
+    "src/blog-client.ts",
+    "src/lib/public-content.ts",
+    "src/lib/blog-navigation.ts",
+    "src/lib/seo.ts",
+    "src/lib/analytics-privacy.ts",
+    "src/components/blog-document-adapter.tsx",
     "src/routes/admin*.tsx",
     "backend/src",
     "src/lib/api-demo.ts",
@@ -41,6 +47,7 @@ try {
   await run(process.execPath, ["--test", "scripts/dev-relay.test.mjs"]);
   await node("scripts/auth-ui-check.mjs");
   await node("scripts/visitor-relay-ui-check.mjs");
+  await node("scripts/content-ui-check.mjs");
 } catch (error) {
   console.error(error.message);
   process.exitCode = 1;

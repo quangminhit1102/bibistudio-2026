@@ -27,6 +27,10 @@ async function prepareContent(config, current, candidate, { backupReceipt, run }
     status = await execute(config, capable.dir, "content-status", capable.manifest);
     checkContentCompatibility(capable.manifest.content, status);
     await execute(config, capable.dir, "content-seed", capable.manifest);
+    if (config.root)
+      await require("./content-initial.cjs").initializeContent(config, current, candidate, {
+        run: execute,
+      });
   } else if (status.state !== "complete") throw Error("Content rollback requires complete schema");
   return status;
 }

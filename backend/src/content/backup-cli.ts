@@ -40,6 +40,7 @@ async function main() {
     for (const [name, source] of Object.entries({
       "content-reader.json": resolve(dirname(file), "content-reader.json"),
       "content-routing.json": resolve(dirname(file), "content-routing.json"),
+      "content-initial-routing.json": resolve(dirname(file), "content-initial-routing.json"),
       "content-reader.php": resolve(deployment, "public-reader/content-reader.php"),
       "loader.php": resolve(env.BIBI_CONTENT_ASSET_ROOT, "_bibi-content/reader.php"),
       "root.htaccess": resolve(env.BIBI_CONTENT_ASSET_ROOT, ".htaccess"),

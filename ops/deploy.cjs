@@ -286,13 +286,13 @@ async function activateRelease(config, id, hooks = {}) {
     { backupReceipt: profileBackup, run: hooks.contextRun },
   );
   if (manifest.visitorContext) await installRelayRouting(config);
+  await mergeAssets(config, dir);
   await prepareContent(
     config,
     old ? { dir: old, manifest: oldManifest } : null,
     { dir, manifest },
     { backupReceipt: contentBackup, run: hooks.contentRun },
   );
-  await mergeAssets(config, dir);
   try {
     await point(config, dir);
     await applyRouting(config, manifest);

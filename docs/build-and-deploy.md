@@ -16,6 +16,8 @@ Trạng thái website hiện tại phải đọc từ [API version](https://bibi
 
 ## 1. Ba lệnh local
 
+CMS Bài viết/Danh mục dùng quy trình setup/dev/compiled acceptance riêng đã tích hợp vào các lệnh hiện có; xem [hướng dẫn CMS local](content-cms-local.md). Phần này mô tả khả năng đã triển khai trong source, không xác nhận CMS đã phát hành production.
+
 **Relay IP/quốc gia đã kiểm chứng local/CI, chưa phát hành:** sau khi cập nhật source, bật Docker Desktop và chạy `npm run db:setup:local` một lần để chuẩn bị feature schema, khóa relay riêng và dữ liệu quốc gia đã khóa checksum. `npm run dev` tự chạy FE, Node và PHP; không cần cài PHP trên Windows hay chạy lệnh PHP riêng. Lần đầu cần tải Docker image PHP đã khóa digest. Ctrl+C dừng cả ba, inspector Node vẫn ở `127.0.0.1:9230`. Preview tự chạy relay nếu runtime có cấu hình tương ứng. IP loopback/private ở local được ghi là chưa xác định; các IP công khai trong bài test là fixture riêng. Khóa local không được dùng cho production. `npm run check` bao gồm kiểm tra PHP/MySQL và trình duyệt thật; `npm run build` vẫn là lệnh đóng gói.
 
 **In phiếu giao hàng đã phát hành12/11:** release `3beb58fc9f2f2fc7125e91bdb6df85c179dbbccf-43259550001`, production43261003682 thành công. Editor bản in riêng lấy dữ liệu khách hàng/sản phẩm browser hiện có, VAT tính thêm, A4 và chữ ký theo mẫu đã duyệt; không ghi phiếu gốc hay đổi schema. Có boundary chỉ đọc để thay API sau này. CI/check/build, UI production và hộp thoại in Edge đã kiểm chứng; giữ release trước `da41998…-42356811515` làm rollback. Xem [biên bản phát hành](superpowers/reports/2026-11-12-delivery-slip-print-release.md).

@@ -122,7 +122,7 @@ export async function verifyContentSeed(seedDirectory: string): Promise<ContentS
 }
 
 // Fixed UUIDv5 namespace and names form a versioned import identity, never a user account.
-function seedId(kind: string, key: string): string {
+export function seedId(kind: string, key: string): string {
   const hash = createHash("sha1")
     .update(Buffer.from("6ba7b8109dad11d180b400c04fd430c8", "hex"))
     .update(`bibistudio.vn/content-seed/v1/${kind}/${key}`)

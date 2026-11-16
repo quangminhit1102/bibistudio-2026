@@ -7,6 +7,7 @@ import { withContentEnvironmentLock } from "./environment-lock";
 import type { ContentPaths, MediaVariant } from "./contracts";
 import { createContentMediaStore } from "./media/store";
 import { readActiveContent, readGeneration, regularBytes, digest } from "./publication/active-read";
+import { readInitialContentJournal } from "./initial";
 const uuid = /^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/;
 async function size(directory: string): Promise<number> {
   let total = 0;
@@ -98,6 +99,7 @@ export async function createContentBackup(
             "content-reader.php",
             "loader.php",
             "root.htaccess",
+            "content-initial-routing.json",
           ].includes(name)
         )
           throw Error("Unknown content bootstrap backup file");
@@ -168,6 +170,16 @@ export async function createContentBackup(
           join(options.assetRoot, asset.slice(1)),
           await regularBytes(options.assetRoot, asset.slice(1), 10 * 1024 ** 2),
         );
+      const initial = await readInitialContentJournal(options.paths);
+      if (initial) {
+        if (generations.get(initial.generationId) !== initial.manifestSha256)
+          throw Error("Missing initial cutover recovery generation");
+        await add(
+          "content/initial-cutover.json",
+          join(options.paths.root, "initial-cutover.json"),
+          await regularBytes(options.paths.root, "initial-cutover.json", 4096),
+        );
+      }
       const copyBytes = [...files.values()].reduce((n, f) => n + f.bytes, 0);
       const assertPairBudget = async (assetBytes: number) => {
         const dumpBytes = options.maxBytes ?? 128 * 1024 ** 2;

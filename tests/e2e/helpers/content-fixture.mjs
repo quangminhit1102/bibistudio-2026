@@ -27,7 +27,10 @@ async function freePort() {
   return port;
 }
 /** All databases, files, PHP containers and processes belong to this disposable fixture. */
-export async function createContentE2eFixture(t, { bundleDir, mode = "bridge" } = {}) {
+export async function createContentE2eFixture(
+  t,
+  { bundleDir, mode = "bridge", browser = false } = {},
+) {
   let app, closing;
   const close = () =>
     (closing ??= (async () => {
@@ -78,7 +81,7 @@ export async function createContentE2eFixture(t, { bundleDir, mode = "bridge" } 
           frontendPort: ports[0],
           backendPort: ports[1],
           inspectorPort: ports[2],
-          prebundle: false,
+          prebundle: browser,
           cacheDir: join(directory, "vite-cache"),
         });
       } finally {
@@ -175,11 +178,11 @@ export async function createContentE2eFixture(t, { bundleDir, mode = "bridge" } 
       assetRoot: setup.env.BIBI_CONTENT_ASSET_ROOT,
       origin: baseUrl,
     });
-  const login = async () => {
+  const login = async (credentials = { username: "admin", password: f.secrets.masterPassword }) => {
     const response = await fetch(baseUrl + "/api/auth/login", {
       method: "POST",
       headers: { Origin: baseUrl, "X-Bibi-Request": "1", "Content-Type": "application/json" },
-      body: JSON.stringify({ username: "admin", password: f.secrets.masterPassword }),
+      body: JSON.stringify(credentials),
     });
     if (!response.ok) throw Error("Content fixture login failed");
     return (await response.json()).accessToken;
@@ -224,6 +227,7 @@ export async function createContentE2eFixture(t, { bundleDir, mode = "bridge" } 
   return {
     baseUrl,
     adminCredentials: { username: "admin", password: f.secrets.masterPassword },
+    editorCredentials: { username: "editor", password: f.secrets.userPassword },
     paths: setup.paths,
     ownedPorts,
     close,

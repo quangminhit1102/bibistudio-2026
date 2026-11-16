@@ -3,8 +3,7 @@
 
 export const SITE_URL = "https://bibistudio.vn";
 export const SITE_NAME = "BiBi Studio";
-export const DEFAULT_OG_IMAGE =
-  SITE_URL + "/catalogue/womens-day-pink-garden.jpg";
+export const DEFAULT_OG_IMAGE = SITE_URL + "/catalogue/womens-day-pink-garden.jpg";
 
 export function appendPageParam(url: string, page: number): string {
   return page > 1 ? `${url}?page=${page}` : url;
