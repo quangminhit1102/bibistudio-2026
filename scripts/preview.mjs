@@ -36,7 +36,16 @@ export async function previewRelease(
       !/^(?:bibi_local|bibi_test_[a-f0-9]{12,32})$/.test(runtimeEnv.DB_NAME ?? ""))
   )
     throw Error("Preview requires an isolated local database");
-  runtimeEnv = { ...runtimeEnv, BIBI_RELEASE_MANIFEST: join(bundleDir, "manifest.json") };
+  runtimeEnv = {
+    ...runtimeEnv,
+    BIBI_RELEASE_MANIFEST: join(bundleDir, "manifest.json"),
+    ...(manifest.content || manifest.contentPublic
+      ? {
+          BIBI_CONTENT_ASSET_ROOT: join(bundleDir, "frontend"),
+          BIBI_CONTENT_ASSETS_FILE: join(bundleDir, "backend/content-assets.json"),
+        }
+      : {}),
+  };
   // Local preview resolves the exact already-installed backend dependency set;
   // the archive was produced before this temporary link and never includes it.
   const dependencyLink = join(bundleDir, "backend/node_modules");
@@ -63,6 +72,8 @@ export async function previewRelease(
   const types = {
     ".html": "text/html; charset=utf-8",
     ".json": "application/json",
+    ".xml": "application/xml; charset=utf-8",
+    ".txt": "text/plain; charset=utf-8",
     ".js": "application/javascript",
     ".css": "text/css",
     ".jpg": "image/jpeg",
@@ -191,6 +202,9 @@ export async function previewRelease(
         backendPort: address.port,
         frontendPort: address.port,
         sourceDirectory: join(bundleDir, "backend/relay"),
+        ...(manifest.content || manifest.contentPublic
+          ? { readerFile: join(bundleDir, "backend/content-public/content-reader.php") }
+          : {}),
       });
     }
     runtime?.start?.();

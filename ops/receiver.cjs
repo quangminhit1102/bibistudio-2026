@@ -125,6 +125,7 @@ async function acceptArchive(config, id, checksum, file) {
       await verifyVisitorContextAssets(path.join(staging, "backend"), manifest.visitorContext);
       await fs.access(path.join(staging, "backend/dist/visitors/context-cli.js"));
     }
+    await require("./content-metadata.cjs").verifyContentAssets(staging, manifest);
     await fs.writeFile(path.join(staging, ".archive-sha256"), checksum);
     await fs.rename(staging, dest);
   } catch (e) {
@@ -161,6 +162,8 @@ async function main() {
     process.exitCode = result.status ?? 1;
     return;
   }
+  require("./content-backup.cjs").assertReceiverContentLock(config.root);
+  config.contentLockFd = 3;
   if (command.action === "check") {
     if (Number(process.versions.node.split(".")[0]) !== 24) throw new Error("Node 24 required");
     await fs.access(config.site);

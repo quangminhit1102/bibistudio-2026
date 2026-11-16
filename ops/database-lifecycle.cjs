@@ -1,6 +1,6 @@
 "use strict";
 const path = require("node:path");
-const { execFile } = require("node:child_process");
+const { execFile, spawn } = require("node:child_process");
 const { promisify } = require("node:util");
 const { verifyDatabaseAssets, checkDatabaseCompatibility } = require("./database-metadata.cjs");
 const execute = promisify(execFile);
@@ -13,6 +13,10 @@ async function runDatabaseTool(config, dir, command, manifest) {
   if (
     ![
       "backup",
+      "content-backup",
+      "content-status",
+      "content-migrate",
+      "content-seed",
       "profile-backup",
       "profile-status",
       "profile-migrate",
@@ -33,6 +37,7 @@ async function runDatabaseTool(config, dir, command, manifest) {
   )
     throw new Error("Unsupported database operation");
   const contextAction = command.startsWith("context-") ? command.slice(8) : null;
+  const contentAction = command.startsWith("content-") ? command.slice(8) : null;
   const profileCommand = command.startsWith("profile-");
   const visitorAction = command.startsWith("visitor-") ? command.slice(8) : null;
   const profileAction = profileCommand ? command.slice(8) : null;
@@ -44,37 +49,41 @@ async function runDatabaseTool(config, dir, command, manifest) {
       ? "private/runtime.env"
       : "private/maintenance.env",
   );
-  const backup = command === "backup" || profileAction === "backup";
+  const backup = command === "backup" || profileAction === "backup" || contentAction === "backup";
   const probe = command === "probe";
-  const args = contextAction
-    ? [path.join(dir, "backend/dist/visitors/context-cli.js"), contextAction]
-    : visitorAction
-      ? [path.join(dir, "backend/dist/visitors/cli.js"), visitorAction]
-      : profileCommand
-        ? profileAction === "backup"
-          ? [path.join(dir, "backend/dist/profile/backup-cli.js"), manifest.releaseId]
-          : [path.join(dir, "backend/dist/profile/cli.js"), profileAction]
-        : logCommand
-          ? logAction === "probe"
-            ? [
-                path.join(dir, "backend/dist/access-logs/probe-cli.js"),
-                manifest.releaseId,
-                manifest.sourceSha,
-                config.baseUrl,
-              ]
-            : [path.join(dir, "backend/dist/access-logs/cli.js"), logAction]
-          : probe
-            ? [
-                path.join(dir, "backend/dist/db/probe-cli.js"),
-                manifest.releaseId,
-                manifest.sourceSha,
-                config.baseUrl,
-              ]
-            : backup
-              ? [path.join(dir, "backend/dist/db/backup-cli.js"), manifest.releaseId]
-              : [path.join(dir, "backend/dist/db/cli.js"), command];
+  const args = contentAction
+    ? contentAction === "backup"
+      ? [path.join(dir, "backend/dist/content/backup-cli.js"), manifest.releaseId]
+      : [path.join(dir, "backend/dist/content/cli.js"), contentAction]
+    : contextAction
+      ? [path.join(dir, "backend/dist/visitors/context-cli.js"), contextAction]
+      : visitorAction
+        ? [path.join(dir, "backend/dist/visitors/cli.js"), visitorAction]
+        : profileCommand
+          ? profileAction === "backup"
+            ? [path.join(dir, "backend/dist/profile/backup-cli.js"), manifest.releaseId]
+            : [path.join(dir, "backend/dist/profile/cli.js"), profileAction]
+          : logCommand
+            ? logAction === "probe"
+              ? [
+                  path.join(dir, "backend/dist/access-logs/probe-cli.js"),
+                  manifest.releaseId,
+                  manifest.sourceSha,
+                  config.baseUrl,
+                ]
+              : [path.join(dir, "backend/dist/access-logs/cli.js"), logAction]
+            : probe
+              ? [
+                  path.join(dir, "backend/dist/db/probe-cli.js"),
+                  manifest.releaseId,
+                  manifest.sourceSha,
+                  config.baseUrl,
+                ]
+              : backup
+                ? [path.join(dir, "backend/dist/db/backup-cli.js"), manifest.releaseId]
+                : [path.join(dir, "backend/dist/db/cli.js"), command];
   try {
-    const { stdout } = await execute(path.join(config.runtimeBin, "node"), args, {
+    const options = {
       cwd: path.join(dir, "backend"),
       env: {
         PATH: config.runtimeBin + path.delimiter + "/usr/bin:/bin",
@@ -82,11 +91,44 @@ async function runDatabaseTool(config, dir, command, manifest) {
         [backup || probe || logAction === "probe"
           ? "BIBI_MAINTENANCE_ENV_FILE"
           : "BIBI_PRIVATE_ENV_FILE"]: privateFile,
+        ...(contentAction && config.contentLockFd === 3 ? { BIBI_CONTENT_LOCK_FD: "3" } : {}),
       },
       timeout: backup ? 300000 : 120000,
       maxBuffer: 65536,
       windowsHide: true,
-    });
+    };
+    let stdout;
+    if (contentAction && config.contentLockFd === 3) {
+      require("./content-backup.cjs").assertReceiverContentLock(config.root);
+      stdout = await new Promise((done, fail) => {
+        const child = spawn(path.join(config.runtimeBin, "node"), args, {
+          ...options,
+          stdio: ["ignore", "pipe", "pipe", 3],
+        });
+        let output = "",
+          bytes = 0;
+        const timer = setTimeout(() => {
+          child.kill("SIGKILL");
+          fail(Error("Content maintenance timed out"));
+        }, options.timeout);
+        child.stdout.on("data", (data) => {
+          bytes += data.length;
+          if (bytes > options.maxBuffer) {
+            child.kill("SIGKILL");
+            fail(Error("Content maintenance output limit"));
+          } else output += data;
+        });
+        child.stderr.resume();
+        child.once("error", (error) => {
+          clearTimeout(timer);
+          fail(error);
+        });
+        child.once("close", (code) => {
+          clearTimeout(timer);
+          code === 0 ? done(output) : fail(Error("Content maintenance failed"));
+        });
+      });
+    } else ({ stdout } = await execute(path.join(config.runtimeBin, "node"), args, options));
     return JSON.parse(stdout.trim());
   } catch (error) {
     if (logAction === "sync" && error.code === 2) {

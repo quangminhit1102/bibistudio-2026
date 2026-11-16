@@ -23,6 +23,7 @@ async function main() {
   const file = process.env.BIBI_PRIVATE_ENV_FILE,
     env = readPrivateEnvironment(file);
   env.NODE_ENV = process.env.NODE_ENV;
+  env.BIBI_PRIVATE_ENV_FILE = file;
   contentEnvironment(file, env);
   const pool = createDbPool({ ...readDbConfig(env), connectionLimit: 2 }),
     directory = resolve(__dirname, "../../content-migrations");

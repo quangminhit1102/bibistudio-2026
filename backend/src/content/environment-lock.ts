@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { constants, readFileSync } from "node:fs";
+import { constants, readFileSync, fstatSync, lstatSync, realpathSync } from "node:fs";
 import { open, realpath, stat, readFile, unlink, rmdir } from "node:fs/promises";
 import { dirname, isAbsolute, join, resolve } from "node:path";
 import { createInterface } from "node:readline";
@@ -31,6 +31,49 @@ export async function withContentEnvironmentLock<T>(
   const file = paths.deployLock;
   if (!isAbsolute(file) || (await realpath(dirname(file))) !== dirname(resolve(file)))
     throw new ApiError(503, "CONTENT_LOCK_CONFIG", "Cấu hình khóa nội dung không hợp lệ");
+  if (process.env.BIBI_CONTENT_LOCK_FD !== undefined) {
+    const controller = new AbortController();
+    const assertActive = () => {
+      try {
+        if (
+          controller.signal.aborted ||
+          process.platform !== "linux" ||
+          process.env.BIBI_CONTENT_LOCK_FD !== "3"
+        )
+          throw lost();
+        const fd = fstatSync(3),
+          named = lstatSync(file);
+        if (
+          !fd.isFile() ||
+          named.isSymbolicLink() ||
+          !named.isFile() ||
+          fd.uid !== process.getuid?.() ||
+          fd.dev !== named.dev ||
+          fd.ino !== named.ino ||
+          realpathSync("/proc/self/fd/3") !== resolve(file) ||
+          !/^lock:\s+\d+:\s+FLOCK\s+ADVISORY\s+WRITE\s+\d+\s+[0-9a-f]+:[0-9a-f]+:\d+\s+0\s+EOF$/m.test(
+            readFileSync("/proc/self/fdinfo/3", "utf8"),
+          )
+        )
+          throw lost();
+      } catch {
+        throw lost();
+      }
+    };
+    assertActive();
+    const lease: ContentEnvironmentLease = {
+      holderPid: process.pid,
+      signal: controller.signal,
+      assertActive,
+    };
+    seals.set(lease, { path: resolve(file), active: true });
+    try {
+      return await work(lease);
+    } finally {
+      seals.get(lease)!.active = false;
+      controller.abort();
+    }
+  }
   const handle =
     process.platform === "linux"
       ? await open(file, constants.O_RDWR | constants.O_CREAT | constants.O_NOFOLLOW, 0o600)

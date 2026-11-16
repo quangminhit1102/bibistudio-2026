@@ -14,6 +14,9 @@ import contextMetadata from "../ops/visitor-context-metadata.cjs";
 import { writeAnalyticsCatalogue } from "./analytics-catalogue.mjs";
 import { prepareCountryDataset } from "./prepare-geoip.mjs";
 import { buildContentSeed } from "./build-content-seed.mjs";
+import { buildContentAssets, writeStaticContentSitemap } from "./build-content-assets.mjs";
+import { CONTENT_RELEASE_MODE } from "./content-release-mode.mjs";
+import contentMetadata from "../ops/content-metadata.cjs";
 
 export async function validateBundle(dir) {
   for (const name of [
@@ -52,6 +55,8 @@ export async function validateBundle(dir) {
     await contextMetadata.verifyVisitorContextAssets(join(dir, "backend"), manifest.visitorContext);
     await stat(join(dir, "backend/dist/visitors/context-cli.js"));
   }
+  if (manifest.content || manifest.contentPublic)
+    await contentMetadata.verifyContentAssets(dir, manifest);
   if (fe.releaseId !== manifest.releaseId || fe.sourceSha !== manifest.sourceSha)
     throw new Error("FE/BE release mismatch");
   async function scan(path) {
@@ -70,15 +75,39 @@ export async function validateBundle(dir) {
   await scan(dir);
   return manifest;
 }
-export async function buildRelease({
+export async function buildRelease(options = {}) {
+  if (Object.hasOwn(options, "mode")) throw Error("Content mode must come from committed source");
+  return buildMode({ ...options, mode: CONTENT_RELEASE_MODE });
+}
+export async function buildContentAcceptanceBundle(options) {
+  if (
+    !options ||
+    Object.keys(options).some((key) => !["sourceSha", "mode", "outputDir"].includes(key)) ||
+    !["bridge", "cms"].includes(options.mode) ||
+    !options.outputDir
+  )
+    throw Error("Local acceptance only; CI identities and promotion are forbidden");
+  const target = resolve(options.outputDir),
+    official = join(root, ".releases");
+  if (
+    target === root ||
+    !relative(target, root).startsWith("..") ||
+    target === official ||
+    !relative(official, target).startsWith("..")
+  )
+    throw Error("Local acceptance requires a separate output directory");
+  return buildMode({ ...options, ciRunId: null });
+}
+async function buildMode({
   sourceSha,
   ciRunId = null,
   outputDir = join(root, ".releases"),
+  mode,
 } = {}) {
   sourceSha ??= execFileSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).trim();
   await writeAnalyticsCatalogue(root);
   await prepareCountryDataset();
-  const manifest = makeManifest(
+  const identity = makeManifest(
     sourceSha,
     ciRunId,
     await databaseMetadata.createDatabaseMetadata(join(root, "backend")),
@@ -88,7 +117,7 @@ export async function buildRelease({
     await contextMetadata.createVisitorContextMetadata(join(root, "backend")),
   );
   const base = resolve(outputDir);
-  const bundleDir = join(base, manifest.releaseId);
+  const bundleDir = join(base, identity.releaseId);
   if (relative(base, bundleDir).startsWith("..") || bundleDir === base)
     throw new Error("Invalid build target");
   await validateCatalogue(root);
@@ -103,8 +132,8 @@ export async function buildRelease({
   } else await rm(bundleDir, { recursive: true, force: true });
   const env = {
     ...process.env,
-    VITE_BIBI_RELEASE_ID: manifest.releaseId,
-    VITE_BIBI_SOURCE_SHA: manifest.sourceSha,
+    VITE_BIBI_RELEASE_ID: identity.releaseId,
+    VITE_BIBI_SOURCE_SHA: identity.sourceSha,
   };
   await run(
     process.execPath,
@@ -163,6 +192,31 @@ export async function buildRelease({
   );
   for (const name of ["relay", "geoip", "visitor-context-migrations"])
     await cp(join(root, "backend", name), join(bundleDir, "backend", name), { recursive: true });
+  await mkdir(join(bundleDir, "backend/content-public"));
+  await cp(
+    join(root, "ops/php/content-reader.php"),
+    join(bundleDir, "backend/content-public/content-reader.php"),
+  );
+  const catalogue = JSON.parse(
+    await readFile(join(bundleDir, "backend/analytics-catalogue.json"), "utf8"),
+  );
+  await buildContentAssets({
+    frontendDir: join(bundleDir, "frontend"),
+    outputFile: join(bundleDir, "backend/content-assets.json"),
+    staticRoutes: catalogue.routes,
+  });
+  await writeStaticContentSitemap(join(bundleDir, "frontend"), catalogue.routes);
+  const feature = await contentMetadata.createContentMetadata(bundleDir, mode),
+    manifest = makeManifest(
+      sourceSha,
+      ciRunId,
+      identity.database,
+      identity.accessLogs,
+      identity.profiles,
+      identity.visitorAnalytics,
+      identity.visitorContext,
+      mode === "cms" ? { content: feature } : { contentPublic: feature },
+    );
   for (const file of ["manifest.json", "frontend/version.json"])
     await writeFile(
       join(bundleDir, file),

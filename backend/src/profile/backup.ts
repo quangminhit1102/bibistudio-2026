@@ -88,7 +88,11 @@ async function flushWrite(file: string, bytes: Buffer | string) {
   }
 }
 export async function createProfileBackup(
-  options: Parameters<typeof createVerifiedBackup>[0] & { assetDirectory: string },
+  options: Parameters<typeof createVerifiedBackup>[0] & {
+    assetDirectory: string;
+    preparePair?: (directory: string) => Promise<void>;
+    assertPairBudget?: (assetBytes: number) => Promise<void>;
+  },
 ): Promise<
   BackupReceipt & {
     profiles: true;
@@ -105,6 +109,10 @@ export async function createProfileBackup(
     const assets = await references(c),
       pair = join(options.directory, "profile-" + randomUUID()),
       assetsDirectory = join(pair, "assets");
+    const assetBytes = assets.reduce((total, asset) => total + asset.byteLength, 0);
+    if (!Number.isSafeInteger(assetBytes) || assetBytes < 0 || assetBytes > 1024 ** 3)
+      throw Error("Profile snapshot exceeds size limit");
+    await options.assertPairBudget?.(assetBytes);
     await privateDirectory(pair);
     const snapshot = await privateDirectory(assetsDirectory);
     let total = 0;
@@ -115,6 +123,7 @@ export async function createProfileBackup(
       await flushWrite(join(assetsDirectory, asset.id + "." + asset.format), bytes);
       await snapshot.read(asset);
     }
+    await options.preparePair?.(pair);
     const receipt = await createVerifiedBackup({
       ...options,
       directory: pair,

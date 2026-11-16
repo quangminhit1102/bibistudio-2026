@@ -19,8 +19,14 @@ if (manifest.isBaseline) {
       path.join(current, "backend/dist/db/private-env.js"),
     );
     const { createRuntime } = require(path.join(current, "backend/dist/runtime.js"));
-    const env = readPrivateEnvironment(path.resolve(__dirname, "../private/runtime.env"));
-    runtime = createRuntime({ ...env, NODE_ENV: "production" });
+    const privateFile = path.resolve(__dirname, "../private/runtime.env");
+    const env = readPrivateEnvironment(privateFile);
+    runtime = createRuntime({
+      ...env,
+      NODE_ENV: "production",
+      BIBI_PRIVATE_ENV_FILE: privateFile,
+      BIBI_RELEASE_MANIFEST: path.join(current, "manifest.json"),
+    });
   }
   const server = http.createServer(
     createApp(
@@ -28,11 +34,14 @@ if (manifest.isBaseline) {
         releaseId: manifest.releaseId,
         sourceSha: manifest.sourceSha,
         schemaVersion: manifest.schemaVersion,
+        ...(manifest.content ? { content: manifest.content } : {}),
+        ...(manifest.contentPublic ? { contentPublic: manifest.contentPublic } : {}),
       },
       runtime?.appOptions,
     ),
   );
   server.listen();
+  runtime?.start?.();
   let closing;
   const close = () =>
     (closing ??= new Promise((resolve) => {

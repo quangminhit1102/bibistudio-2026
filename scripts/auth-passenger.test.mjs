@@ -8,6 +8,7 @@ test("Passenger loads auth runtime from fixed private file and drains pools on s
   const root = path.resolve("passenger-fixture");
   const current = path.join(root, "releases", "auth-release");
   let runtime = 0,
+    started = 0,
     closed = 0,
     listened = 0;
   const events = {};
@@ -16,7 +17,13 @@ test("Passenger loads auth runtime from fixed private file and drains pools on s
     "node:fs": {
       realpathSync: () => current,
       readFileSync: () =>
-        JSON.stringify({ schemaVersion: 2, database: {}, releaseId: "release", sourceSha: "sha" }),
+        JSON.stringify({
+          schemaVersion: 7,
+          content: { mode: "cms", publicReaderVersion: 1 },
+          database: {},
+          releaseId: "release",
+          sourceSha: "sha",
+        }),
     },
     "node:http": {
       createServer: () => ({
@@ -30,6 +37,7 @@ test("Passenger loads auth runtime from fixed private file and drains pools on s
       createApp: (release, options) => {
         assert.equal(release.releaseId, "release");
         assert.equal(release.db, undefined);
+        assert.equal(release.content.mode, "cms");
         assert.equal(options.db, "test-pool");
         return () => {};
       },
@@ -44,10 +52,15 @@ test("Passenger loads auth runtime from fixed private file and drains pools on s
       createRuntime: (env) => {
         assert.equal(env.DB_PASSWORD, "test-only");
         assert.equal(env.NODE_ENV, "production");
+        assert.equal(env.BIBI_PRIVATE_ENV_FILE, path.join(root, "private/runtime.env"));
+        assert.equal(env.BIBI_RELEASE_MANIFEST, path.join(current, "manifest.json"));
         assert.equal(env.AMBIENT_SECRET, undefined);
         runtime++;
         return {
           appOptions: { db: "test-pool" },
+          start: () => {
+            started++;
+          },
           close: async () => {
             closed++;
           },
@@ -71,6 +84,7 @@ test("Passenger loads auth runtime from fixed private file and drains pools on s
   });
   assert.equal(runtime, 1);
   assert.equal(listened, 1);
+  assert.equal(started, 1);
   await events.SIGTERM();
   await events.SIGINT();
   assert.equal(closed, 1);

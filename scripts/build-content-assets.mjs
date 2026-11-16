@@ -1,5 +1,29 @@
 import { readFile, writeFile, realpath, lstat, mkdir } from "node:fs/promises";
 import { resolve, join, sep, dirname } from "node:path";
+export async function writeStaticContentSitemap(frontendDir, routes) {
+  const paths = [
+    ...new Set(
+      routes
+        .map((r) => r.path)
+        .filter(
+          (path) =>
+            typeof path === "string" &&
+            /^\/(?:[a-zA-Z0-9_-]+\/?)*$/.test(path) &&
+            !/^\/(?:blog|admin|api|preview)(?:\/|$)/.test(path),
+        ),
+    ),
+  ].sort();
+  const xml =
+    '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
+    paths.map((path) => `<url><loc>https://bibistudio.vn${path}</loc></url>`).join("\n") +
+    "\n</urlset>\n";
+  await mkdir(join(frontendDir, "sitemaps"), { recursive: true });
+  await writeFile(join(frontendDir, "sitemaps/site.xml"), xml);
+  await writeFile(
+    join(frontendDir, "robots.txt"),
+    "User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /api/\nSitemap: https://bibistudio.vn/sitemap.xml\n",
+  );
+}
 const forbidden =
   /(?:^|[\/_-])(?:admin|tinymce|cpanel|main|index|react|jsx-runtime)(?:[\/_\-.]|$)/i;
 export async function buildContentAssets({

@@ -104,6 +104,7 @@ export async function deployClient() {
         expectedRelease: id,
         expectedSha: id.split("-")[0],
         expectedRelay: result.visitorContext === true,
+        expectedContent: result.content === true,
       });
       await browserSmoke(baseUrl);
       await oldClient.verify();

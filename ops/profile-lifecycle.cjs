@@ -59,7 +59,7 @@ async function validateProfileConfiguration(config) {
       throw new Error("Runtime and maintenance must use the same fixed private profile directory");
   }
 }
-async function prepareProfileLifecycle(config, current, candidate, { run } = {}) {
+async function prepareProfileLifecycle(config, current, candidate, { run, backupReceipt } = {}) {
   const capable = [candidate, current].find((release) => release?.manifest?.profiles);
   if (!capable) {
     if (await profilesConfigured(config))
@@ -75,7 +75,8 @@ async function prepareProfileLifecycle(config, current, candidate, { run } = {})
   if (!["empty", "complete"].includes(status?.state))
     throw new Error("Unknown/dirty profile schema");
   if (status.state === "complete") checkProfileCompatibility(capable.manifest.profiles, status);
-  const receipt = await execute(config, capable.dir, "profile-backup", capable.manifest);
+  const receipt =
+    backupReceipt ?? (await execute(config, capable.dir, "profile-backup", capable.manifest));
   if (
     receipt?.verified !== true ||
     receipt.profiles !== true ||

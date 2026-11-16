@@ -4,6 +4,7 @@ export async function smoke({
   expectedRelease,
   expectedSha,
   expectedRelay = false,
+  expectedContent = false,
   request = fetch,
 }) {
   const get = async (path, type) => {
@@ -31,6 +32,25 @@ export async function smoke({
     throw new Error("API 404 must be JSON");
   await get("/products/ca-phe-voi-nguoi-thuong-notebook", "text/html");
   await get("/catalogue/motivation-ca-phe-nguoi-thuong.jpeg", "image/");
+  if (expectedContent) {
+    if ((await (await get("/api/ready", "application/json")).json()).ok !== true)
+      throw Error("CMS content readiness failed");
+    const html = await (await get("/blog", "text/html")).text();
+    if (
+      (html.match(/<h1(?:\s|>)/gi) ?? []).length !== 1 ||
+      !html.includes('id="bibi-content-bootstrap"') ||
+      /id=["']root["']/.test(html)
+    )
+      throw Error("Native Blog content smoke failed");
+    const missing = await request(new URL("/blog/bibi-smoke-unpublished-404", baseUrl), {
+      cache: "no-store",
+      headers: { DNT: "1" },
+      signal: AbortSignal.timeout(15000),
+    });
+    if (missing.status !== 404) throw Error("Native Blog missing content must be404");
+    for (const path of ["/sitemap.xml", "/sitemaps/blog.xml", "/sitemaps/site.xml"])
+      await get(path, "xml");
+  }
   if (expectedRelay) {
     const relay = await request(new URL("/api/analytics/relay/collect.php", baseUrl), {
       cache: "no-store",

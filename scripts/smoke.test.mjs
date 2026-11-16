@@ -68,3 +68,27 @@ test("context release smoke requires actual PHP execution instead of source or o
       /PHP|relay/i,
     );
 });
+test("CMS smoke refuses SPA Blog HTML despite healthy API and matching release", async () => {
+  const request = async (url) => {
+    const path = new URL(url).pathname;
+    if (["/api/health", "/api/ready"].includes(path)) return Response.json({ ok: true });
+    if (path === "/api/unknown") return Response.json({}, { status: 404 });
+    if (path.startsWith("/catalogue/"))
+      return new Response("image", { headers: { "content-type": "image/jpeg" } });
+    if (path.startsWith("/products/") || path === "/blog")
+      return new Response('<html><div id="root"></div></html>', {
+        headers: { "content-type": "text/html" },
+      });
+    return Response.json({ releaseId: "x", sourceSha: "y" });
+  };
+  await assert.rejects(
+    smoke({
+      baseUrl: "https://example.invalid",
+      expectedRelease: "x",
+      expectedSha: "y",
+      expectedContent: true,
+      request,
+    }),
+    /content|Blog|native/i,
+  );
+});

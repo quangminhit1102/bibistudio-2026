@@ -5,6 +5,7 @@ export interface ReleaseInfo {
   sourceSha: string;
   schemaVersion?: number;
   content?: { mode: "bridge" | "cms"; publicReaderVersion: 1 };
+  contentPublic?: { readerVersion: 1; readModelVersion: 1 };
 }
 export function readRelease(env: NodeJS.ProcessEnv = process.env): ReleaseInfo {
   const file = env.BIBI_RELEASE_MANIFEST;
@@ -17,6 +18,9 @@ export function readRelease(env: NodeJS.ProcessEnv = process.env): ReleaseInfo {
     releaseId: data.releaseId,
     sourceSha: data.sourceSha,
     ...([4, 5, 6, 7].includes(data.schemaVersion) ? { schemaVersion: data.schemaVersion } : {}),
+    ...(data.contentPublic?.readerVersion === 1 && data.contentPublic.readModelVersion === 1
+      ? { contentPublic: { readerVersion: 1 as const, readModelVersion: 1 as const } }
+      : {}),
     ...(data.content &&
     ["bridge", "cms"].includes(data.content.mode) &&
     data.content.publicReaderVersion === 1

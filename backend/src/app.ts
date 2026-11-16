@@ -185,15 +185,21 @@ export function createApp(release: ReleaseInfo, options: AppOptions = {}): Expre
         throw new ApiError(503, "VISITOR_CONTEXT_NOT_READY", "Dịch vụ phân tích chưa sẵn sàng");
       }
     }
-    if (contentCapabilities.canWrite) {
+    if (contentCapabilities.canWrite || options.content || options.publicContent) {
       try {
-        if (
-          !options.content ||
-          (await contentSchemaStatus(options.db, options.content.schemaDirectory)).state !==
-            "complete"
-        )
-          throw new Error();
-        await options.content.activeRead();
+        const required =
+          contentCapabilities.canWrite ||
+          (options.publicContent && !(await options.publicContent.legacyAllowed()));
+        const active = await options.content?.activeRead();
+        if (required || active) {
+          if (
+            !options.content ||
+            !active ||
+            (await contentSchemaStatus(options.db, options.content.schemaDirectory)).state !==
+              "complete"
+          )
+            throw new Error("Compatible active content required");
+        }
       } catch {
         throw new ApiError(503, "CONTENT_NOT_READY", "Dịch vụ nội dung chưa sẵn sàng");
       }

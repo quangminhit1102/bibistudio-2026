@@ -242,4 +242,24 @@ async function uninstallContentRouting(config, receipt) {
     else await atomic(files[key], before[key], key === "loader" ? 0o644 : 0o600);
   }
 }
-module.exports = { installContentRouting, uninstallContentRouting, contentRoutingBlock };
+async function verifyContentRouting(config) {
+  const files = await managed(config),
+    state = JSON.parse(await regular(files.state));
+  if (
+    state.schemaVersion !== 1 ||
+    !/^[a-f0-9]{64}$/.test(state.baseSha256 ?? "") ||
+    state.blockSha256 !== digest(contentRoutingBlock())
+  )
+    throw Error("Invalid owned content routing receipt");
+  await configuration({ ...config, expectedRootSha256: state.baseSha256 });
+  const split = splitRules(await regular(files.root));
+  if (split.block !== contentRoutingBlock()) throw Error("Missing owned content routing block");
+  await assertOwned(files, state, split);
+  return { readerVersion: 1, readModelVersion: 1 };
+}
+module.exports = {
+  installContentRouting,
+  uninstallContentRouting,
+  contentRoutingBlock,
+  verifyContentRouting,
+};

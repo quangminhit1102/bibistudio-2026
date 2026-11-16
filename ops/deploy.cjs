@@ -17,6 +17,9 @@ const execute = promisify(execFile);
 const { prepareProfileLifecycle } = require("./profile-lifecycle.cjs");
 const { prepareVisitorLifecycle } = require("./visitor-lifecycle.cjs");
 const { prepareVisitorContext } = require("./visitor-context-lifecycle.cjs");
+const { assertContentCompatible, contentIsActive } = require("./content-compatibility.cjs");
+const { prepareContent } = require("./content-lifecycle.cjs");
+const { prepareContentBackup } = require("./content-backup.cjs");
 const {
   validateRelayConfiguration,
   installRelayRouting,
@@ -121,7 +124,7 @@ async function install(config, dir) {
   };
   await execute(
     config.npmBin,
-    ["ci", "--omit=dev", "--ignore-scripts", "--no-audit", "--no-fund"],
+    ["ci", "--omit=dev", "--include=optional", "--ignore-scripts", "--no-audit", "--no-fund"],
     { cwd: path.join(dir, "backend"), env, maxBuffer: 1024 * 1024, timeout: 180000 },
   );
 }
@@ -170,6 +173,11 @@ async function verify(config, m) {
   throw last ?? new Error("Health check timed out");
 }
 async function applyRouting(config, m) {
+  if (await contentIsActive(config)) {
+    await assertContentCompatible(config, { manifest: m });
+    await require("./content-routing.cjs").verifyContentRouting(config);
+    return;
+  }
   if (m.isBaseline) {
     await atomicWrite(
       path.join(config.site, ".htaccess"),
@@ -204,6 +212,7 @@ async function currentTarget(config) {
 }
 async function activateRelease(config, id, hooks = {}) {
   const { dir, manifest } = await inspectRelease(config, id);
+  await assertContentCompatible(config, { dir, manifest });
   if (manifest.isBaseline) throw new Error("Use rollback for baseline");
   const old = await currentTarget(config);
   if (config.environment === "production") {
@@ -233,11 +242,17 @@ async function activateRelease(config, id, hooks = {}) {
     await verifyAccessLogAssets(path.join(dir, "backend"), manifest.accessLogs);
   if (manifest.visitorContext) await validateRelayConfiguration(config);
   await (hooks.install ?? install)(config, dir);
+  const contentBackup = await prepareContentBackup(
+    config,
+    old ? { dir: old, manifest: oldManifest } : null,
+    { dir, manifest },
+    { run: hooks.contentRun },
+  );
   const profileBackup = await prepareProfileLifecycle(
     config,
     old ? { dir: old, manifest: oldManifest } : null,
     { dir, manifest },
-    { run: hooks.profileRun },
+    { run: hooks.profileRun, backupReceipt: contentBackup },
   );
   await prepareVisitorLifecycle(
     config,
@@ -271,6 +286,12 @@ async function activateRelease(config, id, hooks = {}) {
     { backupReceipt: profileBackup, run: hooks.contextRun },
   );
   if (manifest.visitorContext) await installRelayRouting(config);
+  await prepareContent(
+    config,
+    old ? { dir: old, manifest: oldManifest } : null,
+    { dir, manifest },
+    { backupReceipt: contentBackup, run: hooks.contentRun },
+  );
   await mergeAssets(config, dir);
   try {
     await point(config, dir);
@@ -285,12 +306,20 @@ async function activateRelease(config, id, hooks = {}) {
       await atomicWrite(path.join(dir, ".release-probe.json"), JSON.stringify(probe));
     }
     await atomicWrite(path.join(dir, ".successful"), new Date().toISOString());
+    if (manifest.contentPublic) {
+      await fs.mkdir(path.join(config.root, "private"), { recursive: true, mode: 0o700 });
+      await atomicWrite(
+        path.join(config.root, "private/content-bridge-release"),
+        manifest.releaseId,
+      );
+    }
     if (old) await atomicWrite(path.join(config.root, "previous"), oldManifest.releaseId);
     if (config.environment === "staging")
       await atomicWrite(path.join(config.root, "highest-staging-run"), manifest.ciRunId);
     console.log(
       JSON.stringify({
         event: "deployed",
+        content: !!manifest.content || (await contentIsActive(config)),
         ...(manifest.visitorContext ? { visitorContext: true } : {}),
         environment: config.environment,
         releaseId: id,
@@ -300,6 +329,7 @@ async function activateRelease(config, id, hooks = {}) {
   } catch (error) {
     if (old) {
       try {
+        await assertContentCompatible(config, { dir: old, manifest: oldManifest });
         if (manifest.database && oldManifest.database) {
           const schema = await (hooks.databaseStatus ?? runDatabaseTool)(
             config,
@@ -313,7 +343,13 @@ async function activateRelease(config, id, hooks = {}) {
           config,
           { dir, manifest },
           { dir: old, manifest: oldManifest },
-          { run: hooks.profileRun },
+          { run: hooks.profileRun, backupReceipt: contentBackup },
+        );
+        await prepareContent(
+          config,
+          { dir, manifest },
+          { dir: old, manifest: oldManifest },
+          { backupReceipt: contentBackup, run: hooks.contentRun },
         );
         await point(config, old);
         await applyRouting(config, oldManifest);
@@ -343,16 +379,23 @@ async function activateRelease(config, id, hooks = {}) {
 }
 async function rollbackRelease(config, id, hooks = {}) {
   const { dir, manifest } = await inspectRelease(config, id);
+  await assertContentCompatible(config, { dir, manifest });
   if (!manifest.isBaseline) await fs.access(path.join(dir, ".successful"));
   const current = await currentTarget(config);
   const active = current
     ? JSON.parse(await fs.readFile(path.join(current, "manifest.json"), "utf8"))
     : null;
+  const contentBackup = await prepareContentBackup(
+    config,
+    current ? { dir: current, manifest: active } : null,
+    { dir, manifest },
+    { run: hooks.contentRun },
+  );
   const profileBackup = await prepareProfileLifecycle(
     config,
     current ? { dir: current, manifest: active } : null,
     { dir, manifest },
-    { run: hooks.profileRun },
+    { run: hooks.profileRun, backupReceipt: contentBackup },
   );
   await prepareVisitorLifecycle(
     config,
@@ -368,6 +411,12 @@ async function rollbackRelease(config, id, hooks = {}) {
     { backupReceipt: profileBackup, run: hooks.contextRun },
   );
   if (manifest.visitorContext) await installRelayRouting(config);
+  await prepareContent(
+    config,
+    current ? { dir: current, manifest: active } : null,
+    { dir, manifest },
+    { backupReceipt: contentBackup, run: hooks.contentRun },
+  );
   let degradedAdmin = false;
   if (manifest.database || active?.database) {
     if (manifest.database) {
@@ -411,11 +460,18 @@ async function rollbackRelease(config, id, hooks = {}) {
   } catch (error) {
     try {
       if (current) {
+        await assertContentCompatible(config, { dir: current, manifest: active });
         await prepareProfileLifecycle(
           config,
           { dir, manifest },
           { dir: current, manifest: active },
-          { run: hooks.profileRun },
+          { run: hooks.profileRun, backupReceipt: contentBackup },
+        );
+        await prepareContent(
+          config,
+          { dir, manifest },
+          { dir: current, manifest: active },
+          { backupReceipt: contentBackup, run: hooks.contentRun },
         );
         await point(config, current);
         await applyRouting(config, active);
@@ -441,6 +497,7 @@ async function rollbackRelease(config, id, hooks = {}) {
   console.log(
     JSON.stringify({
       event: "rolled-back",
+      content: await contentIsActive(config),
       environment: config.environment,
       releaseId: id,
       degradedAdmin,
@@ -472,7 +529,8 @@ async function managedUsage(config) {
 async function assertStorage(config, expandedBytes, { availableBytes } = {}) {
   const used = await managedUsage(config);
   // Space for extraction, a worst-case second asset copy, and runtime packages.
-  const required = expandedBytes * 2 + (config.runtimeReserveBytes ?? 64 * 1024 ** 2);
+  const required =
+    expandedBytes * 2 + (config.runtimeReserveBytes ?? 64 * 1024 ** 2) + 256 * 1024 ** 2;
   if (used + required > (config.maxManagedBytes ?? 4 * 1024 ** 3))
     throw new Error("Expanded release and retained assets exceed quota budget");
   if (availableBytes === undefined) {
@@ -485,6 +543,24 @@ async function assertStorage(config, expandedBytes, { availableBytes } = {}) {
 async function pruneReleases(config, { activeId }) {
   const base = path.join(config.root, "releases");
   const keep = new Set([activeId, "baseline"]);
+  let bridgeId;
+  try {
+    bridgeId = (
+      await fs.readFile(path.join(config.root, "private/content-bridge-release"), "utf8")
+    ).trim();
+  } catch (e) {
+    if (e.code !== "ENOENT") throw e;
+  }
+  if (bridgeId !== undefined) {
+    const bridge = await inspectRelease(config, bridgeId);
+    if (
+      bridge.manifest.contentPublic?.readerVersion !== 1 ||
+      bridge.manifest.contentPublic?.readModelVersion !== 1
+    )
+      throw Error("Invalid pinned content bridge capability");
+    await fs.access(path.join(bridge.dir, ".successful"));
+    keep.add(bridgeId);
+  }
   try {
     keep.add((await fs.readFile(path.join(config.root, "previous"), "utf8")).trim());
   } catch (e) {
@@ -515,6 +591,7 @@ async function pruneReleases(config, { activeId }) {
   // rather than removing unknown files or breaking the 30-day minimum.
 }
 module.exports = {
+  applyRouting,
   inside,
   inspectRelease,
   activateRelease,

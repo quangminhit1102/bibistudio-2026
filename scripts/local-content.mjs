@@ -28,6 +28,7 @@ export async function startLocalContent({
   signal,
   allowUninitialized = false,
   sourceDirectory,
+  readerFile = join(root, "ops/php/content-reader.php"),
 } = {}) {
   if (env.NODE_ENV === "production" || !contentRoot || !isAbsolute(contentRoot))
     throw Error("Explicit local content storage required");
@@ -52,7 +53,7 @@ export async function startLocalContent({
     sourceDirectory,
     content: {
       root: contentRoot,
-      readerFile: join(root, "ops/php/content-reader.php"),
+      readerFile,
       origin: env.BIBI_CONTENT_ORIGIN ?? `http://127.0.0.1:${frontendPort}`,
     },
   });
