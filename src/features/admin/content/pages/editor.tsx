@@ -11,6 +11,7 @@ export default function Editor() {
   return mode === "http" ? (
     <ServerPostForm
       id={id || undefined}
+      onBack={() => void navigate(internalTarget("/admin/content/posts"))}
       onCreated={(created) =>
         void navigate(internalTarget("/admin/content/posts/" + created + "/edit"))
       }

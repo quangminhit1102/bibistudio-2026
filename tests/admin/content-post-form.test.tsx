@@ -2,6 +2,7 @@ import { it, expect, vi } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { ServerPostForm } from "../../src/features/admin/content/components/server-post-form";
 import { contentFixture, ContentHarness } from "./helpers/content-fixture";
+import { useUnsavedChanges } from "../../src/features/admin/shared/forms/unsaved-guard";
 vi.mock("../../src/features/admin/content/components/rich-editor", () => ({
   default: ({ value, onChange }: { value: string; onChange: (value: string) => void }) => (
     <textarea
@@ -14,6 +15,40 @@ vi.mock("../../src/features/admin/content/components/rich-editor", () => ({
 vi.mock("../../src/features/admin/shared/forms/unsaved-guard", () => ({
   useUnsavedChanges: vi.fn(() => ({ status: "idle" })),
 }));
+it("server editor keeps back navigation and resets unsaved values to its saved baseline", async () => {
+  const f = contentFixture(),
+    onBack = vi.fn();
+  render(
+    <ContentHarness value={f.value}>
+      <ServerPostForm id={f.post.id} onBack={onBack} />
+    </ContentHarness>,
+  );
+  await screen.findByDisplayValue(f.post.title);
+  fireEvent.change(screen.getByLabelText("Tiêu đề"), { target: { value: "Chưa lưu" } });
+  fireEvent.click(screen.getByRole("button", { name: "Hoàn tác", exact: true }));
+  expect(screen.getByLabelText("Tiêu đề")).toHaveValue(f.post.title);
+  expect(f.api.posts.saveDraft).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole("button", { name: "Quay lại", exact: true }));
+  expect(onBack).toHaveBeenCalledOnce();
+});
+it("TinyMCE normalization of block-edge spaces does not leave a restored draft dirty", async () => {
+  const f = contentFixture();
+  f.post.content = JSON.stringify({ format: "html-v1", html: "<p>Nội dung </p>" });
+  render(
+    <ContentHarness value={f.value}>
+      <ServerPostForm id={f.post.id} />
+    </ContentHarness>,
+  );
+  await screen.findByDisplayValue(f.post.title);
+  fireEvent.change(screen.getByLabelText("Nội dung bài viết"), {
+    target: { value: JSON.stringify({ format: "html-v1", html: "<p>Nội dung</p>" }) },
+  });
+  expect(vi.mocked(useUnsavedChanges).mock.lastCall?.[0]).toBe(false);
+  fireEvent.change(screen.getByLabelText("Nội dung bài viết"), {
+    target: { value: JSON.stringify({ format: "html-v1", html: "<p>Nội dung mới</p>" }) },
+  });
+  expect(vi.mocked(useUnsavedChanges).mock.lastCall?.[0]).toBe(true);
+});
 it("publish uses the saved server revision and failed jobs keep the draft", async () => {
   const f = contentFixture();
   f.api.publications.status.mockResolvedValue({

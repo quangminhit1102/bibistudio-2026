@@ -57,6 +57,18 @@ function richFingerprint(raw: unknown): string {
     const boundary = (sibling: ChildNode | null) =>
       sibling instanceof Element && blockTags.has(sibling.tagName);
     if (
+      node.parentElement &&
+      blockTags.has(node.parentElement.tagName) &&
+      !node.parentElement.closest("pre,code")
+    ) {
+      // Collapsed whitespace at a block edge has no visible meaning. TinyMCE
+      // removes it when serializing; preserve inline spaces, NBSP and pre/code.
+      let text = node.textContent ?? "";
+      if (!node.previousSibling) text = text.replace(/^[ \t\r\n]+/, "");
+      if (!node.nextSibling) text = text.replace(/[ \t\r\n]+$/, "");
+      node.textContent = text;
+    }
+    if (
       /^\s+$/.test(node.textContent ?? "") &&
       !node.parentElement?.closest("pre,code") &&
       (boundary(node.previousSibling) || boundary(node.nextSibling))

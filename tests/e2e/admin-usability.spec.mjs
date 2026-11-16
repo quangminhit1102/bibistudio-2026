@@ -2,12 +2,17 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { randomBytes } from "node:crypto";
 import { mkdir } from "node:fs/promises";
-import { resolve } from "node:path";
+import { resolve, join } from "node:path";
 import { createServer as createViteServer } from "vite";
 import { chromium } from "playwright";
 import { createProfileAuthFixture as createAuthFixture } from "./helpers/profile-fixture.mjs";
 import { createRuntime } from "../../backend/dist/runtime.js";
 import { startServer } from "../../backend/dist/server.js";
+import { migrateContent } from "../../backend/dist/content/schema.js";
+import { createContentEditing } from "../../backend/dist/content/editing.js";
+import { createContentMedia } from "../../backend/dist/content/media/service.js";
+import { readContentPaths } from "../../backend/dist/content/capabilities.js";
+import { validDraft } from "../../backend/test/helpers/content.mjs";
 
 test(
   "admin usability: real auth, slip editing, TinyMCE guard, tooltips and accessible badges",
@@ -20,6 +25,36 @@ test(
     let runtime, backend, frontend, browser;
     const username = "ui_" + randomBytes(8).toString("hex"),
       password = randomBytes(24).toString("hex");
+    const contentRoot = join(f.assetDirectory, "content"),
+      paths = readContentPaths({ BIBI_CONTENT_ROOT: contentRoot });
+    await mkdir(paths.media, { recursive: true });
+    await mkdir(paths.generations, { recursive: true });
+    await migrateContent(f.pool, resolve("backend/content-migrations"));
+    const grant = await f.auth.login({ username: "admin", password: f.secrets.masterPassword }),
+      actor = await f.auth.authenticate(grant.accessToken),
+      media = createContentMedia({ pool: f.pool, paths, clock: f.clock }),
+      editing = createContentEditing({
+        pool: f.pool,
+        paths,
+        clock: f.clock,
+        media,
+        activeRead: async () => null,
+      }),
+      seeded = await editing.saveDraft(
+        actor,
+        null,
+        validDraft({
+          title: "Bài kiểm chứng lưu trên máy chủ",
+          content: JSON.stringify({
+            format: "html-v1",
+            html:
+              "<p>" +
+              "Nội dung biên tập thực tế để kiểm chứng hoàn nguyên trên CMS. ".repeat(5) +
+              "</p>",
+          }),
+        }),
+        null,
+      );
     try {
       await f.pool.query("CREATE USER ?@'%' IDENTIFIED BY ?", [username, password]);
       await f.pool.query(
@@ -29,6 +64,7 @@ test(
       runtime = createRuntime(
         {
           ...f.profileEnv,
+          BIBI_CONTENT_ROOT: contentRoot,
           DB_HOST: f.dbConfig.host,
           DB_PORT: String(f.dbConfig.port),
           DB_NAME: f.dbConfig.database,
@@ -43,7 +79,12 @@ test(
       backend = await startServer({
         host: "127.0.0.1",
         port: 0,
-        release: { releaseId: "e2e-usability", sourceSha: "test" },
+        release: {
+          releaseId: "e2e-usability",
+          sourceSha: "test",
+          schemaVersion: 7,
+          content: { mode: "cms", publicReaderVersion: 1 },
+        },
         appOptions: runtime.appOptions,
       });
       console.log("usability: backend ready");
@@ -171,10 +212,9 @@ test(
         assert.equal(await page.getByRole("dialog").count(), 0);
       }
 
-      // Edit a real nonempty seeded article, including the date-only seed representation.
+      // Edit a real nonempty server draft; publication dates are server-owned.
       await go("/admin/content/posts");
-      await page.locator('a[href^="/admin/content/posts/journal-"]').first().click();
-      await page.getByRole("link", { name: "Chỉnh sửa", exact: true }).click();
+      await page.locator(`a[href="/admin/content/posts/${seeded.id}/edit"]`).click();
       const existingBody = page.frameLocator('iframe[title="Nội dung bài viết"]').locator("body");
       await existingBody.waitFor();
       const textBefore = await existingBody.innerText();
@@ -183,18 +223,27 @@ test(
       await existingBody.press("Control+End");
       await existingBody.pressSequentially(" Kiểm chứng hoàn nguyên", { delay: 15 });
       assert.equal(await unloadBlocked(), true);
-      await page.getByRole("button", { name: "Hoàn tác", exact: true }).click();
+      await page
+        .locator("button.a-btn")
+        .filter({ hasText: /^Hoàn tác$/ })
+        .click();
+      await page.waitForFunction(
+        (text) =>
+          document.querySelector('iframe[title="Nội dung bài viết"]')?.contentDocument?.body
+            .innerText === text,
+        textBefore,
+      );
       assert.equal(await existingBody.innerText(), textBefore);
       await page.waitForFunction(() =>
         window.dispatchEvent(new Event("beforeunload", { cancelable: true })),
       );
-      const publishAt = page.getByLabel("Ngày xuất bản", { exact: true });
-      const originalDate = await publishAt.inputValue();
-      await publishAt.fill(originalDate === "2026-08-26" ? "2026-08-27" : "2026-08-26");
+      const titleField = page.getByLabel("Tiêu đề", { exact: true });
+      const originalTitle = await titleField.inputValue();
+      await titleField.fill(originalTitle + " thay đổi");
       await page.waitForFunction(
         () => !window.dispatchEvent(new Event("beforeunload", { cancelable: true })),
       );
-      await publishAt.fill(originalDate);
+      await titleField.fill(originalTitle);
       await page.waitForFunction(() =>
         window.dispatchEvent(new Event("beforeunload", { cancelable: true })),
       );

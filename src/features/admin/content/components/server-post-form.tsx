@@ -26,6 +26,7 @@ import {
   Modal,
 } from "../../shared/ui/primitives";
 import { useUnsavedChanges } from "../../shared/forms/unsaved-guard";
+import { hasFormChanges } from "../../shared/forms/form-baseline";
 const signature = (value: PostDraftInput) => JSON.stringify(value);
 const suggestSlug = (value: string) =>
   value
@@ -39,10 +40,12 @@ const suggestSlug = (value: string) =>
 export function ServerPostForm({
   id,
   onCreated,
+  onBack = () => window.history.back(),
   readOnly = false,
 }: {
   id?: string;
   onCreated?: (id: string) => void;
+  onBack?: () => void;
   readOnly?: boolean;
 }) {
   const context = useContent(),
@@ -60,6 +63,7 @@ export function ServerPostForm({
     [jobId, setJobId] = useState<string | null>(null),
     [publishing, setPublishing] = useState(false),
     [preview, setPreview] = useState(false),
+    [editorEpoch, setEditorEpoch] = useState(0),
     [authorSearch, setAuthorSearch] = useState(""),
     [categorySearch, setCategorySearch] = useState("");
   const [tagsText, setTagsText] = useState("");
@@ -68,7 +72,7 @@ export function ServerPostForm({
     slugTouched = useRef(Boolean(id)),
     latest = useRef(state);
   latest.current = state;
-  const dirty = signature(state.values) !== state.baseline,
+  const dirty = hasFormChanges("post", JSON.parse(state.baseline), { ...state.values }),
     blocker = useUnsavedChanges(dirty),
     allowed =
       !readOnly &&
@@ -265,6 +269,25 @@ export function ServerPostForm({
         description="Lưu bản nháp và áp dụng nội dung lên website bằng thao tác xuất bản."
       />
       <div className="a-form-footer">
+        <Button onClick={onBack}>Quay lại</Button>
+        {!readOnly && (
+          <Button
+            disabled={!dirty || busy || publishing}
+            onClick={() => {
+              const values: PostDraftInput = JSON.parse(state.baseline);
+              setState((current) => ({ ...current, values }));
+              setEditorEpoch((current) => current + 1);
+              setTagsText(values.tags.join(", "));
+              slugTouched.current = Boolean(state.record);
+              setError("");
+              setNotice("");
+            }}
+          >
+            Hoàn tác
+          </Button>
+        )}
+      </div>
+      <div className="a-form-footer">
         {publicState && <Badge tone="success">Đang công khai</Badge>}
         {publicState && state.record!.revision !== publicState.draftRevision && (
           <Badge>Có thay đổi chưa đăng</Badge>
@@ -436,7 +459,7 @@ export function ServerPostForm({
             <small>Tối đa 10 thẻ, phân cách bằng dấu phẩy.</small>
           </label>
           <RichEditor
-            key={state.record?.revision ?? "new"}
+            key={`${state.record?.revision ?? "new"}-${editorEpoch}`}
             value={values.content}
             onChange={(value) => change("content", value)}
             media={media}
