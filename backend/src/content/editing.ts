@@ -421,11 +421,15 @@ export function createContentEditing({
             "Danh mục công khai phải được gỡ qua xuất bản",
           );
         const [[references]] = await c.execute<RowDataPacket[]>(
-          "SELECT (SELECT COUNT(*) FROM content_posts WHERE category_id=?)+(SELECT COUNT(*) FROM content_categories WHERE parent_id=?) n",
+          "SELECT (SELECT COUNT(*) FROM content_posts WHERE category_id=?) posts,(SELECT COUNT(*) FROM content_categories WHERE parent_id=?) children",
           [targetId, targetId],
         );
-        if (Number(references.n))
-          throw new ApiError(409, "CATEGORY_REFERENCED", "Danh mục còn bài viết hoặc danh mục con");
+        if (Number(references.posts) || Number(references.children))
+          throw new ApiError(
+            409,
+            "CATEGORY_REFERENCED",
+            `Danh mục còn ${Number(references.children)} danh mục con và ${Number(references.posts)} bài viết, kể cả nháp và thùng rác`,
+          );
         await c.execute("DELETE FROM content_category_revisions WHERE category_id=?", [targetId]);
         await c.execute("DELETE FROM content_categories WHERE id=?", [targetId]);
         await c.execute(

@@ -3011,3 +3011,12 @@
     grid-column: 1 / -1;
   }
 }
+
+.admin-root .a-content-layout { display: grid; grid-template-columns: minmax(220px, 320px) minmax(0, 1fr); gap: 24px; align-items: start; }
+.admin-root .a-content-layout > * { min-width: 0; }
+.admin-root .a-content-category-list { list-style: none; padding: 12px; }
+.admin-root .a-content-category-list li { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-block: 6px; }
+.admin-root .a-content-cover { width: min(100%, 360px); aspect-ratio: 3 / 2; object-fit: cover; }
+@media (max-width: 900px) { .admin-root .a-content-layout { grid-template-columns: minmax(0, 1fr); } }
+
+.admin-root .a-table-scroll { max-width: 100%; overflow-x: auto; }

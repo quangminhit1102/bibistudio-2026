@@ -74,7 +74,11 @@ export async function checkPublicationTarget(c: PoolConnection, input: Publicati
       [input.targetId, input.targetId],
     );
     if (Number(counts.posts) || Number(counts.children))
-      throw new ApiError(409, "CATEGORY_REFERENCED", "Danh mục vẫn có bài viết hoặc danh mục con");
+      throw new ApiError(
+        409,
+        "CATEGORY_REFERENCED",
+        `Danh mục còn ${Number(counts.children)} danh mục con và ${Number(counts.posts)} bài viết, kể cả nháp và thùng rác`,
+      );
   }
   return row;
 }

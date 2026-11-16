@@ -27,6 +27,7 @@ import type { AuthCredentials, AuthService } from "../accounts/auth/contracts";
 import { createHttpAuthService } from "../accounts/auth/http-service";
 import type { AdminHttpClient } from "../../../lib/admin-http";
 import type { PrincipalDto } from "../../../../backend/src/http/contracts";
+import { ContentProvider } from "../content/context";
 type Theme = "light" | "dark" | "system";
 interface Runtime {
   store: AdminStore;
@@ -45,7 +46,7 @@ interface Runtime {
   ensure: (entity: EntityKey) => Promise<void>;
 }
 const RuntimeContext = createContext<Runtime | null>(null);
-const serverEntities: EntityKey[] = ["users", "roles", "audit", "visitors", "sessions"];
+const serverEntities: EntityKey[] = ["users", "roles", "audit", "visitors", "sessions", "posts"];
 function announce() {
   try {
     localStorage.setItem(
@@ -273,13 +274,19 @@ export function AdminProvider({
         ensure,
       }}
     >
-      {storageBlocked && (
-        <p role="alert" className="a-banner">
-          Đang chờ nâng cấp dữ liệu. Hãy đóng hoặc tải lại các tab admin cũ; dữ liệu hiện có được
-          giữ nguyên.
-        </p>
-      )}
-      {children}
+      <ContentProvider
+        http={auth.client}
+        session={session}
+        mode={auth.mode === "http" ? "http" : "demo"}
+      >
+        {storageBlocked && (
+          <p role="alert" className="a-banner">
+            Đang chờ nâng cấp dữ liệu. Hãy đóng hoặc tải lại các tab admin cũ; dữ liệu hiện có được
+            giữ nguyên.
+          </p>
+        )}
+        {children}
+      </ContentProvider>
     </RuntimeContext.Provider>
   );
 }

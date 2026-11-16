@@ -127,7 +127,7 @@ export async function planPublication(
       throw new ApiError(
         409,
         "CATEGORY_REFERENCED",
-        "Danh mục vẫn có danh mục con hoặc bài công khai",
+        `Danh mục còn ${snapshot.categories.filter((item) => item.parentId === input.targetId).length} danh mục con và ${snapshot.posts.filter((item) => item.categoryId === input.targetId).length} bài đang công khai`,
       );
     snapshot.categories = snapshot.categories.filter((item) => item.id !== input.targetId);
     removeOwner(

@@ -286,7 +286,10 @@ export async function runNextPublication(context: PublicationContext): Promise<b
             [
               JSON.stringify({
                 code,
-                message: "Xuất bản thất bại. Bản công khai trước được giữ nguyên.",
+                message:
+                  error instanceof ApiError
+                    ? error.message
+                    : "Xuất bản thất bại. Bản công khai trước được giữ nguyên.",
               }),
               context.clock.now(),
               context.clock.now(),

@@ -295,6 +295,14 @@ export function createContentMedia({
         };
       });
     },
+    async get(actor: AuthPrincipal, id: string): Promise<MediaDto> {
+      if (!serverMediaId(id))
+        throw new ApiError(400, "INVALID_CONTENT_INPUT", "Tham chiếu ảnh không hợp lệ");
+      return withTransaction(pool, async (c) => {
+        await authorize(c, actor);
+        return dto(c, id);
+      });
+    },
     async readPrivate(
       actor: AuthPrincipal,
       id: string,

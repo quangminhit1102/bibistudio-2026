@@ -33,6 +33,9 @@ export function mediaRoutes(
       ),
     ),
   );
+  router.get(path + "/:id", authenticate(auth), async (req, res) =>
+    res.json(await service.get(req.auth!, validate(z.uuid(), req.params.id))),
+  );
   router.get(path + "/:id/:hash", authenticate(auth), async (req, res) => {
     const image = await service.readPrivate(
       req.auth!,

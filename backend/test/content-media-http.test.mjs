@@ -44,6 +44,24 @@ async function fixture(t) {
   return { ...f, request };
 }
 
+test("authenticated media metadata resolves an existing ID without paging every image", async (t) => {
+  const f = await fixture(t),
+    uploaded = await f.request("/api/content/media", "POST", {
+      mimeType: "image/png",
+      originalName: "existing.png",
+      data: pngImage().toString("base64"),
+    });
+  assert.equal(uploaded.status, 201);
+  const image = await uploaded.json();
+  assert.equal(
+    (await f.request("/api/content/media/" + image.id, "GET", undefined, null)).status,
+    401,
+  );
+  const loaded = await f.request("/api/content/media/" + image.id, "GET", undefined, "viewer");
+  assert.equal(loaded.status, 200);
+  assert.equal((await loaded.json()).id, image.id);
+});
+
 test("auth and permission run before a large media parser; analytics keeps its16KiB limit", async (t) => {
   const f = await fixture(t),
     huge = "x".repeat(7 * 1024 * 1024);

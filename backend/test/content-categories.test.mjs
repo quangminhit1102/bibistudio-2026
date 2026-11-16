@@ -97,7 +97,7 @@ test("trash-held references block category deletion and inactive categories are 
   await f.editing.trashDraft(f.admin, post.id, post.revision);
   await assert.rejects(
     f.editing.removeUnusedCategory(f.admin, category.id, category.revision),
-    (error) => error.status === 409,
+    (error) => error.status === 409 && /0 danh mục con.*1 bài/.test(error.message),
   );
   f.setActive({
     schemaVersion: 1,

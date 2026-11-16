@@ -27,7 +27,9 @@ test("retry is idempotent and stale render never activates", async (t) => {
     post.revision,
   );
   await runNextPublication(f.context);
-  assert.equal((await f.publication.status(f.admin, job.id)).status, "failed");
+  const failed = await f.publication.status(f.admin, job.id);
+  assert.equal(failed.status, "failed");
+  assert.match(failed.error.message, /Dữ liệu đã thay đổi/);
   assert.equal((await readActiveContent(f.paths)).manifest.id, f.previousId);
 });
 test("different queued posts survive, and draft save never changes the public revision", async (t) => {

@@ -88,7 +88,10 @@ export function createAdminHttp(options: Options = {}) {
     });
     if (response.status === 204) return undefined as T;
     if (response.ok && input.readBlob) {
-      if (!/^image\/(png|jpeg)$/.test(response.headers.get("content-type") ?? ""))
+      const mime = response.headers.get("content-type") ?? "";
+      const contentWebp =
+        /^\/api\/content\/media\/[a-f\d-]{36}\/[a-f\d]{64}$/i.test(path) && mime === "image/webp";
+      if (!/^image\/(png|jpeg)$/.test(mime) && !contentWebp)
         throw new AdminHttpError(503, "INVALID_RESPONSE", "Invalid image response");
       return (await response.blob()) as T;
     }

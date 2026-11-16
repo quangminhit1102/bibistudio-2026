@@ -34,6 +34,7 @@ export type NavigationItem = {
   action?: "view" | "create";
   icon: LucideIcon;
   permissionCodes?: string[];
+  demoOnly?: boolean;
 };
 export type NavigationGroup = { id: string; label: string; items: NavigationItem[] };
 export const navigation: NavigationGroup[] = [
@@ -102,8 +103,14 @@ export const navigation: NavigationGroup[] = [
         action: "create",
         icon: Plus,
       },
-      { label: "Chuyên mục", path: "/admin/content/categories", resource: "content", icon: Folder },
-      { label: "Thẻ", path: "/admin/content/tags", resource: "content", icon: Tag },
+      {
+        label: "Danh mục",
+        path: "/admin/content/categories",
+        resource: "content",
+        icon: Folder,
+        permissionCodes: ["content_category.view"],
+      },
+      { label: "Thẻ", path: "/admin/content/tags", resource: "content", icon: Tag, demoOnly: true },
       { label: "Thư viện ảnh", path: "/admin/content/media", resource: "content", icon: Image },
     ],
   },
@@ -204,6 +211,7 @@ function navigationItemAllowed(
   item: NavigationItem,
   role?: Role,
 ): boolean {
+  if (session?.kind === "http" && item.demoOnly) return false;
   if (session?.kind === "http" && item.permissionCodes)
     return item.permissionCodes.every((code) => canCode(session, code));
   return (

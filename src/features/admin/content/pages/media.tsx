@@ -16,7 +16,32 @@ import {
   useNotice,
 } from "../../shared/ui/primitives";
 import type { MediaAsset } from "../../services/contracts";
+import { useContent } from "../context";
+import { ServerMediaPicker } from "../components/server-media-picker";
 export default function Media() {
+  const { mode } = useContent();
+  return mode === "http" ? <ServerLibrary /> : <LocalMedia />;
+}
+function ServerLibrary() {
+  const context = useContent(),
+    [selected, setSelected] = useState<string[]>([]);
+  if (context.error) return <ErrorState error={context.error} onRetry={context.retry} />;
+  if (context.pending) return <Skeleton />;
+  if (!context.can("post.view"))
+    return <ErrorState error={new Error("Bạn không có quyền xem ảnh")} />;
+  return (
+    <>
+      <PageTitle
+        title="Thư viện ảnh bài viết"
+        description="Ảnh dùng chung trên máy chủ. Ảnh nháp cần đăng nhập để xem."
+      />
+      <Card>
+        <ServerMediaPicker value={selected} onChange={setSelected} />
+      </Card>
+    </>
+  );
+}
+function LocalMedia() {
   const runtime = useAdmin();
   const role = useRole();
   const client = useQueryClient();

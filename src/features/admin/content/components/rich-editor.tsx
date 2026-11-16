@@ -1,4 +1,4 @@
-import { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState, useCallback, type ReactNode } from "react";
 import { Editor } from "@tinymce/tinymce-react";
 import type { Editor as TinyEditor } from "tinymce";
 import { useAdmin } from "../../services/context";
@@ -13,6 +13,7 @@ import {
   type TinyAssetRegistry,
 } from "./tiny-config";
 import MediaPicker from "./media-picker";
+import type { RichMediaAdapter } from "../contracts";
 
 export default function RichEditor({
   value,
@@ -21,6 +22,7 @@ export default function RichEditor({
   label = "Nội dung bài viết",
   onReadyChange,
   disabled = false,
+  media,
 }: {
   value: string;
   onChange: (value: string) => void;
@@ -28,8 +30,20 @@ export default function RichEditor({
   label?: string;
   onReadyChange?: (ready: boolean) => void;
   disabled?: boolean;
+  media?: RichMediaAdapter & {
+    picker: (props: {
+      value: string[];
+      onChange: (value: string[]) => void;
+      max: number;
+    }) => ReactNode;
+  };
 }) {
   const { store } = useAdmin();
+  const resolveImage = useCallback(
+    (id: string, signal?: AbortSignal) =>
+      media ? media.resolve(id, signal) : resolveMedia(store, id),
+    [media, store],
+  );
   const dark = useContext(AdminThemeContext);
   const latest = useRef(value);
   latest.current = value;
@@ -45,6 +59,7 @@ export default function RichEditor({
   const [imageError, setImageError] = useState("");
   const [inserting, setInserting] = useState(false);
   const editor = useRef<TinyEditor | null>(null);
+  const operations = useRef<AbortController | null>(null);
   const bookmark = useRef<ReturnType<TinyEditor["selection"]["getBookmark"]> | null>(null);
   const leases = useRef<(() => void)[]>([]);
   const readyCallback = useRef(onReadyChange);
@@ -64,6 +79,8 @@ export default function RichEditor({
     setError("");
     setHtml(null);
     let current = true;
+    const controller = new AbortController();
+    operations.current = controller;
     const owned: (() => void)[] = [];
     const inserted = leases.current;
     const draft = document.createElement("div");
@@ -71,7 +88,7 @@ export default function RichEditor({
     void Promise.all(
       [...draft.querySelectorAll("img[data-media-id]")].map(async (img) => {
         try {
-          const lease = await resolveMedia(store, img.getAttribute("data-media-id")!);
+          const lease = await resolveImage(img.getAttribute("data-media-id")!, controller.signal);
           if (!current) {
             lease.release();
             return;
@@ -88,13 +105,15 @@ export default function RichEditor({
     });
     return () => {
       current = false;
+      controller.abort();
+      if (operations.current === controller) operations.current = null;
       active.current = false;
       owned.forEach((release) => release());
       inserted.splice(0).forEach((release) => release());
       editor.current = null;
       readyCallback.current?.(false);
     };
-  }, [store, attempt, dark]);
+  }, [store, attempt, dark, resolveImage]);
   useEffect(() => {
     if (html === null || ready || error) return;
     const timeout = setTimeout(
@@ -252,7 +271,11 @@ export default function RichEditor({
         wide
       >
         <div className="a-dialog-body a-compose-stack">
-          <MediaPicker value={imageIds} onChange={setImageIds} max={1} scope={scope} />
+          {media ? (
+            media.picker({ value: imageIds, onChange: setImageIds, max: 1 })
+          ) : (
+            <MediaPicker value={imageIds} onChange={setImageIds} max={1} scope={scope} />
+          )}
           <label className="a-field">
             Mô tả ảnh (alt)
             <input value={alt} onChange={(e) => setAlt(e.target.value)} />
@@ -311,7 +334,7 @@ export default function RichEditor({
                 setInserting(true);
                 setImageError("");
                 try {
-                  const lease = await resolveMedia(store, imageIds[0]);
+                  const lease = await resolveImage(imageIds[0], operations.current?.signal);
                   if (!active.current || editor.current !== ed) {
                     lease.release();
                     return;
