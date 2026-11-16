@@ -5,6 +5,7 @@ import { spawnOwned, stopOwned, assertPortsFree } from "./process-group.mjs";
 import { assertLocalDevelopmentTarget, ensureLocalMysql } from "./local-database.mjs";
 import { startLocalAnalyticsRelay } from "./local-analytics-relay.mjs";
 import { prepareCountryDataset } from "./prepare-geoip.mjs";
+import { startLocalContent } from "./local-content.mjs";
 
 export async function closeFrontend(server) {
   await server.close();
@@ -37,9 +38,12 @@ export async function startDevelopment({
   let vite;
   let relay;
   const previousRelayUrl = process.env.LOCAL_PHP_RELAY_URL;
+  const previousContentUrl = process.env.LOCAL_PHP_CONTENT_URL;
   const restoreRelayUrl = () => {
     if (previousRelayUrl === undefined) delete process.env.LOCAL_PHP_RELAY_URL;
     else process.env.LOCAL_PHP_RELAY_URL = previousRelayUrl;
+    if (previousContentUrl === undefined) delete process.env.LOCAL_PHP_CONTENT_URL;
+    else process.env.LOCAL_PHP_CONTENT_URL = previousContentUrl;
   };
   let closed = false;
   const child = spawnOwned(
@@ -95,13 +99,16 @@ export async function startDevelopment({
   });
   try {
     if (backendEntry === "src/server.ts") {
-      relay = await startLocalAnalyticsRelay({ backendPort, frontendPort, signal });
+      relay = process.env.BIBI_CONTENT_ROOT
+        ? await startLocalContent({ backendPort, frontendPort, signal })
+        : await startLocalAnalyticsRelay({ backendPort, frontendPort, signal });
       if (closed || signal?.aborted) {
         await relay.close();
         throw new Error("Development startup cancelled");
       }
     }
     process.env.LOCAL_PHP_RELAY_URL = relay?.url ?? "";
+    process.env.LOCAL_PHP_CONTENT_URL = process.env.BIBI_CONTENT_ROOT ? (relay?.url ?? "") : "";
     vite = await createViteServer({
       configFile: join(root, "vite.local.config.ts"),
       root,
@@ -168,7 +175,10 @@ export async function startDevelopment({
     console.log(
       `[FE] READY http://localhost:${frontendPort}/api-test\n[BE] READY http://127.0.0.1:${backendPort}${healthPath}\n[BE] Debug: 127.0.0.1:${inspectorPort} (attach, no pause)`,
     );
-    if (relay) console.log(`[PHP] READY ${relay.url} (analytics relay)`);
+    if (relay)
+      console.log(
+        `[PHP] READY ${relay.url} (analytics${process.env.BIBI_CONTENT_ROOT ? " + content reader" : " relay"})`,
+      );
     onBackendState("ready");
     let state = "ready",
       failedSince = null;

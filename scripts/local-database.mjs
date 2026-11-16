@@ -19,6 +19,8 @@ import mysql from "../backend/node_modules/mysql2/promise.js";
 import { TEST_MYSQL_IMAGE } from "./test-database.mjs";
 import { root, isMain } from "./runtime.mjs";
 import { prepareCountryDataset } from "./prepare-geoip.mjs";
+import { localEnvironmentText } from "./local-env.mjs";
+import { setupLocalContent } from "./local-content.mjs";
 const execute = promisify(execFile);
 const require = createRequire(import.meta.url);
 export async function prepareLocalAccessLogs(
@@ -65,11 +67,13 @@ async function privateEnv(path) {
   }
 }
 async function saveEnv(path, before, values) {
-  const added = Object.entries(values)
-    .filter(([key, value]) => before.values[key] !== value)
-    .map(([key, value]) => `${key}=${JSON.stringify(value)}`);
+  const added = Object.entries(values).filter(([key, value]) => before.values[key] !== value);
   if (added.length)
-    await writeFile(path, `${before.text.trimEnd()}\n${added.join("\n")}\n`, { mode: 0o600 });
+    await writeFile(
+      path,
+      `${before.text.trimEnd()}\n${localEnvironmentText(Object.fromEntries(added))}`,
+      { mode: 0o600 },
+    );
 }
 export async function ensureLocalMysql({ create = false } = {}) {
   const executable =
@@ -268,6 +272,9 @@ export async function setupLocalDatabase() {
     await migrateVisitorContext(pool, join(root, "backend/visitor-context-migrations"));
     const { migrateAccessLogs } = require("../backend/dist/access-logs/schema.js");
     await migrateAccessLogs(pool, join(root, "backend/access-log-migrations"));
+    const content = await setupLocalContent({ pool, env: runtimeEnv });
+    Object.assign(runtimeEnv, content.env, { BIBI_PRIVATE_ENV_FILE: runtimePath });
+    await saveEnv(runtimePath, await privateEnv(runtimePath), runtimeEnv);
   } finally {
     await pool.end();
   }

@@ -11,6 +11,7 @@ export async function startLocalAnalyticsRelay({
   sourceDirectory = join(root, "backend/relay"),
   signal,
   routerFile,
+  content,
 } = {}) {
   const secret = env.ANALYTICS_RELAY_SECRET;
   if (
@@ -40,12 +41,16 @@ export async function startLocalAnalyticsRelay({
   await mkdir(join(root, ".superpowers"), { recursive: true });
   const directory = await mkdtemp(join(root, ".superpowers/local-php-relay-"));
   const configFile = join(directory, "config.json");
+  const contentConfigFile = join(directory, "content-reader.json");
   let relay, closing;
   const close = () =>
     (closing ??= (async () => {
       signal?.removeEventListener("abort", onAbort);
       await relay?.close();
       await unlink(configFile).catch((e) => {
+        if (e.code !== "ENOENT") throw e;
+      });
+      await unlink(contentConfigFile).catch((e) => {
         if (e.code !== "ENOENT") throw e;
       });
       await rmdir(directory);
@@ -59,6 +64,17 @@ export async function startLocalAnalyticsRelay({
       JSON.stringify({ environment: "local", secret, targetUrl, origins }),
       { mode: 0o600, flag: "wx" },
     );
+    if (content)
+      await writeFile(
+        contentConfigFile,
+        JSON.stringify({
+          schemaVersion: 1,
+          environment: "local",
+          contentRoot: "/content",
+          canonicalOrigin: content.origin,
+        }),
+        { mode: 0o600, flag: "wx" },
+      );
     relay = await startPhpRelay({
       port: 0,
       targetUrl,
@@ -67,6 +83,15 @@ export async function startLocalAnalyticsRelay({
       signal,
       routerFile,
       hostNetwork,
+      ...(content
+        ? {
+            content: {
+              root: content.root,
+              readerFile: content.readerFile,
+              configFile: contentConfigFile,
+            },
+          }
+        : {}),
     });
     if (signal?.aborted) {
       await close();

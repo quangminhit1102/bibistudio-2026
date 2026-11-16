@@ -190,7 +190,7 @@ test(
             env: { ...process.env, DOCKER_API_VERSION: "1.43" },
           },
         ).trim();
-      const before = docker(["ps", "-aq", "--filter", "label=com.bibi.local-relay"]);
+      let failedName;
       const occupied = createServer();
       occupied.listen(0, "127.0.0.1");
       await once(occupied, "listening");
@@ -202,13 +202,19 @@ test(
             configFile,
             sourceDirectory: resolve("backend/relay"),
           }),
+          (error) => {
+            const match = /--name (bibi-php-relay-[a-f0-9-]{36})\b/.exec(error.cmd ?? "");
+            assert.ok(match, "failed bind must identify the container it tried to start");
+            failedName = match[1];
+            return true;
+          },
         );
       } finally {
         await new Promise((r) => occupied.close(r));
       }
       assert.equal(
-        docker(["ps", "-aq", "--filter", "label=com.bibi.local-relay"]),
-        before,
+        docker(["ps", "-aq", "--filter", "name=^/" + failedName + "$"]),
+        "",
         "failed start leaves no owned container",
       );
     } finally {

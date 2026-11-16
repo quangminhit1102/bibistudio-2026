@@ -52,6 +52,26 @@ async function write(file: string, bytes: Uint8Array | string) {
     await f.close();
   }
 }
+async function mutatePointer(work: () => Promise<void>, lease: ContentEnvironmentLease) {
+  const deadline = Date.now() + 1000;
+  for (;;) {
+    lease.assertActive();
+    try {
+      await work();
+      return;
+    } catch (error) {
+      // Windows can briefly deny replacement while a reader/filter holds the
+      // target. Retry the atomic operation; never delete before a rename.
+      if (
+        process.platform !== "win32" ||
+        !["EPERM", "EACCES", "EBUSY"].includes((error as NodeJS.ErrnoException).code ?? "") ||
+        Date.now() >= deadline
+      )
+        throw error;
+      await new Promise((done) => setTimeout(done, 25));
+    }
+  }
+}
 export function createGenerationStore(paths: ContentPaths, assetRoot: string) {
   const media = createContentMediaStore(paths);
   async function ready() {
@@ -85,7 +105,7 @@ export function createGenerationStore(paths: ContentPaths, assetRoot: string) {
       if ((active?.manifest.id ?? null) !== expected) throw Error("Active pointer conflict");
       if (id === null) {
         lease.assertActive();
-        await unlink(paths.active);
+        await mutatePointer(() => unlink(paths.active), lease);
         await syncDirectory(paths.root);
         return;
       }
@@ -97,7 +117,7 @@ export function createGenerationStore(paths: ContentPaths, assetRoot: string) {
       );
       try {
         lease.assertActive();
-        await rename(temp, paths.active);
+        await mutatePointer(() => rename(temp, paths.active), lease);
         await syncDirectory(paths.root);
       } finally {
         await unlink(temp).catch(() => {});

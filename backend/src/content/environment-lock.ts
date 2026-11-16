@@ -5,6 +5,7 @@ import { dirname, isAbsolute, join, resolve } from "node:path";
 import { createInterface } from "node:readline";
 import { ApiError } from "../http/errors";
 import type { ContentPaths } from "./contracts";
+import { contentNodeArgs, siblingContentEntry } from "./runtime-entry";
 export interface ContentEnvironmentLease {
   readonly signal: AbortSignal;
   readonly holderPid: number;
@@ -44,7 +45,7 @@ export async function withContentEnvironmentLock<T>(
   }
   const child = spawn(
     process.execPath,
-    [join(__dirname, "lock-holder.js"), process.platform, file],
+    contentNodeArgs(siblingContentEntry(__filename, "lock-holder"), [process.platform, file]),
     {
       stdio: ["pipe", "pipe", "pipe", ...(handle ? [handle.fd] : [])],
       windowsHide: true,

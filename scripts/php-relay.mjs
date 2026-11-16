@@ -42,6 +42,7 @@ export async function startPhpRelay({
   signal,
   routerFile,
   hostNetwork = false,
+  content,
 } = {}) {
   if (!Number.isInteger(port) || port < 0 || port > 65535)
     throw new Error("Invalid PHP relay port");
@@ -49,6 +50,12 @@ export async function startPhpRelay({
   if (config.targetUrl !== targetUrl || config.environment !== "local")
     throw new Error("PHP local config target mismatch");
   await stat(sourceDirectory);
+  if (content) {
+    for (const path of [content.root, content.configFile, content.readerFile]) {
+      const info = await stat(path);
+      if (!info.isFile() && !info.isDirectory()) throw new Error("Invalid local content mount");
+    }
+  }
   if (hostNetwork && !port) {
     const reservation = createServer();
     await new Promise((done, reject) => {
@@ -121,6 +128,15 @@ export async function startPhpRelay({
       args.push(
         "--mount",
         `type=bind,source=${resolve(routerFile)},target=/router/custom.php,readonly`,
+      );
+    if (content)
+      args.push(
+        "--mount",
+        `type=bind,source=${resolve(content.root)},target=/content,readonly`,
+        "--mount",
+        `type=bind,source=${resolve(content.configFile)},target=/private/content-reader.json,readonly`,
+        "--mount",
+        `type=bind,source=${resolve(content.readerFile)},target=/reader/content-reader.php,readonly`,
       );
     args.push(
       PHP_IMAGE,

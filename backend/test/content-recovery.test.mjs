@@ -111,7 +111,19 @@ test("rollback failure stays recoverable and is reported distinctly", async (t) 
 test("atomic pointer readers only observe whole generations; corrupt bytes fail closed", async (t) => {
   const f = await createPublicationFixture(t),
     post = await f.makePost("first");
-  await f.publication.request(f.admin, publicationRequest(post));
+  const job = await f.publication.request(f.admin, publicationRequest(post)),
+    failures = [];
+  for (const phase of ["prepare", "activate"]) {
+    const original = f.context.store[phase];
+    f.context.store[phase] = async (...args) => {
+      try {
+        return await original(...args);
+      } catch (error) {
+        failures.push({ phase, code: error.code ?? error.name });
+        throw error;
+      }
+    };
+  }
   let running = true;
   const observed = [];
   const reader = (async () => {
@@ -127,6 +139,8 @@ test("atomic pointer readers only observe whole generations; corrupt bytes fail 
     await reader;
   }
   const active = await readActiveContent(f.paths);
+  const status = await f.publication.status(f.admin, job.id);
+  assert.equal(status.status, "succeeded", JSON.stringify({ error: status.error, failures }));
   assert.ok(observed.length > 0);
   for (const [id, count] of observed) assert.equal(count, id === f.previousId ? 0 : 1);
   await assert.rejects(

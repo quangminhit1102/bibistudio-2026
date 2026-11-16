@@ -10,6 +10,7 @@ import { contentEnvironment } from "../cli";
 import { createContentMedia } from "../media/service";
 import { parsePublicAssets, publicOrigin } from "../public-schema";
 import { createContentPublication } from "./publisher";
+import { contentNodeArgs } from "../runtime-entry";
 export function publicationBuildConfig(env: NodeJS.ProcessEnv) {
   const root = env.BIBI_CONTENT_ASSET_ROOT;
   if (!root || !isAbsolute(root)) throw Error("Absolute public asset root required");
@@ -47,7 +48,7 @@ export function createPublicationWakeup(env: NodeJS.ProcessEnv) {
   return () => {
     if (!file || !isAbsolute(file) || child || Date.now() - last < 1000) return;
     last = Date.now();
-    child = spawn(process.execPath, [__filename], {
+    child = spawn(process.execPath, contentNodeArgs(__filename), {
       detached: true,
       windowsHide: true,
       stdio: "ignore",
