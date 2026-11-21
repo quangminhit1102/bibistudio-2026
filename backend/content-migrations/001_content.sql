@@ -1,0 +1,103 @@
+CREATE TABLE product_categories (
+  id VARCHAR(36) PRIMARY KEY,
+  name VARCHAR(191) NOT NULL,
+  slug VARCHAR(191) NOT NULL,
+  description TEXT NULL,
+  parent_id VARCHAR(36) NULL,
+  position INT UNSIGNED NOT NULL DEFAULT 0,
+  active TINYINT(1) NOT NULL DEFAULT 1,
+  created_at DATETIME(3) NOT NULL,
+  updated_at DATETIME(3) NOT NULL,
+  revision INT UNSIGNED NOT NULL DEFAULT 1,
+  UNIQUE KEY uq_product_categories_slug (slug),
+  KEY idx_product_categories_parent (parent_id),
+  KEY idx_product_categories_active (active),
+  CONSTRAINT fk_product_categories_parent FOREIGN KEY (parent_id) REFERENCES product_categories(id) ON DELETE RESTRICT
+) ENGINE=InnoDB;
+
+CREATE TABLE content_categories (
+  id VARCHAR(36) PRIMARY KEY,
+  name VARCHAR(191) NOT NULL,
+  slug VARCHAR(191) NOT NULL,
+  description TEXT NULL,
+  parent_id VARCHAR(36) NULL,
+  position INT UNSIGNED NOT NULL DEFAULT 0,
+  active TINYINT(1) NOT NULL DEFAULT 1,
+  created_at DATETIME(3) NOT NULL,
+  updated_at DATETIME(3) NOT NULL,
+  revision INT UNSIGNED NOT NULL DEFAULT 1,
+  UNIQUE KEY uq_content_categories_slug (slug),
+  KEY idx_content_categories_parent (parent_id),
+  KEY idx_content_categories_active (active),
+  CONSTRAINT fk_content_categories_parent FOREIGN KEY (parent_id) REFERENCES content_categories(id) ON DELETE RESTRICT
+) ENGINE=InnoDB;
+
+CREATE TABLE posts (
+  id VARCHAR(36) PRIMARY KEY,
+  slug VARCHAR(191) NOT NULL,
+  title VARCHAR(255) NOT NULL,
+  excerpt TEXT NULL,
+  content LONGTEXT NOT NULL,
+  category_id VARCHAR(36) NULL,
+  author_id VARCHAR(36) NOT NULL,
+  status VARCHAR(16) NOT NULL DEFAULT 'draft',
+  publish_at DATETIME(3) NULL,
+  image_id VARCHAR(64) NULL,
+  seo_title VARCHAR(100) NOT NULL DEFAULT '',
+  seo_description VARCHAR(320) NOT NULL DEFAULT '',
+  created_at DATETIME(3) NOT NULL,
+  updated_at DATETIME(3) NOT NULL,
+  revision INT UNSIGNED NOT NULL DEFAULT 1,
+  UNIQUE KEY uq_posts_slug (slug),
+  KEY idx_posts_category (category_id),
+  KEY idx_posts_author (author_id),
+  KEY idx_posts_status_publish (status, publish_at),
+  CONSTRAINT fk_posts_category FOREIGN KEY (category_id) REFERENCES content_categories(id) ON DELETE RESTRICT,
+  CONSTRAINT fk_posts_author FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE RESTRICT
+) ENGINE=InnoDB;
+
+CREATE TABLE products (
+  id VARCHAR(36) PRIMARY KEY,
+  product_code VARCHAR(64) NOT NULL,
+  name VARCHAR(255) NOT NULL,
+  slug VARCHAR(191) NOT NULL,
+  short_description TEXT NULL,
+  description LONGTEXT NOT NULL,
+  product_type VARCHAR(50) NOT NULL,
+  collection VARCHAR(50) NOT NULL,
+  category_id VARCHAR(36) NULL,
+  price BIGINT NOT NULL DEFAULT 0,
+  compare_at BIGINT NOT NULL DEFAULT 0,
+  stock INT NOT NULL DEFAULT 0,
+  reserved INT NOT NULL DEFAULT 0,
+  status VARCHAR(16) NOT NULL DEFAULT 'draft',
+  image_ids JSON NOT NULL,
+  tags JSON NOT NULL,
+  seo_title VARCHAR(100) NOT NULL DEFAULT '',
+  seo_description VARCHAR(320) NOT NULL DEFAULT '',
+  created_at DATETIME(3) NOT NULL,
+  updated_at DATETIME(3) NOT NULL,
+  revision INT UNSIGNED NOT NULL DEFAULT 1,
+  UNIQUE KEY uq_products_product_code (product_code),
+  UNIQUE KEY uq_products_slug (slug),
+  KEY idx_products_category (category_id),
+  KEY idx_products_status_type_collection (status, product_type, collection),
+  CONSTRAINT fk_products_category FOREIGN KEY (category_id) REFERENCES product_categories(id) ON DELETE RESTRICT
+) ENGINE=InnoDB;
+
+CREATE TABLE customers (
+  id VARCHAR(36) PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  kind VARCHAR(16) NOT NULL,
+  address TEXT NULL,
+  phone VARCHAR(50) NULL,
+  email VARCHAR(255) NULL,
+  vat_rate DECIMAL(5,2) NOT NULL DEFAULT 8.00,
+  notes TEXT NULL,
+  active TINYINT(1) NOT NULL DEFAULT 1,
+  created_at DATETIME(3) NOT NULL,
+  updated_at DATETIME(3) NOT NULL,
+  revision INT UNSIGNED NOT NULL DEFAULT 1,
+  KEY idx_customers_kind (kind),
+  KEY idx_customers_active (active)
+) ENGINE=InnoDB;

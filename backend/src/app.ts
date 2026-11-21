@@ -26,6 +26,7 @@ import { avatarRoutes } from "./profile/avatar-routes";
 import { visitorControlsRoutes } from "./visitors/controls-routes";
 import { createVisitorControlsService } from "./visitors/controls-service";
 import { visitorControlsSchemaStatus } from "./visitors/controls-schema";
+import { contentSchemaStatus } from "./content/schema";
 
 export interface AppOptions {
   db?: Pool;
@@ -36,6 +37,7 @@ export interface AppOptions {
   visitorHistory?: { schemaDirectory: string };
   visitorContext?: { schemaDirectory: string };
   visitorControls?: { schemaDirectory: string };
+  content?: { schemaDirectory: string };
   profiles?: { schemaDirectory: string; assetDirectory: string; assets?: AvatarStore };
 }
 
@@ -192,6 +194,19 @@ export function createApp(release: ReleaseInfo, options: AppOptions = {}): Expre
           throw new Error();
       } catch {
         throw new ApiError(503, "VISITOR_CONTROLS_NOT_READY", "Dịch vụ phân tích chưa sẵn sàng");
+      }
+    }
+    if ((release.schemaVersion ?? 0) >= 8 && !options.content)
+      throw new ApiError(503, "CONTENT_NOT_READY", "Dịch vụ nội dung chưa sẵn sàng");
+    if (options.content) {
+      try {
+        if (
+          (await contentSchemaStatus(options.db, options.content.schemaDirectory)).state !==
+          "complete"
+        )
+          throw new Error();
+      } catch {
+        throw new ApiError(503, "CONTENT_NOT_READY", "Dịch vụ nội dung chưa sẵn sàng");
       }
     }
     res.json({ ok: true });
