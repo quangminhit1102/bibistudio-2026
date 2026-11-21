@@ -3,15 +3,18 @@ import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { SimpleBreadcrumb } from "@/components/ui/simple-breadcrumb";
 import { getBlogPost } from "@/data/blog";
+import { getPublicPost } from "@/lib/content-api";
+import { resolveSeo } from "@/lib/content-seo";
 import { LazyImage } from "@/components/ui/lazy-image";
 
 const SITE = "https://bibistudio-2026.lovable.app";
 
 export const Route = createFileRoute("/blog/$slug")({
-  loader: ({ params }) => {
+  loader: async ({ params }) => {
     const post = getBlogPost(params.slug);
     if (!post) throw notFound();
-    return { post, related: [] as never[] };
+    const seo = await getPublicPost(params.slug);
+    return { post, related: [] as never[], seo };
   },
   head: ({ params, loaderData }) => {
     if (!loaderData) {
@@ -19,15 +22,22 @@ export const Route = createFileRoute("/blog/$slug")({
         meta: [{ title: "Không tìm thấy bài viết — BiBi Studio" }, { name: "robots", content: "noindex" }],
       };
     }
-    const { post } = loaderData;
-    const title = `${post.title} — BiBi Studio`;
+    const { post, seo } = loaderData;
+    const seoMeta = resolveSeo({
+      seoTitle: seo?.seo_title,
+      seoDescription: seo?.seo_description,
+      title: `${post.title} — BiBi Studio`,
+      excerpt: post.excerpt,
+    });
+    const title = seoMeta.title;
+    const description = seoMeta.description;
     const url = `${SITE}/blog/${params.slug}`;
     return {
       meta: [
         { title },
-        { name: "description", content: post.excerpt },
+        { name: "description", content: description },
         { property: "og:title", content: title },
-        { property: "og:description", content: post.excerpt },
+        { property: "og:description", content: description },
         { property: "og:type", content: "article" },
         { property: "og:url", content: url },
         { name: "twitter:card", content: "summary_large_image" },

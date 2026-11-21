@@ -14,15 +14,20 @@ import {
   relatedProducts,
   tx,
 } from "@/data/catalogue";
+import { getPublicProduct } from "@/lib/content-api";
+import { resolveSeo } from "@/lib/content-seo";
 import { SITE_URL, buildBreadcrumbSchema } from "@/lib/seo";
 
 // /products/<type-slug> → listing by product type; /products/<product-slug> → product detail.
 export const Route = createFileRoute("/products/$slug")({
-  loader: ({ params }) => {
+  loader: async ({ params }) => {
     const type = getProductTypeBySlug(params.slug);
     if (type) return { kind: "type" as const, typeId: type.id };
     const product = getProduct(params.slug);
-    if (product) return { kind: "product" as const, slug: product.slug };
+    if (product) {
+      const seo = await getPublicProduct(params.slug);
+      return { kind: "product" as const, slug: product.slug, seo };
+    }
     throw notFound();
   },
   head: ({ loaderData, params }) => {
@@ -37,9 +42,15 @@ export const Route = createFileRoute("/products/$slug")({
     } else {
       const p = getProduct(loaderData.slug)!;
       const t = getProductType(p.productType);
-      title = `${tx(p.name)} · ${tx(t.name)} — BiBi Studio`;
+      const seo = resolveSeo({
+        seoTitle: loaderData.seo?.seo_title,
+        seoDescription: loaderData.seo?.seo_description,
+        title: `${tx(p.name)} · ${tx(t.name)} — BiBi Studio`,
+        shortDescription: tx(p.description),
+      });
+      title = seo.title;
       if (p.images[0]) image = p.images[0].startsWith("http") ? p.images[0] : `${SITE_URL}${p.images[0]}`;
-      description = `${tx(t.name)} ${tx(p.name)} thuộc bộ sưu tập ${tx(getCollection(p.collection).name)} của BiBi Studio.`;
+      description = seo.description;
       scripts.push({
         type: "application/ld+json",
         children: JSON.stringify(
