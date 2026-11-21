@@ -29,6 +29,7 @@ import { visitorControlsSchemaStatus } from "./visitors/controls-schema";
 import { contentSchemaStatus } from "./content/schema";
 import { contentRoutes } from "./content/routes";
 import { createContentService } from "./content/service";
+import { contentPublicRoutes } from "./content/public-routes";
 
 export interface AppOptions {
   db?: Pool;
@@ -213,6 +214,8 @@ export function createApp(release: ReleaseInfo, options: AppOptions = {}): Expre
     }
     res.json({ ok: true });
   });
+  if (options.db)
+    app.use("/api/public", contentPublicRoutes(options.db, options.clock ?? systemClock));
   if (auth && authConfig && options.db && options.profiles) {
     const service = createProfileService({
       pool: options.db,
