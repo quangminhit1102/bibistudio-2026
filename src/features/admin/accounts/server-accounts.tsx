@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { RefreshButton } from "../shared/ui/refresh-button";
 import { LockKeyhole } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
@@ -138,7 +139,7 @@ export function ServerAccounts() {
         description="Quản lý thông tin, trạng thái và vai trò của người dùng."
         actions={
           <>
-            <Button onClick={() => void accounts.refetch()}>Tải lại</Button>
+            <RefreshButton loading={accounts.isFetching} onClick={() => void accounts.refetch()} />
             {allowed("account.create") && (
               <Button variant="primary" onClick={() => setOpen(true)}>
                 Tạo tài khoản

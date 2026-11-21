@@ -116,6 +116,8 @@ test(
       await page.getByLabel("Mật khẩu", { exact: true }).fill(f.secrets.userPassword);
       await page.getByRole("button", { name: "Đăng nhập", exact: true }).click();
       await page.getByText("2001:db8::1234", { exact: true }).first().waitFor();
+      assert.equal(await page.getByRole("button", { name: "Loại trừ IP", exact: true }).count(), 0);
+      assert.equal(await page.getByRole("button", { name: /^Xóa khách/ }).count(), 0);
       assert.equal(await page.getByText("Nhật ký cPanel", { exact: true }).count(), 0);
       assert.equal(
         await page.getByRole("columnheader", { name: "ID khách", exact: true }).count(),
@@ -206,7 +208,7 @@ test(
           });
         },
       );
-      await page.getByRole("button", { name: "Tải lại", exact: true }).click();
+      await page.getByRole("button", { name: "Làm mới", exact: true }).click();
       await page
         .getByText("Phiên bản báo cáo không khớp khoảng ngày đã chọn. Vui lòng tải lại trang.", {
           exact: true,
@@ -222,6 +224,69 @@ test(
         path: resolve(evidence, "rollback-compatibility.png"),
         fullPage: true,
       });
+      // Actual mutation UI uses only this disposable random test database.
+      const admin = await browser.newPage({
+        viewport: { width: 1440, height: 1000 },
+        reducedMotion: "reduce",
+      });
+      admin.setDefaultTimeout(20000);
+      admin.on("pageerror", (error) => errors.push(error.message));
+      await admin.goto(base + "/admin/analytics/visitors");
+      await admin.getByLabel("Tên tài khoản", { exact: true }).fill("admin");
+      await admin.getByLabel("Mật khẩu", { exact: true }).fill(f.secrets.masterPassword);
+      await admin.getByRole("button", { name: "Đăng nhập", exact: true }).click();
+      await admin.getByRole("button", { name: "Loại trừ IP", exact: true }).click();
+      await admin.getByLabel("Thêm quy tắc", { exact: true }).fill("8.8.8.*\n1.1.*.*");
+      await admin.screenshot({
+        path: resolve(evidence, "controls-exclusions-desktop.png"),
+        fullPage: true,
+      });
+      await admin.getByRole("button", { name: "Lưu cấu hình", exact: true }).click();
+      await admin.getByRole("dialog").waitFor({ state: "hidden" });
+      const [[settings]] = await f.pool.query(
+        "SELECT rules FROM visitor_exclusion_settings WHERE id=1",
+      );
+      assert.deepEqual(
+        typeof settings.rules === "string" ? JSON.parse(settings.rules) : settings.rules,
+        ["8.8.8.*", "1.1.*.*"],
+      );
+      await admin.getByRole("button", { name: "Chi tiết khách 2", exact: true }).click();
+      await admin
+        .getByRole("button", { name: /^Xóa phiên/ })
+        .first()
+        .click();
+      await admin.getByRole("dialog", { name: "Xóa phiên truy cập?", exact: true }).waitFor();
+      await admin.screenshot({
+        path: resolve(evidence, "controls-delete-session-confirm.png"),
+        fullPage: true,
+      });
+      await admin.getByRole("button", { name: "Xác nhận", exact: true }).click();
+      await admin.getByText("1 bản ghi", { exact: true }).first().waitFor();
+      const [[removed]] = await f.pool.query("SELECT COUNT(*) n FROM visitors WHERE id=?", [other]);
+      assert.equal(removed.n, 0);
+      await admin.setViewportSize({ width: 390, height: 844 });
+      await admin.getByRole("checkbox", { name: "Chọn khách 2001:db8::1234", exact: true }).check();
+      await admin.getByRole("button", { name: "Xóa đã chọn", exact: true }).waitFor();
+      assert.equal(
+        await admin.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1),
+        true,
+      );
+      await admin.screenshot({
+        path: resolve(evidence, "controls-selection-mobile.png"),
+        fullPage: true,
+      });
+      await admin.getByRole("button", { name: "Xóa đã chọn", exact: true }).click();
+      await admin.getByRole("button", { name: "Xác nhận", exact: true }).click();
+      await admin.getByText("Chưa có dữ liệu", { exact: true }).first().waitFor();
+      const [[remaining]] = await f.pool.query("SELECT COUNT(*) n FROM visitors WHERE id=?", [
+        visitor,
+      ]);
+      assert.equal(
+        remaining.n,
+        0,
+        "Bulk deletion removes selected visitor including historical sessions",
+      );
+      await admin.close();
       assert.deepEqual(errors, []);
     } finally {
       await browser?.close();

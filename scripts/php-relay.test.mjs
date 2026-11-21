@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { createServer } from "node:http";
 import { mkdtemp, writeFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
+import { join, resolve, basename } from "node:path";
 import { once } from "node:events";
 import { execFileSync } from "node:child_process";
 import { startPhpRelay } from "./php-relay.mjs";
@@ -190,7 +190,30 @@ test(
             env: { ...process.env, DOCKER_API_VERSION: "1.43" },
           },
         ).trim();
-      const before = docker(["ps", "-aq", "--filter", "label=com.bibi.local-relay"]);
+      // Other test workers own independent relays. Count only this fixture's
+      // config mount, including a created-but-never-started failed container.
+      const ownedContainers = () => {
+        const ids = docker(["ps", "-aq", "--filter", "label=com.bibi.local-relay"])
+          .split(/\s+/)
+          .filter(Boolean);
+        return ids
+          .filter((id) => {
+            let info;
+            try {
+              info = JSON.parse(docker(["inspect", id]))[0];
+            } catch {
+              return false;
+            } // A different worker may have just closed its relay.
+            return info.Mounts.some(
+              (m) =>
+                m.Destination === "/private/config.json" &&
+                m.Source.replace(/\\/g, "/").endsWith(`/${basename(dir)}/config.json`),
+            );
+          })
+          .sort()
+          .join("\n");
+      };
+      const before = ownedContainers();
       const occupied = createServer();
       occupied.listen(0, "127.0.0.1");
       await once(occupied, "listening");
@@ -206,11 +229,7 @@ test(
       } finally {
         await new Promise((r) => occupied.close(r));
       }
-      assert.equal(
-        docker(["ps", "-aq", "--filter", "label=com.bibi.local-relay"]),
-        before,
-        "failed start leaves no owned container",
-      );
+      assert.equal(ownedContainers(), before, "failed start leaves no owned container");
     } finally {
       await relay?.close();
       upstream.closeAllConnections();

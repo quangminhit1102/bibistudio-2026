@@ -57,10 +57,10 @@ it("409 then failed reload retains draft, successful reload replaces it", async 
   });
   fireEvent.click(screen.getByRole("button", { name: "Lưu thông tin" }));
   await screen.findByText("Xung đột kiểm thử");
-  fireEvent.click(screen.getByRole("button", { name: "Tải lại dữ liệu" }));
+  fireEvent.click(screen.getByRole("button", { name: "Làm mới" }));
   await screen.findByText("Không tải được hồ sơ");
   expect(screen.getByLabelText("Tên hiển thị")).toHaveValue("Bản nháp cần giữ");
-  fireEvent.click(screen.getByRole("button", { name: "Tải lại dữ liệu" }));
+  fireEvent.click(screen.getByRole("button", { name: "Làm mới" }));
   await screen.findByDisplayValue("Bản mới đã tải");
   expect(screen.getByRole("button", { name: "Lưu thông tin" })).toBeDisabled();
   cleanup();

@@ -20,6 +20,7 @@ export interface AnalyticsOptions {
   trustedProxyCidrs?: string[];
   relaySecret?: string;
   countryLookup?: CountryLookup;
+  controlsEnabled?: boolean;
 }
 export const ANALYTICS_COOKIE = "bibi_visitor";
 export function analyticsRoutes(
@@ -71,6 +72,7 @@ export function analyticsRoutes(
         relayObservation,
         countryLookup: options.countryLookup,
         contextEnabled: !!options.relaySecret,
+        controlsEnabled: options.controlsEnabled,
         ip: req.ip ?? "unknown",
         peer: req.socket.remoteAddress,
         sourceVerified: options.clientIpSourceVerified ?? false,

@@ -69,3 +69,16 @@ test("failed incremental load keeps previous rows and offers retry", () => {
   fireEvent.click(screen.getByRole("button", { name: "Thử lại" }));
   expect(retry).toHaveBeenCalledTimes(1);
 });
+
+test("empty products are explicit and session delete does not toggle its panel", () => {
+  const onDelete = vi.fn();
+  const item = { ...session("one"), products: [] };
+  const view = render(
+    <VisitorSessionList items={[item]} hasMore={false} onMore={() => {}} onDelete={onDelete} />,
+  );
+  expect(screen.getAllByText("Không ghi nhận")).toHaveLength(2);
+  expect(screen.queryByText(/Cookie trình/)).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: /Xóa phiên/ }));
+  expect(onDelete).toHaveBeenCalledWith(item);
+  expect(view.container.querySelector("details")).toHaveAttribute("open");
+});

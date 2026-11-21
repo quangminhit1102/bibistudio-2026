@@ -23,6 +23,10 @@ import { profileSchemaStatus } from "./profile/schema";
 import { createAvatarStore, type AvatarStore } from "./profile/avatar-store";
 import { avatarRoutes } from "./profile/avatar-routes";
 
+import { visitorControlsRoutes } from "./visitors/controls-routes";
+import { createVisitorControlsService } from "./visitors/controls-service";
+import { visitorControlsSchemaStatus } from "./visitors/controls-schema";
+
 export interface AppOptions {
   db?: Pool;
   config?: SecurityConfig | AuthConfig;
@@ -31,6 +35,7 @@ export interface AppOptions {
   accessLogs?: { pool: Pool; schemaDirectory: string; currentEnabled?: boolean };
   visitorHistory?: { schemaDirectory: string };
   visitorContext?: { schemaDirectory: string };
+  visitorControls?: { schemaDirectory: string };
   profiles?: { schemaDirectory: string; assetDirectory: string; assets?: AvatarStore };
 }
 
@@ -49,6 +54,15 @@ export function createApp(release: ReleaseInfo, options: AppOptions = {}): Expre
   app.use("/api/customer-access/access-logs", () => {
     throw new ApiError(404, "NOT_FOUND", "Không tìm thấy chức năng");
   });
+  if (auth && options.db && options.visitorControls && options.config)
+    app.use(
+      "/api/customer-access",
+      visitorControlsRoutes(
+        createVisitorControlsService(options.db, options.clock ?? systemClock),
+        auth,
+        options.config,
+      ),
+    );
   if (auth && options.db && options.analytics)
     app.use(
       "/api/customer-access",
@@ -69,7 +83,15 @@ export function createApp(release: ReleaseInfo, options: AppOptions = {}): Expre
   if (options.analytics && options.config)
     app.use(
       "/api/analytics",
-      analyticsRoutes(options.analytics, options.config, options.clock, release.releaseId),
+      analyticsRoutes(
+        {
+          ...options.analytics,
+          controlsEnabled: !!options.visitorControls || options.analytics.controlsEnabled,
+        },
+        options.config,
+        options.clock,
+        release.releaseId,
+      ),
     );
   else
     app.use("/api/analytics", () => {
@@ -157,6 +179,19 @@ export function createApp(release: ReleaseInfo, options: AppOptions = {}): Expre
           throw new Error();
       } catch {
         throw new ApiError(503, "VISITOR_CONTEXT_NOT_READY", "Dịch vụ phân tích chưa sẵn sàng");
+      }
+    }
+    if ((release.schemaVersion ?? 0) >= 7 && !options.visitorControls)
+      throw new ApiError(503, "VISITOR_CONTROLS_NOT_READY", "Dịch vụ phân tích chưa sẵn sàng");
+    if (options.visitorControls) {
+      try {
+        if (
+          (await visitorControlsSchemaStatus(options.db, options.visitorControls.schemaDirectory))
+            .state !== "complete"
+        )
+          throw new Error();
+      } catch {
+        throw new ApiError(503, "VISITOR_CONTROLS_NOT_READY", "Dịch vụ phân tích chưa sẵn sàng");
       }
     }
     res.json({ ok: true });

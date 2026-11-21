@@ -152,7 +152,7 @@ test(
       const refreshed = page.waitForResponse(
         (response) => response.url().endsWith("/api/auth/refresh") && response.status() === 200,
       );
-      await page.getByRole("button", { name: "Tải lại", exact: true }).click();
+      await page.getByRole("button", { name: "Làm mới", exact: true }).click();
       await refreshed;
       await page
         .locator(".a-chart-ranking")

@@ -7,6 +7,7 @@ const tar = require("tar");
 const { validateManifest } = require("./release.cjs");
 const { verifyProfileAssets } = require("./profile-metadata.cjs");
 const { verifyVisitorContextAssets } = require("./visitor-context-metadata.cjs");
+const { verifyVisitorControlsAssets } = require("./visitor-controls-metadata.cjs");
 const { verifyVisitorAssets } = require("./visitor-metadata.cjs");
 const deploy = require("./deploy.cjs");
 const { verifyAccessLogAssets } = require("./access-log-metadata.cjs");
@@ -126,6 +127,10 @@ async function acceptArchive(config, id, checksum, file) {
       await fs.access(path.join(staging, "backend/dist/visitors/context-cli.js"));
     }
     await fs.writeFile(path.join(staging, ".archive-sha256"), checksum);
+    if (manifest.visitorControls) {
+      await verifyVisitorControlsAssets(path.join(staging, "backend"), manifest.visitorControls);
+      await fs.access(path.join(staging, "backend/dist/visitors/controls-cli.js"));
+    }
     await fs.rename(staging, dest);
   } catch (e) {
     await fs.rm(staging, { recursive: true, force: true });

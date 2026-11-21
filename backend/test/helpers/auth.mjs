@@ -2,7 +2,10 @@ import { randomBytes } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { createDatabaseFixture } from "./database.mjs";
 
-export async function createAuthFixture(t, { visitorHistory = true } = {}) {
+export async function createAuthFixture(
+  t,
+  { visitorHistory = true, visitorControls = false } = {},
+) {
   const fixture = await createDatabaseFixture(t);
   const { migrate } = await import("../../dist/db/migrate.js");
   const { seedIdentity } = await import("../../dist/db/seed.js");
@@ -17,6 +20,13 @@ export async function createAuthFixture(t, { visitorHistory = true } = {}) {
   }
   const secrets = { masterPassword: "Only-test-Auth!99", userPassword: "Only-test-Auth!88" };
   await seedIdentity(fixture.pool, secrets);
+  if (visitorControls) {
+    const { migrateVisitorControls } = await import("../../dist/visitors/controls-schema.js");
+    await migrateVisitorControls(
+      fixture.pool,
+      fileURLToPath(new URL("../../visitor-controls-migrations", import.meta.url)),
+    );
+  }
   const config = {
     jwtSecret: randomBytes(32).toString("hex"),
     jwtIssuer: "bibi-test",

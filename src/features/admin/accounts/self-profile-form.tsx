@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { ProfileDto } from "../../../../backend/src/profile/types";
 import type { ProfileDraft } from "./profile-api";
 import { Button, Field } from "../shared/ui/primitives";
+import { RefreshButton } from "../shared/ui/refresh-button";
 const values = (p: ProfileDto) => ({
   displayName: p.displayName,
   email: p.email ?? "",
@@ -142,11 +143,7 @@ export function SelfProfileForm({
       {error && (
         <div role="alert" className="a-error">
           {error}
-          {onReload && (
-            <Button type="button" disabled={busy || blocked} onClick={onReload}>
-              Tải lại dữ liệu
-            </Button>
-          )}
+          {onReload && <RefreshButton disabled={busy || blocked} onClick={onReload} />}
         </div>
       )}
     </form>

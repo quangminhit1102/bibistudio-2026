@@ -4,7 +4,7 @@ import { join, resolve } from "node:path";
 import { createAuthFixture } from "../../../backend/test/helpers/auth.mjs";
 import { migrateProfiles } from "../../../backend/dist/profile/schema.js";
 export async function createProfileAuthFixture(t) {
-  const fixture = await createAuthFixture(t),
+  const fixture = await createAuthFixture(t, { visitorControls: true }),
     assetDirectory = await mkdtemp(join(tmpdir(), "bibi-profile-browser-"));
   t.after(() => rm(assetDirectory, { recursive: true, force: true }));
   await migrateProfiles(fixture.pool, resolve("backend/profile-migrations"));

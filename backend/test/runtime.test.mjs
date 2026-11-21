@@ -30,7 +30,7 @@ test("runtime config fails closed, bounds origins and does not contain frontend 
 });
 
 test("compiled server runtime serves real login with bounded pools and closes all handles without migrating", async (t) => {
-  const f = await createAuthFixture(t);
+  const f = await createAuthFixture(t, { visitorControls: true });
   const { createRuntime } = await import("../dist/runtime.js");
   const env = {
     DB_HOST: f.dbConfig.host,

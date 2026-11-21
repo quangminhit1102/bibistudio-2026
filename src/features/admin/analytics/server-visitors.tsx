@@ -1,5 +1,7 @@
 import { useMemo, useState } from "react";
-import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
+import { Trash2, SlidersHorizontal } from "lucide-react";
+import { useQuery, useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import type { RowSelectionState } from "@tanstack/react-table";
 import { useSearch } from "@tanstack/react-router";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { VisitorDto, VisitorScopeInput } from "../../../../backend/src/http/contracts";
@@ -11,7 +13,17 @@ import { VisitorIp, VisitorLocation, VisitorGeoAttribution } from "./components/
 import { useAdmin } from "../services/context";
 import { canCode } from "../accounts/permissions";
 import { createVisitorApi } from "./http-api";
-import { Button, Card, ErrorState, Modal, PageTitle, Skeleton } from "../shared/ui/primitives";
+import { VisitorExclusions } from "./components/visitor-exclusions";
+import { RefreshButton } from "../shared/ui/refresh-button";
+import {
+  Button,
+  Card,
+  ConfirmDialog,
+  ErrorState,
+  Modal,
+  PageTitle,
+  Skeleton,
+} from "../shared/ui/primitives";
 import { DataTable, type TableState } from "../shared/tables/data-table";
 import { dateTime } from "../shared/lib/text";
 
@@ -24,12 +36,23 @@ function useVisitorApi() {
 }
 const device = (value: string) =>
   ({ mobile: "Di động", tablet: "Máy tính bảng", desktop: "Máy tính" })[value] ?? value;
-export function ServerVisitorDetail({ id, scope }: { id: string; scope?: VisitorScopeInput }) {
+export function ServerVisitorDetail({
+  id,
+  scope,
+  onDeleted,
+}: {
+  id: string;
+  scope?: VisitorScopeInput;
+  onDeleted?: () => void;
+}) {
   const runtime = useAdmin(),
     api = useVisitorApi();
   const [defaultDates] = useState(() => resolveFilterDates({ preset: "1m" }));
   const filter = scope ?? defaultDates;
   const enabled = canCode(runtime.session, "customer_access.view");
+  const queryClient = useQueryClient();
+  const [deleting, setDeleting] = useState<{ id: string; startedAt: string } | null>(null);
+  const canDelete = enabled && canCode(runtime.session, "customer_access.delete");
   const visitor = useQuery({
     queryKey: ["bibi-admin", "http-visitor", runtime.session?.userId, id, filter],
     enabled,
@@ -83,14 +106,11 @@ export function ServerVisitorDetail({ id, scope }: { id: string; scope?: Visitor
             </div>
           ))}
         </dl>
-        {v.ipStatus !== "verified" && (
+        {!["verified", "observed"].includes(v.ipStatus ?? "") && (
           <p className="a-muted">
-            {v.ipStatus === "observed"
-              ? "IP do website ghi nhận, chưa xác minh nguồn từ hosting."
-              : "Phiên chưa có IP công khai đầy đủ; không thể suy ngược IP từ bản ghi cũ."}
+            Phiên chưa có IP công khai đầy đủ; không thể suy ngược IP từ bản ghi cũ.
           </p>
         )}
-        <VisitorGeoAttribution />
       </Card>
       <Card>
         <h2>Các phiên truy cập</h2>
@@ -103,11 +123,37 @@ export function ServerVisitorDetail({ id, scope }: { id: string; scope?: Visitor
           hasMore={history.hasNextPage}
           loading={history.isFetchingNextPage}
           error={history.isFetchNextPageError ? history.error : undefined}
+          onDelete={canDelete ? (session) => setDeleting(session) : undefined}
           onMore={() => {
             if (!history.isFetchingNextPage) void history.fetchNextPage();
           }}
         />
       </Card>
+      <VisitorGeoAttribution />
+      <ConfirmDialog
+        open={!!deleting}
+        title="Xóa phiên truy cập?"
+        description={`Xóa phiên ${deleting ? dateTime(deleting.startedAt) : ""} cùng URL và sản phẩm đã ghi nhận trong phiên. Các phiên khác được giữ nguyên. Thao tác không thể hoàn tác và sẽ cập nhật báo cáo.`}
+        onCancel={() => setDeleting(null)}
+        onConfirm={async () => {
+          if (!deleting) return;
+          const result = await api.deleteSession(id, deleting.id);
+          setDeleting(null);
+          if (result.visitorDeleted) onDeleted?.();
+          await queryClient.invalidateQueries({
+            queryKey: ["bibi-admin"],
+            predicate: (q) =>
+              [
+                "http-visitors",
+                "http-visitor",
+                "visitor-history",
+                "http-visitor-options",
+                "http-visitor-report",
+                "visitor-products",
+              ].includes(String(q.queryKey[1])),
+          });
+        }}
+      />
     </div>
   );
 }
@@ -125,6 +171,16 @@ export function ServerVisitors() {
     typeof search.visitor === "string" ? search.visitor : null,
   );
   const [allProducts, setAllProducts] = useState(false);
+  const [selection, setSelection] = useState<RowSelectionState>({});
+  const [deleteIds, setDeleteIds] = useState<string[]>([]);
+  const [exclusionsOpen, setExclusionsOpen] = useState(false);
+  const queryClient = useQueryClient();
+  const canDelete = canCode(runtime.session, "customer_access.delete");
+  const canConfigure = canCode(runtime.session, "customer_access.manage_exclusions");
+  const updateState = (next: TableState) => {
+    setSelection({});
+    setState(next);
+  };
   const scope = useMemo<VisitorScopeInput>(
     () => ({
       from: state.filters.from,
@@ -199,8 +255,28 @@ export function ServerVisitors() {
           </Button>
         ),
       },
+      ...(canDelete
+        ? [
+            {
+              id: "delete",
+              header: "",
+              enableSorting: false,
+              cell: ({ row }: { row: { original: VisitorDto } }) => (
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="a-visitor-delete"
+                  aria-label={`Xóa khách ${row.original.ipAddress || "chưa xác định"}`}
+                  onClick={() => setDeleteIds([row.original.id])}
+                >
+                  <Trash2 size={16} aria-hidden="true" />
+                </Button>
+              ),
+            },
+          ]
+        : []),
     ],
-    [state.page, state.pageSize],
+    [state.page, state.pageSize, canDelete],
   );
   if (runtime.sessionLoading) return <Skeleton />;
   if (!enabled) return <ErrorState error={new Error("Bạn không có quyền xem khách truy cập")} />;
@@ -210,27 +286,33 @@ export function ServerVisitors() {
         title="Khách truy cập"
         description="Lịch sử phiên truy cập và sản phẩm được quan tâm."
         actions={
-          <Button
-            disabled={visitors.isFetching || report.isFetching}
-            onClick={() => {
-              void visitors.refetch();
-              void options.refetch();
-              void report.refetch();
-            }}
-          >
-            Tải lại
-          </Button>
+          <>
+            {canConfigure && (
+              <Button onClick={() => setExclusionsOpen(true)}>
+                <SlidersHorizontal size={17} />
+                Loại trừ IP
+              </Button>
+            )}
+            <RefreshButton
+              loading={visitors.isFetching || report.isFetching || options.isFetching}
+              onClick={() => {
+                void visitors.refetch();
+                void options.refetch();
+                void report.refetch();
+              }}
+            />
+          </>
         }
       />
       <Card>
         <VisitorFilters
           dates={{ from: scope.from, to: scope.to }}
           onApply={(dates) =>
-            setState((current) => ({
-              ...current,
+            updateState({
+              ...state,
               page: 1,
-              filters: { ...current.filters, ...dates },
-            }))
+              filters: { ...state.filters, ...dates },
+            })
           }
         />
         <div className="a-visitor-filters">
@@ -251,7 +333,7 @@ export function ServerVisitors() {
               <select
                 value={state.filters[filter.key] ?? ""}
                 onChange={(event) =>
-                  setState({
+                  updateState({
                     ...state,
                     page: 1,
                     filters: { ...state.filters, [filter.key]: event.target.value },
@@ -308,19 +390,57 @@ export function ServerVisitors() {
         <p className="a-muted">
           IP ghi nhận được hiển thị kèm trạng thái nguồn. Lịch sử cũ không thể khôi phục IP đầy đủ.
         </p>
+        {canDelete && Object.values(selection).some(Boolean) && (
+          <div className="a-visitor-selection">
+            <span>
+              Đã chọn {Object.values(selection).filter(Boolean).length} khách trên trang này
+            </span>
+            <div className="a-actions">
+              <Button variant="ghost" onClick={() => setSelection({})}>
+                Bỏ chọn
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() =>
+                  setDeleteIds(
+                    (visitors.data?.items ?? []).filter((v) => selection[v.id]).map((v) => v.id),
+                  )
+                }
+              >
+                <Trash2 size={16} />
+                Xóa đã chọn
+              </Button>
+            </div>
+          </div>
+        )}
         <DataTable
           columns={columns}
           result={
             visitors.data ?? { items: [], total: 0, page: state.page, pageSize: state.pageSize }
           }
           state={state}
-          onStateChange={setState}
-          selectable={false}
+          onStateChange={updateState}
+          selectable={canDelete}
+          selection={selection}
+          onSelectionChange={setSelection}
           loading={visitors.isPending}
           error={visitors.error}
           onRetry={() => void visitors.refetch()}
           mobileRow={(v) => (
             <article className="a-visitor-card">
+              {canDelete && (
+                <label className="a-visitor-card-select">
+                  <input
+                    type="checkbox"
+                    aria-label={`Chọn khách ${v.ipAddress || "chưa xác định"}`}
+                    checked={!!selection[v.id]}
+                    onChange={(event) =>
+                      setSelection((current) => ({ ...current, [v.id]: event.target.checked }))
+                    }
+                  />
+                  Chọn khách
+                </label>
+              )}
               <strong className="a-visitor-ip">
                 <VisitorIp value={v} />
               </strong>
@@ -334,10 +454,20 @@ export function ServerVisitors() {
                 {v.sessionCount} phiên · {dateTime(v.lastSeenAt)}
               </p>
               <Button onClick={() => setSelected(v.id)}>Chi tiết</Button>
+              {canDelete && (
+                <Button
+                  className="a-visitor-delete"
+                  size="icon"
+                  variant="ghost"
+                  aria-label={`Xóa khách ${v.ipAddress || "chưa xác định"}`}
+                  onClick={() => setDeleteIds([v.id])}
+                >
+                  <Trash2 size={16} />
+                </Button>
+              )}
             </article>
           )}
         />
-        <VisitorGeoAttribution />
       </Card>
       <Card>
         <div className="a-visitor-section-heading">
@@ -357,6 +487,45 @@ export function ServerVisitors() {
           <VisitorProductsChart report={report.data} />
         )}
       </Card>
+      <VisitorGeoAttribution />
+      {canConfigure && exclusionsOpen && (
+        <VisitorExclusions api={api} onClose={() => setExclusionsOpen(false)} />
+      )}
+      <ConfirmDialog
+        open={deleteIds.length > 0}
+        title={
+          deleteIds.length > 1 ? `Xóa ${deleteIds.length} khách truy cập?` : "Xóa khách truy cập?"
+        }
+        description="Xóa toàn bộ lịch sử và phiên của khách đã chọn, kể cả ngoài khoảng ngày đang lọc. Thao tác không thể hoàn tác và sẽ cập nhật báo cáo. Khách tiếp tục truy cập vẫn có thể được ghi nhận lại."
+        onCancel={() => setDeleteIds([])}
+        onConfirm={async () => {
+          await api.deleteVisitors(deleteIds);
+          if (selected && deleteIds.includes(selected)) setSelected(null);
+          setDeleteIds([]);
+          setSelection({});
+          await queryClient.invalidateQueries({
+            queryKey: ["bibi-admin"],
+            predicate: (q) =>
+              [
+                "http-visitors",
+                "http-visitor",
+                "visitor-history",
+                "http-visitor-options",
+                "http-visitor-report",
+                "visitor-products",
+              ].includes(String(q.queryKey[1])),
+          });
+          const refreshed = await visitors.refetch();
+          if (
+            refreshed.data &&
+            state.page > Math.max(1, Math.ceil(refreshed.data.total / state.pageSize))
+          )
+            updateState({
+              ...state,
+              page: Math.max(1, Math.ceil(refreshed.data.total / state.pageSize)),
+            });
+        }}
+      />
       <Modal
         open={!!selected}
         title="Chi tiết khách truy cập"
@@ -365,6 +534,7 @@ export function ServerVisitors() {
           if (!open) setSelected(null);
         }}
         wide
+        className="a-visitor-modal"
       >
         {selected && (
           <div className="a-dialog-body">
@@ -372,6 +542,16 @@ export function ServerVisitors() {
               key={selected + JSON.stringify(scope)}
               id={selected}
               scope={scope}
+              onDeleted={() => {
+                setSelected(null);
+                setSelection({});
+                void visitors.refetch().then((result) => {
+                  if (result.data) {
+                    const page = Math.max(1, Math.ceil(result.data.total / state.pageSize));
+                    if (state.page > page) updateState({ ...state, page });
+                  }
+                });
+              }}
             />
           </div>
         )}

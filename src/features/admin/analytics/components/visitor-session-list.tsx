@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Trash2 } from "lucide-react";
 import type { VisitorSessionDto } from "../../../../../backend/src/http/contracts";
 import { Button, ErrorState } from "../../shared/ui/primitives";
 import { dateTime } from "../../shared/lib/text";
@@ -26,12 +27,14 @@ export function VisitorSessionList({
   onMore,
   loading = false,
   error,
+  onDelete,
 }: {
   items: VisitorSessionDto[];
   hasMore: boolean;
   onMore: () => void;
   loading?: boolean;
   error?: unknown;
+  onDelete?: (session: VisitorSessionDto) => void;
 }) {
   const [open, setOpen] = useState(() => new Set(items[0] ? [items[0].id] : []));
   return (
@@ -59,10 +62,25 @@ export function VisitorSessionList({
               <small>
                 {session.products.length
                   ? session.products.map((p) => p.name).join(" · ")
-                  : "Chưa ghi nhận sản phẩm"}
+                  : "Không ghi nhận"}
               </small>
             </span>
             <span className="a-visitor-session-count">{session.distinctPageCount} trang</span>
+            {onDelete && (
+              <Button
+                size="icon"
+                variant="ghost"
+                className="a-visitor-delete"
+                aria-label={`Xóa phiên ${dateTime(session.startedAt)}`}
+                onClick={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  onDelete(session);
+                }}
+              >
+                <Trash2 size={16} aria-hidden="true" />
+              </Button>
+            )}
           </summary>
           <div className="a-visitor-session-body">
             <p className="a-muted">
@@ -82,6 +100,7 @@ export function VisitorSessionList({
             </p>
             <h3>Sản phẩm quan tâm</h3>
             <div className="a-visitor-product-links">
+              {!session.products.length && <span className="a-muted">Không ghi nhận</span>}
               {session.products.map((product) => (
                 <a
                   key={product.slug}
@@ -123,10 +142,6 @@ export function VisitorSessionList({
           Xem thêm phiên
         </Button>
       )}
-      <p className="a-muted">
-        Mỗi URL/sản phẩm được ghi một lần trong phiên, không phải lịch sử từng lần bấm. Cookie trình
-        duyệt có hiệu lực 90 ngày; lịch sử đã lưu được giữ lại.
-      </p>
     </div>
   );
 }

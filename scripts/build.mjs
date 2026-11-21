@@ -11,6 +11,7 @@ import profileMetadata from "../ops/profile-metadata.cjs";
 import accessLogMetadata from "../ops/access-log-metadata.cjs";
 import visitorMetadata from "../ops/visitor-metadata.cjs";
 import contextMetadata from "../ops/visitor-context-metadata.cjs";
+import controlsMetadata from "../ops/visitor-controls-metadata.cjs";
 import { writeAnalyticsCatalogue } from "./analytics-catalogue.mjs";
 import { prepareCountryDataset } from "./prepare-geoip.mjs";
 
@@ -53,6 +54,13 @@ export async function validateBundle(dir) {
   }
   if (fe.releaseId !== manifest.releaseId || fe.sourceSha !== manifest.sourceSha)
     throw new Error("FE/BE release mismatch");
+  if (manifest.visitorControls) {
+    await controlsMetadata.verifyVisitorControlsAssets(
+      join(dir, "backend"),
+      manifest.visitorControls,
+    );
+    await stat(join(dir, "backend/dist/visitors/controls-cli.js"));
+  }
   async function scan(path) {
     for (const entry of await readdir(path, { withFileTypes: true })) {
       if (
@@ -85,6 +93,7 @@ export async function buildRelease({
     await profileMetadata.createProfileMetadata(join(root, "backend")),
     await visitorMetadata.createVisitorMetadata(join(root, "backend")),
     await contextMetadata.createVisitorContextMetadata(join(root, "backend")),
+    await controlsMetadata.createVisitorControlsMetadata(join(root, "backend")),
   );
   const base = resolve(outputDir);
   const bundleDir = join(base, manifest.releaseId);
@@ -147,7 +156,12 @@ export async function buildRelease({
     join(root, "backend/analytics-catalogue.json"),
     join(bundleDir, "backend/analytics-catalogue.json"),
   );
-  for (const name of ["relay", "geoip", "visitor-context-migrations"])
+  for (const name of [
+    "relay",
+    "geoip",
+    "visitor-context-migrations",
+    "visitor-controls-migrations",
+  ])
     await cp(join(root, "backend", name), join(bundleDir, "backend", name), { recursive: true });
   for (const file of ["manifest.json", "frontend/version.json"])
     await writeFile(

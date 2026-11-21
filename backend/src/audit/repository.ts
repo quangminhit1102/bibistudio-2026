@@ -9,6 +9,11 @@ export interface AuditInput {
 export async function writeAudit(connection: PoolConnection, event: AuditInput): Promise<void> {
   const metadata: Record<string, unknown> = {};
   for (const key of [
+    "visitorIds",
+    "visitorCount",
+    "ruleCount",
+    "addedCount",
+    "removedCount",
     "reason",
     "changedFields",
     "roleIds",

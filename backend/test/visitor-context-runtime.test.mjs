@@ -10,7 +10,7 @@ import { createApp } from "../dist/app.js";
 import { serve } from "./helpers/http.mjs";
 import { migrateVisitorContext } from "../dist/visitors/context-schema.js";
 test("runtime loads dataset once, closes it, and readiness rejects unmigrated context without DDL", async (t) => {
-  const f = await createAuthFixture(t);
+  const f = await createAuthFixture(t, { visitorControls: true });
   const dir = await mkdtemp(join(tmpdir(), "bibi-runtime-country-"));
   t.after(() => rm(dir, { recursive: true, force: true }));
   const file = join(dir, "country.mmdb");

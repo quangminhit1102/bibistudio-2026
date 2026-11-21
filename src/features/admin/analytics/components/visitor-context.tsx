@@ -35,12 +35,14 @@ export function VisitorLocation({ value }: { value: Context }) {
 }
 export function VisitorGeoAttribution() {
   return (
-    <p className="a-muted">
-      Quốc gia được ước lượng từ IP, không phải vị trí chính xác. Dữ liệu:{" "}
-      <a href="https://db-ip.com" target="_blank" rel="noopener noreferrer">
-        DB-IP
-      </a>
-      .
+    <p className="a-muted a-visitor-footnote">
+      <em>
+        IP do website ghi nhận; quốc gia ước lượng theo{" "}
+        <a href="https://db-ip.com" target="_blank" rel="noopener noreferrer">
+          DB-IP
+        </a>
+        .
+      </em>
     </p>
   );
 }

@@ -1,6 +1,6 @@
 # Khách truy cập: thao tác dữ liệu và loại trừ IP
 
-Ngày: 21/11/2026. Trạng thái: người dùng đã duyệt bản phác thảo; tài liệu thiết kế đang chờ duyệt.
+Ngày: 21/11/2026. Trạng thái: đã duyệt; người dùng yêu cầu triển khai và deploy.
 
 ## Mục tiêu và phạm vi
 
@@ -72,3 +72,4 @@ Tận dụng DataTable selection, shared Modal/Button/confirmation, React Query 
 ## Phần giao cho người triển khai
 
 Chọn tên bảng migration/contract và cách tách service theo convention hiện có; rà soát đầy đủ bảng phụ thuộc trước khi viết delete. Chọn kích thước icon và spacing từ design token admin, không mang CSS standalone của mockup vào toàn ứng dụng. Chốt danh sách nút tải lại thủ công trong admin bằng tìm kiếm source và kiểm chứng từng nhóm tương đương.
+

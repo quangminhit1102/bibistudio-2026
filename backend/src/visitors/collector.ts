@@ -14,6 +14,10 @@ import type { RelayObservation } from "./relay-context";
 import type { CountryLookup } from "./country-lookup";
 import { recordRelayReceipt, writeVisitorContext } from "./context-write";
 
+import { withVisitorWriteRetry } from "./write-retry";
+import { readExclusions } from "./controls-service";
+import { isExcludedIp } from "./exclusions";
+
 const batchSchema = z
   .object({
     paths: z.array(z.string().max(512)).max(50),
@@ -34,6 +38,7 @@ export interface CollectorContext {
   sourceVerified?: boolean;
   trustedCidrs?: string[];
   contextEnabled?: boolean;
+  controlsEnabled?: boolean;
   relayObservation?: RelayObservation;
   countryLookup?: CountryLookup;
 }
@@ -56,7 +61,7 @@ async function associations(
   let truncated = false;
   for (const value of values) {
     const [existing] = await connection.execute<RowDataPacket[]>(
-      `SELECT 1 FROM ${table} WHERE session_id=? AND ${column}=?`,
+      `SELECT 1 FROM ${table} WHERE session_id=? AND ${column}=? FOR UPDATE`,
       [sessionId, value],
     );
     if (existing.length) {
@@ -95,6 +100,22 @@ export async function collectVisitor(
   ];
   const lastPath = publicPath(parsed.data.lastPath, context.catalogue) ?? paths.at(-1);
   if (!paths.length || !lastPath) return { status: 204 };
+  const clientAddress = resolveClientAddress({
+    peer: context.peer,
+    ip: context.ip,
+    sourceVerified: context.sourceVerified ?? false,
+    trustedCidrs: context.trustedCidrs ?? [],
+  });
+  if (context.controlsEnabled) {
+    const { rules } = await readExclusions(pool);
+    if (isExcludedIp(clientAddress.address ?? context.relayObservation?.ip ?? null, rules)) {
+      if (context.relayObservation)
+        await withTransaction(pool, (c) =>
+          recordRelayReceipt(c, context.relayObservation, context.now),
+        );
+      return { status: 204 };
+    }
+  }
   const identity = visitorIdentity(context.cookie, context.idSecret, context.now);
   if (!identity)
     return { status: 202, cookie: { value: createVisitorCookie(context.idSecret, context.now) } };
@@ -109,137 +130,134 @@ export async function collectVisitor(
     }
   }
   const labels = deviceLabels(context.userAgent);
-  const clientAddress = resolveClientAddress({
-    peer: context.peer,
-    ip: context.ip,
-    sourceVerified: context.sourceVerified ?? false,
-    trustedCidrs: context.trustedCidrs ?? [],
-  });
-  await withTransaction(pool, async (connection) => {
-    const contextEnabled = context.contextEnabled ?? !!context.relayObservation;
-    if (contextEnabled) await recordRelayReceipt(connection, context.relayObservation, context.now);
-    await connection.execute(
-      "INSERT INTO visitors(id,identity_hash,ip_prefix,device_type,operating_system,browser,first_seen_at,last_seen_at,is_probe) VALUES (?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE id=id",
-      [
-        randomUUID(),
-        identity,
-        prefix,
-        labels.device,
-        labels.os,
-        labels.browser,
-        context.now,
-        context.now,
-        !!context.probe,
-      ],
-    );
-    const [[visitor]] = await connection.execute<RowDataPacket[]>(
-      "SELECT id,is_probe FROM visitors WHERE identity_hash=? FOR UPDATE",
-      [identity],
-    );
-    if (!!visitor.is_probe !== !!context.probe)
-      throw new ApiError(409, "PROBE_IDENTITY_CONFLICT", "Yêu cầu không hợp lệ");
-    if (context.probe) {
+  await withVisitorWriteRetry(() =>
+    withTransaction(pool, async (connection) => {
+      const contextEnabled = context.contextEnabled ?? !!context.relayObservation;
+      if (contextEnabled)
+        await recordRelayReceipt(connection, context.relayObservation, context.now);
       await connection.execute(
-        "INSERT INTO release_probes(id,release_id,marker_hash,visitor_id,expires_at) VALUES (?,?,?,?,?) ON DUPLICATE KEY UPDATE id=id",
+        "INSERT INTO visitors(id,identity_hash,ip_prefix,device_type,operating_system,browser,first_seen_at,last_seen_at,is_probe) VALUES (?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE id=id",
         [
           randomUUID(),
-          context.probe.releaseId,
-          context.probe.markerHash,
-          visitor.id,
-          context.probe.expiresAt,
-        ],
-      );
-      const [[probe]] = await connection.execute<RowDataPacket[]>(
-        "SELECT visitor_id FROM release_probes WHERE marker_hash=? FOR UPDATE",
-        [context.probe.markerHash],
-      );
-      if (probe.visitor_id !== visitor.id)
-        throw new ApiError(409, "PROBE_IDENTITY_CONFLICT", "Yêu cầu không hợp lệ");
-    }
-    const [[previous]] = await connection.execute<RowDataPacket[]>(
-      "SELECT * FROM visitor_sessions WHERE visitor_id=? ORDER BY last_received_at DESC,id DESC LIMIT 1",
-      [visitor.id],
-    );
-    let sessionId: string;
-    let pageCount = 0;
-    let productCount = 0;
-    let current: RowDataPacket | undefined;
-    if (!previous || +context.now - +sqlDate(previous.last_received_at) > 30 * 60000) {
-      sessionId = randomUUID();
-      await connection.execute(
-        "INSERT INTO visitor_sessions(id,visitor_id,started_at,last_received_at,landing_path,last_received_path) VALUES (?,?,?,?,?,?)",
-        [sessionId, visitor.id, context.now, context.now, paths[0], lastPath],
-      );
-      await connection.execute("UPDATE visitors SET session_count=session_count+1 WHERE id=?", [
-        visitor.id,
-      ]);
-    } else {
-      current = previous;
-      sessionId = previous.id;
-      pageCount = previous.page_count;
-      productCount = previous.product_count;
-    }
-    if (contextEnabled) {
-      await writeVisitorContext(connection, {
-        sessionId,
-        current,
-        verifiedAddress: clientAddress.address,
-        observation: context.relayObservation,
-        countryLookup: context.countryLookup,
-        now: context.now,
-      });
-      await connection.execute(
-        "UPDATE visitor_sessions SET device_type=?,operating_system=?,browser=? WHERE id=? AND last_received_at<=?",
-        [labels.device, labels.os, labels.browser, sessionId, context.now],
-      );
-    } else
-      await connection.execute(
-        "UPDATE visitor_sessions SET client_ip=IF(?='verified',?,client_ip),ip_status=IF(?='verified','verified',IF(ip_status='verified','verified','unavailable')),device_type=?,operating_system=?,browser=? WHERE id=? AND last_received_at<=?",
-        [
-          clientAddress.status,
-          clientAddress.address,
-          clientAddress.status,
+          identity,
+          prefix,
           labels.device,
           labels.os,
           labels.browser,
-          sessionId,
           context.now,
+          context.now,
+          !!context.probe,
         ],
       );
-    const pages = await associations(
-      connection,
-      sessionId,
-      paths,
-      "pages",
-      200,
-      pageCount,
-      context.now,
-    );
-    const interests = await associations(
-      connection,
-      sessionId,
-      products,
-      "products",
-      100,
-      productCount,
-      context.now,
-    );
-    await connection.execute(
-      "UPDATE visitor_sessions SET last_received_path=IF(last_received_at<=?, ?, last_received_path),last_received_at=GREATEST(last_received_at,?),page_count=?,product_count=?,truncated=truncated OR ? WHERE id=?",
-      [
-        context.now,
-        lastPath,
-        context.now,
-        pages.count,
-        interests.count,
-        pages.truncated || interests.truncated,
+      const [[visitor]] = await connection.execute<RowDataPacket[]>(
+        "SELECT id,is_probe FROM visitors WHERE identity_hash=? FOR UPDATE",
+        [identity],
+      );
+      if (!!visitor.is_probe !== !!context.probe)
+        throw new ApiError(409, "PROBE_IDENTITY_CONFLICT", "Yêu cầu không hợp lệ");
+      if (context.probe) {
+        await connection.execute(
+          "INSERT INTO release_probes(id,release_id,marker_hash,visitor_id,expires_at) VALUES (?,?,?,?,?) ON DUPLICATE KEY UPDATE id=id",
+          [
+            randomUUID(),
+            context.probe.releaseId,
+            context.probe.markerHash,
+            visitor.id,
+            context.probe.expiresAt,
+          ],
+        );
+        const [[probe]] = await connection.execute<RowDataPacket[]>(
+          "SELECT visitor_id FROM release_probes WHERE marker_hash=? FOR UPDATE",
+          [context.probe.markerHash],
+        );
+        if (probe.visitor_id !== visitor.id)
+          throw new ApiError(409, "PROBE_IDENTITY_CONFLICT", "Yêu cầu không hợp lệ");
+      }
+      const [[previous]] = await connection.execute<RowDataPacket[]>(
+        "SELECT * FROM visitor_sessions WHERE visitor_id=? ORDER BY last_received_at DESC,id DESC LIMIT 1 FOR UPDATE",
+        [visitor.id],
+      );
+      let sessionId: string;
+      let pageCount = 0;
+      let productCount = 0;
+      let current: RowDataPacket | undefined;
+      if (!previous || +context.now - +sqlDate(previous.last_received_at) > 30 * 60000) {
+        sessionId = randomUUID();
+        await connection.execute(
+          "INSERT INTO visitor_sessions(id,visitor_id,started_at,last_received_at,landing_path,last_received_path) VALUES (?,?,?,?,?,?)",
+          [sessionId, visitor.id, context.now, context.now, paths[0], lastPath],
+        );
+        await connection.execute("UPDATE visitors SET session_count=session_count+1 WHERE id=?", [
+          visitor.id,
+        ]);
+      } else {
+        current = previous;
+        sessionId = previous.id;
+        pageCount = previous.page_count;
+        productCount = previous.product_count;
+      }
+      if (contextEnabled) {
+        await writeVisitorContext(connection, {
+          sessionId,
+          current,
+          verifiedAddress: clientAddress.address,
+          observation: context.relayObservation,
+          countryLookup: context.countryLookup,
+          now: context.now,
+        });
+        await connection.execute(
+          "UPDATE visitor_sessions SET device_type=?,operating_system=?,browser=? WHERE id=? AND last_received_at<=?",
+          [labels.device, labels.os, labels.browser, sessionId, context.now],
+        );
+      } else
+        await connection.execute(
+          "UPDATE visitor_sessions SET client_ip=IF(?='verified',?,client_ip),ip_status=IF(?='verified','verified',IF(ip_status='verified','verified','unavailable')),device_type=?,operating_system=?,browser=? WHERE id=? AND last_received_at<=?",
+          [
+            clientAddress.status,
+            clientAddress.address,
+            clientAddress.status,
+            labels.device,
+            labels.os,
+            labels.browser,
+            sessionId,
+            context.now,
+          ],
+        );
+      const pages = await associations(
+        connection,
         sessionId,
-      ],
-    );
-    await connection.execute(
-      "UPDATE visitors SET last_seen_at=GREATEST(last_seen_at,?) WHERE id=?",
-      [context.now, visitor.id],
-    );
-  });
+        paths,
+        "pages",
+        200,
+        pageCount,
+        context.now,
+      );
+      const interests = await associations(
+        connection,
+        sessionId,
+        products,
+        "products",
+        100,
+        productCount,
+        context.now,
+      );
+      await connection.execute(
+        "UPDATE visitor_sessions SET last_received_path=IF(last_received_at<=?, ?, last_received_path),last_received_at=GREATEST(last_received_at,?),page_count=?,product_count=?,truncated=truncated OR ? WHERE id=?",
+        [
+          context.now,
+          lastPath,
+          context.now,
+          pages.count,
+          interests.count,
+          pages.truncated || interests.truncated,
+          sessionId,
+        ],
+      );
+      await connection.execute(
+        "UPDATE visitors SET last_seen_at=GREATEST(last_seen_at,?) WHERE id=?",
+        [context.now, visitor.id],
+      );
+    }),
+  );
   return { status: 204 };
 }

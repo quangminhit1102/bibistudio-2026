@@ -1200,6 +1200,89 @@
 .a-modal-wide {
   width: min(850px, calc(100vw - 32px));
 }
+.admin-root .a-visitor-modal {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100dvh - 40px);
+  overflow: hidden;
+}
+.admin-root .a-visitor-modal > header {
+  flex-shrink: 0;
+}
+.admin-root .a-visitor-modal > .a-dialog-body {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--a-border) transparent;
+  margin: 8px;
+  padding: 14px;
+}
+.admin-root .a-visitor-modal > .a-dialog-body::-webkit-scrollbar {
+  width: 6px;
+}
+.admin-root .a-visitor-modal > .a-dialog-body::-webkit-scrollbar-thumb {
+  border-radius: 10px;
+  background: var(--a-border);
+}
+.admin-root .a-visitor-selection,
+.admin-root .a-exclusion-rule {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid var(--a-border);
+  padding: 10px 14px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+}
+.admin-root .a-visitor-selection {
+  background: var(--a-surface-alt);
+  flex-wrap: wrap;
+}
+.admin-root .a-exclusion-form {
+  display: grid;
+  gap: 16px;
+}
+.admin-root .a-exclusion-rule {
+  margin-bottom: 8px;
+}
+.admin-root .a-exclusion-rule code {
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+.admin-root .a-exclusion-form textarea {
+  font-family: ui-monospace, monospace;
+  width: 100%;
+  resize: vertical;
+}
+.admin-root .a-exclusion-footer {
+  justify-content: flex-end;
+}
+.admin-root .a-visitor-delete:hover {
+  color: #b4233b;
+  background: #b4233b0d;
+}
+.admin-root .a-visitor-footnote {
+  font-size: 11px;
+  margin-top: 12px;
+}
+.admin-root .a-refresh-button {
+  border-radius: 10px;
+  gap: 8px;
+}
+.admin-root .a-visitor-card-select {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  color: var(--a-muted);
+}
+@media (prefers-reduced-motion: reduce) {
+  .admin-root .a-refresh-button .a-spin {
+    animation: none;
+  }
+}
 .a-modal > header {
   display: flex;
   justify-content: space-between;

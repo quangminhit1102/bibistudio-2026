@@ -208,7 +208,7 @@ test(
         "Nháp không mất",
       );
       await shot("revision-conflict");
-      await page.getByRole("button", { name: "Tải lại dữ liệu", exact: true }).click();
+      await page.getByRole("button", { name: "Làm mới", exact: true }).click();
       await page.getByLabel("Tên hiển thị", { exact: true }).filter({ visible: true }).waitFor();
       await page.waitForFunction(
         () =>

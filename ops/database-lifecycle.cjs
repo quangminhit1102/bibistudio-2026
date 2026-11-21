@@ -19,6 +19,8 @@ async function runDatabaseTool(config, dir, command, manifest) {
       "profile-cleanup",
       "context-status",
       "context-migrate",
+      "controls-status",
+      "controls-migrate",
       "visitor-status",
       "visitor-migrate",
       "migrate",
@@ -33,6 +35,7 @@ async function runDatabaseTool(config, dir, command, manifest) {
   )
     throw new Error("Unsupported database operation");
   const contextAction = command.startsWith("context-") ? command.slice(8) : null;
+  const controlsAction = command.startsWith("controls-") ? command.slice(9) : null;
   const profileCommand = command.startsWith("profile-");
   const visitorAction = command.startsWith("visitor-") ? command.slice(8) : null;
   const profileAction = profileCommand ? command.slice(8) : null;
@@ -46,33 +49,35 @@ async function runDatabaseTool(config, dir, command, manifest) {
   );
   const backup = command === "backup" || profileAction === "backup";
   const probe = command === "probe";
-  const args = contextAction
-    ? [path.join(dir, "backend/dist/visitors/context-cli.js"), contextAction]
-    : visitorAction
-      ? [path.join(dir, "backend/dist/visitors/cli.js"), visitorAction]
-      : profileCommand
-        ? profileAction === "backup"
-          ? [path.join(dir, "backend/dist/profile/backup-cli.js"), manifest.releaseId]
-          : [path.join(dir, "backend/dist/profile/cli.js"), profileAction]
-        : logCommand
-          ? logAction === "probe"
-            ? [
-                path.join(dir, "backend/dist/access-logs/probe-cli.js"),
-                manifest.releaseId,
-                manifest.sourceSha,
-                config.baseUrl,
-              ]
-            : [path.join(dir, "backend/dist/access-logs/cli.js"), logAction]
-          : probe
-            ? [
-                path.join(dir, "backend/dist/db/probe-cli.js"),
-                manifest.releaseId,
-                manifest.sourceSha,
-                config.baseUrl,
-              ]
-            : backup
-              ? [path.join(dir, "backend/dist/db/backup-cli.js"), manifest.releaseId]
-              : [path.join(dir, "backend/dist/db/cli.js"), command];
+  const args = controlsAction
+    ? [path.join(dir, "backend/dist/visitors/controls-cli.js"), controlsAction]
+    : contextAction
+      ? [path.join(dir, "backend/dist/visitors/context-cli.js"), contextAction]
+      : visitorAction
+        ? [path.join(dir, "backend/dist/visitors/cli.js"), visitorAction]
+        : profileCommand
+          ? profileAction === "backup"
+            ? [path.join(dir, "backend/dist/profile/backup-cli.js"), manifest.releaseId]
+            : [path.join(dir, "backend/dist/profile/cli.js"), profileAction]
+          : logCommand
+            ? logAction === "probe"
+              ? [
+                  path.join(dir, "backend/dist/access-logs/probe-cli.js"),
+                  manifest.releaseId,
+                  manifest.sourceSha,
+                  config.baseUrl,
+                ]
+              : [path.join(dir, "backend/dist/access-logs/cli.js"), logAction]
+            : probe
+              ? [
+                  path.join(dir, "backend/dist/db/probe-cli.js"),
+                  manifest.releaseId,
+                  manifest.sourceSha,
+                  config.baseUrl,
+                ]
+              : backup
+                ? [path.join(dir, "backend/dist/db/backup-cli.js"), manifest.releaseId]
+                : [path.join(dir, "backend/dist/db/cli.js"), command];
   try {
     const { stdout } = await execute(path.join(config.runtimeBin, "node"), args, {
       cwd: path.join(dir, "backend"),
@@ -134,11 +139,20 @@ async function verifyReleaseProbe(config, { dir, manifest }, { run = runDatabase
     );
   }
   if (manifest.accessLogs && !manifest.visitorAnalytics) {
+    // Historical access-log releases remain supported.
     await verifyAccessLogAssets(path.join(dir, "backend"), manifest.accessLogs);
     const logs = await run(config, dir, "access-log-probe", manifest);
     if (logs?.ok !== true || logs.accessLogs !== true || logs.releaseId !== manifest.releaseId)
       throw new Error("Access log release probe failed");
     return { ...receipt, accessLogs: true };
+  }
+  if (manifest.visitorControls) {
+    const controls = require("./visitor-controls-metadata.cjs");
+    await controls.verifyVisitorControlsAssets(path.join(dir, "backend"), manifest.visitorControls);
+    controls.checkVisitorControlsCompatibility(
+      manifest.visitorControls,
+      await run(config, dir, "controls-status", manifest),
+    );
   }
   return receipt;
 }

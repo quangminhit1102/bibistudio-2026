@@ -17,6 +17,7 @@ const execute = promisify(execFile);
 const { prepareProfileLifecycle } = require("./profile-lifecycle.cjs");
 const { prepareVisitorLifecycle } = require("./visitor-lifecycle.cjs");
 const { prepareVisitorContext } = require("./visitor-context-lifecycle.cjs");
+const { prepareVisitorControls } = require("./visitor-controls-lifecycle.cjs");
 const {
   validateRelayConfiguration,
   installRelayRouting,
@@ -271,6 +272,12 @@ async function activateRelease(config, id, hooks = {}) {
     { backupReceipt: profileBackup, run: hooks.contextRun },
   );
   if (manifest.visitorContext) await installRelayRouting(config);
+  await prepareVisitorControls(
+    config,
+    old ? { dir: old, manifest: oldManifest } : null,
+    { dir, manifest },
+    { backupReceipt: profileBackup, run: hooks.controlsRun },
+  );
   await mergeAssets(config, dir);
   try {
     await point(config, dir);
@@ -369,6 +376,12 @@ async function rollbackRelease(config, id, hooks = {}) {
   );
   if (manifest.visitorContext) await installRelayRouting(config);
   let degradedAdmin = false;
+  await prepareVisitorControls(
+    config,
+    current ? { dir: current, manifest: active } : null,
+    { dir, manifest },
+    { backupReceipt: profileBackup, run: hooks.controlsRun },
+  );
   if (manifest.database || active?.database) {
     if (manifest.database) {
       await verifyDatabaseAssets(path.join(dir, "backend"), manifest.database);

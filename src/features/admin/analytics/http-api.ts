@@ -67,6 +67,23 @@ export function createVisitorApi(http: AdminHttpClient) {
     return params;
   };
   return {
+    exclusions: (signal?: AbortSignal) =>
+      http.request<{ revision: number; rules: string[] }>(`${root}/exclusions`, { signal }),
+    saveExclusions: (input: { revision: number; rules: string[] }) =>
+      http.request<{ revision: number; rules: string[] }>(`${root}/exclusions`, {
+        method: "PUT",
+        body: input,
+      }),
+    deleteVisitors: (ids: string[]) =>
+      http.request<{ deletedVisitors: number; deletedSessions: number; visitorDeleted: boolean }>(
+        `${root}/bulk-delete`,
+        { method: "POST", body: { ids } },
+      ),
+    deleteSession: (visitorId: string, sessionId: string) =>
+      http.request<{ deletedVisitors: number; deletedSessions: number; visitorDeleted: boolean }>(
+        `${root}/${encodeURIComponent(visitorId)}/sessions/${encodeURIComponent(sessionId)}`,
+        { method: "DELETE" },
+      ),
     list: (
       input: { page: number; pageSize: number; search: string; filters: Record<string, string> },
       signal?: AbortSignal,

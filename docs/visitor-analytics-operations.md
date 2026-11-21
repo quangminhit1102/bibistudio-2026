@@ -1,5 +1,19 @@
 # Khách truy cập: dữ liệu, kiểm chứng và vận hành
 
+## Quản lý khách truy cập và loại trừ IP (21/11/2026)
+
+Thiết kế đã duyệt: [visitor-controls](superpowers/specs/2026-11-21-visitor-controls-design.md). Manifest7 bổ sung capability `visitorControls`, checksum `backend/visitor-controls-migrations/001_controls.sql`, ledger riêng `visitor_controls_schema_migrations` version1 và singleton `visitor_exclusion_settings`. Không thay auth4, visitor-history1 hoặc context1; không sửa các SQL đã phát hành.
+
+Quyền riêng `customer_access.delete` cho xóa khách/phiên và `customer_access.manage_exclusions` cho đọc/sửa IP loại trừ; mỗi thao tác còn cần `customer_access.view`. Admin toàn quyền mặc định; User chỉ xem. Có thể cấp riêng trong Phân quyền.
+
+`Loại trừ IP` nhận tối đa200 rule: IP đầy đủ IPv4/IPv6 hoặc wildcard bốn nhóm IPv4. Dấu `*` thay một nhóm; không nhận regex hoặc `*.*.*.*`. Các rule chỉ áp dụng cho batch mới sau khi lưu, không xóa lịch sử. Nguồn so khớp là IP thực sự sẽ lưu: resolver đã xác minh trước, relay có chữ ký tiếp theo; không tin payload hoặc tự chọn X-Forwarded-For. Khớp rule trả204, không tạo/cập nhật analytics, không geo lookup/cookie mới. Vẫn duy trì xác thực relay và security receipt chống replay. Lỗi đọc cấu hình trả lỗi collector có kiểm soát, không ảnh hưởng render website.
+
+Checkbox chọn các khách ở trang hiện tại, đổi trang/bộ lọc thì bỏ chọn. Xóa khách xóa mọi phiên kể cả ngoài khoảng ngày lọc; xóa phiên chỉ xóa đúng phiên. Popup xác nhận nêu không thể hoàn tác. Xóa không phải chặn tracking: lần truy cập sau có thể ghi nhận lại. Không dùng production để test xóa. Các bản ghi release probe không được xóa qua UI/API quản trị.
+
+Receiver cần cập nhật từ ops đã commit, giữ bản sao tools trước cập nhật. Gói mới chỉ hoạt động sau paired backup/restore verifier → auth seed/migrations hiện có → context readiness → controls status/migrate/status → activation. Controls CLI chỉ chạy schema mutation trong lệnh bảo trì, không tự DDL khi server khởi động. Native backup hiện có sao lưu mọi bảng InnoDB, bao gồm settings/ledger mới.
+
+Rollback dùng tool controls của current/candidate để kiểm tra rồi giữ nguyên DB; không down migration và không tự phục hồi bản ghi đã xóa. Bản trước manifest7 vẫn chạy với schema cộng thêm nhưng chưa có chức năng xóa/loại trừ IP; rule được giữ cho lần forward, không được hiểu là rule vẫn được thực thi trong collector cũ. Khi cần giữ tính năng loại trừ, chọn release manifest7 đã thành công.
+
 **Cập nhật 14/11/2026:** relay manifest6 đã phát hành và rollback/forward thật đã đạt; IP quan sát và quốc gia ước lượng có trên UI. Giữ trust=false. Xem [biên bản hiện tại](superpowers/reports/2026-11-14-visitor-relay-acceptance.md); đoạn 13/11 dưới đây là mốc lịch sử.
 
 Trạng thái ngày 13/11/2026: đã triển khai và kiểm chứng local theo [thiết kế đã duyệt](superpowers/specs/2026-11-13-visitor-analytics-design.md). Đã phát hành production release ee12307-43382604855 và kiểm chứng rollback/forward; xem [biên bản](superpowers/reports/2026-11-13-visitor-analytics-production-release.md). Chủ website xác nhận **chưa gửi yêu cầu Tino**; không có bằng chứng hosting đã sửa nguồn IP. Không bật `CLIENT_IP_SOURCE_VERIFIED` chỉ để có số liệu trên UI.

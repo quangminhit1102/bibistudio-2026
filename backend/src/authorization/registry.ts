@@ -1,6 +1,6 @@
 /** Register implemented capabilities; new resources need rows, never new RBAC tables. */
 const resources: Record<string, { label: string; actions: string[] }> = {
-  customer_access: { label: "khách truy cập", actions: ["view"] },
+  customer_access: { label: "khách truy cập", actions: ["view", "delete", "manage_exclusions"] },
   account: {
     label: "tài khoản",
     actions: [
@@ -27,6 +27,7 @@ const resources: Record<string, { label: string; actions: string[] }> = {
   components: { label: "thành phần giao diện", actions: ["view"] },
 };
 const actions: Record<string, string> = {
+  manage_exclusions: "Quản lý loại trừ IP",
   view: "Xem",
   create: "Tạo",
   update: "Chỉnh sửa",

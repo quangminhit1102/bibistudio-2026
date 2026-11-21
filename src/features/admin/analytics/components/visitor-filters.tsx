@@ -82,10 +82,12 @@ export function VisitorFilters({
           )}
         </div>
       )}
-      <p className="a-muted">
-        Từ {dates.from.split("-").reverse().join("/")} đến hết ngày{" "}
-        {dates.to.split("-").reverse().join("/")} · giờ Việt Nam. Một phiên mới bắt đầu sau hơn 30
-        phút không hoạt động.
+      <p className="a-muted a-visitor-date-note">
+        <em>
+          Từ {dates.from.split("-").reverse().join("/")} đến hết ngày{" "}
+          {dates.to.split("-").reverse().join("/")} · giờ Việt Nam. Một phiên mới bắt đầu sau hơn 30
+          phút không hoạt động.
+        </em>
       </p>
     </div>
   );

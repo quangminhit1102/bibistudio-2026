@@ -266,6 +266,8 @@ export async function setupLocalDatabase() {
     await migrateVisitorHistory(pool, join(root, "backend/visitor-migrations"));
     const { migrateVisitorContext } = require("../backend/dist/visitors/context-schema.js");
     await migrateVisitorContext(pool, join(root, "backend/visitor-context-migrations"));
+    const { migrateVisitorControls } = require("../backend/dist/visitors/controls-schema.js");
+    await migrateVisitorControls(pool, join(root, "backend/visitor-controls-migrations"));
     const { migrateAccessLogs } = require("../backend/dist/access-logs/schema.js");
     await migrateAccessLogs(pool, join(root, "backend/access-log-migrations"));
   } finally {
