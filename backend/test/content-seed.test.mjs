@@ -78,14 +78,18 @@ test("seedContent inserts once, holds the author FK, and is idempotent", async (
   assert.equal(author.active, 1);
 
   const [posts] = await f.pool.query(
-    "SELECT category_id, author_id, status, publish_at FROM posts ORDER BY slug",
+    "SELECT category_id, author_id, status, publish_at, content FROM posts ORDER BY slug",
   );
   for (const post of posts) {
     assert.ok(post.category_id, "post category resolved by slug");
     assert.equal(post.author_id, SYSTEM_AUTHOR_ID);
     assert.equal(post.status, "published");
     assert.ok(post.publish_at);
+    const envelope = JSON.parse(post.content);
+    assert.equal(envelope.format, "html-v1");
+    assert.equal(typeof envelope.html, "string");
   }
+  assert.match(JSON.parse(posts[0].content).html, /<p>Nội dung 1<\/p>/);
   const [products] = await f.pool.query("SELECT category_id, image_ids, tags FROM products");
   assert.ok(products[0].category_id, "product category resolved by slug");
   assert.deepEqual(products[0].image_ids, ["catalogue-image-san-pham-a-0"]);

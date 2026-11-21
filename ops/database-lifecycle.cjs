@@ -23,6 +23,7 @@ async function runDatabaseTool(config, dir, command, manifest) {
       "controls-migrate",
       "content-status",
       "content-migrate",
+      "content-seed",
       "visitor-status",
       "visitor-migrate",
       "migrate",

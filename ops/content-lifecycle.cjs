@@ -24,6 +24,7 @@ async function prepareContent(config, current, candidate, { backupReceipt, run }
       await execute(config, capable.dir, "content-migrate", capable.manifest);
     status = await execute(config, capable.dir, "content-status", capable.manifest);
     checkContentCompatibility(capable.manifest.content, status);
+    await execute(config, capable.dir, "content-seed", capable.manifest);
   } else if (status.state !== "complete")
     throw new Error("Content rollback requires complete schema");
   return status;

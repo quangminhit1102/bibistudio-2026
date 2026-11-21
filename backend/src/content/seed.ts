@@ -47,6 +47,14 @@ export const SYSTEM_AUTHOR_ID = "author-bibi-studio";
 const toDate = (value: string | Date | null | undefined): Date | null =>
   value == null ? null : value instanceof Date ? value : new Date(value);
 
+/**
+ * The admin editor stores rich content in the `html-v1` envelope
+ * (`writeRichContent` in `src/features/admin/content/rich-content.ts`). Seeding raw HTML
+ * would render as escaped literal text in the editor and corrupt on save; store the
+ * envelope instead so seeded posts round-trip through `readRichContent`/`writeRichContent`.
+ */
+const richEnvelope = (html: string): string => JSON.stringify({ format: "html-v1", html });
+
 async function upsertCategory(
   c: PoolConnection,
   table: "content_categories" | "product_categories",
@@ -106,7 +114,7 @@ export async function seedContent(pool: Pool, data: ContentSeedData): Promise<nu
           post.slug,
           post.title,
           post.excerpt ?? null,
-          post.content,
+          richEnvelope(post.content),
           post.categorySlug ? contentCategoryIds.get(post.categorySlug) ?? null : null,
           SYSTEM_AUTHOR_ID,
           post.status ?? "published",
