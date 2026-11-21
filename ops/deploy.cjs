@@ -18,6 +18,7 @@ const { prepareProfileLifecycle } = require("./profile-lifecycle.cjs");
 const { prepareVisitorLifecycle } = require("./visitor-lifecycle.cjs");
 const { prepareVisitorContext } = require("./visitor-context-lifecycle.cjs");
 const { prepareVisitorControls } = require("./visitor-controls-lifecycle.cjs");
+const { prepareContent } = require("./content-lifecycle.cjs");
 const {
   validateRelayConfiguration,
   installRelayRouting,
@@ -278,6 +279,12 @@ async function activateRelease(config, id, hooks = {}) {
     { dir, manifest },
     { backupReceipt: profileBackup, run: hooks.controlsRun },
   );
+  await prepareContent(
+    config,
+    old ? { dir: old, manifest: oldManifest } : null,
+    { dir, manifest },
+    { backupReceipt: profileBackup, run: hooks.contentRun },
+  );
   await mergeAssets(config, dir);
   try {
     await point(config, dir);
@@ -381,6 +388,12 @@ async function rollbackRelease(config, id, hooks = {}) {
     current ? { dir: current, manifest: active } : null,
     { dir, manifest },
     { backupReceipt: profileBackup, run: hooks.controlsRun },
+  );
+  await prepareContent(
+    config,
+    current ? { dir: current, manifest: active } : null,
+    { dir, manifest },
+    { backupReceipt: profileBackup, run: hooks.contentRun },
   );
   if (manifest.database || active?.database) {
     if (manifest.database) {

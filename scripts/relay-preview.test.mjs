@@ -12,7 +12,7 @@ import { makeManifest } from "./release-manifest.mjs";
 import { prepareCountryDataset } from "./prepare-geoip.mjs";
 import { root } from "./runtime.mjs";
 test("compiled local preview includes real PHP proxy and closes relay, pools and links", async (t) => {
-  const f = await createAuthFixture(t, { visitorControls: true });
+  const f = await createAuthFixture(t, { visitorControls: true, content: true });
   await migrateVisitorContext(f.pool, join(root, "backend/visitor-context-migrations"));
   await prepareCountryDataset();
   const dir = await mkdtemp(join(tmpdir(), "bibi-relay-preview-"));
@@ -34,6 +34,7 @@ test("compiled local preview includes real PHP proxy and closes relay, pools and
       "visitor-migrations",
       "visitor-context-migrations",
       "visitor-controls-migrations",
+      "content-migrations",
       "geoip",
       "relay",
     ])

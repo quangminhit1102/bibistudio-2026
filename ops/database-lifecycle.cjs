@@ -21,6 +21,8 @@ async function runDatabaseTool(config, dir, command, manifest) {
       "context-migrate",
       "controls-status",
       "controls-migrate",
+      "content-status",
+      "content-migrate",
       "visitor-status",
       "visitor-migrate",
       "migrate",
@@ -36,6 +38,7 @@ async function runDatabaseTool(config, dir, command, manifest) {
     throw new Error("Unsupported database operation");
   const contextAction = command.startsWith("context-") ? command.slice(8) : null;
   const controlsAction = command.startsWith("controls-") ? command.slice(9) : null;
+  const contentAction = command.startsWith("content-") ? command.slice(8) : null;
   const profileCommand = command.startsWith("profile-");
   const visitorAction = command.startsWith("visitor-") ? command.slice(8) : null;
   const profileAction = profileCommand ? command.slice(8) : null;
@@ -49,10 +52,12 @@ async function runDatabaseTool(config, dir, command, manifest) {
   );
   const backup = command === "backup" || profileAction === "backup";
   const probe = command === "probe";
-  const args = controlsAction
-    ? [path.join(dir, "backend/dist/visitors/controls-cli.js"), controlsAction]
-    : contextAction
-      ? [path.join(dir, "backend/dist/visitors/context-cli.js"), contextAction]
+  const args = contentAction
+    ? [path.join(dir, "backend/dist/content/cli.js"), contentAction]
+    : controlsAction
+      ? [path.join(dir, "backend/dist/visitors/controls-cli.js"), controlsAction]
+      : contextAction
+        ? [path.join(dir, "backend/dist/visitors/context-cli.js"), contextAction]
       : visitorAction
         ? [path.join(dir, "backend/dist/visitors/cli.js"), visitorAction]
         : profileCommand
@@ -152,6 +157,14 @@ async function verifyReleaseProbe(config, { dir, manifest }, { run = runDatabase
     controls.checkVisitorControlsCompatibility(
       manifest.visitorControls,
       await run(config, dir, "controls-status", manifest),
+    );
+  }
+  if (manifest.content) {
+    const content = require("./content-metadata.cjs");
+    await content.verifyContentAssets(path.join(dir, "backend"), manifest.content);
+    content.checkContentCompatibility(
+      manifest.content,
+      await run(config, dir, "content-status", manifest),
     );
   }
   return receipt;

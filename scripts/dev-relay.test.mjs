@@ -9,6 +9,7 @@ import { startDevelopment } from "./dev.mjs";
 import { assertPortsFree } from "./process-group.mjs";
 import { createProfileAuthFixture } from "../tests/e2e/helpers/profile-fixture.mjs";
 import { migrateVisitorContext } from "../backend/dist/visitors/context-schema.js";
+import { migrateContent } from "../backend/dist/content/schema.js";
 import { prepareCountryDataset } from "./prepare-geoip.mjs";
 async function port() {
   const server = createServer();
@@ -23,6 +24,7 @@ test(
   async (t) => {
     const f = await createProfileAuthFixture(t);
     await migrateVisitorContext(f.pool, resolve("backend/visitor-context-migrations"));
+    await migrateContent(f.pool, resolve("backend/content-migrations"));
     const dataset = await prepareCountryDataset();
     const ports = await Promise.all([port(), port(), port()]);
     const directory = await mkdtemp(join(tmpdir(), "bibi-relay-dev-"));

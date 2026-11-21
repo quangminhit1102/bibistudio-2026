@@ -8,6 +8,7 @@ const { validateManifest } = require("./release.cjs");
 const { verifyProfileAssets } = require("./profile-metadata.cjs");
 const { verifyVisitorContextAssets } = require("./visitor-context-metadata.cjs");
 const { verifyVisitorControlsAssets } = require("./visitor-controls-metadata.cjs");
+const { verifyContentAssets } = require("./content-metadata.cjs");
 const { verifyVisitorAssets } = require("./visitor-metadata.cjs");
 const deploy = require("./deploy.cjs");
 const { verifyAccessLogAssets } = require("./access-log-metadata.cjs");
@@ -130,6 +131,10 @@ async function acceptArchive(config, id, checksum, file) {
     if (manifest.visitorControls) {
       await verifyVisitorControlsAssets(path.join(staging, "backend"), manifest.visitorControls);
       await fs.access(path.join(staging, "backend/dist/visitors/controls-cli.js"));
+    }
+    if (manifest.content) {
+      await verifyContentAssets(path.join(staging, "backend"), manifest.content);
+      await fs.access(path.join(staging, "backend/dist/content/cli.js"));
     }
     await fs.rename(staging, dest);
   } catch (e) {

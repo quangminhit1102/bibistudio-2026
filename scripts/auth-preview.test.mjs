@@ -11,7 +11,7 @@ import { root } from "./runtime.mjs";
 import { randomBytes } from "node:crypto";
 
 test("auth release preview uses supplied private runtime env and closes pools/dependency link", async (t) => {
-  const f = await createAuthFixture(t, { visitorControls: true });
+  const f = await createAuthFixture(t, { visitorControls: true, content: true });
   const directory = await mkdtemp(join(tmpdir(), "bibi-auth-preview-"));
   t.after(() => rm(directory, { recursive: true, force: true }));
   await mkdir(join(directory, "frontend/assets"), { recursive: true });
@@ -24,7 +24,7 @@ test("auth release preview uses supplied private runtime env and closes pools/de
   );
   for (const name of ["manifest.json", "frontend/version.json"])
     await writeFile(join(directory, name), JSON.stringify(manifest));
-  for (const name of ["dist", "migrations", "visitor-migrations", "visitor-controls-migrations"])
+  for (const name of ["dist", "migrations", "visitor-migrations", "visitor-controls-migrations", "content-migrations"])
     await cp(join(root, "backend", name), join(directory, "backend", name), { recursive: true });
   for (const name of ["package.json", "package-lock.json", "analytics-catalogue.json"])
     await cp(join(root, "backend", name), join(directory, "backend", name));
