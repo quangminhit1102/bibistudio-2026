@@ -164,6 +164,11 @@ test(
         await p.goto(base + path, { waitUntil: "domcontentloaded", timeout: 90000 });
         if (trackingReady) {
           await trackingReady;
+          // The dynamic module response precedes React's effect that creates
+          // the tracker. Let that effect commit before freezing the test clock.
+          await p.evaluate(
+            () => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))),
+          );
         }
         console.log("relay-e2e: loaded " + path);
         if (!path.startsWith("/admin"))
