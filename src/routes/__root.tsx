@@ -83,7 +83,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "BiBi Studio" },
-      { name: "description", content: "BiBi Studio — sổ tay, thiệp, postcard và giấy viết thư lấy cảm hứng từ Việt Nam." },
       { name: "author", content: "BiBi Studio" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
