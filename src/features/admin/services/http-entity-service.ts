@@ -29,7 +29,7 @@ export function createHttpEntityService<K extends EntityKey>(
       if (input.search) q.set("q", input.search);
       if (input.sort) { q.set("sort", input.sort.field); q.set("dir", input.sort.direction); }
       for (const [k, v] of Object.entries(input.filters ?? {})) if (v) q.set("f_" + k, v);
-      return client.request<ListResult<AdminModels[K]>>(`${base}?${q}`);
+      return client.request<ListResult<AdminModels[K]>>(`${base}?${q}`, { signal: input.signal });
     },
     async get(id, signal) {
       return client.request<AdminModels[K]>(`${base}/${id}`, { signal });
@@ -58,8 +58,15 @@ export function createHttpEntityService<K extends EntityKey>(
       return { updated, failures };
     },
     async export(input) {
-      const result = await this.list({ ...input, page: 1, pageSize: 200 });
-      return result.items;
+      const rows: AdminModels[K][] = [];
+      let page = 1;
+      while (true) {
+        const result = await this.list({ ...input, page, pageSize: 200 });
+        rows.push(...result.items);
+        if (rows.length >= result.total) break;
+        page++;
+      }
+      return rows;
     },
   };
 }

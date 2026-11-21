@@ -21,7 +21,15 @@ describe("createHttpEntityService", () => {
     const { client, request } = mockClient();
     request.mockResolvedValue(customersResult);
     await createHttpEntityService(client, "customers").list({ page: 1, pageSize: 10 });
-    expect(request).toHaveBeenCalledWith("/api/customers?page=1&size=10");
+    expect(request).toHaveBeenCalledWith("/api/customers?page=1&size=10", { signal: undefined });
+  });
+
+  it("list forwards the abort signal", async () => {
+    const { client, request } = mockClient();
+    request.mockResolvedValue(customersResult);
+    const signal = new AbortController().signal;
+    await createHttpEntityService(client, "customers").list({ page: 1, pageSize: 10, signal });
+    expect(request).toHaveBeenCalledWith("/api/customers?page=1&size=10", { signal });
   });
 
   it("resolves categories to content vs product path by resource", async () => {
@@ -29,8 +37,12 @@ describe("createHttpEntityService", () => {
     request.mockResolvedValue(customersResult);
     await createHttpEntityService(client, "categories", "content").list({ page: 1, pageSize: 10 });
     await createHttpEntityService(client, "categories", "bookstore").list({ page: 1, pageSize: 10 });
-    expect(request).toHaveBeenNthCalledWith(1, "/api/content-categories?page=1&size=10");
-    expect(request).toHaveBeenNthCalledWith(2, "/api/product-categories?page=1&size=10");
+    expect(request).toHaveBeenNthCalledWith(1, "/api/content-categories?page=1&size=10", {
+      signal: undefined,
+    });
+    expect(request).toHaveBeenNthCalledWith(2, "/api/product-categories?page=1&size=10", {
+      signal: undefined,
+    });
   });
 
   it("serializes search, sort, and f_* filters as query params", async () => {
@@ -125,12 +137,32 @@ describe("createHttpEntityService", () => {
     expect(result.failures).toEqual([]);
   });
 
-  it("export lists page 1 with 200 items and returns just items", async () => {
+  it("export returns a single page when total fits one page", async () => {
     const { client, request } = mockClient();
     request.mockResolvedValue({ items: [1, 2, 3], total: 3, page: 1, pageSize: 200 });
     const items = await createHttpEntityService(client, "posts").export({ page: 5, pageSize: 10 });
-    expect(request).toHaveBeenCalledWith("/api/posts?page=1&size=200");
+    expect(request).toHaveBeenCalledTimes(1);
+    expect(request).toHaveBeenCalledWith("/api/posts?page=1&size=200", { signal: undefined });
     expect(items).toEqual([1, 2, 3]);
+  });
+
+  it("export paginates through all pages when total exceeds page size", async () => {
+    const { client, request } = mockClient();
+    const page1 = Array.from({ length: 200 }, (_, i) => i);
+    const page2 = Array.from({ length: 200 }, (_, i) => 200 + i);
+    const page3 = Array.from({ length: 50 }, (_, i) => 400 + i);
+    request
+      .mockResolvedValueOnce({ items: page1, total: 450, page: 1, pageSize: 200 })
+      .mockResolvedValueOnce({ items: page2, total: 450, page: 2, pageSize: 200 })
+      .mockResolvedValueOnce({ items: page3, total: 450, page: 3, pageSize: 200 });
+    const items = await createHttpEntityService(client, "posts").export({ page: 1, pageSize: 200 });
+    expect(request).toHaveBeenCalledTimes(3);
+    expect(request).toHaveBeenNthCalledWith(1, "/api/posts?page=1&size=200", { signal: undefined });
+    expect(request).toHaveBeenNthCalledWith(2, "/api/posts?page=2&size=200", { signal: undefined });
+    expect(request).toHaveBeenNthCalledWith(3, "/api/posts?page=3&size=200", { signal: undefined });
+    expect(items).toHaveLength(450);
+    expect(items[0]).toBe(0);
+    expect(items[449]).toBe(449);
   });
 
   it("rejects unsupported entities", () => {
