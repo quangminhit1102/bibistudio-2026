@@ -12,7 +12,9 @@ import accessLogMetadata from "../ops/access-log-metadata.cjs";
 import visitorMetadata from "../ops/visitor-metadata.cjs";
 import contextMetadata from "../ops/visitor-context-metadata.cjs";
 import controlsMetadata from "../ops/visitor-controls-metadata.cjs";
+import contentMetadata from "../ops/content-metadata.cjs";
 import { writeAnalyticsCatalogue } from "./analytics-catalogue.mjs";
+import { writeContentSeed } from "./generate-content-seed.mjs";
 import { prepareCountryDataset } from "./prepare-geoip.mjs";
 
 export async function validateBundle(dir) {
@@ -61,6 +63,10 @@ export async function validateBundle(dir) {
     );
     await stat(join(dir, "backend/dist/visitors/controls-cli.js"));
   }
+  if (manifest.content) {
+    await contentMetadata.verifyContentAssets(join(dir, "backend"), manifest.content);
+    await stat(join(dir, "backend/dist/content/cli.js"));
+  }
   async function scan(path) {
     for (const entry of await readdir(path, { withFileTypes: true })) {
       if (
@@ -84,6 +90,7 @@ export async function buildRelease({
 } = {}) {
   sourceSha ??= execFileSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).trim();
   await writeAnalyticsCatalogue(root);
+  await writeContentSeed(root);
   await prepareCountryDataset();
   const manifest = makeManifest(
     sourceSha,
@@ -94,6 +101,7 @@ export async function buildRelease({
     await visitorMetadata.createVisitorMetadata(join(root, "backend")),
     await contextMetadata.createVisitorContextMetadata(join(root, "backend")),
     await controlsMetadata.createVisitorControlsMetadata(join(root, "backend")),
+    await contentMetadata.createContentMetadata(join(root, "backend")),
   );
   const base = resolve(outputDir);
   const bundleDir = join(base, manifest.releaseId);
@@ -156,11 +164,13 @@ export async function buildRelease({
     join(root, "backend/analytics-catalogue.json"),
     join(bundleDir, "backend/analytics-catalogue.json"),
   );
+  await cp(join(root, "backend/content-seed.json"), join(bundleDir, "backend/content-seed.json"));
   for (const name of [
     "relay",
     "geoip",
     "visitor-context-migrations",
     "visitor-controls-migrations",
+    "content-migrations",
   ])
     await cp(join(root, "backend", name), join(bundleDir, "backend", name), { recursive: true });
   for (const file of ["manifest.json", "frontend/version.json"])
