@@ -4,7 +4,7 @@ import { createDatabaseFixture } from "./database.mjs";
 
 export async function createAuthFixture(
   t,
-  { visitorHistory = true, visitorControls = false } = {},
+  { visitorHistory = true, visitorControls = false, content = false } = {},
 ) {
   const fixture = await createDatabaseFixture(t);
   const { migrate } = await import("../../dist/db/migrate.js");
@@ -25,6 +25,13 @@ export async function createAuthFixture(
     await migrateVisitorControls(
       fixture.pool,
       fileURLToPath(new URL("../../visitor-controls-migrations", import.meta.url)),
+    );
+  }
+  if (content) {
+    const { migrateContent } = await import("../../dist/content/schema.js");
+    await migrateContent(
+      fixture.pool,
+      fileURLToPath(new URL("../../content-migrations", import.meta.url)),
     );
   }
   const config = {

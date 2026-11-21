@@ -41,7 +41,7 @@ test("unknown API routes are JSON 404; unsupported methods are 405", async (t) =
 test("compiled CommonJS server starts inside an ESM repo and serves HTTP", async (t) => {
   const { createAuthFixture } = await import("./helpers/auth.mjs");
   const { randomBytes } = await import("node:crypto");
-  const fixture = await createAuthFixture(t, { visitorControls: true });
+  const fixture = await createAuthFixture(t, { visitorControls: true, content: true });
   const child = spawn(process.execPath, ["dist/server.js"], {
     cwd: new URL("../", import.meta.url),
     env: {

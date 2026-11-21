@@ -51,6 +51,7 @@ export function createRuntime(env: NodeJS.ProcessEnv = process.env, clock: Clock
       : {}),
     visitorHistory: { schemaDirectory: resolve(__dirname, "../visitor-migrations") },
     visitorControls: { schemaDirectory: resolve(__dirname, "../visitor-controls-migrations") },
+    content: { schemaDirectory: resolve(__dirname, "../content-migrations") },
     ...(countryLookup
       ? { visitorContext: { schemaDirectory: resolve(__dirname, "../visitor-context-migrations") } }
       : {}),

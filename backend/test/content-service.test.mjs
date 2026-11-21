@@ -1,20 +1,14 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { resolve } from "node:path";
-import { readFile } from "node:fs/promises";
 import { createAuthFixture } from "./helpers/auth.mjs";
 
 const directory = resolve("backend/content-migrations");
 
-async function migrateContent(pool) {
-  const sql = await readFile(resolve("backend/content-migrations/001_content.sql"), "utf8");
-  for (const step of sql.split(";").map((s) => s.trim()).filter(Boolean)) await pool.query(step);
-}
-
 async function setup(t) {
   const f = await createAuthFixture(t);
-  process.env.BIBI_CONTENT_MIGRATIONS = directory;
-  await migrateContent(f.pool);
+  const { migrateContent } = await import("../dist/content/schema.js");
+  await migrateContent(f.pool, directory);
   const { createContentService } = await import("../dist/content/service.js");
   const service = createContentService(f.pool, f.clock);
   const grant = await f.auth.login({ username: "admin", password: f.secrets.masterPassword });

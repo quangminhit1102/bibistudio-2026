@@ -27,6 +27,8 @@ import { visitorControlsRoutes } from "./visitors/controls-routes";
 import { createVisitorControlsService } from "./visitors/controls-service";
 import { visitorControlsSchemaStatus } from "./visitors/controls-schema";
 import { contentSchemaStatus } from "./content/schema";
+import { contentRoutes } from "./content/routes";
+import { createContentService } from "./content/service";
 
 export interface AppOptions {
   db?: Pool;
@@ -270,6 +272,19 @@ export function createApp(release: ReleaseInfo, options: AppOptions = {}): Expre
     app.use(["/api/roles", "/api/permissions", "/api/audit"], () => {
       throw new ApiError(503, "NOT_READY", "Dịch vụ chưa sẵn sàng");
     });
+  if (auth && authConfig && options.db && options.content && options.config)
+    app.use(
+      "/api",
+      contentRoutes(
+        createContentService(options.db, options.clock ?? systemClock),
+        auth,
+        options.config,
+      ),
+    );
+  else
+    app.use("/api/content", (_req, _res, next) =>
+      next(new ApiError(503, "CONTENT_NOT_READY", "Dịch vụ nội dung chưa sẵn sàng")),
+    );
   app.get("/api/version", (_req, res) => {
     res.json({ releaseId: release.releaseId, sourceSha: release.sourceSha });
   });
