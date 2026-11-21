@@ -150,7 +150,21 @@ test(
       async function go(p, path) {
         console.log("relay-e2e: navigating " + path);
         await p.clock.resume();
-        await p.goto(base + path, { waitUntil: "networkidle", timeout: 90000 });
+        // The Vite development server holds a live HMR connection, so
+        // `networkidle` is not a reliable definition of page readiness here.
+        // The following assertions exercise the real relay and page behavior.
+        const trackingReady =
+          path.startsWith("/admin")
+            ? undefined
+            : p.waitForResponse(
+                (response) =>
+                  new URL(response.url()).pathname.endsWith("/src/lib/visitor-runtime.ts"),
+                { timeout: 20000 },
+              );
+        await p.goto(base + path, { waitUntil: "domcontentloaded", timeout: 90000 });
+        if (trackingReady) {
+          await trackingReady;
+        }
         console.log("relay-e2e: loaded " + path);
         if (!path.startsWith("/admin"))
           await p.clock.pauseAt((await p.evaluate(() => Date.now())) + 1000);
