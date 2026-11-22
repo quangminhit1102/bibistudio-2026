@@ -45,7 +45,14 @@ export function useEditorSession(entity: "posts" | "products", id?: string) {
           editable as Partial<CreateInput<typeof entity>>,
           snapshot.revision,
         );
-      else await service.create({ ...config.defaults, ...editable } as CreateInput<typeof entity>);
+      else
+        await service.create({
+          ...config.defaults,
+          ...editable,
+          ...(entity === "posts" && runtime.session
+            ? { authorId: runtime.session.userId }
+            : {}),
+        } as CreateInput<typeof entity>);
       await query.invalidateQueries({ queryKey: ["bibi-admin"] });
       flushSync(() => dirtyChanged(false));
     },

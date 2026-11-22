@@ -46,8 +46,18 @@ export const postConfig: EntityConfig<"posts"> = {
     { key: "excerpt", label: "Tóm tắt", type: "textarea", full: true },
     { key: "content", label: "Nội dung", type: "rich-text", full: true },
     { key: "imageId", label: "Ảnh đại diện", type: "media", full: true },
-    { key: "seoTitle", label: "Tiêu đề SEO", type: "text" },
-    { key: "seoDescription", label: "Mô tả SEO", type: "textarea" },
+    {
+      key: "seoTitle",
+      label: "Tiêu đề SEO",
+      type: "text",
+      description: "Để trống sẽ dùng tiêu đề bài viết.",
+    },
+    {
+      key: "seoDescription",
+      label: "Mô tả SEO",
+      type: "textarea",
+      description: "Để trống sẽ dùng tóm tắt.",
+    },
   ],
   filters: [
     {

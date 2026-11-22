@@ -193,7 +193,7 @@ export default function ComposeForm({
                 <p className="a-compose-hint">
                   Phục vụ quản lý; không hiển thị trong catalogue sản phẩm.
                 </p>
-                <div className="a-compose-fields">{fields(["price", "compareAt", "stock"])}</div>
+                <div className="a-compose-fields">{fields(["price", "compareAt"])}</div>
               </details>
             )}
             <details className="a-compose-details">
