@@ -39,7 +39,7 @@ test("artifact manifest contains every cPanel public entry", () => {
   assert.deepEqual(artifactEntries, [
     "assets",
     "catalogue",
-      ".htaccess",
+    ".htaccess",
     "bibi-logo.svg",
     "bibi-mark.svg",
     "favicon.svg",
