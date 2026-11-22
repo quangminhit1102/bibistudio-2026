@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import {
-  getPublicPost,
-  getPublicProduct,
+  findPublicPost,
+  findPublicProduct,
+  pickSource,
   getPublicPosts,
   getPublicProducts,
   getPublicCategories,
@@ -11,33 +12,73 @@ import {
 describe("content-api", () => {
   afterEach(() => vi.unstubAllGlobals());
 
-  it("returns null when fetch is unavailable", async () => {
+  const reply = (status: number, contentType: string, body: unknown = {}) => ({
+    ok: status >= 200 && status < 300,
+    status,
+    headers: new Headers({ "content-type": contentType }),
+    json: async () => body,
+  });
+
+  it("reports the API as unavailable when fetch is missing", async () => {
     vi.stubGlobal("fetch", undefined);
-    expect(await getPublicPost("hello-world")).toBeNull();
+    expect(await findPublicPost("hello-world")).toEqual({ status: "unavailable" });
     expect(await getPublicPosts()).toBeNull();
   });
 
-  it("returns null when the request rejects", async () => {
+  it("reports the API as unavailable when the request rejects", async () => {
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("offline")));
-    expect(await getPublicProduct("hello-world")).toBeNull();
+    expect(await findPublicProduct("hello-world")).toEqual({ status: "unavailable" });
     expect(await getPublicProducts()).toBeNull();
   });
 
-  it("returns null on a non-ok response", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, status: 404 }));
-    expect(await getPublicPost("missing")).toBeNull();
+  it("treats the API's own 404 as removed content", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(reply(404, "application/json; charset=utf-8")),
+    );
+    expect(await findPublicPost("missing")).toEqual({ status: "missing" });
+    expect(await findPublicProduct("missing")).toEqual({ status: "missing" });
     expect(await getPublicCollections()).toBeNull();
   });
 
-  it("returns the parsed payload on success", async () => {
+  it("does not read a host error page or a server error as removed content", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(reply(404, "text/html")));
+    expect(await findPublicPost("hello-world")).toEqual({ status: "unavailable" });
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(reply(503, "application/json")));
+    expect(await findPublicProduct("hello-world")).toEqual({ status: "unavailable" });
+  });
+
+  it("returns the parsed payload on success and lets the browser cache it", async () => {
     const payload = {
       slug: "hello-world",
       title: "Hello",
       seo_title: "SEO",
       seo_description: "Desc",
     };
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: async () => payload }));
-    expect(await getPublicPost("hello-world")).toEqual(payload);
+    const fetchMock = vi.fn().mockResolvedValue(reply(200, "application/json", payload));
+    vi.stubGlobal("fetch", fetchMock);
+    expect(await findPublicPost("hello-world")).toEqual({ status: "found", value: payload });
+    expect(fetchMock.mock.calls).toEqual([["/api/public/posts/hello-world"]]);
+  });
+
+  it("never brings removed content back from the bundled copy", () => {
+    const bundled = vi.fn(() => "bundled");
+    expect(pickSource({ status: "missing" }, bundled)).toBeNull();
+    expect(bundled).not.toHaveBeenCalled();
+  });
+
+  it("prefers the API and uses the bundled copy only while the API is unavailable", () => {
+    const bundled = vi.fn(() => "bundled");
+    expect(pickSource({ status: "found", value: "live" }, bundled)).toEqual({
+      from: "api",
+      value: "live",
+    });
+    expect(bundled).not.toHaveBeenCalled();
+    expect(pickSource({ status: "unavailable" }, bundled)).toEqual({
+      from: "bundle",
+      value: "bundled",
+    });
+    expect(pickSource({ status: "unavailable" }, () => undefined)).toBeNull();
   });
 
   it("requests the list endpoints and returns parsed arrays", async () => {
@@ -53,7 +94,7 @@ describe("content-api", () => {
       else if (url === "/api/public/categories?scope=content") json = categories;
       else if (url === "/api/public/collections") json = collections;
       else json = [];
-      return Promise.resolve({ ok: true, json: async () => json });
+      return Promise.resolve(reply(200, "application/json", json));
     });
     vi.stubGlobal("fetch", fetchMock);
 
