@@ -1,4 +1,5 @@
 import type { Pool, RowDataPacket } from "mysql2/promise";
+import type { Clock } from "../config";
 
 const imageIds = (value: unknown): string[] => {
   if (value == null) return [];
@@ -20,7 +21,10 @@ const resolveImage = (value: string): string =>
 const str = (value: unknown): string => (value == null ? "" : String(value));
 const nullable = (value: unknown): string | null => (value == null ? null : String(value));
 
-export function createContentPublicService(pool: Pool) {
+// A published post is public only once its publish time has passed.
+const LIVE_POST = "p.status='published' AND (p.publish_at IS NULL OR p.publish_at <= ?)";
+
+export function createContentPublicService(pool: Pool, clock: Clock) {
   const postShape = (row: RowDataPacket) => {
     const coverRef = row.cover_image_id ?? row.image_id;
     return {
@@ -67,8 +71,9 @@ export function createContentPublicService(pool: Pool) {
          FROM posts p
          LEFT JOIN content_categories c ON c.id=p.category_id
          LEFT JOIN users u ON u.id=p.author_id
-         WHERE p.status='published'
+         WHERE ${LIVE_POST}
          ORDER BY p.publish_at DESC`,
+        [clock.now()],
       );
       return rows.map(postShape);
     },
@@ -79,8 +84,8 @@ export function createContentPublicService(pool: Pool) {
          FROM posts p
          LEFT JOIN content_categories c ON c.id=p.category_id
          LEFT JOIN users u ON u.id=p.author_id
-         WHERE p.slug=? AND p.status='published'`,
-        [slug],
+         WHERE p.slug=? AND ${LIVE_POST}`,
+        [slug, clock.now()],
       );
       return row ? postShape(row) : null;
     },
