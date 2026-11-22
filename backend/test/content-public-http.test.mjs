@@ -16,6 +16,8 @@ const seed = {
       status: "published",
       publishAt: "2026-01-01",
       imageId: "cover-old",
+      coverImageId: "/assets/blog/old.jpg",
+      readTime: "5 phút đọc",
       seoTitle: "SEO cũ",
       seoDescription: "Mô tả cũ",
     },
@@ -55,10 +57,24 @@ const seed = {
       collection: "motivation",
       categorySlug: "motivation",
       status: "published",
-      imageIds: ["image-a-0"],
+      imageIds: ["image-a-0", "/catalogue/a.webp"],
       tags: ["Việt Nam"],
       seoTitle: "SEO A",
       seoDescription: "Mô tả A",
+      nameEn: "Product A",
+      shortDescriptionEn: "Short A",
+      descriptionEn: "Description A",
+      dimensions: "A5",
+      pages: "80",
+      materialVi: "Giấy",
+      materialEn: "Paper",
+      formatVi: "Khổ A5",
+      formatEn: "A5 format",
+      occasion: "birthday",
+      featured: true,
+      sortOrder: 3,
+      imageAltVi: "Alt A",
+      imageAltEn: "Alt A EN",
     },
     {
       productCode: "0002",
@@ -108,7 +124,7 @@ async function buildApp(t) {
   return { f, base };
 }
 
-test("public posts endpoints serve only published posts without auth", async (t) => {
+test("public posts endpoints serve only published posts with full shape", async (t) => {
   const { base } = await buildApp(t);
 
   const list = await fetch(base + "/api/public/posts");
@@ -127,12 +143,21 @@ test("public posts endpoints serve only published posts without auth", async (t)
   assert.equal(post.slug, "post-old");
   assert.equal(post.title, "Post cũ");
   assert.equal(post.seo_title, "SEO cũ");
+  assert.equal(post.category_name, "Cảm hứng");
+  assert.equal(post.author_name, "BiBi Studio");
+  assert.equal(post.read_time, "5 phút đọc");
+  assert.equal(post.cover_url, "/assets/blog/old.jpg");
+
+  const fresh = await (await fetch(base + "/api/public/posts/post-new")).json();
+  assert.equal(fresh.category_name, "Hướng dẫn");
+  assert.equal(fresh.author_name, "BiBi Studio");
+  assert.equal(fresh.cover_url, "/api/media/cover-new");
 
   assert.equal((await fetch(base + "/api/public/posts/post-draft")).status, 404);
   assert.equal((await fetch(base + "/api/public/posts/missing-slug")).status, 404);
 });
 
-test("public products endpoints serve only published products without auth", async (t) => {
+test("public products endpoints serve only published products with full shape", async (t) => {
   const { base } = await buildApp(t);
 
   const list = await fetch(base + "/api/public/products");
@@ -140,13 +165,30 @@ test("public products endpoints serve only published products without auth", asy
   const products = await list.json();
   assert.equal(products.length, 1);
   assert.equal(products[0].slug, "san-pham-a");
-  assert.deepEqual(products[0].image_ids, ["image-a-0"]);
+  assert.deepEqual(products[0].images, ["/api/media/image-a-0", "/catalogue/a.webp"]);
 
   const detail = await fetch(base + "/api/public/products/san-pham-a");
   assert.equal(detail.status, 200);
   const product = await detail.json();
   assert.equal(product.slug, "san-pham-a");
+  assert.deepEqual(product.name, { vi: "Sản phẩm A", en: "Product A" });
+  assert.deepEqual(product.description, { vi: "Mô tả A", en: "Description A" });
+  assert.equal(product.short_description, "Mô tả ngắn A");
   assert.equal(product.product_type, "notebook");
+  assert.equal(product.collection, "motivation");
+  assert.equal(product.price, 0);
+  assert.equal(product.compare_at, 0);
+  assert.deepEqual(product.images, ["/api/media/image-a-0", "/catalogue/a.webp"]);
+  assert.deepEqual(product.image_alt, { vi: "Alt A", en: "Alt A EN" });
+  assert.equal(product.dimensions, "A5");
+  assert.equal(product.pages, "80");
+  assert.deepEqual(product.material, { vi: "Giấy", en: "Paper" });
+  assert.deepEqual(product.format, { vi: "Khổ A5", en: "A5 format" });
+  assert.equal(product.occasion, "birthday");
+  assert.equal(product.featured, true);
+  assert.equal(product.sort_order, 3);
+  assert.equal(product.seo_title, "SEO A");
+  assert.equal(product.seo_description, "Mô tả A");
 
   assert.equal((await fetch(base + "/api/public/products/san-pham-b")).status, 404);
   assert.equal((await fetch(base + "/api/public/products/missing-slug")).status, 404);
@@ -172,4 +214,13 @@ test("public categories endpoints list categories by scope", async (t) => {
     defaults.map((cat) => cat.slug),
     ["motivation"],
   );
+});
+
+test("public collections endpoint returns name/slug/tagline", async (t) => {
+  const { base } = await buildApp(t);
+
+  const collections = await (await fetch(base + "/api/public/collections")).json();
+  assert.deepEqual(collections, [
+    { slug: "motivation", name: "Tạo động lực", tagline: "Mô tả" },
+  ]);
 });

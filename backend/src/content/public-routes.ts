@@ -21,5 +21,6 @@ export function contentPublicRoutes(pool: Pool, _clock: Clock): Router {
   r.get("/categories", async (req, res) =>
     res.json(await svc.listCategories(String(req.query.scope ?? "product"))),
   );
+  r.get("/collections", async (_req, res) => res.json(await svc.listCollections()));
   return r;
 }
