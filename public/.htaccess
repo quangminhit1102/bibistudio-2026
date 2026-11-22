@@ -5,3 +5,15 @@
   RewriteCond %{REQUEST_FILENAME} !-d
   RewriteRule . index.html [L]
 </IfModule>
+<IfModule mod_headers.c>
+  # Keep identical to ops/frontend.htaccess.template: this copy ships with every release.
+  <FilesMatch "\.(?:html|js|mjs|css|json|map|txt|xml|svg|png|jpe?g|webp|avif|gif|ico|woff2?|ttf|webmanifest)$">
+    Header set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+    Header set X-Content-Type-Options "nosniff"
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+  </FilesMatch>
+  # Report-only: browsers log violations and block nothing. Enforce once the console stays clean.
+  <FilesMatch "\.html$">
+    Header set Content-Security-Policy-Report-Only "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; form-action 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self'; frame-src 'self' https://www.google.com; worker-src 'self' blob:"
+  </FilesMatch>
+</IfModule>

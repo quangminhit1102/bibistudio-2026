@@ -36,6 +36,11 @@ test("smoke rejects HTML API fallback and mismatched versions", async () => {
     /mismatch/,
   );
 });
+const secure = {
+  "strict-transport-security": "max-age=31536000; includeSubDomains",
+  "x-content-type-options": "nosniff",
+  "referrer-policy": "strict-origin-when-cross-origin",
+};
 test("context release smoke requires actual PHP execution instead of source or old 404", async () => {
   const request = async (url) => {
     const path = new URL(url).pathname;
@@ -43,7 +48,7 @@ test("context release smoke requires actual PHP execution instead of source or o
       return Response.json({ error: { code: "ANALYTICS_RELAY_REJECTED" } }, { status: 405 });
     if (path === "/api/unknown") return Response.json({ error: "Not found" }, { status: 404 });
     if (path.startsWith("/products/"))
-      return new Response("<html>", { headers: { "content-type": "text/html" } });
+      return new Response("<html>", { headers: { "content-type": "text/html", ...secure } });
     if (path.startsWith("/catalogue/"))
       return new Response("image", { headers: { "content-type": "image/jpeg" } });
     if (path === "/api/health") return Response.json({ ok: true });
@@ -55,7 +60,16 @@ test("context release smoke requires actual PHP execution instead of source or o
     expectedSha: "y",
     expectedRelay: true,
   };
-  await smoke({ ...options, request });
+  const paths = [];
+  await smoke({
+    ...options,
+    request: async (url, init) => {
+      paths.push(new URL(url).pathname);
+      return request(url, init);
+    },
+  });
+  assert.ok(paths.includes("/api/health") && paths.includes("/api/version"));
+  assert.ok(!paths.includes("/api/demo"), "the sample endpoint no longer exists");
   for (const status of [200, 404])
     await assert.rejects(
       smoke({
@@ -67,4 +81,27 @@ test("context release smoke requires actual PHP execution instead of source or o
       }),
       /PHP|relay/i,
     );
+});
+test("smoke warns, without failing, when a page lacks the static security headers", async () => {
+  const request = (headers) => async (url) => {
+    const path = new URL(url).pathname;
+    if (path === "/api/unknown") return Response.json({ error: "Not found" }, { status: 404 });
+    if (path.startsWith("/products/"))
+      return new Response("<html>", { headers: { "content-type": "text/html", ...headers } });
+    if (path.startsWith("/catalogue/"))
+      return new Response("image", { headers: { "content-type": "image/jpeg" } });
+    if (path === "/api/health") return Response.json({ ok: true });
+    return Response.json({ releaseId: "x", sourceSha: "y" });
+  };
+  const options = { baseUrl: "https://example.invalid", expectedRelease: "x", expectedSha: "y" };
+  const warnings = [];
+  const warn = (message) => warnings.push(message);
+  await smoke({ ...options, warn, request: request(secure) });
+  assert.deepEqual(warnings, []);
+  // A release from before these headers must still pass, e.g. when a rollback restores it.
+  await smoke({ ...options, warn, request: request({}) });
+  assert.deepEqual(
+    warnings,
+    Object.keys(secure).map((name) => `::warning::Page is served without ${name}`),
+  );
 });
