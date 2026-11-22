@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { resolve, dirname } from "node:path";
+import { resolve, dirname, isAbsolute } from "node:path";
 import type { AppOptions } from "./app";
 import { readAuthConfig, readDbConfig, readProfileConfig, systemClock, type Clock } from "./config";
 import { createDbPool } from "./db/pool";
@@ -11,6 +11,9 @@ export function createRuntime(env: NodeJS.ProcessEnv = process.env, clock: Clock
   const config = readAuthConfig(env);
   const database = readDbConfig(env);
   const profiles = readProfileConfig(env);
+  const mediaDirectory = env.BIBI_MEDIA_DIR ?? resolve(__dirname, "../media");
+  if (!mediaDirectory || mediaDirectory !== mediaDirectory.trim() || !isAbsolute(mediaDirectory))
+    throw new Error("Invalid private media directory");
   if (
     !env.ANALYTICS_ID_SECRET ||
     Buffer.byteLength(env.ANALYTICS_ID_SECRET) < 32 ||
@@ -51,7 +54,7 @@ export function createRuntime(env: NodeJS.ProcessEnv = process.env, clock: Clock
       : {}),
     visitorHistory: { schemaDirectory: resolve(__dirname, "../visitor-migrations") },
     visitorControls: { schemaDirectory: resolve(__dirname, "../visitor-controls-migrations") },
-    content: { schemaDirectory: resolve(__dirname, "../content-migrations") },
+    content: { schemaDirectory: resolve(__dirname, "../content-migrations"), mediaDirectory },
     ...(countryLookup
       ? { visitorContext: { schemaDirectory: resolve(__dirname, "../visitor-context-migrations") } }
       : {}),

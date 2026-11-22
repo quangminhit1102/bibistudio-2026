@@ -30,6 +30,8 @@ import { contentSchemaStatus } from "./content/schema";
 import { contentRoutes } from "./content/routes";
 import { createContentService } from "./content/service";
 import { contentPublicRoutes } from "./content/public-routes";
+import { createMediaStore, type MediaStore } from "./content/media-store";
+import { mediaRoutes } from "./content/media-routes";
 
 export interface AppOptions {
   db?: Pool;
@@ -40,7 +42,7 @@ export interface AppOptions {
   visitorHistory?: { schemaDirectory: string };
   visitorContext?: { schemaDirectory: string };
   visitorControls?: { schemaDirectory: string };
-  content?: { schemaDirectory: string };
+  content?: { schemaDirectory: string; mediaDirectory?: string; media?: MediaStore };
   profiles?: { schemaDirectory: string; assetDirectory: string; assets?: AvatarStore };
 }
 
@@ -275,7 +277,7 @@ export function createApp(release: ReleaseInfo, options: AppOptions = {}): Expre
     app.use(["/api/roles", "/api/permissions", "/api/audit"], () => {
       throw new ApiError(503, "NOT_READY", "Dịch vụ chưa sẵn sàng");
     });
-  if (auth && authConfig && options.db && options.content && options.config)
+  if (auth && authConfig && options.db && options.content && options.config) {
     app.use(
       "/api",
       contentRoutes(
@@ -284,10 +286,31 @@ export function createApp(release: ReleaseInfo, options: AppOptions = {}): Expre
         options.config,
       ),
     );
-  else
+    const mediaStore =
+      options.content.media ??
+      (options.content.mediaDirectory
+        ? createMediaStore({ root: options.content.mediaDirectory })
+        : undefined);
+    if (mediaStore)
+      app.use(
+        "/api/media",
+        mediaRoutes(mediaStore, auth, options.config, {
+          pool: options.db,
+          clock: options.clock ?? systemClock,
+        }),
+      );
+    else
+      app.use("/api/media", (_req, _res, next) =>
+        next(new ApiError(503, "CONTENT_NOT_READY", "Dịch vụ nội dung chưa sẵn sàng")),
+      );
+  } else {
     app.use("/api/content", (_req, _res, next) =>
       next(new ApiError(503, "CONTENT_NOT_READY", "Dịch vụ nội dung chưa sẵn sàng")),
     );
+    app.use("/api/media", (_req, _res, next) =>
+      next(new ApiError(503, "CONTENT_NOT_READY", "Dịch vụ nội dung chưa sẵn sàng")),
+    );
+  }
   app.get("/api/version", (_req, res) => {
     res.json({ releaseId: release.releaseId, sourceSha: release.sourceSha });
   });
