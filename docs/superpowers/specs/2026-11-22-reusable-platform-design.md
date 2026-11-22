@@ -1,7 +1,7 @@
 # Thiết kế: biến bibistudio-2026 thành nền tảng dùng lại cho nhiều website
 
 - Ngày: 2026-11-22
-- Trạng thái: chờ duyệt spec
+- Trạng thái: đã duyệt (2026-11-22)
 - Nền: `main` tại `ae36409`
 - Phạm vi: toàn repo (frontend công khai, admin, backend, `ops`, CI/CD), chia 5 giai đoạn, mỗi giai đoạn một PR.
 
