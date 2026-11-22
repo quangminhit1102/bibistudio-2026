@@ -60,11 +60,10 @@ test("media upload returns 201 with id and dimensions; GET serves the stored byt
   assert.equal(a.size, image.length);
   assert.ok(!JSON.stringify(a).includes(f.mediaDirectory));
   const url = f.base + "/api/media/" + a.id;
-  assert.equal((await fetch(url)).status, 401);
-  const read = await fetch(url, { headers: { Authorization: "Bearer " + f.master.accessToken } });
+  const read = await fetch(url);
   assert.equal(read.status, 200);
   assert.match(read.headers.get("content-type"), /^image\/png/);
-  assert.equal(read.headers.get("cache-control"), "private, no-store");
+  assert.equal(read.headers.get("cache-control"), "public, max-age=31536000, immutable");
   assert.ok(Buffer.from(await read.arrayBuffer()).equals(image));
   assert.equal((await readdir(f.mediaDirectory)).length, 1);
 
@@ -82,6 +81,20 @@ test("media upload rejects bodies over 2 MiB and unauthorized actors", async (t)
   const f = await createMediaFixture(t);
   assert.equal((await f.upload(Buffer.alloc(2097153))).status, 413);
   assert.equal((await f.upload(pngImage(), { token: f.user.accessToken })).status, 403);
+  assert.equal(
+    (
+      await fetch(f.base + "/api/media", {
+        method: "POST",
+        headers: {
+          Origin: f.config.allowedOrigins[0],
+          "X-Bibi-Request": "1",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ mimeType: "image/png", data: pngImage().toString("base64") }),
+      })
+    ).status,
+    401,
+  );
   assert.equal(
     (
       await fetch(f.base + "/api/media", {

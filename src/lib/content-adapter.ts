@@ -1,6 +1,6 @@
 import type { PublicPostShape, PublicProductShape } from "./content-api";
-import type { ContentBlock } from "@/data/blog";
-import { collections, occasions, productTypes } from "@/data/catalogue";
+import { getBlogPost, type ContentBlock } from "@/data/blog";
+import { collections, getProduct, occasions, productTypes } from "@/data/catalogue";
 import type { CollectionId, OccasionId, Product, ProductTypeId } from "@/data/catalogue";
 
 // Map the public API content shapes to the shapes the existing public components
@@ -32,6 +32,7 @@ function localized(value: { vi: string; en: string }, fallbackVi = ""): { vi: st
 }
 
 export function toPublicProduct(api: PublicProductShape): Product {
+  const legacy = getProduct(api.slug);
   return {
     id: api.slug,
     slug: api.slug,
@@ -44,7 +45,7 @@ export function toPublicProduct(api: PublicProductShape): Product {
     material: api.material.vi || api.material.en ? localized(api.material) : undefined,
     pages: api.pages ?? undefined,
     format: api.format.vi || api.format.en ? localized(api.format) : undefined,
-    images: api.images,
+    images: legacy ? legacy.images : api.images,
     imageAlt: localized(api.image_alt, api.name.vi),
     featured: api.featured,
     sortOrder: api.sort_order,
@@ -70,6 +71,7 @@ export type PostView = {
 };
 
 export function toPublicPost(api: PublicPostShape): PostView {
+  const legacy = getBlogPost(api.slug);
   return {
     slug: api.slug,
     title: api.title,
@@ -78,7 +80,7 @@ export function toPublicPost(api: PublicPostShape): PostView {
     author: api.author_name ?? "BiBi Studio",
     date: api.publish_at ?? "",
     readTime: api.read_time ?? "",
-    coverImage: api.cover_url ?? "",
+    coverImage: legacy ? legacy.coverImage : (api.cover_url ?? ""),
     seoTitle: api.seo_title,
     seoDescription: api.seo_description,
     content: { kind: "html", html: api.content },

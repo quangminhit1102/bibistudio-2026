@@ -87,14 +87,14 @@ export function mediaRoutes(
       res.status(201).json({ id: stored.id, width, height, size: bytes.length });
     },
   );
-  router.get("/:id", authenticate(auth), async (req, res) => {
+  router.get("/:id", async (req, res) => {
     const id = validate(z.uuid(), req.params.id);
     const [[row]] = await pool.execute<RowDataPacket[]>("SELECT * FROM media WHERE id=?", [id]);
     if (!row) throw new ApiError(404, "NOT_FOUND", "Không tìm thấy tệp phương tiện");
     const bytes = await store.read(id);
     if (bytes.length !== Number(row.size))
       throw new ApiError(503, "MEDIA_UNAVAILABLE", "Không đọc được tệp phương tiện lúc này");
-    res.setHeader("Cache-Control", "private, no-store");
+    res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
     res.type(String(row.mime)).send(bytes);
   });
   return router;
