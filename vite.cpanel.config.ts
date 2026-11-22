@@ -5,6 +5,7 @@ import { join, resolve } from "node:path";
 import { defineConfig, type ConfigEnv, type Plugin } from "vite";
 import tsConfigPaths from "vite-tsconfig-paths";
 import { tanstackRouterGenerator } from "@tanstack/router-plugin/vite";
+import { siteHtmlPlugin } from "./scripts/site-html.mjs";
 
 const emitCpanelIndex = (): Plugin => ({
   name: "emit-cpanel-index",
@@ -23,18 +24,21 @@ export default defineConfig(({ mode }: ConfigEnv) => {
   const isTempUrl = mode === "cpanel-temp";
   const basepath = isTempUrl ? "/~vhplasti" : "/";
 
+  const siteDir = resolve(process.cwd(), process.env.SITE_DIR ?? "site");
+
   return {
     base: isTempUrl ? `${basepath}/` : "/",
     define: {
       "import.meta.env.VITE_BIBI_CSR": JSON.stringify("true"),
       "import.meta.env.VITE_ROUTER_BASEPATH": JSON.stringify(basepath),
     },
-    resolve: { alias: { "@site": resolve(process.cwd(), process.env.SITE_DIR ?? "site") } },
+    resolve: { alias: { "@site": siteDir } },
     plugins: [
       tanstackRouterGenerator({ target: "react" }),
       react(),
       tailwindcss(),
       tsConfigPaths(),
+      siteHtmlPlugin(siteDir),
       emitCpanelIndex(),
     ],
     build: {
