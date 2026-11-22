@@ -27,13 +27,21 @@ export type SiteConfig = {
   contact: {
     phone: string;
     phoneDisplay: string;
+    /** E.164 form for structured data, e.g. `+84392969000`. */
+    phoneInternational?: string;
     email: string;
     social: SocialLink[];
     location?: SiteLocation;
   };
   /** Legal entity printed on business documents. */
   company?: { legalName: string; address: string };
-  seo: { titleSuffix: string; description: string; ogImage?: string };
+  seo: {
+    titleSuffix: string;
+    description: string;
+    /** Public paths, resolved against `url`. */
+    logo?: string;
+    ogImage?: string;
+  };
   fonts: { href: string }[];
   preconnect?: { href: string; crossOrigin?: boolean }[];
   admin: { title: string; modules: string[] };

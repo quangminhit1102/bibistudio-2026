@@ -1,10 +1,11 @@
 // src/lib/seo.ts
 // Centralized SEO configuration & Structured Data (JSON-LD) generators.
 
-export const SITE_URL = "https://bibistudio-2026.lovable.app";
-export const SITE_NAME = "BiBi Studio";
-export const DEFAULT_OG_IMAGE =
-  "https://placehold.co/1200x630?text=1200x630";
+import { site } from "@/platform/site";
+import { siteUrl } from "@/platform/site-contract";
+
+export const SITE_URL = site.url;
+export const SITE_NAME = site.name;
 
 export function appendPageParam(url: string, page: number): string {
   return page > 1 ? `${url}?page=${page}` : url;
@@ -55,10 +56,10 @@ export function buildOrganizationSchema() {
     "@type": "Organization",
     name: SITE_NAME,
     url: SITE_URL,
-    logo: DEFAULT_OG_IMAGE,
+    logo: site.seo.logo ? siteUrl(site, site.seo.logo) : undefined,
     contactPoint: {
       "@type": "ContactPoint",
-      telephone: "+84-967-495-867",
+      telephone: site.contact.phoneInternational ?? site.contact.phone,
       contactType: "customer service",
       areaServed: "VN",
       availableLanguage: "Vietnamese",

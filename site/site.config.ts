@@ -10,6 +10,7 @@ export default defineSite({
   contact: {
     phone: "0392969000",
     phoneDisplay: "0392 969 000",
+    phoneInternational: "+84392969000",
     email: "bibistudio@gmail.com",
     social: [
       { id: "zalo", label: "Zalo", href: "https://zalo.me/0392969000", display: "0392 969 000" },
@@ -36,6 +37,7 @@ export default defineSite({
   },
   seo: {
     titleSuffix: " — BiBi Studio",
+    logo: "/bibi-logo.svg",
     description: "BiBi Studio - so tay, thiep, postcard va giay viet thu lay cam hung tu Viet Nam.",
   },
   fonts: [

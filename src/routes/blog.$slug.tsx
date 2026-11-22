@@ -9,8 +9,8 @@ import { staticPostToView, toPublicPost, type PostView } from "@/lib/content-ada
 import { renderArticle, slugifyHeading, type TocItem } from "@/lib/content-html";
 import { resolveSeo } from "@/lib/content-seo";
 import { LazyImage } from "@/components/ui/lazy-image";
-
-const SITE = "https://bibistudio-2026.lovable.app";
+import { SITE_URL } from "@/lib/seo";
+import { site } from "@/platform/site";
 
 export const Route = createFileRoute("/blog/$slug")({
   loader: async ({ params }) => {
@@ -24,7 +24,7 @@ export const Route = createFileRoute("/blog/$slug")({
     if (!loaderData) {
       return {
         meta: [
-          { title: "Không tìm thấy bài viết — BiBi Studio" },
+          { title: `Không tìm thấy bài viết${site.seo.titleSuffix}` },
           { name: "robots", content: "noindex" },
         ],
       };
@@ -33,12 +33,12 @@ export const Route = createFileRoute("/blog/$slug")({
     const seoMeta = resolveSeo({
       seoTitle: post.seoTitle,
       seoDescription: post.seoDescription,
-      title: `${post.title} — BiBi Studio`,
+      title: `${post.title}${site.seo.titleSuffix}`,
       excerpt: post.excerpt,
     });
     const title = seoMeta.title;
     const description = seoMeta.description;
-    const url = `${SITE}/blog/${params.slug}`;
+    const url = `${SITE_URL}/blog/${params.slug}`;
     return {
       meta: [
         { title },
