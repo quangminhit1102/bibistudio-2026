@@ -86,9 +86,7 @@ export default function CustomerDetail() {
           <div>
             <dt>VAT mặc định</dt>
             <dd>
-              <Badge tone={c.vatApplied ? "info" : "neutral"}>
-                {c.vatApplied ? "Có VAT" : "Không VAT"}
-              </Badge>
+              <Badge tone={c.vatRate > 0 ? "info" : "neutral"}>{c.vatRate}%</Badge>
             </dd>
           </div>
           <div>

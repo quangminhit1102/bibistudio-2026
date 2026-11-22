@@ -35,7 +35,7 @@ export const productConfig: EntityConfig<"products"> = {
   duplicate: true,
   defaults: {
     name: "",
-    sku: "",
+    productCode: "",
     slug: "",
     description: "",
     shortDescription: "",
@@ -54,7 +54,7 @@ export const productConfig: EntityConfig<"products"> = {
   },
   fields: [
     { key: "name", label: "Tên sản phẩm", type: "text", required: true },
-    { key: "sku", label: "SKU", type: "text", required: true },
+    { key: "productCode", label: "Mã sản phẩm", type: "text", required: true },
     { key: "slug", label: "Đường dẫn", type: "text", required: true },
     { key: "status", label: "Trạng thái", type: "select", options: statuses },
     { key: "productType", label: "Loại sản phẩm", type: "select", options: productTypes },
@@ -95,7 +95,7 @@ export const productConfig: EntityConfig<"products"> = {
           )}
           <span>
             <strong>{row.original.name}</strong>
-            <small>{row.original.sku}</small>
+            <small>{row.original.productCode}</small>
           </span>
         </Link>
       ),

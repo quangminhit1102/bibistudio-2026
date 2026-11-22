@@ -107,7 +107,7 @@ it("keeps customer and line snapshots after catalogue changes but switches custo
   const products = createEntityService(f.store, "products", () => f.session);
   await customers.update(
     f.customerId,
-    { name: "Tên mới", address: "Mới", vatApplied: true, active: false },
+    { name: "Tên mới", address: "Mới", vatRate: 8, active: false },
     1,
   );
   await products.update(

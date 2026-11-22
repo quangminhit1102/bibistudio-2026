@@ -130,7 +130,6 @@ export const resourceForEntity = (entity: EntityKey): Resource =>
       roles: "accounts",
       users: "accounts",
       posts: "content",
-      tags: "content",
       media: "content",
       orders: "sales",
       payments: "sales",

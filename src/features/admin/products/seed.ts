@@ -22,7 +22,7 @@ export function seed(): SeedBatch {
   const products = getAllProducts().map((p, i) => ({
     ...seedBase(legacyProductIds[p.slug] ?? "catalogue-" + p.slug, i % 28),
     name: p.name.vi,
-    sku: `BIBI-${String(i + 1).padStart(4, "0")}`,
+    productCode: `BIBI-${String(i + 1).padStart(4, "0")}`,
     slug: p.slug,
     description: p.description.vi,
     shortDescription: p.description.vi,

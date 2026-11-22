@@ -22,7 +22,6 @@ export function seed(): SeedBatch {
           .join(""),
       ),
       categoryId: "cat-journal",
-      tagIds: ["tag-0"],
       authorId: "user-1",
       status: "published" as const,
       publishAt: p.date,

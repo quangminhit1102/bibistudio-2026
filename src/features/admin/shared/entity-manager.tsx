@@ -201,7 +201,7 @@ export function EntityManager<K extends EntityKey>({ config }: { config: EntityC
                         if ("reserved" in raw) raw.reserved = 0;
                         if ("status" in raw) raw.status = "draft";
                         if ("publishAt" in raw) raw.publishAt = null;
-                        for (const k of ["sku", "slug", "isbn"])
+                        for (const k of ["productCode", "slug", "isbn"])
                           if (raw[k]) raw[k] = String(raw[k]) + "-" + Date.now();
                         await service.create(raw as CreateInput<K>);
                         notice("Đã nhân bản.");

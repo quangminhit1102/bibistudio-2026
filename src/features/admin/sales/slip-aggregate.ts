@@ -93,7 +93,7 @@ export function summarizeSlips(
       const product = productMap.get(item.productId),
         p = byProduct.get(item.productId) ?? {
           id: item.productId,
-          sku: product?.sku ?? item.sku,
+          sku: product?.productCode ?? item.sku,
           name: product?.name ?? item.name,
           quantity: 0,
           value: 0,

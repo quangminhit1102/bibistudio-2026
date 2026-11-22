@@ -84,16 +84,15 @@ it("creates and edits customers on dedicated pages and deactivates without delet
   mount("/admin/customers/create");
   await u.type(await screen.findByRole("textbox", { name: /Tên khách/ }), "Nhà sách thử nghiệm");
   await u.selectOptions(screen.getByLabelText(/Loại khách/), "company");
-  await u.click(screen.getByRole("checkbox", { name: "Áp dụng VAT" }));
   await u.click(screen.getByRole("button", { name: "Lưu thay đổi" }));
   await screen.findByRole("heading", { name: "Khách mua hàng", exact: true });
   const created = (await fixture.store.list("customers")).find(
     (c) => c.name === "Nhà sách thử nghiệm",
   )!;
-  expect(created).toMatchObject({ kind: "company", vatApplied: true, active: true });
+  expect(created).toMatchObject({ kind: "company", vatRate: 8, active: true });
   cleanup();
   mount(`/admin/customers/${created.id}/edit`);
-  expect(await screen.findByRole("checkbox", { name: "Áp dụng VAT" })).toBeChecked();
+  expect(await screen.findByLabelText(/VAT/)).toHaveValue(8);
   await u.click(screen.getByRole("checkbox", { name: "Hoạt động" }));
   await u.click(screen.getByRole("button", { name: "Lưu thay đổi" }));
   await waitFor(async () =>
@@ -108,7 +107,7 @@ it("same names and contact emails stay distinct and referenced customers cannot 
     name: "Trùng tên",
     kind: "individual" as const,
     address: "",
-    vatApplied: false,
+    vatRate: 0,
     notes: "",
     active: true,
     email: "shared@example.test",

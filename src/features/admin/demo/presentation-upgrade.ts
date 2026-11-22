@@ -68,7 +68,7 @@ export async function upgradePresentation(store: AdminStore, entity: EntityKey):
             ],
           });
         const unique =
-          ["sku", "slug", "isbn", "email"].includes(field) &&
+          ["productCode", "slug", "isbn", "email"].includes(field) &&
           !(entity === "customers" && field === "email");
         if (
           unique &&

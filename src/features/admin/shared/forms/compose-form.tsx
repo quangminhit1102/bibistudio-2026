@@ -142,7 +142,7 @@ export default function ComposeForm({
             <Card>
               <div className="a-compose-stack">
                 {fields(
-                  post ? ["title", "slug", "excerpt"] : ["name", "sku", "slug", "shortDescription"],
+                  post ? ["title", "slug", "excerpt"] : ["name", "productCode", "slug", "shortDescription"],
                 )}
               </div>
             </Card>
@@ -207,7 +207,7 @@ export default function ComposeForm({
               <div className="a-compose-stack a-compose-card-fields">
                 {fields(
                   post
-                    ? ["status", "categoryId", "authorId", "publishAt", "tagIds"]
+                    ? ["status", "categoryId", "publishAt"]
                     : ["status", "productType", "collection", "categoryId", "tags"],
                 )}
               </div>

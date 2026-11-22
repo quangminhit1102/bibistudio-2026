@@ -16,10 +16,9 @@ export const postConfig: EntityConfig<"posts"> = {
     excerpt: "",
     content: JSON.stringify({ type: "doc", content: [{ type: "paragraph" }] }),
     categoryId: "cat-journal",
-    tagIds: [],
     authorId: "user-1",
     status: "draft",
-    publishAt: null,
+    publishAt: new Date().toISOString(),
     imageId: null,
     seoTitle: "",
     seoDescription: "",
@@ -27,7 +26,6 @@ export const postConfig: EntityConfig<"posts"> = {
   fields: [
     { key: "title", label: "Tiêu đề", type: "text", required: true, full: true },
     { key: "slug", label: "Đường dẫn", type: "text", required: true },
-    { key: "authorId", label: "Tác giả", type: "select", entity: "users", required: true },
     {
       key: "categoryId",
       label: "Chuyên mục",
@@ -35,7 +33,6 @@ export const postConfig: EntityConfig<"posts"> = {
       entity: "categories",
       filter: { kind: "content" },
     },
-    { key: "tagIds", label: "Thẻ", type: "multi-select", entity: "tags" },
     {
       key: "status",
       label: "Trạng thái",
@@ -89,15 +86,5 @@ export const postConfig: EntityConfig<"posts"> = {
       header: "Ngày xuất bản",
       cell: ({ getValue }) => date(getValue() as string | null),
     },
-  ],
-};
-export const tagConfig: EntityConfig<"tags"> = {
-  entity: "tags",
-  title: "Thẻ bài viết",
-  description: "Sắp xếp nội dung bằng các thẻ dùng chung.",
-  defaults: { name: "", description: "" },
-  fields: [
-    { key: "name", label: "Tên thẻ", type: "text", required: true },
-    { key: "description", label: "Mô tả", type: "textarea" },
   ],
 };

@@ -21,7 +21,7 @@ export function seed(context?: { products?: AdminProduct[] }): SeedBatch {
     ][i],
     kind: (["bookstore", "individual", "company"] as const)[i % 3],
     address: "",
-    vatApplied: i % 2 === 0,
+    vatRate: i % 2 === 0 ? 8 : 0,
     notes: "",
     active: i !== 11,
     phone: "",
@@ -29,7 +29,7 @@ export function seed(context?: { products?: AdminProduct[] }): SeedBatch {
   }));
   const products = (context?.products ?? []).filter(
     (p) =>
-      seedProductIds.has(p.id) && p.sku && p.name && Number.isSafeInteger(p.price) && p.price >= 0,
+      seedProductIds.has(p.id) && p.productCode && p.name && Number.isSafeInteger(p.price) && p.price >= 0,
   );
   const counts = new Map<number, number>();
   const purchaseSlips: PurchaseSlip[] = products.length
@@ -50,7 +50,7 @@ export function seed(context?: { products?: AdminProduct[] }): SeedBatch {
             lineId: `${base.id}-${offset}`,
             productId: p.id,
             name: p.name,
-            sku: p.sku,
+            sku: p.productCode,
             quantity: 1 + (i % 3),
             unitPrice: p.price,
           };
@@ -60,7 +60,7 @@ export function seed(context?: { products?: AdminProduct[] }): SeedBatch {
           number: `PMH-${year}-${String(seq).padStart(4, "0")}`,
           customerId: customer.id,
           customerSnapshot: { name: customer.name, kind: customer.kind, address: customer.address },
-          vatApplied: customer.vatApplied,
+          vatApplied: customer.vatRate > 0,
           items,
           total: items.reduce((n, row) => n + row.quantity * row.unitPrice, 0),
           notes: "",

@@ -9,7 +9,7 @@ const runtime = vi.hoisted(() => ({
     get: async () =>
       entity === "customers"
         ? { name: "Khách liên kết", address: "Địa chỉ" }
-        : { name: "Sản phẩm liên kết", sku: "001" },
+        : { name: "Sản phẩm liên kết", productCode: "001" },
   })),
 }));
 vi.mock("../../src/features/admin/services/context", () => ({ useAdmin: () => runtime }));

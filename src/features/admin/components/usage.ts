@@ -73,7 +73,7 @@ const named: Record<string, string> = {
   "Statistic Card":
     '<Kpi title="Sản phẩm" value={50} raw={50} previous={45} description="Số bản ghi trong catalogue."/>',
   "Key-Value List":
-    '<dl className="a-key-values"><dt>Mã sản phẩm</dt><dd>{product.sku}</dd><dt>Bộ sưu tập</dt><dd>{product.collection}</dd></dl>',
+    '<dl className="a-key-values"><dt>Mã sản phẩm</dt><dd>{product.productCode}</dd><dt>Bộ sưu tập</dt><dd>{product.collection}</dd></dl>',
   Timeline:
     '<ol className="a-timeline">{events.map(event => <li key={event.id}>{event.title}<small>{date(event.at)}</small></li>)}</ol>',
   "Status Indicator":
@@ -110,7 +110,7 @@ const named: Record<string, string> = {
   "Tree View":
     '<div role="tree" aria-label="Bộ sưu tập" onKeyDown={handleTreeArrowKeys}><button role="treeitem" aria-expanded={expanded} onClick={() => setExpanded(!expanded)}>Việt Nam</button>{expanded && <div role="group"><button role="treeitem" aria-selected={selected==="danang"} onClick={() => setSelected("danang")}>Đà Nẵng</button></div>}</div>\n// handleTreeArrowKeys chuyển focus Up/Down/Home/End; Left/Right đóng/mở node.',
   "Details Panel":
-    "<details><summary>Chi tiết sản phẩm</summary><dl><dt>SKU</dt><dd>{product.sku}</dd><dt>Trạng thái</dt><dd>{product.status}</dd></dl></details>",
+    "<details><summary>Chi tiết sản phẩm</summary><dl><dt>Mã sản phẩm</dt><dd>{product.productCode}</dd><dt>Trạng thái</dt><dd>{product.status}</dd></dl></details>",
   "Alert Dialog":
     '<AlertDialog.Root><AlertDialog.Trigger asChild><Button variant="destructive">Xóa</Button></AlertDialog.Trigger><AlertDialog.Portal><AlertDialog.Overlay/><AlertDialog.Content><AlertDialog.Title>Xóa bản nháp?</AlertDialog.Title><AlertDialog.Description>Thao tác không thể hoàn tác.</AlertDialog.Description><AlertDialog.Cancel>Hủy</AlertDialog.Cancel><AlertDialog.Action onClick={removeDraft}>Xác nhận</AlertDialog.Action></AlertDialog.Content></AlertDialog.Portal></AlertDialog.Root>',
   "Confirmation Dialog":

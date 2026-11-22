@@ -152,7 +152,7 @@ export function SlipForm({
               change({
                 ...draft,
                 customerId: id,
-                vatApplied: customers.find((c) => c.id === id)?.vatApplied ?? false,
+                vatApplied: (customers.find((c) => c.id === id)?.vatRate ?? 0) > 0,
               })
             }
           />
@@ -175,13 +175,13 @@ export function SlipForm({
               {draft.vatApplied ? "Có VAT" : "Không VAT"}
             </Badge>
             <small>Chỉ là nhãn trên phiếu, không tính thuế.</small>
-            {customer && draft.vatApplied !== customer.vatApplied && (
+            {customer && draft.vatApplied !== (customer.vatRate > 0) && (
               <>
                 <small>Khác mặc định của khách</small>
                 <Button
                   size="sm"
                   variant="link"
-                  onClick={() => change({ ...draft, vatApplied: customer.vatApplied })}
+                  onClick={() => change({ ...draft, vatApplied: customer.vatRate > 0 })}
                 >
                   Lấy mặc định của khách
                 </Button>
@@ -194,7 +194,7 @@ export function SlipForm({
           value=""
           options={products
             .filter((p) => p.status !== "hidden")
-            .map((p) => ({ id: p.id, name: `${p.sku} · ${p.name}` }))}
+            .map((p) => ({ id: p.id, name: `${p.productCode} · ${p.name}` }))}
           onChange={add}
         />
         <div className="a-slip-lines" role="table" aria-label="Các dòng sản phẩm">
@@ -217,7 +217,7 @@ export function SlipForm({
               <div className="a-slip-row" role="row" key={line.lineId}>
                 <div role="cell">
                   <strong>{snapshot?.name ?? product?.name ?? "Sản phẩm không còn tồn tại"}</strong>
-                  <small>{snapshot?.sku ?? product?.sku}</small>
+                  <small>{snapshot?.sku ?? product?.productCode}</small>
                 </div>
                 <label role="cell">
                   <span className="a-slip-mobile-label">Số lượng</span>

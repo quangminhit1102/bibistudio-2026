@@ -96,7 +96,7 @@ export function createSlipService(
       items.push({
         ...line,
         name: oldLine?.name ?? product.name,
-        sku: oldLine?.sku ?? product.sku,
+        sku: oldLine?.sku ?? product.productCode,
       });
     }
     return {

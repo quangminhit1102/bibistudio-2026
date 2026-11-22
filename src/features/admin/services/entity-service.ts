@@ -279,7 +279,6 @@ export function createEntityService<K extends EntityKey>(
           "categories",
           "authors",
           "publishers",
-          "tags",
           "users",
           "roles",
           "media",

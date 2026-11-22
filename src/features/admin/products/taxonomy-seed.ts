@@ -18,9 +18,5 @@ export function seed(): SeedBatch {
       position: i,
       active: true,
     })),
-    tags: ["Việt Nam", "Handmade", "Quà tặng", "Cảm hứng", "Sáng tạo"].map((name, i) => ({
-      ...seedBase(`tag-${i}`),
-      name,
-    })),
   };
 }

@@ -11,7 +11,7 @@ export interface NamedRecord extends BaseRecord {
 export interface Customer extends NamedRecord {
   kind: "bookstore" | "individual" | "company";
   address: string;
-  vatApplied: boolean;
+  vatRate: number;
   notes: string;
   active: boolean;
   phone?: string;
@@ -54,7 +54,7 @@ export interface CatalogueRecord extends NamedRecord {
   seoDescription: string;
 }
 export interface AdminProduct extends CatalogueRecord {
-  sku: string;
+  productCode: string;
   productType: string;
   collection: string;
   categoryId: string;
@@ -121,7 +121,6 @@ export interface Post extends BaseRecord {
   excerpt: string;
   content: string;
   categoryId: string;
-  tagIds: string[];
   authorId: string;
   status: "draft" | "published";
   publishAt: string | null;
@@ -226,7 +225,6 @@ export interface AdminModels {
   roles: Role;
   users: AdminUser;
   posts: Post;
-  tags: NamedRecord;
   orders: Order;
   payments: Payment;
   stock: StockEvent;
@@ -250,7 +248,6 @@ export const entityKeys: EntityKey[] = [
   "roles",
   "users",
   "posts",
-  "tags",
   "orders",
   "payments",
   "stock",

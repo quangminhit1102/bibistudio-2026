@@ -5,7 +5,7 @@ import { calendarDate } from "../shared/lib/text";
 /** Replace these read methods with API calls when business data moves to MySQL. */
 export interface SlipPrintSource {
   customer: (id: string) => Promise<{ name: string; address: string } | null | undefined>;
-  product: (id: string) => Promise<{ name: string; sku: string } | null | undefined>;
+  product: (id: string) => Promise<{ name: string; productCode: string } | null | undefined>;
 }
 export interface PrintLine {
   id: string;
@@ -56,7 +56,7 @@ export async function loadPrintDraft(slip: PurchaseSlip, source: SlipPrintSource
       return {
         id: line.lineId,
         productId: line.productId,
-        code: product?.sku ?? line.sku,
+        code: product?.productCode ?? line.sku,
         name: product?.name ?? line.name,
         unit: "cuốn",
         quantity: line.quantity,

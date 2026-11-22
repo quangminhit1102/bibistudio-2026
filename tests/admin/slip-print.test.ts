@@ -29,7 +29,7 @@ export const printSlip: PurchaseSlip = {
 };
 const source: SlipPrintSource = {
   customer: async () => ({ name: "Nhã Nam", address: "Đường sách" }),
-  product: async () => ({ name: "Sổ tay A6", sku: "008938565196048" }),
+  product: async () => ({ name: "Sổ tay A6", productCode: "008938565196048" }),
 };
 describe("delivery-slip print draft", () => {
   it("uses linked data but preserves saved quantities/prices and original records", async () => {

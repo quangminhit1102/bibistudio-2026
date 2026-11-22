@@ -42,7 +42,6 @@ export const groupForEntity: Record<EntityKey, Group> = {
   roles: "accounts",
   users: "accounts",
   categories: "taxonomy",
-  tags: "taxonomy",
   products: "products",
   books: "bookstore",
   authors: "bookstore",

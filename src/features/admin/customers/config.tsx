@@ -30,7 +30,7 @@ export const customerConfig: EntityConfig<"customers"> = {
     name: "",
     kind: "bookstore",
     address: "",
-    vatApplied: false,
+    vatRate: 8,
     notes: "",
     active: true,
     email: "",
@@ -43,10 +43,12 @@ export const customerConfig: EntityConfig<"customers"> = {
     { key: "phone", label: "Điện thoại", type: "text" },
     { key: "email", label: "Email", type: "email" },
     {
-      key: "vatApplied",
-      label: "Áp dụng VAT",
-      type: "checkbox",
-      description: "Nhãn mặc định khi lập phiếu; không tính thuế.",
+      key: "vatRate",
+      label: "VAT (%)",
+      type: "number",
+      min: 0,
+      max: 100,
+      description: "Mức thuế VAT mặc định khi lập phiếu; không tự tính thuế.",
     },
     {
       key: "active",
@@ -58,14 +60,6 @@ export const customerConfig: EntityConfig<"customers"> = {
   ],
   filters: [
     { field: "kind", label: "Loại khách", options: customerKinds },
-    {
-      field: "vatApplied",
-      label: "VAT",
-      options: [
-        { value: "true", label: "Có VAT" },
-        { value: "false", label: "Không VAT" },
-      ],
-    },
     {
       field: "active",
       label: "Sử dụng",
@@ -96,10 +90,10 @@ export const customerConfig: EntityConfig<"customers"> = {
     },
     { accessorKey: "address", header: "Địa chỉ" },
     {
-      accessorKey: "vatApplied",
+      accessorKey: "vatRate",
       header: "VAT",
       cell: ({ getValue }) => (
-        <Badge tone={getValue() ? "info" : "neutral"}>{getValue() ? "Có VAT" : "Không VAT"}</Badge>
+        <Badge tone={Number(getValue()) > 0 ? "info" : "neutral"}>{String(getValue())}%</Badge>
       ),
     },
     {

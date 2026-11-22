@@ -36,7 +36,7 @@ export const schemas = {
       name,
       kind: z.enum(["bookstore", "individual", "company"]),
       address: z.string().max(1000),
-      vatApplied: z.boolean(),
+      vatRate: z.number().min(0).max(100),
       notes: z.string().max(5000),
       active: z.boolean(),
       phone: z.string().max(50).optional(),
@@ -44,7 +44,7 @@ export const schemas = {
     })
     .passthrough(),
   products: catalogue.extend({
-    sku: name,
+    productCode: z.string().trim().min(1).max(64),
     productType: name,
     collection: name,
     categoryId: z.string(),
@@ -92,7 +92,6 @@ export const schemas = {
       content: z.string(),
       authorId: name,
       categoryId: z.string(),
-      tagIds: z.array(z.string()),
       status: z.enum(["draft", "published"]),
       publishAt: z.string().nullable(),
       imageId: z.string().nullable(),
@@ -100,7 +99,6 @@ export const schemas = {
       seoDescription: z.string().max(320),
     })
     .passthrough(),
-  tags: z.object({ name }).passthrough(),
 };
 export async function validateRecord<K extends EntityKey>(
   entity: K,
@@ -125,7 +123,7 @@ export async function validateRecord<K extends EntityKey>(
       JSON.stringify(defaultPermissions("super-admin"))
   )
     throw new ServiceError("validation", "Quyền của Super Admin được bảo vệ.");
-  for (const field of ["sku", "slug", "isbn", "email"]) {
+  for (const field of ["productCode", "slug", "isbn", "email"]) {
     if (entity === "customers" && field === "email") continue;
     const value = (row as unknown as Record<string, unknown>)[field];
     if (
@@ -189,8 +187,6 @@ export async function validateRecord<K extends EntityKey>(
       throw new ServiceError("validation", "Tác giả bài viết không tồn tại.");
     if (p.categoryId && (await tx.get("categories", p.categoryId))?.kind !== "content")
       throw new ServiceError("validation", "Chuyên mục không tồn tại.");
-    for (const id of p.tagIds)
-      if (!(await tx.get("tags", id))) throw new ServiceError("validation", "Thẻ không tồn tại.");
     p.content = writeRichContent(readRichContent(p.content));
     for (const id of [...documentMediaIds(p.content), ...(p.imageId ? [p.imageId] : [])])
       if (!(await tx.get("media", id)))
@@ -245,7 +241,6 @@ export async function assertDeletable(entity: EntityKey, id: string, tx: AdminTr
     "parentId",
     "roleId",
     "authorId",
-    "tagIds",
     "imageIds",
     "imageId",
   ];

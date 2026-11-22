@@ -25,7 +25,7 @@ function Demo({ path = "/admin/dashboard" }: { path?: string }) {
   return <SidebarNavigation groups={navigation} pathname={path} {...state} />;
 }
 it("has exactly five flat groups and each destination has an icon and no nested children", () => {
-  expect(navigation.map((g) => g.items.length)).toEqual([2, 4, 3, 5, 15]);
+  expect(navigation.map((g) => g.items.length)).toEqual([2, 4, 3, 4, 15]);
   expect(navigation.every((g) => g.items.every((i) => i.icon && !("children" in i)))).toBe(true);
   const role = {
     id: "custom",
