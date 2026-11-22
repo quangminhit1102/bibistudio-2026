@@ -33,7 +33,15 @@ export function renderArticle(raw: string): RenderedArticle {
   const host = document.createElement("div");
   host.innerHTML = readRichContent(raw);
   for (const img of host.querySelectorAll("img")) {
-    if ((img.getAttribute("src") ?? "").startsWith("bibi-media:")) img.remove();
+    const src = img.getAttribute("src") ?? "";
+    if (!src.startsWith("bibi-media:")) continue;
+    const id = src.slice("bibi-media:".length);
+    // Server-uploaded media is a uuid and resolves through the public media
+    // endpoint. Legacy synthetic ids (e.g. "journal-inline-…") have no public
+    // asset, so drop them rather than rendering a broken image.
+    if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id))
+      img.setAttribute("src", `/api/media/${encodeURIComponent(id)}`);
+    else img.remove();
   }
   const toc: TocItem[] = [];
   host.querySelectorAll("h2, h3").forEach((heading, index) => {

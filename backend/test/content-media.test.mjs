@@ -113,6 +113,19 @@ test("media upload rejects bodies over 2 MiB and unauthorized actors", async (t)
   assert.equal((await readdir(f.mediaDirectory)).length, 0);
 });
 
+test("media list returns uploaded metadata without filesystem paths", async (t) => {
+  const f = await createMediaFixture(t);
+  const a = await (await f.upload(pngImage(40, 60))).json();
+  const list = await fetch(f.base + "/api/media");
+  assert.equal(list.status, 200);
+  const body = await list.json();
+  assert.equal(body.total, 1);
+  assert.equal(body.items[0].id, a.id);
+  assert.equal(body.items[0].width, 40);
+  assert.equal(body.items[0].height, 60);
+  assert.ok(!JSON.stringify(body).includes(f.mediaDirectory));
+});
+
 test("missing media id is a 404 and reads validate against the stored size", async (t) => {
   const f = await createMediaFixture(t);
   const missing = await fetch(f.base + "/api/media/00000000-0000-4000-8000-000000000000", {

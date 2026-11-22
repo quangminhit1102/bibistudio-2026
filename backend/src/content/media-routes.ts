@@ -87,6 +87,22 @@ export function mediaRoutes(
       res.status(201).json({ id: stored.id, width, height, size: bytes.length });
     },
   );
+  router.get("/", async (_req, res) => {
+    const [rows] = await pool.execute<RowDataPacket[]>(
+      "SELECT id,mime,size,width,height,created_at FROM media ORDER BY created_at DESC LIMIT 200",
+    );
+    res.json({
+      items: rows.map((row) => ({
+        id: row.id,
+        mime: row.mime,
+        size: Number(row.size),
+        width: Number(row.width),
+        height: Number(row.height),
+        createdAt: row.created_at,
+      })),
+      total: rows.length,
+    });
+  });
   router.get("/:id", async (req, res) => {
     const id = validate(z.uuid(), req.params.id);
     const [[row]] = await pool.execute<RowDataPacket[]>("SELECT * FROM media WHERE id=?", [id]);

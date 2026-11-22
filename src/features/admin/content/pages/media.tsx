@@ -16,6 +16,14 @@ import {
   useNotice,
 } from "../../shared/ui/primitives";
 import type { MediaAsset } from "../../services/contracts";
+function formatBytes(size: number): string {
+  if (!Number.isFinite(size) || size <= 0) return "—";
+  if (size >= 1024 * 1024) return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+  return `${Math.max(1, Math.round(size / 1024))} KiB`;
+}
+function formatDimensions(width: number, height: number): string {
+  return width > 0 && height > 0 ? `${width}×${height}` : "—";
+}
 export default function Media() {
   const runtime = useAdmin();
   const role = useRole();
@@ -143,7 +151,7 @@ export default function Media() {
                   <strong>{asset.name}</strong>
                 </label>
                 <small>
-                  {asset.width}×{asset.height} · {(asset.size / 1024).toFixed(0)}KiB
+                  {formatDimensions(asset.width, asset.height)} · {formatBytes(asset.size)}
                 </small>
               </div>
             </div>
@@ -163,8 +171,8 @@ export default function Media() {
             <>
               <MediaImage id={preview.id} alt={preview.name} className="a-media-preview" />
               <p style={{ marginTop: 12 }}>
-                {preview.mime} · {preview.width}×{preview.height} ·{" "}
-                {preview.size.toLocaleString("vi-VN")} bytes
+                {preview.mime} · {formatDimensions(preview.width, preview.height)} ·{" "}
+                {formatBytes(preview.size)}
               </p>
             </>
           )}

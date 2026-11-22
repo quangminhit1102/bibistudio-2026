@@ -84,8 +84,7 @@ function formatDate(iso: string) {
   });
 }
 
-const proseClasses =
-  "prose prose-stone max-w-none prose-headings:font-semibold prose-headings:text-foreground prose-p:text-[15px] prose-p:leading-[1.8] prose-p:text-foreground prose-a:text-accent prose-a:no-underline hover:prose-a:underline prose-blockquote:border-l-accent prose-blockquote:bg-secondary/40 prose-blockquote:py-2 prose-blockquote:pl-5 prose-blockquote:pr-4 prose-blockquote:italic prose-blockquote:text-foreground prose-img:rounded-sm prose-figcaption:text-[13px] prose-figcaption:text-muted-foreground";
+const proseClasses = "article-body";
 
 function Toc({ toc }: { toc: TocItem[] }) {
   return (

@@ -263,3 +263,110 @@
 body:has([aria-modal="true"]) .floating-contact, body:has([aria-modal="true"]) .back-to-top, body:has([aria-modal="true"]) [data-product-bar] { display: none; }
 img.img-loading { opacity: 0 !important; }
 @layer base { img { transition: opacity 0.7s var(--ease-paper); } }
+
+/* Public article typography. Mirrors the admin editor preview (`a-rich-content`)
+ * so what authors format in TinyMCE renders the same on the public article page. */
+.article-body {
+  font-size: 16px;
+  line-height: 1.85;
+  overflow-wrap: anywhere;
+  overflow-x: auto;
+  color: var(--color-foreground);
+}
+.article-body p {
+  margin: 0 0 1.2em;
+}
+.article-body h1,
+.article-body h2,
+.article-body h3,
+.article-body h4 {
+  margin: 1.5em 0 0.7em;
+  line-height: 1.4;
+  font-weight: 600;
+  color: var(--color-foreground);
+}
+.article-body h1 {
+  font-size: 28px;
+}
+.article-body h2 {
+  font-size: 24px;
+}
+.article-body h3 {
+  font-size: 20px;
+}
+.article-body h4 {
+  font-size: 18px;
+}
+.article-body ul {
+  list-style-type: disc;
+}
+.article-body ol {
+  list-style-type: decimal;
+}
+.article-body ul,
+.article-body ol {
+  padding-left: 1.7em;
+  margin: 1em 0;
+}
+.article-body table {
+  border-collapse: collapse;
+  max-width: 100%;
+  margin: 24px 0;
+}
+.article-body th,
+.article-body td {
+  border: 1px solid var(--color-border);
+  padding: 10px 12px;
+  vertical-align: top;
+}
+.article-body th {
+  font-weight: 600;
+}
+.article-body sub,
+.article-body sup {
+  font-size: 75%;
+  line-height: 0;
+  position: relative;
+  vertical-align: baseline;
+}
+.article-body sub {
+  bottom: -0.25em;
+}
+.article-body sup {
+  top: -0.5em;
+}
+.article-body hr {
+  border: 0;
+  border-top: 1px solid var(--color-border);
+  margin: 28px 0;
+}
+.article-body figure {
+  margin: 28px 0;
+}
+.article-body img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius-sm);
+}
+.article-body figcaption {
+  text-align: center;
+  font-size: 13px;
+  color: var(--color-muted-foreground);
+  margin-top: 8px;
+}
+.article-body blockquote {
+  margin: 24px 0;
+  border-left: 3px solid var(--color-kraft);
+  padding: 4px 0 4px 20px;
+  font-style: italic;
+}
+.article-body pre {
+  white-space: pre-wrap;
+  background: var(--color-secondary);
+  padding: 16px;
+  border-radius: 8px;
+}
+.article-body a {
+  color: var(--color-accent);
+  text-decoration: underline;
+}
