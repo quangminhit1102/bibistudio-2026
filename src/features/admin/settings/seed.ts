@@ -1,3 +1,4 @@
+import { site } from "@/platform/site";
 import { seedBase } from "../demo/clock";
 import type { SeedBatch } from "../demo/registry";
 export function seed(): SeedBatch {
@@ -21,8 +22,8 @@ export function seed(): SeedBatch {
         ...seedBase("general"),
         key: "general",
         values: {
-          studioName: "BiBi Studio",
-          email: "bibistudio@gmail.com",
+          studioName: site.name,
+          email: site.contact.email,
           timezone: "Asia/Ho_Chi_Minh",
           language: "vi",
         },

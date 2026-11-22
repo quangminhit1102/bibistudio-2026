@@ -2,11 +2,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { PageShell, PageIntro } from "@/components/page-shell";
 import { loadApiDemo } from "@/lib/api-demo";
+import { site } from "@/platform/site";
 
 export const Route = createFileRoute("/api-test")({
   head: () => ({
     meta: [
-      { title: "Kiểm tra API — BiBi Studio" },
+      { title: `Kiểm tra API${site.seo.titleSuffix}` },
       { name: "robots", content: "noindex, nofollow" },
     ],
   }),
@@ -50,7 +51,7 @@ function ApiTestPage() {
       <PageIntro
         eyebrow="KIỂM TRA KỸ THUẬT"
         title="Kết nối React và API"
-        lead="Trang thử nghiệm công khai dành cho việc kiểm tra và phát hành BiBi Studio."
+        lead={`Trang thử nghiệm công khai dành cho việc kiểm tra và phát hành ${site.name}.`}
       />
       <section className="mx-auto max-w-[1280px] px-5 pb-24 sm:px-6 lg:px-12">
         <div role="status" className="mb-6 rounded border border-border p-5">

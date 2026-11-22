@@ -1,5 +1,6 @@
 import type { AdminStore, EntityKey } from "../services/contracts";
 import { legacyPresentationBaseline } from "./legacy-presentation";
+import { site } from "@/platform/site";
 const groups: Partial<Record<EntityKey, string>> = {
   products: "products",
   users: "accounts",
@@ -63,7 +64,7 @@ export async function upgradePresentation(store: AdminStore, entity: EntityKey):
             content: [
               {
                 type: "paragraph",
-                content: [{ type: "text", text: "Những câu chuyện và cảm hứng từ BiBi Studio." }],
+                content: [{ type: "text", text: `Những câu chuyện và cảm hứng từ ${site.name}.` }],
               },
             ],
           });

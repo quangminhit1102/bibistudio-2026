@@ -7,10 +7,11 @@ import { ContactBand } from "@/components/contact-cta";
 import { collections, getAllProducts, tx, type Product } from "@/data/catalogue";
 import { getPublicProducts } from "@/lib/content-api";
 import { toPublicProduct } from "@/lib/content-adapter";
+import { site } from "@/platform/site";
 
-const title = "Bộ sưu tập — BiBi Studio";
+const title = `Bộ sưu tập${site.seo.titleSuffix}`;
 const description =
-  "Bảy câu chuyện của BiBi Studio: Khám phá Việt Nam, Món ăn Việt Nam, Áo dài, Thiệp chúc mừng và hơn thế nữa.";
+  `Bảy câu chuyện của ${site.name}: Khám phá Việt Nam, Món ăn Việt Nam, Áo dài, Thiệp chúc mừng và hơn thế nữa.`;
 
 export const Route = createFileRoute("/collections/")({
   loader: async () => {

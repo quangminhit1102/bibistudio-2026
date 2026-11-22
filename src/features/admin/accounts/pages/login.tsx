@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useAdmin } from "../../services/context";
 import { Button, Card, Field } from "../../shared/ui/primitives";
 import { Leaf, Eye, EyeOff, ArrowRight } from "lucide-react";
+import { site } from "@/platform/site";
 export function Login() {
   const { login, authNotice } = useAdmin();
   const [username, setUsername] = useState("");
@@ -13,7 +14,7 @@ export function Login() {
     <div className="a-login">
       <div className="a-login-story">
         <Leaf size={30} />
-        <p>BiBi Studio · Không gian quản trị</p>
+        <p>{site.name} · Không gian quản trị</p>
         <h1>
           Một nơi gọn gàng.
           <br />
@@ -24,7 +25,8 @@ export function Login() {
       <div className="a-login-form">
         <Card>
           <span className="a-wordmark">
-            B<span>BiBi Admin</span>
+            {site.admin.title.charAt(0)}
+            <span>{site.admin.title}</span>
           </span>
           <h2>Chào mừng trở lại</h2>
           <p>Đăng nhập để quản lý công việc của bạn.</p>

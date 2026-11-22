@@ -1,8 +1,10 @@
 # BiBi Studio — develop, build, deploy và rollback
 
-## Chế độ hiện tại: chỉ production, phát hành thủ công
+## Chế độ hiện tại: chỉ production, tự phát hành khi CI main đạt
 
-Luồng hoạt động: **code → CI kiểm tra/build → Run workflow Deploy production → duyệt production → deploy → smoke test → tự phục hồi nếu lỗi**. Push main chỉ tạo artifact, không tự thay đổi website.
+Luồng hoạt động: **push main → CI kiểm tra/build song song → Deploy production tự chạy với đúng artifact của lần CI đó → deploy → smoke test → tự phục hồi nếu lỗi**. Vẫn chạy tay được Deploy production và Rollback production bất cứ lúc nào (mục 3 và 4). PR và nhánh khác không bao giờ deploy.
+
+Tạm dừng tự phát hành: đặt repository variable `AUTO_DEPLOY` = `false` (Settings → Secrets and variables → Actions → Variables), hoặc ghi `[skip deploy]` trong commit message của commit mới nhất trong lần push. Xóa biến hoặc đổi giá trị khác `false` để bật lại. Khi tạm dừng, CI vẫn tạo artifact và deploy tay vẫn dùng được.
 
 **Relay IP/quốc gia đã phát hành 14/11:** release `032ec991fe11673b8a00298c0276fbcad59fa83b-43563390060`, production43566445860 và forward43568216450 Success; rollback43567948441 về v5 đã kiểm chứng. Hai nguồn Windows/hosting, hai hostname, HMAC/replay/privacy/auth và UI desktop/mobile đạt. Giữ trust=false; IP Chưa xác minh, quốc gia Ước lượng. Xem [biên bản và giới hạn](superpowers/reports/2026-11-14-visitor-relay-acceptance.md).
 
@@ -46,9 +48,27 @@ FE mặc định `http://localhost:5173`; `/api` proxy tới BE `127.0.0.1:3001`
 
 `.env.example` mô tả tên cấu hình; env thật bị gitignore. Setup sinh `.env.local` cho runtime và `.env.migration.local` cho thao tác DB có chủ đích. Không chép key/env production vào source hoặc VITE_*. API local mới có auth/account/role/permission/audit/customer-access; các module kinh doanh/content/media vẫn lưu local. Chỉ `/api/health` đạt chưa đủ chứng minh đăng nhập/MySQL sẵn sàng.
 
+### Cấu hình site (`site/`)
+
+Mọi thứ riêng của thương hiệu nằm trong `site/`: `site.config.ts` (tên, domain, liên hệ, SEO, font, module admin), `theme.css` (màu và font) và `assets/` (logo). Phần lõi (`src/`) chỉ đọc qua `src/platform/site.ts`; `scripts/site-boundary.test.mjs` chạy trong `npm run check` và báo lỗi khi tên thương hiệu, domain, số điện thoại hay email của site xuất hiện lại trong các thư mục lõi đã tách.
+
+Build đọc site từ biến môi trường `SITE_DIR` (mặc định `site`), ví dụ `SITE_DIR=sites/khac npm run build:cpanel`. Thiếu `site.config.ts` thì build dừng và nêu đường dẫn bị thiếu. Trang chủ, giới thiệu, liên hệ, dữ liệu mẫu và `src/data` chưa tách; tên kỹ thuật nội bộ có `bibi` (biến môi trường, cookie, header, khóa lưu trữ) giữ nguyên.
+
 ## 2. CI và artifact
 
-[CI](../.github/workflows/ci.yml) chạy cho PR và push main/codex. PR không nhận deploy secrets. CI dùng Node24, `npm ci`, `npm run check`, `npm run build`. Chỉ successful main-push CI mới tạo artifact phát hành.
+[CI](../.github/workflows/ci.yml) chạy cho PR và push main/codex. PR không nhận deploy secrets. Chỉ successful main-push CI mới tạo artifact phát hành.
+
+CI chia thành các job chạy song song, mỗi job một giai đoạn của `scripts/check.mjs`:
+
+| Job       | Lệnh                                                                     | Cần thêm               |
+| --------- | ------------------------------------------------------------------------ | ---------------------- |
+| `static`  | `node scripts/check.mjs static` (TypeScript, lint, ảnh catalogue)        | không                  |
+| `admin`   | `node scripts/check.mjs admin` (Vitest admin)                            | không                  |
+| `backend` | `node scripts/check.mjs backend` (test backend/scripts)                  | MariaDB, PHP           |
+| `e2e`     | `node scripts/check.mjs e2e <bộ>` — matrix 5 bộ trình duyệt              | MariaDB, PHP, Chromium |
+| `build`   | `npm run build`, `node scripts/visitor-context-bundle-check.mjs`, upload | MariaDB, PHP, Chromium |
+
+`npm run check` không tham số vẫn chạy toàn bộ các giai đoạn theo thứ tự như trước; thêm tên giai đoạn để chạy riêng một phần khi debug local. Thêm bộ trình duyệt mới thì thêm vào `E2E_SUITES` trong `scripts/check.mjs` và matrix của job `e2e`; policy test sẽ báo nếu hai nơi lệch nhau. Một job lỗi làm cả CI run lỗi, nên artifact của run đó không được phát hành dù job `build` đã upload.
 
 Artifact tên `release-<source SHA đầy đủ>-<CI run ID>`, chứa `<release ID>.tgz` và `.tgz.sha256`, giữ 30 ngày theo giới hạn GitHub. Archive gồm frontend static, backend JavaScript đã biên dịch, backend package/lockfile và manifest; không chứa env thật, private key, node_modules, symlink hoặc source triển khai tùy ý. Local build mang tiền tố `local-` và không được dùng để phát hành.
 
@@ -58,12 +78,22 @@ Production xác minh CI run là push main thành công, đúng repository/workfl
 
 Workflow: [Deploy production](../.github/workflows/production.yml).
 
-1. Mở CI main đã thành công, lấy release ID `<SHA>-<run ID>` từ tên artifact. Không dùng latest main thay cho một release cụ thể.
-2. Actions → Deploy production → Run workflow → chọn branch `main` → nhập release ID.
-3. Mở run → Review deployments → chọn production → Approve and deploy. Environment chỉ nhận main, required reviewer là `quangminhit1102`; cho phép chủ repo tự duyệt, không phải người duyệt độc lập.
-4. Workflow kiểm tra nguồn CI/artifact, SSH check, upload và checksum, chuẩn bị release, cài dependencies production BE, đổi current, restart Passenger.
-5. Chỉ báo deploy đạt sau HTTP/version/API404, browser ảnh sản phẩm, `/api-test` FE/BE khớp và kiểm tra assets/điều hướng của tab còn mở từ bản trước.
-6. Mở website kiểm tra một sản phẩm và `/api-test`; đối chiếu release ID của API với run.
+**Tự động:** khi CI của một push lên main đạt, workflow này tự chạy với release ID `<SHA>-<run ID>` của chính lần CI đó. Điều kiện: CI kết luận success, sự kiện push, nhánh main, cùng repository, `AUTO_DEPLOY` khác `false` và commit message không có `[skip deploy]`. Không cần thao tác gì; theo dõi ở Actions → Deploy production. Nếu khi run bắt đầu main đã có commit mới hơn (ví dụ chạy lại một CI run cũ), run tự bỏ qua deploy và ghi notice, để bản cũ không đè lên bản mới; muốn deploy bản đó thì chạy tay với release ID.
+
+**Chạy tay** (deploy lại, deploy một bản cụ thể, hoặc khi đang tạm dừng tự phát hành):
+
+1. Actions → Deploy production → Run workflow → chọn branch `main`.
+2. Để trống release ID để deploy bản CI main đạt mới nhất; hoặc nhập release ID `<SHA>-<run ID>` (lấy từ tên artifact của CI run) để deploy đúng bản đó.
+
+Cả hai đường đi qua cùng các bước:
+
+1. Workflow kiểm tra nguồn CI/artifact, SSH check, upload và checksum, chuẩn bị release, cài dependencies production BE, chạy migration, đổi current, restart Passenger.
+2. Chỉ báo deploy đạt sau HTTP/version/API404, browser ảnh sản phẩm, `/api-test` FE/BE khớp và kiểm tra assets/điều hướng của tab còn mở từ bản trước.
+3. Sau deploy, mở website kiểm tra một sản phẩm và `/api-test`; đối chiếu release ID của API với run.
+
+Environment `production` chỉ nhận main. Nếu environment còn required reviewer thì mọi run, kể cả run tự động, dừng ở Review deployments chờ Approve; muốn tự phát hành hoàn toàn phải gỡ reviewer trong Settings → Environments → production. Gỡ reviewer cũng bỏ bước duyệt của deploy tay và rollback.
+
+Vì migration tự chạy khi deploy và rollback không down-migrate (mục 4), commit có migration phá vỡ tương thích nên dùng `[skip deploy]` hoặc `AUTO_DEPLOY=false`, rồi deploy tay khi sẵn sàng.
 
 CI hoặc upload lỗi trước activation thì website không chuyển. Receiver kiểm tra hosting sau activation; nếu lỗi sẽ trả current/routing về bản trước và xác minh phục hồi. Nếu HTTP/browser/old-client smoke phía runner lỗi sau server activation, deploy client gọi rollback bản trước, kiểm tra phục hồi rồi báo job thất bại. Nếu rollback cũng lỗi, job báo rõ `ROLLBACK FAILED`; không coi đây là deploy thành công.
 
@@ -73,10 +103,12 @@ Workflow: [Rollback production](../.github/workflows/rollback.yml). Chỉ có pr
 
 1. Actions → Rollback production → Run workflow trên main.
 2. Nhập release ID đã thành công và còn trên hosting; hoặc `baseline` để về website static trước cutover.
-3. Duyệt production như deploy. Hosting kiểm tra release, đổi con trỏ, phục hồi routing phù hợp, restart và xác minh HTTP.
+3. Nếu environment còn required reviewer thì duyệt production. Hosting kiểm tra release, đổi con trỏ, phục hồi routing phù hợp, restart và xác minh HTTP.
 4. Đối chiếu FE/BE, trang sản phẩm và ảnh. Baseline chưa có API demo nên kiểm tra static và checksum baseline. Có thể chọn lại release thành công vừa rời đi để phục hồi sau diễn tập.
 
-Deploy và rollback dùng chung concurrency group `deploy-production`, không cancel run đang chạy; receiver còn khóa `flock` trên server. Baseline/bản thành công trước là điều kiện bắt buộc trước activation production. Giữ active, previous, baseline và năm release thành công gần nhất. Rollback không rewrite Git history và không rebuild. Database rollback chỉ đổi app tương thích schema; không down-migrate hoặc restore đè dữ liệu.
+Rollback không tắt tự phát hành: push main tiếp theo đạt CI sẽ deploy lại. Nếu rollback vì bản mới lỗi, đặt `AUTO_DEPLOY=false` trước, sửa xong rồi bật lại.
+
+Deploy (tự động lẫn tay) và rollback dùng chung concurrency group `deploy-production`, không cancel run đang chạy; receiver còn khóa `flock` trên server. Baseline/bản thành công trước là điều kiện bắt buộc trước activation production. Giữ active, previous, baseline và năm release thành công gần nhất. Rollback không rewrite Git history và không rebuild. Database rollback chỉ đổi app tương thích schema; không down-migrate hoặc restore đè dữ liệu.
 
 Không cố tình đưa fixture hỏng lên production. Mọi diễn tập rollback gây chuyển website thật phải thuộc phạm vi người dùng duyệt. Release pre-auth được duyệt riêng báo `degradedAdmin:true`; không dùng để khẳng định auth vẫn hoạt động. Xem biên bản auth05/11 ở trên.
 
@@ -138,15 +170,16 @@ Không xóa domain, key, secret hoặc các run cũ chỉ để làm sạch side
 - Bộ13 mockup sổ bản đồ đã phát hành ngày01/11/2026 bằng [CI main41255894313](https://github.com/quangminhit1102/bibistudio-2026/actions/runs/41255894313) và [production41261096084](https://github.com/quangminhit1102/bibistudio-2026/actions/runs/41261096084), release `e1df4d2348eb9e06426afd7584c86a982c8f3278-41255894313`. Workflow và kiểm tra độc lập đạt:13 detail đúng tên/ảnh,13 WebP khớp bytes/SHA256, FE/BE khớp, www và node-test200, tab cũ tải2 assets không dùng cache. Receipt giữ bản trước0bc7453; không diễn tập rollback mới.
 
 - Admin và các chỉnh sửa responsive đã phát hành ngày02/11/2026 qua [CI main41388721286](https://github.com/quangminhit1102/bibistudio-2026/actions/runs/41388721286) và [production41388994773](https://github.com/quangminhit1102/bibistudio-2026/actions/runs/41388994773), release `4c6e07014824cb8d1020875439cba3d153077d8e-41388721286`. CI Linux98 admin +55 tooling/API đạt, build/artifact chính thức đạt. Workflow và kiểm chứng độc lập đạt: FE/BE/www khớp, API JSON404, ảnh Đà Lạt khớp SHA256/source và browser decode, admin/pages/popup/mobile hoạt động, old-client asset khớp bytes/hash, `/node-test`200. Receipt giữ bản trước `4c791499859ea42bbb7214c7bd3e222b2a6a4a57-41274633689`; không diễn tập rollback mới. Admin vẫn là demo IndexedDB, Express chưa nhận nghiệp vụ quản trị. [Biên bản chi tiết](superpowers/reports/2026-11-02-admin-production-release.md).
-  | Lỗi                 | Kiểm tra đầu tiên                                                           |
-  | ------------------- | --------------------------------------------------------------------------- |
-  | Local không chạy    | Node24, npm ci, cổng5173/3001/9230                                          |
-  | API trả HTML        | Passenger mount/routing, content-type, `/api-test`                          |
-  | Ảnh lỗi             | URL catalogue, file/signature và browser decode                             |
-  | Artifact bị từ chối | CI main push/repository/SHA, artifact name/ID/expiry, sidecar SHA256        |
-  | SSH lỗi             | Environment secret, key scope, host pin, preflight; không mở shell rộng hơn |
-  | FE/BE lệch          | `/api/version`, `/version.json`, HTML script và mtime thực tế, log rollback |
-  | Deploy lỗi          | Đọc lỗi đầu tiên và kết quả recovery; `ROLLBACK FAILED` cần xử lý ngay      |
+  | Lỗi                  | Kiểm tra đầu tiên                                                                                               |
+  | -------------------- | --------------------------------------------------------------------------------------------------------------- |
+  | Local không chạy     | Node24, npm ci, cổng5173/3001/9230                                                                              |
+  | API trả HTML         | Passenger mount/routing, content-type, `/api-test`                                                              |
+  | Ảnh lỗi              | URL catalogue, file/signature và browser decode                                                                 |
+  | Artifact bị từ chối  | CI main push/repository/SHA, artifact name/ID/expiry, sidecar SHA256                                            |
+  | SSH lỗi              | Environment secret, key scope, host pin, preflight; không mở shell rộng hơn                                     |
+  | FE/BE lệch           | `/api/version`, `/version.json`, HTML script và mtime thực tế, log rollback                                     |
+  | Deploy lỗi           | Đọc lỗi đầu tiên và kết quả recovery; `ROLLBACK FAILED` cần xử lý ngay                                          |
+  | CI đạt, không deploy | Run bị skipped: `AUTO_DEPLOY`, `[skip deploy]`; notice "Skipped": main có commit mới hơn; chờ Approve: reviewer |
 
 Agent cần đọc tài liệu này trước khi đổi local/CI/deploy/rollback; xác định release/môi trường, kiểm tra trước/sau, báo rõ commit/build/run/live state và giới hạn chưa kiểm chứng. Lệnh package.json, workflow source, response HTTP và kết quả browser là bằng chứng vận hành.
 

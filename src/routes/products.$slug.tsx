@@ -19,6 +19,7 @@ import { findPublicProduct, getPublicProducts, pickSource } from "@/lib/content-
 import { toPublicProduct } from "@/lib/content-adapter";
 import { resolveSeo } from "@/lib/content-seo";
 import { SITE_URL, buildBreadcrumbSchema } from "@/lib/seo";
+import { site } from "@/platform/site";
 
 function relatedFromList(product: Product, list: Product[], n = 8): Product[] {
   const sameCollection = list.filter(
@@ -57,14 +58,14 @@ export const Route = createFileRoute("/products/$slug")({
   head: ({ loaderData, params }) => {
     if (!loaderData)
       return {
-        meta: [{ title: "Không tìm thấy — BiBi Studio" }, { name: "robots", content: "noindex" }],
+        meta: [{ title: `Không tìm thấy${site.seo.titleSuffix}` }, { name: "robots", content: "noindex" }],
       };
     let title: string, description: string;
     let image: string | undefined;
     const scripts: { type: string; children: string }[] = [];
     if (loaderData.kind === "type") {
       const t = getProductType(loaderData.typeId);
-      title = `${tx(t.plural)} — BiBi Studio`;
+      title = `${tx(t.plural)}${site.seo.titleSuffix}`;
       description = tx(t.tagline);
     } else {
       const p = loaderData.product;
@@ -72,7 +73,7 @@ export const Route = createFileRoute("/products/$slug")({
       const seo = resolveSeo({
         seoTitle: loaderData.seo?.seo_title,
         seoDescription: loaderData.seo?.seo_description,
-        title: `${tx(p.name)} · ${tx(t.name)} — BiBi Studio`,
+        title: `${tx(p.name)} · ${tx(t.name)}${site.seo.titleSuffix}`,
         shortDescription: tx(p.description),
       });
       title = seo.title;
@@ -226,14 +227,14 @@ function ProductDetail({ product, related }: { product: Product; related: Produc
           <div className="paper-texture mt-10 p-7">
             <p className="font-display text-2xl">Bạn quan tâm đến sản phẩm này?</p>
             <p className="mt-2 text-[13px] text-muted-foreground">
-              Liên hệ BiBi Studio để được tư vấn chi tiết.
+              Liên hệ {site.name} để được tư vấn chi tiết.
             </p>
             <ContactLinks className="mt-5" />
             <Link
               to="/contact"
               className="mt-6 block bg-foreground py-3.5 text-center text-[12px] font-medium uppercase tracking-[0.22em] text-background transition hover:bg-accent"
             >
-              Liên hệ BiBi Studio
+              Liên hệ {site.name}
             </Link>
           </div>
         </div>

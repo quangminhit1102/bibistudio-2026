@@ -2,6 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageShell, PageIntro } from "@/components/page-shell";
 import { Reveal } from "@/components/brand/reveal";
 import { ContactBand } from "@/components/contact-cta";
+import notebookCollectionImage from "@/assets/about/watercolor-notebook-collection.webp";
+import postcardCollectionImage from "@/assets/about/illustrated-postcard-collection.webp";
 
 const title = "Về BiBi Studio — Touch your heart";
 const description = "BiBi Studio là studio đồ giấy sáng tạo: sổ tay, thiệp, postcard và giấy viết thư lấy cảm hứng từ Việt Nam.";
@@ -75,7 +77,7 @@ function AboutPage() {
 
       <section className="mx-auto max-w-[1280px] px-5 sm:px-6 lg:px-12">
         <Reveal>
-          <img src="/Images/GPT-Update/Vietnam Watercolor Travel Notebook Collection.png" alt="Thế giới hình ảnh và sản phẩm giấy BiBi Studio" loading="lazy" className="aspect-[16/9] w-full object-cover md:aspect-[21/9]" />
+          <img src={notebookCollectionImage} alt="Thế giới hình ảnh và sản phẩm giấy BiBi Studio" loading="lazy" className="aspect-[16/9] w-full object-cover md:aspect-[21/9]" />
         </Reveal>
       </section>
 
@@ -115,7 +117,7 @@ function AboutPage() {
       {/* Sản phẩm & câu chuyện */}
       <section className="mx-auto grid max-w-[1280px] gap-12 px-5 py-20 sm:px-6 md:grid-cols-2 md:items-center md:py-28 lg:px-12">
         <Reveal className="overflow-hidden">
-          <img src="Images\GPT-Update\Vietnam Illustrated Travel Postcard Collection-2.png" alt="Bộ sưu tập sổ tay và đồ giấy lấy cảm hứng từ Việt Nam" loading="lazy" className="aspect-[4/3] w-full object-cover transition-transform duration-700 ease-out hover:scale-[1.04]" />
+          <img src={postcardCollectionImage} alt="Bộ sưu tập sổ tay và đồ giấy lấy cảm hứng từ Việt Nam" loading="lazy" className="aspect-[4/3] w-full object-cover transition-transform duration-700 ease-out hover:scale-[1.04]" />
         </Reveal>
         <Reveal className="space-y-6" delay={120}>
           <p className="eyebrow">Những câu chuyện mang theo</p>

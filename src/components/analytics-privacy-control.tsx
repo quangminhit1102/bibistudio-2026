@@ -6,6 +6,7 @@ import {
   ANALYTICS_PREFERENCE_EVENT,
   ANALYTICS_OPT_OUT_KEY,
 } from "../lib/analytics-privacy";
+import { site } from "@/platform/site";
 export function AnalyticsPrivacyControl() {
   const [disabled, setDisabled] = useState(false);
   const [privacySignal, setPrivacySignal] = useState(false);
@@ -33,7 +34,7 @@ export function AnalyticsPrivacyControl() {
         Quyền riêng tư khi truy cập
       </summary>
       <p className="my-2">
-        BiBi ghi nhận các trang và sản phẩm được quan tâm bằng cookie riêng trong tối đa 90 ngày.
+        {site.shortName} ghi nhận các trang và sản phẩm được quan tâm bằng cookie riêng trong tối đa 90 ngày.
         Khi có nguồn phù hợp, website lưu IP công khai và ước lượng quốc gia; không thu thập vị trí
         chính xác hoặc nội dung biểu mẫu. Không liên kết với tài khoản quản trị.
       </p>

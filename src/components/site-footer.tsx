@@ -1,10 +1,13 @@
 // Magazine-style footer: brand story · products · collections · contact & map.
 import { Link } from "@tanstack/react-router";
 import { ArrowUpRight, MapPin } from "lucide-react";
-import { BrandLogo } from "./brand-logo";
 import { Reveal } from "./brand/reveal";
 import { collections, productTypes, tx } from "@/data/catalogue";
-import { contact, studioLocation } from "@/data/contact";
+import { mailHref, siteLocation, telHref } from "@/lib/site-contact";
+import { BrandLogo, site } from "@/platform/site";
+
+const contact = site.contact;
+const studioLocation = siteLocation(site);
 
 function Col({ title, children, delay = 0 }: { title: string; children: React.ReactNode; delay?: number }) {
   return (
@@ -34,7 +37,7 @@ export function SiteFooter() {
               Một studio nhỏ làm đồ giấy lấy cảm hứng từ Việt Nam — mỗi sản phẩm bắt đầu từ một câu chuyện.
             </p>
             <Link to="/about" className="mt-6 inline-flex items-center gap-1.5 text-[12px] font-medium uppercase tracking-[0.2em] underline underline-offset-8 hover:text-accent">
-              Câu chuyện BiBi <ArrowUpRight className="size-3.5" />
+              Câu chuyện {site.shortName} <ArrowUpRight className="size-3.5" />
             </Link>
           </Reveal>
 
@@ -56,27 +59,24 @@ export function SiteFooter() {
           </Col>
 
           <Col title="Liên hệ" delay={240}>
-            <a href={`tel:${contact.phone}`} className="block font-display text-3xl leading-none transition hover:text-accent">
+            <a href={telHref(site)} className="block font-display text-3xl leading-none transition hover:text-accent">
               {contact.phoneDisplay}
             </a>
-            <a href={`mailto:${contact.email}`} className="mt-3 block break-all text-[14px] text-foreground/80 hover:text-foreground">
+            <a href={mailHref(site)} className="mt-3 block break-all text-[14px] text-foreground/80 hover:text-foreground">
               {contact.email}
             </a>
             <div className="mt-5 flex flex-wrap gap-2">
-              {[
-                ["Zalo", contact.zalo],
-                ["Facebook", contact.facebook],
-                ["Messenger", contact.messenger],
-              ].map(([label, href]) => (
-                <a key={label} href={href} target="_blank" rel="noopener noreferrer" className="border border-border px-3 py-1.5 text-[12px] transition hover:border-foreground hover:bg-secondary">
+              {contact.social.map(({ id, label, href }) => (
+                <a key={id} href={href} target="_blank" rel="noopener noreferrer" className="border border-border px-3 py-1.5 text-[12px] transition hover:border-foreground hover:bg-secondary">
                   {label}
                 </a>
               ))}
             </div>
+            {studioLocation && (
             <a href={studioLocation.maps} target="_blank" rel="noopener noreferrer" className="group mt-6 block overflow-hidden border border-border">
               <div className="relative h-28 overflow-hidden bg-secondary">
                 <iframe
-                  title="Bản đồ BiBi Studio"
+                  title={`Bản đồ ${site.name}`}
                   src={studioLocation.embed}
                   loading="lazy"
                   tabIndex={-1}
@@ -88,16 +88,17 @@ export function SiteFooter() {
                 <span><span className="text-foreground">{studioLocation.name}</span><br />{studioLocation.address}</span>
               </div>
             </a>
+            )}
           </Col>
         </div>
       </div>
 
       <div className="border-t border-border">
         <div className="mx-auto flex max-w-[1280px] flex-col gap-2 px-5 pb-24 pt-5 text-[11px] tracking-wider text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-6 xl:pb-5 lg:px-12">
-          <p>© {new Date().getFullYear()} BiBi Studio · Touch your heart</p>
+          <p>© {new Date().getFullYear()} {site.name}{site.tagline ? ` · ${site.tagline}` : ""}</p>
           <AnalyticsPrivacyControl />
           <p className="flex gap-5">
-            <Link to="/about" className="hover:text-foreground">Về BiBi</Link>
+            <Link to="/about" className="hover:text-foreground">Về {site.shortName}</Link>
             <Link to="/contact" className="hover:text-foreground">Liên hệ</Link>
             <Link to="/api-test" className="hover:text-foreground">Kiểm tra API</Link>
           </p>

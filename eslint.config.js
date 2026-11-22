@@ -15,6 +15,7 @@ export default tseslint.config(
       ".superpowers",
       ".output",
       ".vinxi",
+      "public/vendor",
     ],
   },
   {
@@ -42,7 +43,21 @@ export default tseslint.config(
           ],
         },
       ],
-      "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
+      "react-refresh/only-export-components": [
+        "warn",
+        {
+          allowConstantExport: true,
+          // Hooks that read a provider or route defined in the same file stay beside it.
+          allowExportNames: [
+            "useAdmin",
+            "useEntity",
+            "useRecord",
+            "useRole",
+            "useNotice",
+            "useRecordId",
+          ],
+        },
+      ],
       "@typescript-eslint/no-unused-vars": "off",
     },
   },

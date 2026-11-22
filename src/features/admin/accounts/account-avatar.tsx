@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import type { AdminUser } from "../services/contracts";
 import { useAdmin } from "../services/context";
 import { ownedAvatarKey } from "./profile-avatar";
-export function profileInitials(name: string): string {
+function profileInitials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   return (parts[0]?.[0] ?? "B") + (parts.length > 1 ? parts.at(-1)![0] : "");
 }

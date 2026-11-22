@@ -1,3 +1,4 @@
+import { site } from "@/platform/site";
 import type { PurchaseSlip } from "../services/contracts";
 import { ServiceError } from "../services/errors";
 import { calendarDate } from "../shared/lib/text";
@@ -65,10 +66,9 @@ export async function loadPrintDraft(slip: PurchaseSlip, source: SlipPrintSource
     }),
   );
   const draft: PrintDraft = {
-    company: "Công Ty TNHH BI DIARY HANDMADE",
-    companyAddress:
-      "984/10 quốc lộ 1A, KP. 5, P. Linh Trung, Thành phố Thủ Đức, Thành phố Hồ Chí Minh",
-    phone: "0392969000",
+    company: site.company?.legalName ?? site.name,
+    companyAddress: site.company?.address ?? "",
+    phone: site.contact.phone,
     title: "PHIẾU GIAO HÀNG",
     customer: customer?.name ?? slip.customerSnapshot.name,
     customerAddress: customer?.address ?? slip.customerSnapshot.address,

@@ -15,10 +15,11 @@ import {
 } from "@/data/catalogue";
 import { getPublicProducts } from "@/lib/content-api";
 import { toPublicProduct } from "@/lib/content-adapter";
+import { site } from "@/platform/site";
 
-const title = "Sản phẩm — BiBi Studio";
+const title = `Sản phẩm${site.seo.titleSuffix}`;
 const description =
-  "Danh mục sản phẩm BiBi Studio: sổ tay, thiệp, postcard, bao thư, giấy viết thư và magnet.";
+  `Danh mục sản phẩm ${site.name}: sổ tay, thiệp, postcard, bao thư, giấy viết thư và magnet.`;
 const PAGE = 12;
 
 export const Route = createFileRoute("/products/")({
@@ -170,7 +171,7 @@ function ProductsPage() {
       <PageIntro
         eyebrow="Catalogue"
         title="Sản phẩm"
-        lead="Khám phá các sản phẩm giấy của BiBi Studio theo loại sản phẩm hoặc theo bộ sưu tập."
+        lead={`Khám phá các sản phẩm giấy của ${site.name} theo loại sản phẩm hoặc theo bộ sưu tập.`}
       />
       <section className="mx-auto max-w-[1280px] px-5 sm:px-6 lg:px-12">
         <div className="border-y border-border py-6">
