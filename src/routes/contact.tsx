@@ -3,7 +3,11 @@ import { MapPin, Navigation } from "lucide-react";
 import { PageShell, PageIntro } from "@/components/page-shell";
 import { ContactLinks } from "@/components/contact-cta";
 import { Reveal } from "@/components/brand/reveal";
-import { contact, studioLocation } from "@/data/contact";
+import { mailHref, siteLocation, telHref } from "@/lib/site-contact";
+import { site } from "@/platform/site";
+
+const contact = site.contact;
+const studioLocation = siteLocation(site);
 
 const title = "Liên hệ — BiBi Studio";
 const description =
@@ -34,13 +38,13 @@ function ContactPage() {
       <section className="mx-auto grid max-w-[1280px] gap-14 px-5 pb-28 sm:px-6 md:grid-cols-2 lg:px-12">
         <div>
           <a
-            href={`tel:${contact.phone}`}
+            href={telHref(site)}
             className="block font-display text-[2.7rem] leading-none transition hover:text-accent sm:text-5xl md:text-6xl"
           >
             {contact.phoneDisplay}
           </a>
           <a
-            href={`mailto:${contact.email}`}
+            href={mailHref(site)}
             className="mt-6 block font-display text-2xl italic text-kraft hover:underline"
           >
             {contact.email}
@@ -49,6 +53,7 @@ function ContactPage() {
         <ContactLinks />
       </section>
 
+      {studioLocation && (
       <section className="border-t border-border bg-secondary/50">
         <div className="mx-auto max-w-[1280px] px-5 py-20 sm:px-6 md:py-28 lg:px-12">
           <Reveal className="max-w-2xl">
@@ -112,6 +117,7 @@ function ContactPage() {
           </div>
         </div>
       </section>
+      )}
     </PageShell>
   );
 }

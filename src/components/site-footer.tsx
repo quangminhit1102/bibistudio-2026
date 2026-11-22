@@ -4,7 +4,11 @@ import { ArrowUpRight, MapPin } from "lucide-react";
 import { BrandLogo } from "./brand-logo";
 import { Reveal } from "./brand/reveal";
 import { collections, productTypes, tx } from "@/data/catalogue";
-import { contact, studioLocation } from "@/data/contact";
+import { mailHref, siteLocation, telHref } from "@/lib/site-contact";
+import { site } from "@/platform/site";
+
+const contact = site.contact;
+const studioLocation = siteLocation(site);
 
 function Col({ title, children, delay = 0 }: { title: string; children: React.ReactNode; delay?: number }) {
   return (
@@ -56,27 +60,24 @@ export function SiteFooter() {
           </Col>
 
           <Col title="Liên hệ" delay={240}>
-            <a href={`tel:${contact.phone}`} className="block font-display text-3xl leading-none transition hover:text-accent">
+            <a href={telHref(site)} className="block font-display text-3xl leading-none transition hover:text-accent">
               {contact.phoneDisplay}
             </a>
-            <a href={`mailto:${contact.email}`} className="mt-3 block break-all text-[14px] text-foreground/80 hover:text-foreground">
+            <a href={mailHref(site)} className="mt-3 block break-all text-[14px] text-foreground/80 hover:text-foreground">
               {contact.email}
             </a>
             <div className="mt-5 flex flex-wrap gap-2">
-              {[
-                ["Zalo", contact.zalo],
-                ["Facebook", contact.facebook],
-                ["Messenger", contact.messenger],
-              ].map(([label, href]) => (
-                <a key={label} href={href} target="_blank" rel="noopener noreferrer" className="border border-border px-3 py-1.5 text-[12px] transition hover:border-foreground hover:bg-secondary">
+              {contact.social.map(({ id, label, href }) => (
+                <a key={id} href={href} target="_blank" rel="noopener noreferrer" className="border border-border px-3 py-1.5 text-[12px] transition hover:border-foreground hover:bg-secondary">
                   {label}
                 </a>
               ))}
             </div>
+            {studioLocation && (
             <a href={studioLocation.maps} target="_blank" rel="noopener noreferrer" className="group mt-6 block overflow-hidden border border-border">
               <div className="relative h-28 overflow-hidden bg-secondary">
                 <iframe
-                  title="Bản đồ BiBi Studio"
+                  title={`Bản đồ ${site.name}`}
                   src={studioLocation.embed}
                   loading="lazy"
                   tabIndex={-1}
@@ -88,6 +89,7 @@ export function SiteFooter() {
                 <span><span className="text-foreground">{studioLocation.name}</span><br />{studioLocation.address}</span>
               </div>
             </a>
+            )}
           </Col>
         </div>
       </div>

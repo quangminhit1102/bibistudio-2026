@@ -1,7 +1,13 @@
 // The contract between the reusable core and one brand's `site/` directory.
 
 export type NavItem = { to: string; label: string };
-export type SocialLink = { id: string; label: string; href: string };
+export type SocialLink = {
+  id: string;
+  label: string;
+  href: string;
+  /** Text shown beside the label in contact lists; defaults to the label. */
+  display?: string;
+};
 export type SiteLocation = {
   name: string;
   address: string;
@@ -25,6 +31,8 @@ export type SiteConfig = {
     social: SocialLink[];
     location?: SiteLocation;
   };
+  /** Legal entity printed on business documents. */
+  company?: { legalName: string; address: string };
   seo: { titleSuffix: string; description: string; ogImage?: string };
   fonts: { href: string }[];
   preconnect?: { href: string; crossOrigin?: boolean }[];

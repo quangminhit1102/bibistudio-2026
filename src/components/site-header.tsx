@@ -5,7 +5,8 @@ import { Link } from "@tanstack/react-router";
 import { BrandLogo } from "./brand-logo";
 import { LanguageSwitcher } from "./language-switcher";
 import { QuickSearch } from "./quick-search";
-import { contact } from "@/data/contact";
+import { telHref } from "@/lib/site-contact";
+import { site } from "@/platform/site";
 import { collections, productTypes, tx } from "@/data/catalogue";
 
 type Mega = "products" | "collections";
@@ -95,7 +96,7 @@ export function SiteHeader() {
 
         <div className="flex items-center justify-self-end lg:hidden">
           <QuickSearch />
-          <a href={`tel:${contact.phone}`} className="grid size-11 place-items-center" aria-label="Gọi BiBi Studio">
+          <a href={telHref(site)} className="grid size-11 place-items-center" aria-label={`Gọi ${site.name}`}>
             <Phone className="size-5" />
           </a>
         </div>

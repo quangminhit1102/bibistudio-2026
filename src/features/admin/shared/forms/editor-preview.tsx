@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Monitor, Smartphone } from "lucide-react";
+import { site } from "@/platform/site";
 import { useAdmin } from "../../services/context";
 import { Button, Modal } from "../ui/primitives";
 import { MediaImage } from "../../content/components/media-image";
@@ -126,10 +127,12 @@ export default function EditorPreview({
                   <p>{String(record.shortDescription ?? "")}</p>
                   <div className="a-preview-contact">
                     <h3>Bạn quan tâm đến sản phẩm này?</h3>
-                    <p>Liên hệ BiBi Studio để được tư vấn chi tiết.</p>
-                    <p>0392 969 000 · bibistudio@gmail.com</p>
+                    <p>Liên hệ {site.name} để được tư vấn chi tiết.</p>
+                    <p>
+                      {site.contact.phoneDisplay} · {site.contact.email}
+                    </p>
                     <a href="/contact" target="_blank" rel="noopener noreferrer">
-                      Liên hệ BiBi Studio
+                      Liên hệ {site.name}
                     </a>
                   </div>
                 </div>

@@ -8,7 +8,12 @@ const valid: SiteConfig = {
   url: "https://example.com",
   locales: ["vi"],
   defaultLocale: "vi",
-  contact: { phone: "0900000000", phoneDisplay: "0900 000 000", email: "a@example.com", social: [] },
+  contact: {
+    phone: "0900000000",
+    phoneDisplay: "0900 000 000",
+    email: "a@example.com",
+    social: [],
+  },
   seo: { titleSuffix: " — Example", description: "Example site" },
   fonts: [],
   admin: { title: "Example Admin", modules: [] },

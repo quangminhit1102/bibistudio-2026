@@ -12,9 +12,14 @@ export default defineSite({
     phoneDisplay: "0392 969 000",
     email: "bibistudio@gmail.com",
     social: [
-      { id: "zalo", label: "Zalo", href: "https://zalo.me/0392969000" },
-      { id: "facebook", label: "Facebook", href: "https://www.facebook.com/bidiary" },
-      { id: "messenger", label: "Messenger", href: "https://m.me/bidiary" },
+      { id: "zalo", label: "Zalo", href: "https://zalo.me/0392969000", display: "0392 969 000" },
+      {
+        id: "facebook",
+        label: "Facebook",
+        href: "https://www.facebook.com/bidiary",
+        display: "BiBi Studio",
+      },
+      { id: "messenger", label: "Messenger", href: "https://m.me/bidiary", display: "Nhắn tin" },
     ],
     // Meeting point saved by BiBi Studio in Google Maps.
     location: {
@@ -24,6 +29,10 @@ export default defineSite({
       lng: 106.6998246,
       query: "Đường sách Nguyễn Văn Bình, Quận 1, TP. Hồ Chí Minh",
     },
+  },
+  company: {
+    legalName: "Công Ty TNHH BI DIARY HANDMADE",
+    address: "984/10 quốc lộ 1A, KP. 5, P. Linh Trung, Thành phố Thủ Đức, Thành phố Hồ Chí Minh",
   },
   seo: {
     titleSuffix: " — BiBi Studio",
