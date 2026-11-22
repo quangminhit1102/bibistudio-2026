@@ -18,11 +18,12 @@ permissions:
   contents: read
   actions: read
   deployments: write
-concurrency:
-  group: deploy-production
-  cancel-in-progress: false
 jobs:
   promote:
+    # Job level, so a run skipped by the condition below never enters the queue and cannot evict a pending rollback.
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
     if: >-
       github.ref == 'refs/heads/main' && (
         github.event_name == 'workflow_dispatch' ||

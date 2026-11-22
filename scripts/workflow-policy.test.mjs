@@ -122,7 +122,9 @@ test("workflows pin actions and isolate deployment credentials from CI", async (
       for (const step of job.steps ?? []) if (step.uses) assert.match(step.uses, /@[a-f0-9]{40}$/);
     assert.equal(workflows[name].permissions.contents, "read");
     if (name !== "ci") {
-      assert.equal(workflows[name].concurrency["cancel-in-progress"], false);
+      const concurrency =
+        workflows[name].concurrency ?? Object.values(workflows[name].jobs)[0].concurrency;
+      assert.deepEqual(concurrency, { group: "deploy-production", "cancel-in-progress": false });
       assert.ok(source.includes("github.ref == 'refs/heads/main'"));
     } else assert.ok(!source.includes("secrets."));
   }
@@ -212,6 +214,9 @@ test("production deploys automatically only after successful main push CI of thi
   ])
     assert.ok(condition.includes(required), `deploy condition lacks: ${required}`);
   assert.ok(!condition.includes("always()"));
+  // Workflow-level concurrency would let a skipped run (failed CI) evict a queued rollback.
+  assert.equal(production.concurrency, undefined);
+  assert.ok(production.jobs.promote.concurrency);
   const deploy = production.jobs.promote.steps.find(
     (step) => step.run === "node scripts/deploy-client.mjs",
   );
