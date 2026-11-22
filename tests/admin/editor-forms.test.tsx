@@ -7,16 +7,20 @@ import ProductForm from "../../src/features/admin/products/components/product-fo
 import { postConfig } from "../../src/features/admin/content/config";
 import { productConfig } from "../../src/features/admin/products/config";
 vi.mock("../../src/features/admin/services/context", () => {
+  const rows = [
+    { id: "user-1", name: "BiBi", kind: "content" },
+    { id: "cat-journal", name: "Nhật ký", kind: "content" },
+    { id: "cat-notebook", name: "Sổ tay", kind: "product" },
+  ];
   const runtime = {
     ensure: async () => {},
     store: {
-      list: async () => [
-        { id: "user-1", name: "BiBi", kind: "content" },
-        { id: "cat-journal", name: "Nhật ký", kind: "content" },
-        { id: "cat-notebook", name: "Sổ tay", kind: "product" },
-      ],
+      list: async () => rows,
       get: async () => undefined,
     },
+    service: () => ({
+      list: async () => ({ items: rows, total: rows.length, page: 1, pageSize: 500 }),
+    }),
   };
   return { useAdmin: () => runtime };
 });

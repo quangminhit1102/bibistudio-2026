@@ -5,6 +5,7 @@ import { useAdmin } from "../../services/context";
 import { Field, Skeleton } from "../ui/primitives";
 import { calendarDate } from "../lib/text";
 import type { FormField, FormValues } from "./record-form";
+import { relationResource } from "./record-form";
 
 function TagInput({
   value,
@@ -57,12 +58,15 @@ function RelationInput({
     queryKey: ["bibi-admin", "editor-options", field.entity, field.filter],
     queryFn: async () => {
       await runtime.ensure(field.entity!);
-      const rows = await runtime.store.list(field.entity!);
-      return rows
+      const result = await runtime
+        .service(field.entity!, relationResource(field))
+        .list({ page: 1, pageSize: 500 });
+      return result.items
         .filter((row) =>
-          Object.entries(field.filter ?? {}).every(
-            ([key, v]) => String((row as unknown as FormValues)[key]) === v,
-          ),
+          Object.entries(field.filter ?? {}).every(([key, v]) => {
+            const rowValue = (row as unknown as FormValues)[key];
+            return rowValue === undefined || String(rowValue) === v;
+          }),
         )
         .map((row) => ({ value: row.id, label: "name" in row ? String(row.name) : row.id }));
     },

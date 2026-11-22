@@ -10,12 +10,13 @@ const uuid = z.uuid();
 const revision = z.number().int().positive();
 const listQuery = z
   .object({
-    search: z.string().max(100).default(""),
+    q: z.string().max(100).optional(),
     page: z.coerce.number().int().min(1).max(100000).default(1),
-    pageSize: z.coerce.number().int().min(1).max(100).default(20),
+    size: z.coerce.number().int().min(1).max(1000).default(20),
     sort: z.string().max(64).optional(),
+    dir: z.enum(["asc", "desc"]).optional(),
   })
-  .strict();
+  .catchall(z.string());
 const id = (value: unknown) => validate(uuid, value);
 
 const categoryCreate = z
@@ -103,7 +104,7 @@ const postUpdate = z
 
 const productCreate = z
   .object({
-    productCode: z.string().trim().min(1).max(64),
+    productCode: z.string().trim().min(1).max(64).regex(/^\d{1,64}$/),
     name: z.string().trim().min(1).max(255),
     slug: z.string().trim().min(1).max(191),
     shortDescription: z.string().nullable().optional(),
@@ -125,7 +126,7 @@ const productCreate = z
 const productUpdate = z
   .object({
     revision,
-    productCode: z.string().trim().min(1).max(64).optional(),
+    productCode: z.string().trim().min(1).max(64).regex(/^\d{1,64}$/).optional(),
     name: z.string().trim().min(1).max(255).optional(),
     slug: z.string().trim().min(1).max(191).optional(),
     shortDescription: z.string().nullable().optional(),
@@ -165,9 +166,15 @@ function entity(
   const r = Router();
   r.get("/", authenticate(auth), requirePermission(`${permission}.view`), async (req, res) => {
     const query = validate(listQuery, req.query);
+    const filters: Record<string, string> = {};
+    for (const [key, value] of Object.entries(query)) {
+      if (key.startsWith("f_") && value !== undefined && value !== "")
+        filters[key.slice(2)] = String(value);
+    }
+    const sort = query.sort ? `${query.sort}:${query.dir ?? "asc"}` : undefined;
     res.json(
       await service.list(
-        { search: query.search, page: query.page, pageSize: query.pageSize, sort: query.sort },
+        { search: query.q, page: query.page, pageSize: query.size, sort, filters },
         req.auth!,
       ),
     );

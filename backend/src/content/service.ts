@@ -277,7 +277,7 @@ export function createContentService(pool: Pool, clock: Clock) {
     map: (row: RowDataPacket) => T,
   ): Promise<Page<T>> {
     const page = Math.max(1, Math.floor(input.page ?? 1));
-    const pageSize = Math.min(100, Math.max(1, Math.floor(input.pageSize ?? 20)));
+    const pageSize = Math.min(500, Math.max(1, Math.floor(input.pageSize ?? 20)));
     const where: string[] = [];
     const params: (string | number)[] = [];
     if (input.search) {

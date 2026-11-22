@@ -1,7 +1,7 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { useQuery } from "@tanstack/react-query";
-import type { EntityKey } from "../../services/contracts";
+import type { EntityKey, Resource } from "../../services/contracts";
 import { useAdmin } from "../../services/context";
 import { Button, Field, Skeleton } from "../ui/primitives";
 import { calendarDate } from "../lib/text";
@@ -32,6 +32,11 @@ export interface FormField {
   description?: string;
 }
 export type FormValues = Record<string, unknown>;
+export function relationResource(field: FormField): Resource | undefined {
+  if (field.entity !== "categories") return undefined;
+  const kind = field.filter?.kind;
+  return kind === "content" ? "content" : kind === "genre" ? "bookstore" : "products";
+}
 function RelationField({
   field,
   value,
@@ -46,12 +51,15 @@ function RelationField({
     queryKey: ["bibi-admin", "options", field.entity, field.filter],
     queryFn: async () => {
       await runtime.ensure(field.entity!);
-      const rows = await runtime.store.list(field.entity!);
-      return rows
+      const result = await runtime
+        .service(field.entity!, relationResource(field))
+        .list({ page: 1, pageSize: 500 });
+      return result.items
         .filter((r) =>
-          Object.entries(field.filter ?? {}).every(
-            ([k, v]) => String((r as unknown as FormValues)[k]) === v,
-          ),
+          Object.entries(field.filter ?? {}).every(([k, v]) => {
+            const rowValue = (r as unknown as FormValues)[k];
+            return rowValue === undefined || String(rowValue) === v;
+          }),
         )
         .map((r) => ({ value: r.id, label: "name" in r ? String(r.name) : r.id }));
     },
