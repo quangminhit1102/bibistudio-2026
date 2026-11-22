@@ -83,11 +83,29 @@ export async function validateRelease(
     checksum: evidence?.checksum ?? "",
   };
 }
+/** The release a manual deploy promotes when no release ID was entered. */
+export async function latestReleaseId({ request = github } = {}) {
+  const { workflow_runs: runs } = await request(
+    "actions/workflows/ci.yml/runs?branch=main&event=push&status=success&per_page=1",
+  );
+  if (!runs?.length) throw new Error("No successful main CI run");
+  return `${runs[0].head_sha}-${runs[0].id}`;
+}
+/** False once main has moved on, e.g. when an old CI run is re-run after a newer deploy. */
+export async function isMainHead(sourceSha, { request = github } = {}) {
+  return (await request("commits/main")).sha === sourceSha;
+}
 if (isMain(import.meta.url)) {
   try {
-    const result = await validateRelease(process.env.RELEASE_ID, {
+    const result = await validateRelease(process.env.RELEASE_ID || (await latestReleaseId()), {
       production: process.env.DEPLOY_ENV === "production",
     });
+    if (process.env.GITHUB_EVENT_NAME === "workflow_run" && !(await isMainHead(result.sourceSha))) {
+      result.stale = true;
+      console.log(
+        `::notice::Skipped automatic deploy of ${result.releaseId}: main has newer commits. Run Deploy production manually to deploy it anyway.`,
+      );
+    }
     for (const [key, value] of Object.entries(result))
       await appendFile(process.env.GITHUB_OUTPUT, `${key}=${value}\n`);
   } catch (e) {
