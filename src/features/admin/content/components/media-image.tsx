@@ -10,7 +10,8 @@ export function MediaImage({
   alt: string;
   className?: string;
 }) {
-  const { store } = useAdmin();
+  const { store, session, http } = useAdmin();
+  const remote = session?.kind === "http" ? http : undefined;
   const [url, setUrl] = useState("");
   const [failed, setFailed] = useState(false);
   useEffect(() => {
@@ -18,7 +19,7 @@ export function MediaImage({
     let release = () => {};
     setFailed(false);
     setUrl("");
-    void resolveMedia(store, id)
+    void resolveMedia(store, id, remote)
       .then((lease) => {
         if (!active) {
           lease.release();
@@ -34,7 +35,7 @@ export function MediaImage({
       active = false;
       release();
     };
-  }, [id, store]);
+  }, [id, store, remote]);
   return url && !failed ? (
     <img src={url} alt={alt} className={className} onError={() => setFailed(true)} />
   ) : (

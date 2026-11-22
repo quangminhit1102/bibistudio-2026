@@ -29,7 +29,8 @@ export default function RichEditor({
   onReadyChange?: (ready: boolean) => void;
   disabled?: boolean;
 }) {
-  const { store } = useAdmin();
+  const { store, session, http } = useAdmin();
+  const remote = session?.kind === "http" ? http : undefined;
   const dark = useContext(AdminThemeContext);
   const latest = useRef(value);
   latest.current = value;
@@ -71,7 +72,7 @@ export default function RichEditor({
     void Promise.all(
       [...draft.querySelectorAll("img[data-media-id]")].map(async (img) => {
         try {
-          const lease = await resolveMedia(store, img.getAttribute("data-media-id")!);
+          const lease = await resolveMedia(store, img.getAttribute("data-media-id")!, remote);
           if (!current) {
             lease.release();
             return;
@@ -94,7 +95,7 @@ export default function RichEditor({
       editor.current = null;
       readyCallback.current?.(false);
     };
-  }, [store, attempt, dark]);
+  }, [store, attempt, dark, remote]);
   useEffect(() => {
     if (html === null || ready || error) return;
     const timeout = setTimeout(
@@ -311,7 +312,7 @@ export default function RichEditor({
                 setInserting(true);
                 setImageError("");
                 try {
-                  const lease = await resolveMedia(store, imageIds[0]);
+                  const lease = await resolveMedia(store, imageIds[0], remote);
                   if (!active.current || editor.current !== ed) {
                     lease.release();
                     return;

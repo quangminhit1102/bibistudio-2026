@@ -10,7 +10,8 @@ export default function RichContentView({
   value: string;
   className?: string;
 }) {
-  const { store } = useAdmin();
+  const { store, session, http } = useAdmin();
+  const remote = session?.kind === "http" ? http : undefined;
   const container = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const host = container.current;
@@ -23,7 +24,7 @@ export default function RichContentView({
     images.forEach((img) => img.removeAttribute("src"));
     host.replaceChildren(...draft.childNodes);
     for (const img of images)
-      void resolveMedia(store, img.getAttribute("data-media-id")!)
+      void resolveMedia(store, img.getAttribute("data-media-id")!, remote)
         .then((lease) => {
           if (!active) {
             lease.release();
@@ -53,6 +54,6 @@ export default function RichContentView({
       active = false;
       leases.forEach((release) => release());
     };
-  }, [value, store]);
+  }, [value, store, remote]);
   return <div ref={container} className={`a-rich-content ${className}`} />;
 }

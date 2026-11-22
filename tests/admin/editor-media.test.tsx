@@ -80,3 +80,18 @@ it("does not replace image B when image A resolves late", async () => {
   await act(async () => finish(a));
   expect(screen.getByAltText("Ảnh")).toHaveAttribute("src", "/catalogue/b.webp");
 });
+it("resolves server media via requestBlob when the id is not in the local store", async () => {
+  const s = await setup();
+  const http = {
+    requestBlob: vi.fn().mockResolvedValue(new Blob(["pixels"], { type: "image/png" })),
+  } as unknown as NonNullable<Parameters<typeof resolveMedia>[2]>;
+  const create = vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:server");
+  const revoke = vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => {});
+  const lease = await resolveMedia(s, "server-id", http);
+  expect(http.requestBlob).toHaveBeenCalledWith("/api/media/server-id");
+  expect(lease.url).toBe("blob:server");
+  lease.release();
+  expect(revoke).toHaveBeenCalledWith("blob:server");
+  create.mockRestore();
+  revoke.mockRestore();
+});

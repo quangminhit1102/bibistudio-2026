@@ -2,6 +2,8 @@ import { useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAdmin, useEntity } from "../../services/context";
 import { createMediaService } from "../media/service";
+import { validateMediaUpload } from "../media/limits";
+import { ServiceError } from "../../services/errors";
 import { MediaImage } from "./media-image";
 import { Button, Modal, Skeleton, ErrorState, useNotice } from "../../shared/ui/primitives";
 export default function MediaPicker({
@@ -24,19 +26,41 @@ export default function MediaPicker({
   const notice = useNotice();
   const input = useRef<HTMLInputElement>(null);
   const media = useEntity("media", { page: 1, pageSize: 200 }, scope);
+  const isHttp = runtime.session?.kind === "http";
   const upload = async (files: File[]) => {
     setBusy(true);
     try {
       if (value.length + files.length > max)
         throw new Error(`Tối đa ${max} ảnh. Xóa ảnh đang chọn trước khi thêm ảnh mới.`);
-      const added = await createMediaService(runtime.store, () => runtime.session, scope).import(
-        files,
-      );
+      if (files.length > 10) throw new Error("Tối đa10 ảnh mỗi lần nhập.");
+      let added: string[];
+      if (isHttp) {
+        if (!runtime.http) throw new ServiceError("forbidden", "Chưa sẵn sàng kết nối máy chủ.");
+        const ids: string[] = [];
+        for (const file of files) {
+          await validateMediaUpload(file);
+          ids.push(
+            (
+              await runtime.http.uploadMedia<{
+                id: string;
+                width: number;
+                height: number;
+                size: number;
+              }>(file)
+            ).id,
+          );
+        }
+        added = ids;
+      } else {
+        added = (
+          await createMediaService(runtime.store, () => runtime.session, scope).import(files)
+        ).map((a) => a.id);
+      }
       if (value.length + added.length > max)
         throw new Error("Tối đa10 ảnh cho một sản phẩm. Ảnh đã nhập nằm trong thư viện.");
-      onChange([...value, ...added.map((a) => a.id)]);
+      onChange([...value, ...added]);
       await query.invalidateQueries({ queryKey: ["bibi-admin", "media"] });
-      notice("Đã lưu ảnh cục bộ.");
+      notice(isHttp ? "Đã upload ảnh lên máy chủ." : "Đã lưu ảnh cục bộ.");
     } catch (e) {
       notice(e instanceof Error ? e.message : "Không thể nhập ảnh", "error");
     } finally {
@@ -53,7 +77,7 @@ export default function MediaPicker({
         <input
           ref={input}
           type="file"
-          accept="image/jpeg,image/png,image/webp"
+          accept={isHttp ? "image/jpeg,image/png" : "image/jpeg,image/png,image/webp"}
           multiple
           hidden
           onChange={(e) => {
@@ -62,7 +86,11 @@ export default function MediaPicker({
           }}
         />
       </div>
-      <small>JPEG, PNG, WebP · tối đa5MiB/ảnh · lưu trong trình duyệt, không upload server.</small>
+      <small>
+        {isHttp
+          ? "JPEG, PNG · tối đa2MiB/ảnh · upload lên máy chủ."
+          : "JPEG, PNG, WebP · tối đa5MiB/ảnh · lưu trong trình duyệt, không upload server."}
+      </small>
       {showSelection && (
         <div className="a-demo-gallery">
           {value.map((id) => (

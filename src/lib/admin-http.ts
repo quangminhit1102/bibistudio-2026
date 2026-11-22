@@ -34,6 +34,15 @@ interface Grant {
 }
 const aborted = () => new DOMException("Phiên đã thay đổi", "AbortError");
 const unauthenticated = () => new AdminHttpError(401, "UNAUTHENTICATED", "Vui lòng đăng nhập lại");
+async function encodeBase64(blob: Blob): Promise<string> {
+  if (blob.size > 2097152)
+    throw new AdminHttpError(413, "PAYLOAD_TOO_LARGE", "Dùng ảnh tối đa 2 MiB");
+  const bytes = new Uint8Array(await blob.arrayBuffer());
+  let binary = "";
+  for (let at = 0; at < bytes.length; at += 32768)
+    binary += String.fromCharCode(...bytes.subarray(at, at + 32768));
+  return btoa(binary);
+}
 
 /** Access tokens live only in this closure. Cookies are exclusively managed by the browser. */
 export function createAdminHttp(options: Options = {}) {
@@ -227,19 +236,28 @@ export function createAdminHttp(options: Options = {}) {
       options.signal?.throwIfAborted();
       const ticket = epoch;
       if (!token) throw unauthenticated();
-      if (blob.size > 2097152)
-        throw new AdminHttpError(413, "PAYLOAD_TOO_LARGE", "Dùng ảnh tối đa 2 MiB");
-      const bytes = new Uint8Array(await blob.arrayBuffer());
+      const data = await encodeBase64(blob);
       assertEpoch(ticket);
       options.signal?.throwIfAborted();
-      let binary = "";
-      for (let at = 0; at < bytes.length; at += 32768)
-        binary += String.fromCharCode(...bytes.subarray(at, at + 32768));
       return authorizedRequest<T>(path, {
         method: "PUT",
-        body: { mimeType: blob.type, data: btoa(binary) },
+        body: { mimeType: blob.type, data },
         ifMatch: options.revision,
         signal: options.signal,
+      });
+    },
+    uploadMedia: async <T>(blob: Blob, signal?: AbortSignal) => {
+      endpoint("/api/media");
+      signal?.throwIfAborted();
+      const ticket = epoch;
+      if (!token) throw unauthenticated();
+      const data = await encodeBase64(blob);
+      assertEpoch(ticket);
+      signal?.throwIfAborted();
+      return authorizedRequest<T>("/api/media", {
+        method: "POST",
+        body: { mimeType: blob.type, data },
+        signal,
       });
     },
     requestBlob: (path: string, options: { signal?: AbortSignal } = {}) =>
