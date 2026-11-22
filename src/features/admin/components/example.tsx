@@ -1,11 +1,7 @@
 import { useState, type ReactNode } from "react";
 import { Button, Card } from "../shared/ui/primitives";
 import { componentLabel } from "./labels";
-export async function copyText(value: string) {
-  if (!navigator.clipboard)
-    throw new Error("Trình duyệt không hỗ trợ clipboard. Bạn có thể chọn và sao chép đoạn mã.");
-  await navigator.clipboard.writeText(value);
-}
+import { copyText } from "./clipboard";
 export function Example({
   name,
   description,
