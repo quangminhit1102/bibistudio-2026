@@ -1,6 +1,7 @@
 import { createServer } from "node:http";
 import { createRequire } from "node:module";
-import { readFile, stat, symlink, unlink } from "node:fs/promises";
+import { mkdtemp, readFile, stat, symlink, unlink } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import { resolve, join, extname, sep } from "node:path";
 import { validateBundle } from "./build.mjs";
 import { isMain, root } from "./runtime.mjs";
@@ -11,6 +12,12 @@ export async function previewRelease(
   { port = 4173, host = "127.0.0.1", runtimeEnv = process.env } = {},
 ) {
   bundleDir = resolve(bundleDir);
+  if (!runtimeEnv.BIBI_MEDIA_DIR) {
+    runtimeEnv = {
+      ...runtimeEnv,
+      BIBI_MEDIA_DIR: await mkdtemp(join(tmpdir(), "bibi-media-")),
+    };
+  }
   const manifest = await validateBundle(bundleDir);
   // Local preview resolves the exact already-installed backend dependency set;
   // the archive was produced before this temporary link and never includes it.
