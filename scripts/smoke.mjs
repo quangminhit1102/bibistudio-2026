@@ -25,7 +25,6 @@ export async function smoke({
   }
   if ((await (await get("/api/health", "application/json")).json()).ok !== true)
     throw new Error("API unhealthy");
-  await get("/api/demo", "application/json");
   const unknown = await request(new URL("/api/unknown", baseUrl), { headers: { DNT: "1" } });
   if (unknown.status !== 404 || !unknown.headers.get("content-type")?.includes("application/json"))
     throw new Error("API 404 must be JSON");

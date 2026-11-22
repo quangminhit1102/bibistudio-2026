@@ -55,7 +55,16 @@ test("context release smoke requires actual PHP execution instead of source or o
     expectedSha: "y",
     expectedRelay: true,
   };
-  await smoke({ ...options, request });
+  const paths = [];
+  await smoke({
+    ...options,
+    request: async (url, init) => {
+      paths.push(new URL(url).pathname);
+      return request(url, init);
+    },
+  });
+  assert.ok(paths.includes("/api/health") && paths.includes("/api/version"));
+  assert.ok(!paths.includes("/api/demo"), "the sample endpoint no longer exists");
   for (const status of [200, 404])
     await assert.rejects(
       smoke({
