@@ -21,7 +21,19 @@ test("content schema reports empty before migration and complete after migrateCo
   assert.equal(complete.state, "complete");
   assert.equal(complete.version, 8);
   assert.match(complete.migrationChecksums["001_content.sql"], /^[a-f0-9]{64}$/);
+  assert.match(complete.migrationChecksums["002_content_v9.sql"], /^[a-f0-9]{64}$/);
   await assert.doesNotReject(assertContentReady(f.pool));
+  const [[media]] = await f.pool.query(
+    "SELECT COUNT(*) n FROM information_schema.tables WHERE table_schema=DATABASE() AND table_name='media'",
+  );
+  assert.equal(media.n, 1);
+  const [columns] = await f.pool.query(
+    "SELECT COLUMN_NAME FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name='products' AND COLUMN_NAME IN ('name_en','description_en','featured','sort_order','image_alt_en')",
+  );
+  assert.deepEqual(
+    new Set(columns.map((c) => c.COLUMN_NAME)),
+    new Set(["name_en", "description_en", "featured", "sort_order", "image_alt_en"]),
+  );
 });
 
 test("content schema reports dirty when only some tables exist", async (t) => {

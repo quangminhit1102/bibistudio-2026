@@ -12,6 +12,7 @@ const targets = [
   "posts",
   "products",
   "customers",
+  "media",
 ] as const;
 
 export interface ContentSchemaStatus {
@@ -20,25 +21,55 @@ export interface ContentSchemaStatus {
   migrationChecksums: Record<string, string>;
 }
 
-async function asset(directory: string) {
+interface MigrationOperation {
+  sql: string;
+  target: string;
+  create: boolean;
+}
+
+interface MigrationStep {
+  operations: MigrationOperation[];
+}
+
+interface ContentAssets {
+  checksums: Record<string, string>;
+  checksum: string;
+  steps: MigrationStep[];
+}
+
+async function asset(directory: string): Promise<ContentAssets> {
   const names = (await readdir(directory)).filter((n) => n.endsWith(".sql")).sort();
-  if (names.join() !== "001_content.sql") throw new Error("Unknown content migration assets");
-  const sql = await readFile(join(directory, names[0]), "utf8");
-  const steps = sql
+  if (names.join() !== "001_content.sql,002_content_v9.sql")
+    throw new Error("Unknown content migration assets");
+  const sqls = await Promise.all(names.map((n) => readFile(join(directory, n), "utf8")));
+  const checksums = Object.fromEntries(names.map((n, i) => [n, digest(sqls[i])]));
+  const statements = sqls
+    .join("\n")
     .split(";")
     .map((s) => s.trim())
     .filter(Boolean);
-  if (
-    steps.length !== 5 ||
-    steps.some(
-      (step) =>
-        !/^CREATE TABLE (product_categories|content_categories|posts|products|customers) /.test(
-          step,
-        ),
-    )
-  )
+  const tables = ["product_categories", "content_categories", "posts", "products", "customers"];
+  if (statements.length !== 7) throw new Error("Invalid content DDL assets");
+  tables.forEach((t, i) => {
+    if (!new RegExp(`^CREATE TABLE ${t} `).test(statements[i]))
+      throw new Error("Invalid content DDL assets");
+  });
+  if (!/^ALTER TABLE products\s+ADD COLUMN /.test(statements[5]))
     throw new Error("Invalid content DDL assets");
-  return { name: names[0], checksum: digest(sql), steps };
+  if (!/^CREATE TABLE media /.test(statements[6]))
+    throw new Error("Invalid content DDL assets");
+  const steps: MigrationStep[] = [
+    ...tables.map((t, i) => ({
+      operations: [{ sql: statements[i], target: t, create: true }],
+    })),
+    {
+      operations: [
+        { sql: statements[5], target: "products", create: false },
+        { sql: statements[6], target: "media", create: true },
+      ],
+    },
+  ];
+  return { checksums, checksum: digest(sqls.join("\n")), steps };
 }
 
 async function fingerprint(c: Connection, target: string): Promise<string | null> {
@@ -65,7 +96,11 @@ async function history(c: Connection): Promise<RowDataPacket[]> {
 async function verify(c: Connection, row: RowDataPacket) {
   const hashes: Record<string, string> =
     typeof row.ddl_hashes === "string" ? JSON.parse(row.ddl_hashes) : row.ddl_hashes;
-  if (!Number.isInteger(row.completed_steps) || row.completed_steps < 0 || row.completed_steps > 5)
+  if (
+    !Number.isInteger(row.completed_steps) ||
+    row.completed_steps < 0 ||
+    row.completed_steps > targets.length
+  )
     throw new Error("Dirty content step count");
   for (let i = 0; i < row.completed_steps; i++) {
     if (!hashes[targets[i]] || (await fingerprint(c, targets[i])) !== hashes[targets[i]])
@@ -79,7 +114,7 @@ export async function contentSchemaStatus(
 ): Promise<ContentSchemaStatus> {
   const a = await asset(directory),
     rows = await history(pool);
-  const migrationChecksums = rows.length ? { [a.name]: String(rows[0].checksum) } : {};
+  const migrationChecksums = rows.length ? { ...a.checksums } : {};
   if (!rows.length) {
     const untracked = (await Promise.all(targets.map((t) => fingerprint(pool, t)))).some(Boolean);
     return { version: 8, state: untracked ? "dirty" : "empty", migrationChecksums };
@@ -93,7 +128,7 @@ export async function contentSchemaStatus(
   }
   return {
     version: 8,
-    state: rows[0].state === "complete" && rows[0].completed_steps === 5 ? "complete" : "dirty",
+    state: rows[0].state === "complete" && rows[0].completed_steps === 6 ? "complete" : "dirty",
     migrationChecksums,
   };
 }
@@ -107,7 +142,7 @@ export async function assertContentReady(connection: Connection): Promise<void> 
       rows.length === 1 &&
       rows[0].version === 1 &&
       rows[0].state === "complete" &&
-      rows[0].completed_steps === 5
+      rows[0].completed_steps === 6
     )
       return;
   } catch {
@@ -140,7 +175,7 @@ export async function migrateContent(
       throw new Error("Untracked content DDL; inspect manually");
     if (rows.length) {
       await verify(c, rows[0]);
-      if (rows[0].state === "complete" && rows[0].completed_steps === 5) return;
+      if (rows[0].state === "complete" && rows[0].completed_steps === a.steps.length) return;
       if (!options.resumeDirty || rows[0].state !== "dirty")
         throw new Error("Dirty content schema; inspect and resume explicitly");
     }
@@ -157,14 +192,16 @@ export async function migrateContent(
         ? JSON.parse(rows[0].ddl_hashes)
         : rows[0].ddl_hashes
       : {};
-    for (let i = rows[0]?.completed_steps ?? 0; i < a.steps.length; i++) {
-      if (await fingerprint(c, targets[i]))
-        throw new Error("Unrecorded content DDL; manual inspection required");
-      await c.query(a.steps[i]);
-      hashes[targets[i]] = (await fingerprint(c, targets[i]))!;
+    for (let s = rows[0]?.completed_steps ?? 0; s < a.steps.length; s++) {
+      for (const op of a.steps[s].operations) {
+        if (op.create && (await fingerprint(c, op.target)))
+          throw new Error("Unrecorded content DDL; manual inspection required");
+        await c.query(op.sql);
+        hashes[op.target] = (await fingerprint(c, op.target))!;
+      }
       await c.execute(
         "UPDATE content_schema_migrations SET completed_steps=?,ddl_hashes=? WHERE version=1",
-        [i + 1, JSON.stringify(hashes)],
+        [s + 1, JSON.stringify(hashes)],
       );
     }
     await c.execute(
