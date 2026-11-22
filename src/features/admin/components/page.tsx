@@ -3,6 +3,7 @@ import { lazy, Suspense } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Card, PageTitle, Skeleton } from "../shared/ui/primitives";
 import { componentCatalogue, type ComponentCategory } from "./catalogue";
+import { site } from "@/platform/site";
 const examples = {
   actions: lazy(() => import("./actions")),
   forms: lazy(() => import("./forms")),
@@ -20,7 +21,7 @@ export default function ComponentPage() {
     <>
       <PageTitle
         title="Thư viện thành phần"
-        description="Các khối UI của BiBi Admin · ví dụ tương tác và TypeScript dùng lại."
+        description={`Các khối UI của ${site.admin.title} · ví dụ tương tác và TypeScript dùng lại.`}
       />
       <nav className="a-showcase-tabs" aria-label="Nhóm thành phần">
         {Object.keys(componentCatalogue).map((k) => (

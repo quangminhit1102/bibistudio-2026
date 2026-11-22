@@ -2,6 +2,7 @@ import type { PublicPostShape, PublicProductShape } from "./content-api";
 import { getBlogPost, type ContentBlock } from "@/data/blog";
 import { collections, getProduct, occasions, productTypes } from "@/data/catalogue";
 import type { CollectionId, OccasionId, Product, ProductTypeId } from "@/data/catalogue";
+import { site } from "@/platform/site";
 
 // Map the public API content shapes to the shapes the existing public components
 // already render. The static `collections` / `productTypes` / `occasions` vocab is a
@@ -77,7 +78,7 @@ export function toPublicPost(api: PublicPostShape): PostView {
     title: api.title,
     excerpt: api.excerpt ?? "",
     category: api.category_name ?? "Nhật ký",
-    author: api.author_name ?? "BiBi Studio",
+    author: api.author_name ?? site.name,
     date: api.publish_at ?? "",
     readTime: api.read_time ?? "",
     coverImage: legacy ? legacy.coverImage : (api.cover_url ?? ""),

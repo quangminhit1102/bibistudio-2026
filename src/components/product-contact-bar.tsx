@@ -1,10 +1,13 @@
 import { Phone } from "lucide-react";
 import { useState } from "react";
-import { contact } from "@/data/contact";
+import { socialLink, telHref } from "@/lib/site-contact";
+import { site } from "@/platform/site";
 
 /** Phone-only bar pinned to the bottom of a product page; replaces the floating contact buttons there. */
 export function ProductContactBar({ name }: { name: string }) {
-  const message = `Chào BiBi Studio, mình quan tâm đến mẫu "${name}".`;
+  const message = `Chào ${site.name}, mình quan tâm đến mẫu "${name}".`;
+  const zalo = socialLink(site, "zalo");
+  const messenger = socialLink(site, "messenger");
   const [copied, setCopied] = useState(false);
   const copy = () => {
     navigator.clipboard?.writeText(message).then(() => {
@@ -19,9 +22,9 @@ export function ProductContactBar({ name }: { name: string }) {
         {copied ? "Đã chép lời nhắn — dán vào Zalo để gửi" : <>Liên hệ về mẫu <span className="text-foreground">{name}</span></>}
       </p>
       <div className="mt-2 flex gap-2">
-        <a href={`tel:${contact.phone}`} className={`${btn} border border-border`}><Phone className="size-4" />Gọi</a>
-        <a href={contact.zalo} target="_blank" rel="noopener noreferrer" onClick={copy} className={`${btn} border border-border`}>Zalo</a>
-        <a href={`${contact.messenger}?text=${encodeURIComponent(message)}`} target="_blank" rel="noopener noreferrer" className={`${btn} bg-foreground text-background`}>Nhắn tin</a>
+        <a href={telHref(site)} className={`${btn} border border-border`}><Phone className="size-4" />Gọi</a>
+        {zalo && <a href={zalo.href} target="_blank" rel="noopener noreferrer" onClick={copy} className={`${btn} border border-border`}>Zalo</a>}
+        {messenger && <a href={`${messenger.href}?text=${encodeURIComponent(message)}`} target="_blank" rel="noopener noreferrer" className={`${btn} bg-foreground text-background`}>Nhắn tin</a>}
       </div>
     </div>
   );

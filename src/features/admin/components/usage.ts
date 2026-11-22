@@ -12,7 +12,7 @@ const named: Record<string, string> = {
     boolState +
     "<Button aria-pressed={checked} onClick={() => setChecked(!checked)}>Theo dõi</Button>",
   "Copy Button":
-    'const [copied,setCopied] = useState(false);\n<Button onClick={async () => {await navigator.clipboard.writeText("BiBi Studio");setCopied(true);}}>{copied ? "Đã sao chép" : "Sao chép"}</Button>',
+    'const [copied,setCopied] = useState(false);\n<Button onClick={async () => {await navigator.clipboard.writeText("Nội dung");setCopied(true);}}>{copied ? "Đã sao chép" : "Sao chép"}</Button>',
   "Loading Button":
     "<Button loading={isSaving} disabled={!isValid} onClick={saveDraft}>Lưu thay đổi</Button>",
   "Dropdown Button":

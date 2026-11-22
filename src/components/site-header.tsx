@@ -2,10 +2,10 @@
 import { ArrowRight, Menu, Phone, X } from "lucide-react";
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { BrandLogo } from "./brand-logo";
 import { LanguageSwitcher } from "./language-switcher";
 import { QuickSearch } from "./quick-search";
-import { contact } from "@/data/contact";
+import { telHref } from "@/lib/site-contact";
+import { BrandLogo, site } from "@/platform/site";
 import { collections, productTypes, tx } from "@/data/catalogue";
 
 type Mega = "products" | "collections";
@@ -14,7 +14,7 @@ const nav: { to: string; label: string; mega?: Mega }[] = [
   { to: "/products", label: "Sản phẩm", mega: "products" },
   { to: "/collections", label: "Bộ sưu tập", mega: "collections" },
   { to: "/blog", label: "Nhật ký" },
-  { to: "/about", label: "Về BiBi" },
+  { to: "/about", label: `Về ${site.shortName}` },
   { to: "/contact", label: "Liên hệ" },
 ];
 
@@ -67,7 +67,7 @@ export function SiteHeader() {
           {open ? <X className="size-5" /> : <Menu className="size-5" />}
         </button>
 
-        <Link to="/" aria-label="BiBi Studio — Trang chủ" className="min-w-0 justify-self-center">
+        <Link to="/" aria-label={`${site.name} — Trang chủ`} className="min-w-0 justify-self-center">
           <BrandLogo />
         </Link>
 
@@ -95,7 +95,7 @@ export function SiteHeader() {
 
         <div className="flex items-center justify-self-end lg:hidden">
           <QuickSearch />
-          <a href={`tel:${contact.phone}`} className="grid size-11 place-items-center" aria-label="Gọi BiBi Studio">
+          <a href={telHref(site)} className="grid size-11 place-items-center" aria-label={`Gọi ${site.name}`}>
             <Phone className="size-5" />
           </a>
         </div>

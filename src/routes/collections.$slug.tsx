@@ -17,6 +17,7 @@ import {
 } from "@/data/catalogue";
 import { getPublicProducts } from "@/lib/content-api";
 import { toPublicProduct } from "@/lib/content-adapter";
+import { site } from "@/platform/site";
 
 const chapters: Record<string, { quote?: string; themes?: string[] }> = {
   "explore-vietnam": {
@@ -37,9 +38,9 @@ export const Route = createFileRoute("/collections/$slug")({
     const c = loaderData && collections.find((x) => x.id === loaderData.id);
     if (!c)
       return {
-        meta: [{ title: "Không tìm thấy — BiBi Studio" }, { name: "robots", content: "noindex" }],
+        meta: [{ title: `Không tìm thấy${site.seo.titleSuffix}` }, { name: "robots", content: "noindex" }],
       };
-    const title = `${tx(c.name)} — Bộ sưu tập BiBi Studio`;
+    const title = `${tx(c.name)} — Bộ sưu tập ${site.name}`;
     const image = c.image
       ? c.image.startsWith("http")
         ? c.image
