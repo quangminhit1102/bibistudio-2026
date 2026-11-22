@@ -6,7 +6,9 @@ import { PaperPlaceholder } from "@/components/brand/paper-placeholder";
 import { Reveal } from "@/components/brand/reveal";
 import { SplitWords } from "@/components/brand/motion";
 import { SITE_URL } from "@/lib/seo";
-import { collections, getCollectionBySlug, occasions, productsByCollection, productsByOccasion, tx } from "@/data/catalogue";
+import { collections, getAllProducts, getCollectionBySlug, occasions, tx, type CollectionId, type Product } from "@/data/catalogue";
+import { getPublicProducts } from "@/lib/content-api";
+import { toPublicProduct } from "@/lib/content-adapter";
 
 const chapters: Record<string, { quote?: string; themes?: string[] }> = {
   "explore-vietnam": { themes: ["Nơi chốn", "Phố phường", "Kiến trúc", "Ẩm thực", "Văn hoá", "Đời thường"] },
@@ -15,10 +17,11 @@ const chapters: Record<string, { quote?: string; themes?: string[] }> = {
 };
 
 export const Route = createFileRoute("/collections/$slug")({
-  loader: ({ params }) => {
+  loader: async ({ params }) => {
     const c = getCollectionBySlug(params.slug);
     if (!c) throw notFound();
-    return { id: c.id };
+    const api = await getPublicProducts();
+    return { id: c.id, products: api ? api.map(toPublicProduct) : getAllProducts() };
   },
   head: ({ loaderData }) => {
     const c = loaderData && collections.find((x) => x.id === loaderData.id);
@@ -49,15 +52,17 @@ export const Route = createFileRoute("/collections/$slug")({
 });
 
 function CollectionPage() {
-  const { id } = Route.useLoaderData();
+  const { id, products }: { id: CollectionId; products: Product[] } = Route.useLoaderData();
   const c = collections.find((x) => x.id === id)!;
   const ch = chapters[c.slug] ?? {};
   const signature = c.id === "explore-vietnam";
   const idx = collections.indexOf(c);
   const next = collections[(idx + 1) % collections.length];
-  const count = productsByCollection(c.id).length;
-  const live = occasions.filter((o) => productsByOccasion(o.id).length > 0);
-  const soon = occasions.filter((o) => productsByOccasion(o.id).length === 0);
+  const inCollection = (collectionId: string) => products.filter((p) => p.collection === collectionId);
+  const byOccasion = (occasionId: string) => products.filter((p) => p.occasion === occasionId);
+  const count = inCollection(c.id).length;
+  const live = occasions.filter((o) => byOccasion(o.id).length > 0);
+  const soon = occasions.filter((o) => byOccasion(o.id).length === 0);
 
   return (
     <PageShell>
@@ -104,7 +109,7 @@ function CollectionPage() {
           <nav aria-label="Chọn dịp" className="sticky top-0 z-30 -mx-5 mb-12 border-y border-border bg-background/95 px-5 backdrop-blur sm:-mx-6 sm:px-6 lg:mx-0 lg:px-0">
             <ul className="no-scrollbar flex gap-6 overflow-x-auto py-4">
               {occasions.map((o) => {
-                const n = productsByOccasion(o.id).length;
+                const n = byOccasion(o.id).length;
                 return (
                   <li key={o.id} className="shrink-0">
                     <a href={`#${o.id}`} className={`text-[13px] transition hover:text-foreground ${n ? "text-foreground" : "text-muted-foreground/70"}`}>
@@ -117,7 +122,7 @@ function CollectionPage() {
           </nav>
           <div className="space-y-20">
             {live.map((o) => {
-              const items = productsByOccasion(o.id);
+              const items = byOccasion(o.id);
               return (
                 <div key={o.id} id={o.id} className="scroll-mt-24">
                   <Reveal>
@@ -148,7 +153,7 @@ function CollectionPage() {
       ) : (
         <section className="mx-auto max-w-[1280px] px-6 py-20 lg:px-12">
           <h2 className="eyebrow mb-10 border-b border-border pb-6 text-foreground">Sản phẩm trong bộ sưu tập</h2>
-          <CatalogueGrid items={productsByCollection(c.id)} />
+          <CatalogueGrid items={inCollection(c.id)} />
         </section>
       )}
 

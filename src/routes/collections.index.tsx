@@ -4,12 +4,18 @@ import { PageShell, PageIntro } from "@/components/page-shell";
 import { PaperPlaceholder } from "@/components/brand/paper-placeholder";
 import { Reveal } from "@/components/brand/reveal";
 import { ContactBand } from "@/components/contact-cta";
-import { collections, productsByCollection, tx } from "@/data/catalogue";
+import { collections, getAllProducts, tx, type Product } from "@/data/catalogue";
+import { getPublicProducts } from "@/lib/content-api";
+import { toPublicProduct } from "@/lib/content-adapter";
 
 const title = "Bộ sưu tập — BiBi Studio";
 const description = "Bảy câu chuyện của BiBi Studio: Khám phá Việt Nam, Món ăn Việt Nam, Áo dài, Thiệp chúc mừng và hơn thế nữa.";
 
 export const Route = createFileRoute("/collections/")({
+  loader: async () => {
+    const api = await getPublicProducts();
+    return { products: api ? api.map(toPublicProduct) : getAllProducts() };
+  },
   head: () => ({
     meta: [
       { title },
@@ -24,6 +30,8 @@ export const Route = createFileRoute("/collections/")({
 });
 
 function CollectionsPage() {
+  const { products }: { products: Product[] } = Route.useLoaderData();
+  const countByCollection = (id: string) => products.filter((p) => p.collection === id).length;
   return (
     <PageShell>
       <PageIntro eyebrow="Collections" title="Mỗi bộ sưu tập là một chương." lead="Những câu chuyện về nơi chốn, hương vị và khoảnh khắc — kể lại bằng giấy." />
@@ -42,7 +50,7 @@ function CollectionsPage() {
                 <p className="mt-1 text-[13px] uppercase tracking-[0.2em] text-muted-foreground">{c.name.en}</p>
                 <p className="mt-6 max-w-md text-[15px] leading-relaxed text-muted-foreground">{tx(c.tagline)}</p>
                 <p className="eyebrow mt-8 flex items-center gap-2 text-foreground transition group-hover:gap-3">
-                  {productsByCollection(c.id).length} sản phẩm · Khám phá <ArrowRight className="size-3.5" />
+                  {countByCollection(c.id)} sản phẩm · Khám phá <ArrowRight className="size-3.5" />
                 </p>
               </div>
             </Link>

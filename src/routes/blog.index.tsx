@@ -6,8 +6,10 @@ import { SimpleBreadcrumb } from "@/components/ui/simple-breadcrumb";
 import { LazyImage } from "@/components/ui/lazy-image";
 import { Pagination } from "@/components/ui/pagination";
 import { useScrollToOnPage } from "@/hooks/use-scroll-to-on-page";
-import { getBlogPostsPage } from "@/data/blog";
-import { POSTS_PER_PAGE } from "@/data/pagination";
+import { getAllBlogPosts } from "@/data/blog";
+import { paginate, POSTS_PER_PAGE, type Paged } from "@/data/pagination";
+import { getPublicPosts } from "@/lib/content-api";
+import { staticPostToView, toPublicPost, type PostView } from "@/lib/content-adapter";
 import { SITE_URL, appendPageParam } from "@/lib/seo";
 
 const title = "Nhật ký — BiBi Studio";
@@ -23,8 +25,13 @@ export const Route = createFileRoute("/blog/")({
   loaderDeps: ({ search }) => ({
     page: search.page,
   }),
-  loader: ({ deps }) => {
-    const postPage = getBlogPostsPage(deps.page, POSTS_PER_PAGE);
+  loader: async ({ deps }) => {
+    const api = await getPublicPosts();
+    const posts: PostView[] = api ? api.map(toPublicPost) : getAllBlogPosts().map(staticPostToView);
+    const sorted = [...posts].sort(
+      (a, b) => (b.date ? new Date(b.date).getTime() : 0) - (a.date ? new Date(a.date).getTime() : 0),
+    );
+    const postPage = paginate(sorted, deps.page, POSTS_PER_PAGE);
     if (deps.page > postPage.totalPages) {
       throw redirect({
         to: "/blog",
@@ -51,7 +58,10 @@ export const Route = createFileRoute("/blog/")({
 });
 
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("vi-VN", {
+  if (!iso) return "";
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleDateString("vi-VN", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -59,7 +69,7 @@ function formatDate(iso: string) {
 }
 
 function BlogIndexPage() {
-  const { postPage }: { postPage: ReturnType<typeof getBlogPostsPage> } = Route.useLoaderData();
+  const { postPage }: { postPage: Paged<PostView> } = Route.useLoaderData();
   const search = Route.useSearch();
 
   useScrollToOnPage(search.page, "blog-listing");

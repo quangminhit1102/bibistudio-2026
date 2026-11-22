@@ -4,13 +4,19 @@ import { SlidersHorizontal, X } from "lucide-react";
 import { PageShell, PageIntro } from "@/components/page-shell";
 import { CatalogueGrid } from "@/components/catalogue-card";
 import { ContactBand } from "@/components/contact-cta";
-import { collections, getAllProducts, productTypes, tx, type CollectionId, type ProductTypeId } from "@/data/catalogue";
+import { collections, getAllProducts, productTypes, tx, type CollectionId, type Product, type ProductTypeId } from "@/data/catalogue";
+import { getPublicProducts } from "@/lib/content-api";
+import { toPublicProduct } from "@/lib/content-adapter";
 
 const title = "Sản phẩm — BiBi Studio";
 const description = "Danh mục sản phẩm BiBi Studio: sổ tay, thiệp, postcard, bao thư, giấy viết thư và magnet.";
 const PAGE = 12;
 
 export const Route = createFileRoute("/products/")({
+  loader: async () => {
+    const api = await getPublicProducts();
+    return { products: api ? api.map(toPublicProduct) : getAllProducts() };
+  },
   head: () => ({
     meta: [
       { title },
@@ -45,6 +51,7 @@ function Pill({ active, onClick, children }: { active: boolean; onClick: () => v
 }
 
 function ProductsPage() {
+  const { products }: { products: Product[] } = Route.useLoaderData();
   const [type, setType] = useState<ProductTypeId | "all">("all");
   const [col, setCol] = useState<CollectionId | "all">("all");
   const [q, setQ] = useState("");
@@ -74,7 +81,7 @@ function ProductsPage() {
   const sentinel = useRef<HTMLDivElement>(null);
 
   const items = useMemo(() => {
-    const all = getAllProducts();
+    const all = products;
     const list = all.filter(
       (p) =>
         (type === "all" || p.productType === type) &&
@@ -85,7 +92,7 @@ function ProductsPage() {
     if (sort === "name") return [...list].sort((a, b) => tx(a.name).localeCompare(tx(b.name), "vi"));
     const order = collections.map((c) => c.id);
     return [...list].sort((a, b) => order.indexOf(a.collection) - order.indexOf(b.collection));
-  }, [type, col, q, sort]);
+  }, [products, type, col, q, sort]);
 
   useEffect(() => setLimit(PAGE), [type, col, q, sort]);
   useEffect(() => {

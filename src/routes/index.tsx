@@ -6,12 +6,14 @@ import { PaperPlaceholder } from "@/components/brand/paper-placeholder";
 import { ContactBand } from "@/components/contact-cta";
 import { CatalogueCard } from "@/components/catalogue-card";
 import { BrandMark } from "@/components/brand-logo";
-import { collections, getAllProducts, productTypes, productsByCollection, tx, type Collection } from "@/data/catalogue";
+import { collections, getAllProducts, productTypes, tx, type Collection, type Product } from "@/data/catalogue";
 import { FilmStrip, Parallax, ScrollExpand, SplitWords } from "@/components/brand/motion";
 import { buildOrganizationSchema } from "@/lib/seo";
 import heroImg from "@/assets/hero-desk.jpg";
 import { HeroSlides, type HeroSlide as Slide } from "@/components/brand/hero-slides";
-import { occasions, productsByOccasion } from "@/data/catalogue";
+import { occasions } from "@/data/catalogue";
+import { getPublicProducts } from "@/lib/content-api";
+import { toPublicProduct } from "@/lib/content-adapter";
 
 
 const title = "BiBi Studio — Little things, made to touch your heart";
@@ -19,6 +21,10 @@ const description =
   "BiBi Studio sáng tạo sổ tay, thiệp, postcard, bao thư, giấy viết thư và magnet lấy cảm hứng từ Việt Nam và những câu chuyện nhỏ.";
 
 export const Route = createFileRoute("/")({
+  loader: async () => {
+    const api = await getPublicProducts();
+    return { products: api ? api.map(toPublicProduct) : getAllProducts() };
+  },
   head: () => ({
     meta: [
       { title },
@@ -59,14 +65,15 @@ function CollectionTile({ c, className = "", ratio = "4/5", big = false }: { c: 
 }
 
 function Home() {
+  const { products }: { products: Product[] } = Route.useLoaderData();
   const [ev, food, motivation, aoDai, cards, flowers, spiral] = collections;
-  const evProducts = productsByCollection("explore-vietnam").slice(0, 4);
+  const evProducts = products.filter((p) => p.collection === "explore-vietnam").slice(0, 4);
   const heroSlides: Slide[] = [
     { src: heroImg, alt: "Sổ tay, postcard, bao thư và giấy viết thư BiBi Studio trên bàn gỗ", label: "Bàn giấy của BiBi" },
     ...[motivation, cards, flowers, ev].filter((c) => c.image).map((c) => ({ src: c.image!, alt: tx(c.name), label: tx(c.name), slug: c.slug })),
   ];
-  const realLife = getAllProducts().filter((p) => p.images.length > 1).slice(0, 8);
-  const featured = getAllProducts().filter((p) => p.featured && p.images.length).slice(0, 10);
+  const realLife = products.filter((p) => p.images.length > 1).slice(0, 8);
+  const featured = products.filter((p) => p.featured && p.images.length).slice(0, 10);
   return (
     <PageShell>
       {/* Hero */}
@@ -204,7 +211,7 @@ function Home() {
         </Reveal>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {occasions.map((o, i) => {
-            const n = productsByOccasion(o.id).length;
+            const n = products.filter((p) => p.occasion === o.id).length;
             return (
               <Reveal key={o.id} variant="paper" delay={(i % 4) * 80}>
                 <Link

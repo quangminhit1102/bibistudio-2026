@@ -13,20 +13,38 @@ import {
   productsByType,
   relatedProducts,
   tx,
+  type Product,
 } from "@/data/catalogue";
-import { getPublicProduct } from "@/lib/content-api";
+import { getPublicProduct, getPublicProducts } from "@/lib/content-api";
+import { toPublicProduct } from "@/lib/content-adapter";
 import { resolveSeo } from "@/lib/content-seo";
 import { SITE_URL, buildBreadcrumbSchema } from "@/lib/seo";
+
+function relatedFromList(product: Product, list: Product[], n = 8): Product[] {
+  const sameCollection = list.filter((x) => x.slug !== product.slug && x.collection === product.collection);
+  const sameType = list.filter(
+    (x) => x.slug !== product.slug && x.collection !== product.collection && x.productType === product.productType,
+  );
+  return sameCollection.concat(sameType).slice(0, n);
+}
 
 // /products/<type-slug> → listing by product type; /products/<product-slug> → product detail.
 export const Route = createFileRoute("/products/$slug")({
   loader: async ({ params }) => {
     const type = getProductTypeBySlug(params.slug);
     if (type) return { kind: "type" as const, typeId: type.id };
+    const apiProduct = await getPublicProduct(params.slug);
+    if (apiProduct) {
+      const product = toPublicProduct(apiProduct);
+      const list = await getPublicProducts();
+      const related = list
+        ? relatedFromList(product, list.map(toPublicProduct))
+        : relatedProducts(product, 8);
+      return { kind: "product" as const, product, related, seo: apiProduct };
+    }
     const product = getProduct(params.slug);
     if (product) {
-      const seo = await getPublicProduct(params.slug);
-      return { kind: "product" as const, slug: product.slug, seo };
+      return { kind: "product" as const, product, related: relatedProducts(product, 8), seo: null };
     }
     throw notFound();
   },
@@ -43,7 +61,7 @@ export const Route = createFileRoute("/products/$slug")({
       title = `${tx(t.plural)} — BiBi Studio`;
       description = tx(t.tagline);
     } else {
-      const p = getProduct(loaderData.slug)!;
+      const p = loaderData.product;
       const t = getProductType(p.productType);
       const seo = resolveSeo({
         seoTitle: loaderData.seo?.seo_title,
@@ -113,7 +131,7 @@ function ProductRoute() {
   return data.kind === "type" ? (
     <TypeListing typeId={data.typeId} />
   ) : (
-    <ProductDetail slug={data.slug} />
+    <ProductDetail product={data.product} related={data.related} />
   );
 }
 
@@ -130,8 +148,8 @@ function TypeListing({ typeId }: { typeId: Parameters<typeof getProductType>[0] 
   );
 }
 
-function ProductDetail({ slug }: { slug: string }) {
-  const p = getProduct(slug)!;
+function ProductDetail({ product, related }: { product: Product; related: Product[] }) {
+  const p = product;
   const t = getProductType(p.productType);
   const c = getCollection(p.collection);
   const details = [
@@ -140,7 +158,6 @@ function ProductDetail({ slug }: { slug: string }) {
     ["Số trang", p.pages],
     ["Định dạng", p.format && tx(p.format)],
   ].filter(([, v]) => v) as [string, string][];
-  const related = relatedProducts(p, 8);
 
   return (
     <PageShell>
