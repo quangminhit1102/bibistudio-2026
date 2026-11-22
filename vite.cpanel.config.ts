@@ -1,7 +1,7 @@
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { existsSync, renameSync } from "node:fs";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { defineConfig, type ConfigEnv, type Plugin } from "vite";
 import tsConfigPaths from "vite-tsconfig-paths";
 import { tanstackRouterGenerator } from "@tanstack/router-plugin/vite";
@@ -29,6 +29,7 @@ export default defineConfig(({ mode }: ConfigEnv) => {
       "import.meta.env.VITE_BIBI_CSR": JSON.stringify("true"),
       "import.meta.env.VITE_ROUTER_BASEPATH": JSON.stringify(basepath),
     },
+    resolve: { alias: { "@site": resolve(process.cwd(), process.env.SITE_DIR ?? "site") } },
     plugins: [
       tanstackRouterGenerator({ target: "react" }),
       react(),
