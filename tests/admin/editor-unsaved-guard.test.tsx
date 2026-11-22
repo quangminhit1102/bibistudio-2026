@@ -65,7 +65,7 @@ for (const kind of ["post", "product"] as const) {
         />
       </QueryClientProvider>,
     );
-    await screen.findByRole("textbox", { name: "Nội dung thử nghiệm" });
+    if (kind === "post") await screen.findByRole("textbox", { name: "Nội dung thử nghiệm" });
     await waitFor(() => expect(dirty).toHaveBeenLastCalledWith(false));
     expect(dirty.mock.calls.some(([v]) => v === true)).toBe(false);
     const user = userEvent.setup(),
@@ -97,7 +97,7 @@ it("preserves drafts on refetch, treats gallery ordering as a change, and resets
   );
   const view = render(ui(initial)),
     user = userEvent.setup();
-  await screen.findByRole("textbox", { name: "Nội dung thử nghiệm" });
+  await screen.findByRole("button", { name: "Đảo thứ tự ảnh" });
   await user.click(screen.getByRole("button", { name: "Đảo thứ tự ảnh" }));
   expect(dirty).toHaveBeenLastCalledWith(true);
   await user.click(screen.getByRole("button", { name: "Đảo thứ tự ảnh" }));

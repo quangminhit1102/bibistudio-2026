@@ -3,6 +3,7 @@ import type { EntityConfig } from "../shared/entity-manager";
 import { Badge } from "../shared/ui/primitives";
 import { MediaImage } from "../content/components/media-image";
 import { money } from "../shared/lib/text";
+import { occasions, tx } from "@/data/catalogue";
 export const statuses = [
   { value: "draft", label: "Nháp" },
   { value: "published", label: "Đang hiển thị" },
@@ -25,6 +26,7 @@ export const collectionOptions = [
   { value: "pressed-flower-cards", label: "Thiệp ép hoa khô" },
   { value: "spiral-cards", label: "Thiệp xoắn" },
 ];
+export const occasionOptions = occasions.map((o) => ({ value: o.id, label: tx(o.name) }));
 export const productConfig: EntityConfig<"products"> = {
   entity: "products",
   title: "Sản phẩm",
@@ -38,6 +40,7 @@ export const productConfig: EntityConfig<"products"> = {
     productCode: "",
     slug: "",
     description: "",
+    descriptionEn: "",
     shortDescription: "",
     productType: "notebook",
     collection: "explore-vietnam",
@@ -54,6 +57,7 @@ export const productConfig: EntityConfig<"products"> = {
   },
   fields: [
     { key: "name", label: "Tên sản phẩm", type: "text", required: true },
+    { key: "nameEn", label: "Tên sản phẩm (English)", type: "text" },
     { key: "productCode", label: "Mã sản phẩm", type: "text", required: true },
     { key: "slug", label: "Đường dẫn", type: "text", required: true },
     { key: "status", label: "Trạng thái", type: "select", options: statuses },
@@ -69,7 +73,20 @@ export const productConfig: EntityConfig<"products"> = {
     { key: "price", label: "Giá (VND)", type: "number", min: 0 },
     { key: "compareAt", label: "Giá so sánh (VND)", type: "number", min: 0 },
     { key: "shortDescription", label: "Mô tả ngắn", type: "textarea", full: true },
-    { key: "description", label: "Mô tả", type: "textarea", full: true },
+    { key: "shortDescriptionEn", label: "Mô tả ngắn (English)", type: "textarea", full: true },
+    { key: "description", label: "Mô tả (Tiếng Việt)", type: "textarea", full: true },
+    { key: "descriptionEn", label: "Mô tả (English)", type: "textarea", full: true },
+    { key: "dimensions", label: "Kích thước", type: "text" },
+    { key: "pages", label: "Số trang", type: "text" },
+    { key: "materialVi", label: "Chất liệu (Tiếng Việt)", type: "text" },
+    { key: "materialEn", label: "Chất liệu (English)", type: "text" },
+    { key: "formatVi", label: "Định dạng (Tiếng Việt)", type: "text" },
+    { key: "formatEn", label: "Định dạng (English)", type: "text" },
+    { key: "occasion", label: "Dịp lễ", type: "select", options: occasionOptions },
+    { key: "featured", label: "Nổi bật", type: "checkbox" },
+    { key: "sortOrder", label: "Thứ tự sắp xếp", type: "number", min: 0 },
+    { key: "imageAltVi", label: "Alt ảnh (Tiếng Việt)", type: "text" },
+    { key: "imageAltEn", label: "Alt ảnh (English)", type: "text" },
     { key: "imageIds", label: "Ảnh sản phẩm", type: "media", full: true },
     { key: "tags", label: "Thẻ", type: "tags", full: true },
     {

@@ -44,11 +44,10 @@ export default function ComposeForm({
   const isDirty = hasFormChanges(kind, baseline, values);
   const [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
-    [ready, setReady] = useState(false);
+    [ready, setReady] = useState(!post);
   const [preview, setPreview] = useState<EditorSnapshot | null>(null);
   const manualSlug = useRef(Boolean(initial.id) || Boolean(initial.slug));
   const name = watch(post ? "title" : "name");
-  const bodyKey = post ? "content" : "description";
   useEffect(() => {
     onDirtyChange?.(isDirty);
   }, [isDirty, onDirtyChange]);
@@ -198,27 +197,34 @@ export default function ComposeForm({
                 />
               </Card>
             )}
-            <Card>
-              <h2>{post ? "Nội dung bài viết" : "Mô tả chi tiết"}</h2>
-              <div className="a-compose-body">
-                <Controller
-                  name={bodyKey}
-                  control={control}
-                  render={({ field }) => (
-                    <Suspense fallback={<Skeleton rows={5} />}>
-                      <RichEditor
-                        disabled={busy || writeBlocked}
-                        value={String(field.value ?? "")}
-                        onChange={field.onChange}
-                        scope={post ? "content" : "products"}
-                        label={post ? "Nội dung bài viết" : "Mô tả chi tiết sản phẩm"}
-                        onReadyChange={setReady}
-                      />
-                    </Suspense>
-                  )}
-                />
-              </div>
-            </Card>
+            {post ? (
+              <Card>
+                <h2>Nội dung bài viết</h2>
+                <div className="a-compose-body">
+                  <Controller
+                    name="content"
+                    control={control}
+                    render={({ field }) => (
+                      <Suspense fallback={<Skeleton rows={5} />}>
+                        <RichEditor
+                          disabled={busy || writeBlocked}
+                          value={String(field.value ?? "")}
+                          onChange={field.onChange}
+                          scope="content"
+                          label="Nội dung bài viết"
+                          onReadyChange={setReady}
+                        />
+                      </Suspense>
+                    )}
+                  />
+                </div>
+              </Card>
+            ) : (
+              <Card>
+                <h2>Mô tả chi tiết</h2>
+                <div className="a-compose-stack">{fields(["description", "descriptionEn"])}</div>
+              </Card>
+            )}
             {!post && (
               <details className="a-compose-details">
                 <summary>Thông tin nội bộ</summary>
