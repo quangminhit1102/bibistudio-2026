@@ -1,10 +1,17 @@
 name: Deploy production
+# Automatic: every successful CI run for a push to main is promoted.
+# Manual: run this workflow; an empty release ID promotes the latest successful main CI run.
+# Pause automatic deploys with repository variable AUTO_DEPLOY=false or "[skip deploy]" in the commit message.
 on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
   workflow_dispatch:
     inputs:
       release_id:
-        description: Exact release ID from successful main CI
-        required: true
+        description: Release ID (<sha>-<CI run id>); empty deploys the latest successful main CI
+        required: false
         type: string
 permissions:
   contents: read
@@ -15,12 +22,26 @@ concurrency:
   cancel-in-progress: false
 jobs:
   promote:
-    if: github.ref == 'refs/heads/main'
+    if: >-
+      github.ref == 'refs/heads/main' && (
+        github.event_name == 'workflow_dispatch' ||
+        (
+          github.event.workflow_run.conclusion == 'success' &&
+          github.event.workflow_run.event == 'push' &&
+          github.event.workflow_run.head_branch == 'main' &&
+          github.event.workflow_run.head_repository.full_name == github.repository &&
+          vars.AUTO_DEPLOY != 'false' &&
+          !contains(github.event.workflow_run.head_commit.message, '[skip deploy]')
+        )
+      )
     runs-on: ubuntu-latest
     timeout-minutes: 20
     environment: production
     env:
-      RELEASE_ID: ${{ inputs.release_id }}
+      RELEASE_ID: >-
+        ${{ github.event_name == 'workflow_run'
+        && format('{0}-{1}', github.event.workflow_run.head_sha, github.event.workflow_run.id)
+        || inputs.release_id }}
       DEPLOY_ENV: production
       BASE_URL: https://bibistudio.vn
       GITHUB_TOKEN: ${{ github.token }}
@@ -32,6 +53,11 @@ jobs:
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
         with:
           node-version: "24"
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            backend/package-lock.json
+            ops/package-lock.json
       - id: trusted
         run: node scripts/github-release.mjs
       - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0
@@ -45,6 +71,7 @@ jobs:
       - run: npx --no-install playwright install --with-deps chromium
       - run: node scripts/deploy-client.mjs
         env:
+          RELEASE_ID: ${{ steps.trusted.outputs.releaseId }}
           DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
           ARTIFACT_ID: ${{ steps.trusted.outputs.artifactId }}
           EXPECTED_CHECKSUM: ${{ steps.trusted.outputs.checksum }}

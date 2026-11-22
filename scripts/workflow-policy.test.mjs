@@ -2,7 +2,12 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { readFile, readdir } from "node:fs/promises";
 import { parse } from "yaml";
-import { assertTrustedRun, assertStagingEvidence, validateRelease } from "./github-release.mjs";
+import {
+  assertTrustedRun,
+  assertStagingEvidence,
+  validateRelease,
+  latestReleaseId,
+} from "./github-release.mjs";
 import { STAGES, E2E_SUITES } from "./check.mjs";
 const sha = "a".repeat(40);
 test("production accepts a trusted CI artifact without querying staging", async () => {
@@ -141,7 +146,10 @@ test("workflows pin actions and isolate deployment credentials from CI", async (
   );
   assert.ok(archived.on.workflow_run);
   assert.ok(workflows.production.on.workflow_dispatch);
-  assert.deepEqual(Object.keys(workflows.production.on), ["workflow_dispatch"]);
+  assert.deepEqual(Object.keys(workflows.production.on).sort(), [
+    "workflow_dispatch",
+    "workflow_run",
+  ]);
   assert.equal(workflows.production.jobs.promote.environment, "production");
   assert.equal(workflows.rollback.jobs.rollback.environment, "production");
   assert.equal(workflows.rollback.concurrency.group, "deploy-production");
@@ -160,4 +168,47 @@ test("CI runs every check stage and every browser suite as its own job", async (
   assert.deepEqual(ci.jobs.e2e.strategy.matrix.suite, E2E_SUITES);
   assert.equal(ci.jobs.e2e.strategy["fail-fast"], false);
   assert.ok(commands.includes("node scripts/check.mjs e2e ${{ matrix.suite }}"));
+});
+test("a manual deploy without a release ID takes the latest successful main CI run", async () => {
+  const routes = [];
+  const request = async (route) => {
+    routes.push(route);
+    return { workflow_runs: [{ id: 123, head_sha: sha }] };
+  };
+  assert.equal(await latestReleaseId({ request }), `${sha}-123`);
+  assert.deepEqual(routes, [
+    "actions/workflows/ci.yml/runs?branch=main&event=push&status=success&per_page=1",
+  ]);
+  await assert.rejects(
+    latestReleaseId({ request: async () => ({ workflow_runs: [] }) }),
+    /No successful main CI run/,
+  );
+});
+test("production deploys automatically only after successful main push CI of this repository", async () => {
+  const production = parse(
+    await readFile(new URL("../.github/workflows/production.yml", import.meta.url), "utf8"),
+  );
+  assert.deepEqual(production.on.workflow_run, {
+    workflows: ["CI"],
+    types: ["completed"],
+    branches: ["main"],
+  });
+  assert.equal(production.on.workflow_dispatch.inputs.release_id.required, false);
+  const condition = production.jobs.promote.if.replace(/\s+/g, " ");
+  for (const required of [
+    "github.ref == 'refs/heads/main' && (",
+    "github.event_name == 'workflow_dispatch' ||",
+    "github.event.workflow_run.conclusion == 'success' &&",
+    "github.event.workflow_run.event == 'push' &&",
+    "github.event.workflow_run.head_branch == 'main' &&",
+    "github.event.workflow_run.head_repository.full_name == github.repository &&",
+    "vars.AUTO_DEPLOY != 'false' &&",
+    "!contains(github.event.workflow_run.head_commit.message, '[skip deploy]')",
+  ])
+    assert.ok(condition.includes(required), `deploy condition lacks: ${required}`);
+  assert.ok(!condition.includes("always()"));
+  const deploy = production.jobs.promote.steps.find(
+    (step) => step.run === "node scripts/deploy-client.mjs",
+  );
+  assert.equal(deploy.env.RELEASE_ID, "${{ steps.trusted.outputs.releaseId }}");
 });
