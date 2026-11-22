@@ -87,7 +87,13 @@ function RelationInput({
       multiple={multiple}
       value={(value ?? (multiple ? [] : "")) as string | string[]}
       onChange={(e) =>
-        onChange(multiple ? Array.from(e.target.selectedOptions, (o) => o.value) : e.target.value)
+        onChange(
+          multiple
+            ? Array.from(e.target.selectedOptions, (o) => o.value)
+            : e.target.value === ""
+              ? null
+              : e.target.value,
+        )
       }
     >
       {!multiple && <option value="">Chọn…</option>}

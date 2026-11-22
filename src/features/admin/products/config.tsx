@@ -46,7 +46,7 @@ export const productConfig: EntityConfig<"products"> = {
     shortDescriptionEn: "",
     productType: "notebook",
     collection: "explore-vietnam",
-    categoryId: "cat-notebook",
+    categoryId: null,
     price: 0,
     compareAt: 0,
     stock: 0,

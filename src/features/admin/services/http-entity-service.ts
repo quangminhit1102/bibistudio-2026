@@ -50,12 +50,16 @@ export function createHttpEntityService<K extends EntityKey>(
     async update(id, input, revision) {
       return client.request<AdminModels[K]>(`${base}/${id}`, {
         method: "PUT",
-        body: input,
+        body: { ...input, revision },
         ifMatch: revision,
       });
     },
     async remove(id, revision) {
-      await client.request<void>(`${base}/${id}`, { method: "DELETE", ifMatch: revision });
+      await client.request<void>(`${base}/${id}`, {
+        method: "DELETE",
+        body: { revision },
+        ifMatch: revision,
+      });
     },
     async bulk(action, records) {
       let updated = 0;

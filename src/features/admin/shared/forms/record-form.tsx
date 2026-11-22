@@ -82,7 +82,9 @@ function RelationField({
         onChange(
           field.type === "multi-select"
             ? Array.from(e.target.selectedOptions, (o) => o.value)
-            : e.target.value,
+            : e.target.value === ""
+              ? null
+              : e.target.value,
         )
       }
     >

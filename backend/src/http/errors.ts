@@ -5,6 +5,7 @@ export class ApiError extends Error {
     public readonly status: number,
     public readonly code: string,
     message: string,
+    public readonly details?: unknown,
   ) {
     super(message);
   }
@@ -28,7 +29,12 @@ export const errorHandler: ErrorRequestHandler = (error: unknown, _req, res, _ne
         : tooLarge
           ? new ApiError(413, "PAYLOAD_TOO_LARGE", "Dữ liệu quá lớn")
           : new ApiError(503, "SERVICE_UNAVAILABLE", "Dịch vụ tạm thời không khả dụng");
-  res
-    .status(safe.status)
-    .json({ error: { code: safe.code, message: safe.message }, requestId: res.locals.requestId });
+  res.status(safe.status).json({
+    error: {
+      code: safe.code,
+      message: safe.message,
+      ...(safe.details ? { details: safe.details } : {}),
+    },
+    requestId: res.locals.requestId,
+  });
 };

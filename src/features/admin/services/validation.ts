@@ -202,7 +202,7 @@ export async function validateRecord<K extends EntityKey>(
   }
   if (entity === "posts") {
     const p = row as AdminModels["posts"];
-    if (!(await tx.get("users", p.authorId)))
+    if (!p.authorId || !(await tx.get("users", p.authorId)))
       throw new ServiceError("validation", "Tác giả bài viết không tồn tại.");
     if (p.categoryId && (await tx.get("categories", p.categoryId))?.kind !== "content")
       throw new ServiceError("validation", "Chuyên mục không tồn tại.");

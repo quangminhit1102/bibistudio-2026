@@ -82,13 +82,22 @@ export default function ComposeForm({
       }
       setBusy(true);
       setError("");
+      methods.clearErrors();
       try {
         await onSave({ ...values, ...(draft ? { status: "draft" } : {}) });
         const saved = structuredClone({ ...values, ...(draft ? { status: "draft" } : {}) });
         setBaseline(saved);
         methods.reset(saved);
       } catch (e) {
-        setError(e instanceof Error ? e.message : "Không thể lưu dữ liệu.");
+        const details = (e as { details?: { field: string; message: string }[] })?.details;
+        if (Array.isArray(details) && details.length) {
+          for (const d of details) {
+            if (d?.field) methods.setError(d.field, { type: "server", message: d.message });
+          }
+          setError("Vui lòng kiểm tra các trường được đánh dấu lỗi bên dưới.");
+        } else {
+          setError(e instanceof Error ? e.message : "Không thể lưu dữ liệu.");
+        }
       } finally {
         setBusy(false);
       }

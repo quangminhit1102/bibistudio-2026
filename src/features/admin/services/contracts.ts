@@ -57,7 +57,7 @@ export interface AdminProduct extends CatalogueRecord {
   productCode: string;
   productType: string;
   collection: string;
-  categoryId: string;
+  categoryId: string | null;
   shortDescription: string;
   compareAt: number;
   nameEn?: string | null;
@@ -134,8 +134,8 @@ export interface Post extends BaseRecord {
   slug: string;
   excerpt: string;
   content: string;
-  categoryId: string;
-  authorId: string;
+  categoryId: string | null;
+  authorId: string | null;
   status: "draft" | "published";
   publishAt: string | null;
   imageId: string | null;

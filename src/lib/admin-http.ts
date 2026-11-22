@@ -6,6 +6,7 @@ export class AdminHttpError extends Error {
     public readonly status: number,
     public readonly code: string,
     message: string,
+    public readonly details?: unknown,
   ) {
     super(message);
   }
@@ -115,6 +116,7 @@ export function createAdminHttp(options: Options = {}) {
         typeof body?.error?.message === "string"
           ? body.error.message
           : "Không thể thực hiện yêu cầu",
+        body?.error?.details,
       );
     if (!json) throw new AdminHttpError(503, "INVALID_RESPONSE", "Phản hồi API không hợp lệ");
     return body as T;

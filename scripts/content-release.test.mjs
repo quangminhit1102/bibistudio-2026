@@ -48,6 +48,17 @@ async function fixture(t) {
 }
 const backupReceipt = { verified: true, profiles: true, sha256: "a".repeat(64), bytes: 100 };
 
+test("previous one-file content release remains inspectable with exact checksums", async (t) => {
+  const f = await fixture(t);
+  await rm(join(f.dir, "backend/content-migrations/002_content_v9.sql"));
+  const old = await metadata.createContentMetadata(join(f.dir, "backend"));
+  assert.deepEqual(Object.keys(old.migrationChecksums), ["001_content.sql"]);
+  await metadata.verifyContentAssets(join(f.dir, "backend"), old);
+  assert.throws(() => metadata.validateContentMetadata({ ...old, migrationChecksums: { "002_content_v9.sql": "a".repeat(64) } }));
+  assert.throws(() => metadata.validateContentMetadata({ ...old, migrationChecksums: { ...old.migrationChecksums, "003_unknown.sql": "a".repeat(64) } }));
+  await assert.rejects(metadata.verifyContentAssets(join(f.dir, "backend"), f.manifest.content));
+});
+
 test("content metadata pins assets and rejects altered SQL", async (t) => {
   const f = await fixture(t);
   await metadata.verifyContentAssets(join(f.dir, "backend"), f.manifest.content);
