@@ -54,8 +54,18 @@ test("previous one-file content release remains inspectable with exact checksums
   const old = await metadata.createContentMetadata(join(f.dir, "backend"));
   assert.deepEqual(Object.keys(old.migrationChecksums), ["001_content.sql"]);
   await metadata.verifyContentAssets(join(f.dir, "backend"), old);
-  assert.throws(() => metadata.validateContentMetadata({ ...old, migrationChecksums: { "002_content_v9.sql": "a".repeat(64) } }));
-  assert.throws(() => metadata.validateContentMetadata({ ...old, migrationChecksums: { ...old.migrationChecksums, "003_unknown.sql": "a".repeat(64) } }));
+  assert.throws(() =>
+    metadata.validateContentMetadata({
+      ...old,
+      migrationChecksums: { "002_content_v9.sql": "a".repeat(64) },
+    }),
+  );
+  assert.throws(() =>
+    metadata.validateContentMetadata({
+      ...old,
+      migrationChecksums: { ...old.migrationChecksums, "003_unknown.sql": "a".repeat(64) },
+    }),
+  );
   await assert.rejects(metadata.verifyContentAssets(join(f.dir, "backend"), f.manifest.content));
 });
 
