@@ -28,7 +28,7 @@ async function main() {
     if (command === "migrate") await migrateContent(pool, directory);
     const status = await contentSchemaStatus(pool, directory);
     console.log(JSON.stringify(status));
-    if (!["empty", "complete"].includes(status.state)) process.exitCode = 1;
+    if (!["empty", "dirty", "complete"].includes(status.state)) process.exitCode = 1;
   } finally {
     await pool.end();
   }

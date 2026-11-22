@@ -3,6 +3,8 @@ const { createHash } = require("node:crypto");
 const { lstat, readFile, readdir } = require("node:fs/promises");
 const { join } = require("node:path");
 const MIGRATION_FILES = ["001_content.sql", "002_content_v9.sql"];
+const knownFiles = (names) =>
+  names.join(",") === MIGRATION_FILES[0] || names.join(",") === MIGRATION_FILES.join(",");
 function validateContentMetadata(data) {
   if (
     !data ||
@@ -10,15 +12,20 @@ function validateContentMetadata(data) {
     data.compatibleMax !== 8 ||
     Object.keys(data).sort().join(",") !== "compatibleMax,migrationChecksums,requiredMin" ||
     !data.migrationChecksums ||
-    Object.keys(data.migrationChecksums).sort().join(",") !== MIGRATION_FILES.join(",") ||
+    !knownFiles(Object.keys(data.migrationChecksums).sort()) ||
     !Object.values(data.migrationChecksums).every((hash) => /^[a-f0-9]{64}$/.test(hash))
   )
-    throw new Error("Invalid content metadata");
+    throw new Error(
+      "Invalid content metadata: keys=" +
+        JSON.stringify(Object.keys(data ?? {})) +
+        " checksumKeys=" +
+        JSON.stringify(Object.keys(data?.migrationChecksums ?? {})),
+    );
   return {
     requiredMin: 8,
     compatibleMax: 8,
     migrationChecksums: Object.fromEntries(
-      MIGRATION_FILES.map((name) => [name, data.migrationChecksums[name]]),
+      Object.keys(data.migrationChecksums).sort().map((name) => [name, data.migrationChecksums[name]]),
     ),
   };
 }
@@ -29,7 +36,7 @@ async function createContentMetadata(backend) {
     throw new Error("Invalid content migration directory");
   const names = (await readdir(dir)).sort();
   if (
-    names.join(",") !== MIGRATION_FILES.join(",") ||
+    !knownFiles(names) ||
     !(
       await Promise.all(
         names.map(async (name) => {

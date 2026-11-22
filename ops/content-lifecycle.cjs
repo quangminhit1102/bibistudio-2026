@@ -15,11 +15,11 @@ async function prepareContent(config, current, candidate, { backupReceipt, run }
   await verifyContentAssets(join(capable.dir, "backend"), capable.manifest.content);
   const execute = run ?? require("./database-lifecycle.cjs").runDatabaseTool;
   let status = await execute(config, capable.dir, "content-status", capable.manifest);
-  if (!["empty", "complete"].includes(status?.state))
-    throw new Error("Unknown/dirty content schema");
+  if (!["empty", "dirty", "complete"].includes(status?.state))
+    throw new Error("Unknown content schema");
   if (status.state === "complete") checkContentCompatibility(capable.manifest.content, status);
   if (candidate?.manifest?.content) {
-    if (status.state === "empty")
+    if (status.state !== "complete")
       await execute(config, capable.dir, "content-migrate", capable.manifest);
     status = await execute(config, capable.dir, "content-status", capable.manifest);
     checkContentCompatibility(capable.manifest.content, status);
