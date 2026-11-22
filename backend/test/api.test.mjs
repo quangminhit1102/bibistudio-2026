@@ -16,24 +16,23 @@ async function serve(t) {
   });
   return `http://127.0.0.1:${server.address().port}`;
 }
-test("public API serves health, supplied release and deterministic demo JSON", async (t) => {
+test("public API serves health and the supplied release, with no sample endpoint", async (t) => {
   const base = await serve(t);
   const health = await fetch(base + "/api/health");
   assert.equal(health.status, 200);
   assert.match(health.headers.get("content-type"), /application\/json/);
   assert.deepEqual(await health.json(), { ok: true });
   assert.deepEqual(await (await fetch(base + "/api/version")).json(), release);
-  const demo = await (await fetch(base + "/api/demo")).json();
-  assert.deepEqual(demo, await (await fetch(base + "/api/demo")).json());
-  assert.equal(demo.message, "Hello from BiBi Studio API");
-  assert.doesNotMatch(JSON.stringify(demo), /process\.env|password|private.key|\/home\//i);
+  const demo = await fetch(base + "/api/demo");
+  assert.equal(demo.status, 404);
+  assert.deepEqual(await demo.json(), { error: "Not found" });
 });
 test("unknown API routes are JSON 404; unsupported methods are 405", async (t) => {
   const base = await serve(t);
   const missing = await fetch(base + "/api/unknown");
   assert.equal(missing.status, 404);
   assert.deepEqual(await missing.json(), { error: "Not found" });
-  const method = await fetch(base + "/api/demo", { method: "POST" });
+  const method = await fetch(base + "/api/health", { method: "POST" });
   assert.equal(method.status, 405);
   assert.equal(method.headers.get("allow"), "GET, HEAD");
   assert.deepEqual(await method.json(), { error: "Method not allowed" });

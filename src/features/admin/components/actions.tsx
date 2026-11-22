@@ -2,7 +2,8 @@ import { componentUsage } from "./usage";
 import { useState } from "react";
 import { Plus, Heart, ChevronDown } from "lucide-react";
 import { Button, ActionMenu, type ButtonVariant } from "../shared/ui/primitives";
-import { Example, copyText } from "./example";
+import { Example } from "./example";
+import { copyText } from "./clipboard";
 import { componentCatalogue } from "./catalogue";
 import { site } from "@/platform/site";
 export function ActionExample({ name }: { name: string }) {

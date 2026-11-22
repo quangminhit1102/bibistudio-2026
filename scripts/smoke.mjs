@@ -5,6 +5,7 @@ export async function smoke({
   expectedSha,
   expectedRelay = false,
   request = fetch,
+  warn = console.warn,
 }) {
   const get = async (path, type) => {
     const response = await request(new URL(path, baseUrl), {
@@ -25,11 +26,14 @@ export async function smoke({
   }
   if ((await (await get("/api/health", "application/json")).json()).ok !== true)
     throw new Error("API unhealthy");
-  await get("/api/demo", "application/json");
   const unknown = await request(new URL("/api/unknown", baseUrl), { headers: { DNT: "1" } });
   if (unknown.status !== 404 || !unknown.headers.get("content-type")?.includes("application/json"))
     throw new Error("API 404 must be JSON");
-  await get("/products/ca-phe-voi-nguoi-thuong-notebook", "text/html");
+  const page = await get("/products/ca-phe-voi-nguoi-thuong-notebook", "text/html");
+  // A warning, not a failure: releases built before these headers existed must still pass
+  // when they are redeployed or restored by a rollback.
+  for (const name of ["strict-transport-security", "x-content-type-options", "referrer-policy"])
+    if (!page.headers.get(name)) warn(`::warning::Page is served without ${name}`);
   await get("/catalogue/motivation-ca-phe-nguoi-thuong.jpeg", "image/");
   if (expectedRelay) {
     const relay = await request(new URL("/api/analytics/relay/collect.php", baseUrl), {

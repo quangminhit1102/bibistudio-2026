@@ -30,7 +30,6 @@
     "test:admin": "vitest run --config vitest.admin.config.ts"
   },
   "dependencies": {
-    "@hookform/resolvers": "^7.0.1",
     "@radix-ui/react-slot": "^1.2.4",
     "@tailwindcss/vite": "^4.2.1",
     "@tanstack/react-query": "^5.101.1",
@@ -39,7 +38,6 @@
     "@tanstack/react-table": "^8.21.3",
     "@tanstack/router-plugin": "1.168.42",
     "@tinymce/tinymce-react": "6.3.1",
-    "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dompurify": "^3.4.17",
     "idb": "^8.0.4",

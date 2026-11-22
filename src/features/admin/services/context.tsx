@@ -163,6 +163,8 @@ export function AdminProvider({
     window.addEventListener("storage", sync);
     return () => {
       alive = false;
+      // A ticket counter, not a DOM node: cleanup must bump whatever value is current.
+      // eslint-disable-next-line react-hooks/exhaustive-deps
       epoch.current++;
       auth.client?.dispose();
       window.removeEventListener("storage", sync);

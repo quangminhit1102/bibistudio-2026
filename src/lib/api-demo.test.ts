@@ -1,22 +1,16 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { loadApiDemo } from "./api-demo.ts";
-test("API demo reads release and payload through relative API paths", async () => {
+test("API check reads the backend release through a relative API path", async () => {
   const paths: string[] = [];
   const result = await loadApiDemo(undefined, async (input) => {
     paths.push(String(input));
-    return new Response(
-      JSON.stringify(
-        String(input).endsWith("version")
-          ? { releaseId: "local", sourceSha: "local" }
-          : { message: "hello" },
-      ),
-      { headers: { "content-type": "application/json" } },
-    );
+    return new Response(JSON.stringify({ releaseId: "local", sourceSha: "local" }), {
+      headers: { "content-type": "application/json" },
+    });
   });
-  assert.deepEqual(paths.sort(), ["/api/demo", "/api/version"]);
-  assert.equal(result.backend.releaseId, "local");
-  assert.deepEqual(result.demo, { message: "hello" });
+  assert.deepEqual(paths, ["/api/version"]);
+  assert.deepEqual(result, { backend: { releaseId: "local", sourceSha: "local" } });
 });
 test("API demo clearly rejects HTTP errors and HTML fallback", async () => {
   await assert.rejects(

@@ -86,11 +86,6 @@ function ApiTestPage() {
             </div>
           ))}
         </div>
-        {state.data && (
-          <pre className="mt-6 overflow-auto rounded bg-secondary p-5 text-sm">
-            {JSON.stringify(state.data.demo, null, 2)}
-          </pre>
-        )}
       </section>
     </PageShell>
   );
