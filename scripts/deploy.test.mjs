@@ -143,6 +143,24 @@ test("first deployment failure restores original routing and removes current", a
   await assert.rejects(readlink(join(config.root, "current")), { code: "ENOENT" });
 });
 
+test("hashed assets are served as immutable for a year, outside any single release", async (t) => {
+  const config = await fixture(t);
+  const hooks = { install: async () => {}, restart: async () => {}, verify: async () => {} };
+  const rules = join(config.site, "assets/.htaccess");
+  await deploy.activateRelease(config, first, hooks);
+  assert.match(
+    await readFile(rules, "utf8"),
+    /^\s*Header set Cache-Control "public, max-age=31536000, immutable"$/m,
+  );
+  if (process.platform !== "win32") assert.equal((await stat(rules)).mode & 0o777, 0o644);
+  // The file belongs to the deploy tools: a release must not carry its own copy, which
+  // the immutable-asset merge would then refuse to ever change.
+  assert.deepEqual(await readdir(join(config.root, "releases", first, "frontend/assets")), [
+    "a.js",
+  ]);
+  await deploy.activateRelease(config, second, hooks);
+  assert.match(await readFile(rules, "utf8"), /immutable/);
+});
 test("baseline rollback restores original static routing", async (t) => {
   const config = await fixture(t);
   const baseline = join(config.root, "releases/baseline");
@@ -153,11 +171,14 @@ test("baseline rollback restores original static routing", async (t) => {
     JSON.stringify({ isBaseline: true, releaseId: "baseline" }),
   );
   await writeFile(join(config.root, "baseline.htaccess"), "baseline-routing");
+  await mkdir(join(config.site, "assets"));
+  await writeFile(join(config.site, "assets/.htaccess"), "from a managed release");
   await deploy.rollbackRelease(config, "baseline", {
     restart: async () => {},
     verify: async () => {},
   });
   assert.equal(await readFile(join(config.site, ".htaccess"), "utf8"), "baseline-routing");
+  await assert.rejects(stat(join(config.site, "assets/.htaccess")), { code: "ENOENT" });
 });
 
 test("rollback verification failure is reported distinctly", async (t) => {

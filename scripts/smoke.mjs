@@ -34,6 +34,16 @@ export async function smoke({
   // when they are redeployed or restored by a rollback.
   for (const name of ["strict-transport-security", "x-content-type-options", "referrer-policy"])
     if (!page.headers.get(name)) warn(`::warning::Page is served without ${name}`);
+  // Also a warning: the rule is written by the deploy tools on the server, which a release
+  // does not update.
+  const script = (await page.text()).match(/src="(\/assets\/[^"]+\.js)"/)?.[1];
+  if (script) {
+    const cacheControl = (await get(script, "javascript")).headers.get("cache-control");
+    if (!cacheControl?.includes("immutable"))
+      warn(
+        `::warning::${script} is not cached as immutable (${cacheControl ?? "no Cache-Control"})`,
+      );
+  }
   await get("/catalogue/motivation-ca-phe-nguoi-thuong.jpeg", "image/");
   if (expectedRelay) {
     const relay = await request(new URL("/api/analytics/relay/collect.php", baseUrl), {

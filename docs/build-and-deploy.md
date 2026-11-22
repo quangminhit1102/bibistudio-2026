@@ -107,6 +107,10 @@ Deploy tools ở `/home/vhplasti/bibi-deploy/tools`, ngoài archive ứng dụng
 
 Header bảo mật của trang tĩnh (HSTS, `nosniff`, `Referrer-Policy`, CSP ở chế độ Report-Only) nằm ở hai nơi giống hệt nhau, có test giữ đồng bộ: `public/.htaccess` đi theo mỗi release nên có hiệu lực ngay sau một lần deploy thường cho HTML và file trong `_bibi`; `ops/frontend.htaccess.template` phủ thêm `/assets` nhưng chỉ có hiệu lực sau khi bootstrap lại deploy tools. Smoke in cảnh báo, không làm deploy thất bại, nếu trang thiếu các header này. `/api` dùng header của Helmet.
 
+File có hash trong `/assets` được cache một năm kèm `immutable`: `ops/deploy.cjs` ghi `assets/.htaccess` ngay trong thư mục assets dùng chung mỗi lần activation/rollback và xóa file này khi quay về baseline. Quy tắc không nằm trong release vì bước gộp assets coi mọi file trong `frontend/assets` là bất biến và sẽ từ chối bản sửa sau này. Vì thuộc deploy tools, thay đổi chỉ có hiệu lực sau khi bootstrap lại; trước đó hosting vẫn trả `max-age=604800` mặc định và smoke in cảnh báo, không làm deploy thất bại. Mới kiểm trên Apache `httpd:2.4`, chưa kiểm trên LiteSpeed thật.
+
+API công khai `/api/public/*` trả `Cache-Control: public, max-age=60` cho phản hồi thành công; 404 và lỗi giữ `no-store`. Nội dung vừa sửa trong admin có thể hiện trễ tối đa một phút trên trình duyệt đã mở trang đó.
+
 Tạo/cấp quyền key mới, mở rộng truy cập hoặc chuyển production lần đầu cần xác nhận phù hợp. Không đọc/in private key để điều tra một job lỗi.
 
 ## 7. Staging đang tắt và cách bật lại
