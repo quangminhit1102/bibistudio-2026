@@ -119,7 +119,7 @@ export function createApp(release: ReleaseInfo, options: AppOptions = {}): Expre
     }
     next();
   });
-  const endpoints = ["/api/health", "/api/version", "/api/demo"];
+  const endpoints = ["/api/health", "/api/version"];
   app.use((req, res, next) => {
     if (endpoints.includes(req.path) && !["GET", "HEAD"].includes(req.method)) {
       res.setHeader("Allow", "GET, HEAD");
@@ -313,13 +313,6 @@ export function createApp(release: ReleaseInfo, options: AppOptions = {}): Expre
   }
   app.get("/api/version", (_req, res) => {
     res.json({ releaseId: release.releaseId, sourceSha: release.sourceSha });
-  });
-  app.get("/api/demo", (_req, res) => {
-    res.json({
-      message: "Hello from BiBi Studio API",
-      framework: "Express",
-      items: ["React", "Express", "cPanel"],
-    });
   });
   app.use((_req, res) => {
     res.status(404).json({ error: "Not found" });

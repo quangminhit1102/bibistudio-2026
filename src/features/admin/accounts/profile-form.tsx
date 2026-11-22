@@ -30,6 +30,8 @@ export function ProfileForm({
     mounted.current = true;
     return () => {
       mounted.current = false;
+      // A ticket counter, not a DOM node: cleanup must bump whatever value is current.
+      // eslint-disable-next-line react-hooks/exhaustive-deps
       sequence.current++;
     };
   }, []);

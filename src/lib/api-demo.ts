@@ -5,7 +5,7 @@ export interface ApiRelease {
 export async function loadApiDemo(
   signal?: AbortSignal,
   request: typeof fetch = fetch,
-): Promise<{ backend: ApiRelease; demo: unknown }> {
+): Promise<{ backend: ApiRelease }> {
   async function json(path: string) {
     const response = await request(path, { signal, cache: "no-store" });
     if (!response.ok) throw new Error(`${path}: HTTP ${response.status}`);
@@ -13,8 +13,8 @@ export async function loadApiDemo(
       throw new Error(`${path}: Expected JSON; check API routing`);
     return response.json();
   }
-  const [backend, demo] = await Promise.all([json("/api/version"), json("/api/demo")]);
+  const backend = await json("/api/version");
   if (typeof backend?.releaseId !== "string" || typeof backend?.sourceSha !== "string")
     throw new Error("Invalid API release metadata");
-  return { backend, demo };
+  return { backend };
 }

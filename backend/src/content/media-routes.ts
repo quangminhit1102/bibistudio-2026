@@ -11,19 +11,22 @@ import { validate } from "../http/validation";
 import { avatarHeader } from "../profile/avatar-header";
 import type { MediaStore } from "./media-store";
 
-const requireMediaCreate: RequestHandler = (req, _res, next) => {
-  try {
-    if (!req.auth) throw new ApiError(401, "UNAUTHENTICATED", "Vui lòng đăng nhập lại");
-    if (
-      !hasPermission(req.auth.principal, "product.create") &&
-      !hasPermission(req.auth.principal, "post.create")
-    )
-      throw new ApiError(403, "FORBIDDEN", "Bạn không có quyền thực hiện thao tác này");
-    next();
-  } catch (error) {
-    next(error);
-  }
-};
+const requireAnyPermission =
+  (...permissions: string[]): RequestHandler =>
+  (req, _res, next) => {
+    try {
+      if (!req.auth) throw new ApiError(401, "UNAUTHENTICATED", "Vui lòng đăng nhập lại");
+      const { principal } = req.auth;
+      if (!permissions.some((permission) => hasPermission(principal, permission)))
+        throw new ApiError(403, "FORBIDDEN", "Bạn không có quyền thực hiện thao tác này");
+      next();
+    } catch (error) {
+      next(error);
+    }
+  };
+const requireMediaCreate = requireAnyPermission("product.create", "post.create");
+// The list reveals ids of images attached to drafts, so it is never public.
+const requireMediaList = requireAnyPermission("product.view", "post.view");
 
 export function mediaRoutes(
   store: MediaStore,
@@ -87,7 +90,7 @@ export function mediaRoutes(
       res.status(201).json({ id: stored.id, width, height, size: bytes.length });
     },
   );
-  router.get("/", async (_req, res) => {
+  router.get("/", authenticate(auth), requireMediaList, async (_req, res) => {
     const [rows] = await pool.execute<RowDataPacket[]>(
       "SELECT id,mime,size,width,height,created_at FROM media ORDER BY created_at DESC LIMIT 200",
     );

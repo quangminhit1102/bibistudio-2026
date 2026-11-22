@@ -131,6 +131,8 @@ Secret hoạt động là `DEPLOY_SSH_KEY` trong GitHub environment `production`
 
 Deploy tools ở `/home/vhplasti/bibi-deploy/tools`, ngoài archive ứng dụng. Sửa `ops` cần kiểm tra source và bootstrap qua cPanel với đúng commit/checksum; deploy ứng dụng không tự ghi đè receiver. Bản `deploy.cjs` hiện đã bootstrap từ `032ec991fe11673b8a00298c0276fbcad59fa83b`, SHA256 `52132e6231d0360f61608fd12e8b6431780342f4e4402fbc6bc8950ab93bba53`; stable Passenger và visitor-context/PHP tools cùng source. Thay đổi production-only ở workflow/scripts không cần đổi tool này.
 
+Header bảo mật của trang tĩnh (HSTS, `nosniff`, `Referrer-Policy`, CSP ở chế độ Report-Only) nằm ở hai nơi giống hệt nhau, có test giữ đồng bộ: `public/.htaccess` đi theo mỗi release nên có hiệu lực ngay sau một lần deploy thường cho HTML và file trong `_bibi`; `ops/frontend.htaccess.template` phủ thêm `/assets` nhưng chỉ có hiệu lực sau khi bootstrap lại deploy tools. Smoke in cảnh báo, không làm deploy thất bại, nếu trang thiếu các header này. `/api` dùng header của Helmet.
+
 Tạo/cấp quyền key mới, mở rộng truy cập hoặc chuyển production lần đầu cần xác nhận phù hợp. Không đọc/in private key để điều tra một job lỗi.
 
 ## 7. Staging đang tắt và cách bật lại

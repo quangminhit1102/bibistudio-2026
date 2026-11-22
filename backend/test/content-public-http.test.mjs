@@ -34,6 +34,18 @@ const seed = {
       seoDescription: "Mô tả mới",
     },
     {
+      slug: "post-scheduled",
+      title: "Post hẹn giờ",
+      excerpt: "Hẹn giờ",
+      content: "<p>Hẹn giờ</p>",
+      categorySlug: null,
+      status: "published",
+      publishAt: "2026-12-01T00:00:00Z",
+      imageId: null,
+      seoTitle: "",
+      seoDescription: "",
+    },
+    {
       slug: "post-draft",
       title: "Post nháp",
       excerpt: "Nháp",
@@ -155,6 +167,22 @@ test("public posts endpoints serve only published posts with full shape", async 
 
   assert.equal((await fetch(base + "/api/public/posts/post-draft")).status, 404);
   assert.equal((await fetch(base + "/api/public/posts/missing-slug")).status, 404);
+});
+
+test("published posts dated in the future stay hidden until their publish time", async (t) => {
+  const { f, base } = await buildApp(t);
+  const slugs = async () =>
+    (await (await fetch(base + "/api/public/posts")).json()).map((post) => post.slug);
+
+  assert.deepEqual(await slugs(), ["post-new", "post-old"]);
+  assert.equal((await fetch(base + "/api/public/posts/post-scheduled")).status, 404);
+
+  f.clock.set("2026-11-30T23:59:59Z");
+  assert.equal((await fetch(base + "/api/public/posts/post-scheduled")).status, 404);
+
+  f.clock.set("2026-12-01T00:00:00Z");
+  assert.deepEqual(await slugs(), ["post-scheduled", "post-new", "post-old"]);
+  assert.equal((await fetch(base + "/api/public/posts/post-scheduled")).status, 200);
 });
 
 test("public products endpoints serve only published products with full shape", async (t) => {
