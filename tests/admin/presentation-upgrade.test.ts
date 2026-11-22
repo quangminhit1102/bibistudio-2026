@@ -22,7 +22,7 @@ it("fresh seed uses the actual catalogue and journal with local imagery and vali
     for (const p of products)
       for (const id of p.imageIds) expect((await s.get("media", id))?.url).toBeTruthy();
     expect(posts.every((p) => p.imageId && !p.slug.includes("demo"))).toBe(true);
-    const custom = { ...products[0], id: "my-product-uuid", productCode: "CUSTOM" };
+    const custom = { ...products[0], id: "my-product-uuid", productCode: "9999" };
     expect(seedBusiness({ products: [custom] }).purchaseSlips).toHaveLength(0);
   } finally {
     await s.destroy();

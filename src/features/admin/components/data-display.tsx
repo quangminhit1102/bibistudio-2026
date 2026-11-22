@@ -161,7 +161,7 @@ export function DataExample({ name }: { name: string }) {
     return (
       <dl className="a-key-values">
         <dt>Mã sản phẩm</dt>
-        <dd>BIBI-001</dd>
+        <dd>0001</dd>
         <dt>Bộ sưu tập</dt>
         <dd>Khám phá Việt Nam</dd>
       </dl>

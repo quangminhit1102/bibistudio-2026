@@ -19,12 +19,12 @@ it("product CRUD validates stock, unique SKU, relationships and public isolation
     const added = await service.create({
       ...input,
       name: "Sổ kiểm thử",
-      productCode: "TEST-SKU",
+      productCode: "9999",
       slug: "test-slug",
     });
     expect(added.id).not.toBe(original.id);
     await expect(
-      service.create({ ...input, productCode: "TEST-SKU", slug: "another" }),
+      service.create({ ...input, productCode: "9999", slug: "another" }),
     ).rejects.toMatchObject({ code: "validation" });
     const updated = await service.update(added.id, { name: "Đã cập nhật" }, added.revision);
     expect(updated.revision).toBe(2);

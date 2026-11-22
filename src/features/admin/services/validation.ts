@@ -44,7 +44,7 @@ export const schemas = {
     })
     .passthrough(),
   products: catalogue.extend({
-    productCode: z.string().trim().min(1).max(64),
+    productCode: z.string().trim().regex(/^\d{1,64}$/, "Mã sản phẩm chỉ gồm chữ số"),
     productType: name,
     collection: name,
     categoryId: z.string(),

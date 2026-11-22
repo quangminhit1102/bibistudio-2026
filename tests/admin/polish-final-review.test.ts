@@ -45,7 +45,7 @@ it("migration preserves a unique field occupied by another current record", asyn
     const u = accountSeed().users!.find((u) => u.id === "user-1")!;
     await s.transaction(["products", "users"], async (tx) => {
       await tx.put("products", { ...p, ...legacyPresentationBaseline("products", p.id) });
-      await tx.put("products", { ...p, id: "custom-product", productCode: "CUSTOM" });
+      await tx.put("products", { ...p, id: "custom-product", productCode: "9999" });
       await tx.put("users", { ...u, ...legacyPresentationBaseline("users", u.id) });
       await tx.put("users", { ...u, id: "custom-user" });
     });

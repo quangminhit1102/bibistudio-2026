@@ -55,7 +55,6 @@ import { Route as AdminContentIndexRouteImport } from './routes/admin.content.in
 import { Route as AdminContentCategoriesRouteImport } from './routes/admin.content.categories'
 import { Route as AdminContentMediaRouteImport } from './routes/admin.content.media'
 import { Route as AdminContentPostsRouteImport } from './routes/admin.content.posts'
-import { Route as AdminContentTagsRouteImport } from './routes/admin.content.tags'
 import { Route as AdminCustomersIdRouteImport } from './routes/admin.customers.$id'
 import { Route as AdminCustomersCreateRouteImport } from './routes/admin.customers.create'
 import { Route as AdminProductsIndexRouteImport } from './routes/admin.products.index'
@@ -325,11 +324,6 @@ const AdminContentPostsRoute = AdminContentPostsRouteImport.update({
   path: '/content/posts',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminContentTagsRoute = AdminContentTagsRouteImport.update({
-  id: '/content/tags',
-  path: '/content/tags',
-  getParentRoute: () => AdminRoute,
-} as any)
 const AdminCustomersIdRoute = AdminCustomersIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -541,7 +535,7 @@ export interface FileRoutesByFullPath {
   '/admin/content/categories': typeof AdminContentCategoriesRoute
   '/admin/content/media': typeof AdminContentMediaRoute
   '/admin/content/posts': typeof AdminContentPostsRouteWithChildren
-  '/admin/content/tags': typeof AdminContentTagsRoute
+
   '/admin/customers/$id': typeof AdminCustomersIdRouteWithChildren
   '/admin/customers/create': typeof AdminCustomersCreateRoute
   '/admin/products/$id': typeof AdminProductsIdRouteWithChildren
@@ -622,7 +616,7 @@ export interface FileRoutesByTo {
   '/admin/content/categories': typeof AdminContentCategoriesRoute
   '/admin/content/media': typeof AdminContentMediaRoute
   '/admin/content/posts': typeof AdminContentPostsRouteWithChildren
-  '/admin/content/tags': typeof AdminContentTagsRoute
+
   '/admin/customers/$id': typeof AdminCustomersIdRouteWithChildren
   '/admin/customers/create': typeof AdminCustomersCreateRoute
   '/admin/products/$id': typeof AdminProductsIdRouteWithChildren
@@ -705,7 +699,7 @@ export interface FileRoutesById {
   '/admin/content/categories': typeof AdminContentCategoriesRoute
   '/admin/content/media': typeof AdminContentMediaRoute
   '/admin/content/posts': typeof AdminContentPostsRouteWithChildren
-  '/admin/content/tags': typeof AdminContentTagsRoute
+
   '/admin/customers/$id': typeof AdminCustomersIdRouteWithChildren
   '/admin/customers/create': typeof AdminCustomersCreateRoute
   '/admin/products/$id': typeof AdminProductsIdRouteWithChildren
@@ -789,7 +783,7 @@ export interface FileRouteTypes {
     | '/admin/content/categories'
     | '/admin/content/media'
     | '/admin/content/posts'
-    | '/admin/content/tags'
+
     | '/admin/customers/$id'
     | '/admin/customers/create'
     | '/admin/products/$id'
@@ -870,7 +864,7 @@ export interface FileRouteTypes {
     | '/admin/content/categories'
     | '/admin/content/media'
     | '/admin/content/posts'
-    | '/admin/content/tags'
+
     | '/admin/customers/$id'
     | '/admin/customers/create'
     | '/admin/products/$id'
@@ -952,7 +946,7 @@ export interface FileRouteTypes {
     | '/admin/content/categories'
     | '/admin/content/media'
     | '/admin/content/posts'
-    | '/admin/content/tags'
+
     | '/admin/customers/$id'
     | '/admin/customers/create'
     | '/admin/products/$id'
@@ -1329,13 +1323,6 @@ declare module '@tanstack/react-router' {
       path: '/content/posts'
       fullPath: '/admin/content/posts'
       preLoaderRoute: typeof AdminContentPostsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/content/tags': {
-      id: '/admin/content/tags'
-      path: '/content/tags'
-      fullPath: '/admin/content/tags'
-      preLoaderRoute: typeof AdminContentTagsRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/customers/$id': {
@@ -1751,7 +1738,6 @@ interface AdminRouteChildren {
   AdminContentCategoriesRoute: typeof AdminContentCategoriesRoute
   AdminContentMediaRoute: typeof AdminContentMediaRoute
   AdminContentPostsRoute: typeof AdminContentPostsRouteWithChildren
-  AdminContentTagsRoute: typeof AdminContentTagsRoute
   AdminProductsIdRoute: typeof AdminProductsIdRouteWithChildren
   AdminProductsCategoriesRoute: typeof AdminProductsCategoriesRoute
   AdminProductsCreateRoute: typeof AdminProductsCreateRoute
@@ -1807,7 +1793,6 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminContentCategoriesRoute: AdminContentCategoriesRoute,
   AdminContentMediaRoute: AdminContentMediaRoute,
   AdminContentPostsRoute: AdminContentPostsRouteWithChildren,
-  AdminContentTagsRoute: AdminContentTagsRoute,
   AdminProductsIdRoute: AdminProductsIdRouteWithChildren,
   AdminProductsCategoriesRoute: AdminProductsCategoriesRoute,
   AdminProductsCreateRoute: AdminProductsCreateRoute,
@@ -1850,3 +1835,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

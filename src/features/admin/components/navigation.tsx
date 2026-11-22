@@ -227,8 +227,8 @@ export function NavigationExample({ name }: { name: string }) {
         <summary>{name === "Details Panel" ? "Chi tiết sản phẩm" : "Các module quản trị"}</summary>
         {name === "Details Panel" ? (
           <dl>
-            <dt>SKU</dt>
-            <dd>BIBI-001</dd>
+            <dt>Mã sản phẩm</dt>
+            <dd>0001</dd>
             <dt>Trạng thái</dt>
             <dd>Bản nháp</dd>
           </dl>

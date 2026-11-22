@@ -86,7 +86,7 @@ it("preserves drafts on refetch, treats gallery ordering as a change, and resets
     ...productConfig.defaults,
     id: "p",
     name: "Gốc",
-    productCode: "SKU-1",
+    productCode: "0001",
     slug: "goc",
     imageIds: ["a", "b"],
   };
