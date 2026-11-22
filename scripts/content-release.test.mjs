@@ -39,6 +39,10 @@ async function fixture(t) {
     join(dir, "backend/content-migrations/001_content.sql"),
     "CREATE TABLE sample (id INT);",
   );
+  await writeFile(
+    join(dir, "backend/content-migrations/002_content_v9.sql"),
+    "ALTER TABLE sample ADD COLUMN name VARCHAR(10) NULL;\nCREATE TABLE media (id VARCHAR(36) PRIMARY KEY) ENGINE=InnoDB;",
+  );
   const content = await metadata.createContentMetadata(join(dir, "backend"));
   return { dir, manifest: { content } };
 }

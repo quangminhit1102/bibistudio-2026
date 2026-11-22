@@ -2,43 +2,55 @@
 const { createHash } = require("node:crypto");
 const { lstat, readFile, readdir } = require("node:fs/promises");
 const { join } = require("node:path");
+const MIGRATION_FILES = ["001_content.sql", "002_content_v9.sql"];
 function validateContentMetadata(data) {
   if (
     !data ||
-    Object.keys(data).sort().join() !== "compatibleMax,migrationChecksums,requiredMin" ||
     data.requiredMin !== 8 ||
     data.compatibleMax !== 8 ||
+    Object.keys(data).sort().join(",") !== "compatibleMax,migrationChecksums,requiredMin" ||
     !data.migrationChecksums ||
-    Object.keys(data.migrationChecksums).join() !== "001_content.sql" ||
-    !/^[a-f0-9]{64}$/.test(data.migrationChecksums["001_content.sql"] ?? "")
+    Object.keys(data.migrationChecksums).sort().join(",") !== MIGRATION_FILES.join(",") ||
+    !Object.values(data.migrationChecksums).every((hash) => /^[a-f0-9]{64}$/.test(hash))
   )
     throw new Error("Invalid content metadata");
   return {
     requiredMin: 8,
     compatibleMax: 8,
-    migrationChecksums: { "001_content.sql": data.migrationChecksums["001_content.sql"] },
+    migrationChecksums: Object.fromEntries(
+      MIGRATION_FILES.map((name) => [name, data.migrationChecksums[name]]),
+    ),
   };
 }
 async function createContentMetadata(backend) {
   const dir = join(backend, "content-migrations"),
     info = await lstat(dir);
-  if (
-    !info.isDirectory() ||
-    info.isSymbolicLink() ||
-    (await readdir(dir)).join() !== "001_content.sql"
-  )
+  if (!info.isDirectory() || info.isSymbolicLink())
     throw new Error("Invalid content migration directory");
-  const file = join(dir, "001_content.sql"),
-    entry = await lstat(file);
-  if (!entry.isFile() || entry.isSymbolicLink()) throw new Error("Invalid content migration asset");
+  const names = (await readdir(dir)).sort();
+  if (
+    names.join(",") !== MIGRATION_FILES.join(",") ||
+    !(
+      await Promise.all(
+        names.map(async (name) => {
+          const entry = await lstat(join(dir, name));
+          return entry.isFile() && !entry.isSymbolicLink();
+        }),
+      )
+    ).every(Boolean)
+  )
+    throw new Error("Invalid content migration assets");
   return validateContentMetadata({
     requiredMin: 8,
     compatibleMax: 8,
-    migrationChecksums: {
-      "001_content.sql": createHash("sha256")
-        .update(await readFile(file))
-        .digest("hex"),
-    },
+    migrationChecksums: Object.fromEntries(
+      await Promise.all(
+        names.map(async (name) => [
+          name,
+          createHash("sha256").update(await readFile(join(dir, name))).digest("hex"),
+        ]),
+      ),
+    ),
   });
 }
 async function verifyContentAssets(backend, metadata) {
