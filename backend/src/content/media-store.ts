@@ -33,7 +33,7 @@ export function createMediaStore({ root }: { root: string }) {
       )
   )
     throw new Error("Unsafe private media directory");
-  mkdirSync(resolve(root), { recursive: true });
+  mkdirSync(resolve(root), { recursive: true, mode: 0o700 });
   const directory = resolve(root),
     initial = lstatSync(directory);
   const owner = typeof process.getuid === "function" ? process.getuid() : undefined;
