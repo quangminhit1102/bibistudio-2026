@@ -168,6 +168,10 @@ test("CI runs every check stage and every browser suite as its own job", async (
   assert.deepEqual(ci.jobs.e2e.strategy.matrix.suite, E2E_SUITES);
   assert.equal(ci.jobs.e2e.strategy["fail-fast"], false);
   assert.ok(commands.includes("node scripts/check.mjs e2e ${{ matrix.suite }}"));
+  const backend = ci.jobs.backend.steps.find(
+    (step) => step.run === "node scripts/check.mjs backend",
+  );
+  assert.equal(backend.env.BIBI_TEST_DB_CONTAINER, "${{ job.services.mysql.id }}");
 });
 test("a manual deploy without a release ID takes the latest successful main CI run", async () => {
   const routes = [];

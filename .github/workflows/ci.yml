@@ -63,7 +63,6 @@ jobs:
       BIBI_TEST_DB_HOST: 127.0.0.1
       BIBI_TEST_DB_PORT: "33384"
       BIBI_TEST_DB_PASSWORD: ci-test-only
-      BIBI_TEST_DB_CONTAINER: ${{ job.services.mysql.id }}
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
         with:
@@ -80,6 +79,8 @@ jobs:
       - run: npm ci
       - run: docker pull php:8.4-cli@sha256:d63e8b80cd4c6cfd01cfa7c910522e299cdc7ca1a2b6d6563db48df3c17e6c55
       - run: node scripts/check.mjs backend
+        env:
+          BIBI_TEST_DB_CONTAINER: ${{ job.services.mysql.id }} # native backup tests exec into the service
   e2e:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -102,7 +103,6 @@ jobs:
       BIBI_TEST_DB_HOST: 127.0.0.1
       BIBI_TEST_DB_PORT: "33384"
       BIBI_TEST_DB_PASSWORD: ci-test-only
-      BIBI_TEST_DB_CONTAINER: ${{ job.services.mysql.id }}
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
         with:
@@ -117,7 +117,8 @@ jobs:
             ops/package-lock.json
       - run: npm ci
       - run: node node_modules/playwright/cli.js install --with-deps chromium
-      - run: docker pull php:8.4-cli@sha256:d63e8b80cd4c6cfd01cfa7c910522e299cdc7ca1a2b6d6563db48df3c17e6c55
+      - if: matrix.suite == 'visitor-relay' # the only suite that starts the PHP relay
+        run: docker pull php:8.4-cli@sha256:d63e8b80cd4c6cfd01cfa7c910522e299cdc7ca1a2b6d6563db48df3c17e6c55
       - run: node scripts/check.mjs e2e ${{ matrix.suite }}
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
@@ -145,7 +146,6 @@ jobs:
       BIBI_TEST_DB_HOST: 127.0.0.1
       BIBI_TEST_DB_PORT: "33384"
       BIBI_TEST_DB_PASSWORD: ci-test-only
-      BIBI_TEST_DB_CONTAINER: ${{ job.services.mysql.id }}
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
         with:
