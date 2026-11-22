@@ -138,13 +138,16 @@ test(
       await heading("Chỉnh sửa phiếu mua hàng").waitFor();
       await shot("slip-edit-desktop");
 
-      for (const [path, title, iframe] of [
-        ["/admin/products/create", "Thêm sản phẩm", "Mô tả chi tiết sản phẩm"],
-        ["/admin/content/posts/create", "Thêm bài viết", "Nội dung bài viết"],
+      for (const [path, title, kind] of [
+        ["/admin/products/create", "Thêm sản phẩm", "product"],
+        ["/admin/content/posts/create", "Thêm bài viết", "post"],
       ]) {
         await go(path);
         await heading(title).waitFor();
-        const body = page.frameLocator(`iframe[title="${iframe}"]`).locator("body");
+        const body =
+          kind === "post"
+            ? page.frameLocator('iframe[title="Nội dung bài viết"]').locator("body")
+            : page.getByLabel("Mô tả (Tiếng Việt)");
         await body.waitFor();
         assert.equal(await unloadBlocked(), false);
         await page.getByRole("button", { name: "Đổi giao diện sáng tối" }).click();
