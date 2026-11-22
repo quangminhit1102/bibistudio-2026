@@ -28,7 +28,7 @@ test("deployment manifest copies only generated static artifacts", () => {
   const yml = renderCpanelYml("/home/vhplasti/public_html/");
 
   assert.match(yml, /DEPLOYPATH=\/home\/vhplasti\/public_html\//);
-  assert.match(yml, /\/bin\/cp -R assets catalogue Images "\$DEPLOYPATH"/);
+  assert.match(yml, /\/bin\/cp -R assets catalogue "\$DEPLOYPATH"/);
   assert.match(
     yml,
     /\/bin\/cp \.htaccess index\.html favicon\.svg robots\.txt zalo\.png bibi-logo\.svg bibi-mark\.svg "\$DEPLOYPATH"/,
@@ -39,8 +39,7 @@ test("artifact manifest contains every cPanel public entry", () => {
   assert.deepEqual(artifactEntries, [
     "assets",
     "catalogue",
-    "Images",
-    ".htaccess",
+      ".htaccess",
     "bibi-logo.svg",
     "bibi-mark.svg",
     "favicon.svg",
