@@ -18,6 +18,8 @@ export interface SeedPost {
   imageId?: string | null;
   seoTitle?: string;
   seoDescription?: string;
+  readTime?: string | null;
+  coverImageId?: string | null;
 }
 export interface SeedProduct {
   productCode: string;
@@ -33,6 +35,20 @@ export interface SeedProduct {
   tags?: string[];
   seoTitle?: string;
   seoDescription?: string;
+  nameEn?: string | null;
+  shortDescriptionEn?: string | null;
+  descriptionEn?: string | null;
+  dimensions?: string | null;
+  pages?: string | null;
+  materialVi?: string | null;
+  materialEn?: string | null;
+  formatVi?: string | null;
+  formatEn?: string | null;
+  occasion?: string | null;
+  featured?: boolean;
+  sortOrder?: number;
+  imageAltVi?: string | null;
+  imageAltEn?: string | null;
 }
 export interface ContentSeedData {
   posts: SeedPost[];
@@ -106,8 +122,8 @@ export async function seedContent(pool: Pool, data: ContentSeedData): Promise<nu
     }
     for (const post of data.posts ?? []) {
       await c.execute(
-        `INSERT INTO posts (id,slug,title,excerpt,content,category_id,author_id,status,publish_at,image_id,seo_title,seo_description,created_at,updated_at,revision)
-         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,1)`,
+        `INSERT INTO posts (id,slug,title,excerpt,content,category_id,author_id,status,publish_at,image_id,seo_title,seo_description,read_time,cover_image_id,created_at,updated_at,revision)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,1)`,
         [
           "journal-" + post.slug,
           post.slug,
@@ -121,6 +137,8 @@ export async function seedContent(pool: Pool, data: ContentSeedData): Promise<nu
           post.imageId ?? null,
           post.seoTitle ?? "",
           post.seoDescription ?? "",
+          post.readTime ?? null,
+          post.coverImageId ?? null,
           now,
           now,
         ],
@@ -129,8 +147,8 @@ export async function seedContent(pool: Pool, data: ContentSeedData): Promise<nu
     }
     for (const product of data.products ?? []) {
       await c.execute(
-        `INSERT INTO products (id,product_code,name,slug,short_description,description,product_type,collection,category_id,price,compare_at,stock,reserved,status,image_ids,tags,seo_title,seo_description,created_at,updated_at,revision)
-         VALUES (?,?,?,?,?,?,?,?,?,0,0,0,0,?,?,?,?,?,?,?,1)`,
+        `INSERT INTO products (id,product_code,name,slug,short_description,description,product_type,collection,category_id,price,compare_at,stock,reserved,status,image_ids,tags,seo_title,seo_description,name_en,short_description_en,description_en,dimensions,pages,material_vi,material_en,format_vi,format_en,occasion,featured,sort_order,image_alt_vi,image_alt_en,created_at,updated_at,revision)
+         VALUES (?,?,?,?,?,?,?,?,?,0,0,0,0,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,1)`,
         [
           randomUUID(),
           product.productCode,
@@ -146,6 +164,20 @@ export async function seedContent(pool: Pool, data: ContentSeedData): Promise<nu
           JSON.stringify(product.tags ?? []),
           product.seoTitle ?? "",
           product.seoDescription ?? "",
+          product.nameEn ?? null,
+          product.shortDescriptionEn ?? null,
+          product.descriptionEn ?? null,
+          product.dimensions ?? null,
+          product.pages ?? null,
+          product.materialVi ?? null,
+          product.materialEn ?? null,
+          product.formatVi ?? null,
+          product.formatEn ?? null,
+          product.occasion ?? null,
+          product.featured === true ? 1 : 0,
+          product.sortOrder ?? 0,
+          product.imageAltVi ?? null,
+          product.imageAltEn ?? null,
           now,
           now,
         ],

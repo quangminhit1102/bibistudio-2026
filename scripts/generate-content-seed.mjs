@@ -106,7 +106,58 @@ function categorySlug(name) {
   return result;
 }
 
+function optionalString(node) {
+  return node ? string(node) : null;
+}
+
+function boolean(node) {
+  if (
+    !node ||
+    (node.kind !== ts.SyntaxKind.TrueKeyword && node.kind !== ts.SyntaxKind.FalseKeyword)
+  )
+    throw new Error("Content seed fields must be literal booleans");
+  return node.kind === ts.SyntaxKind.TrueKeyword;
+}
+
+// Blog cover images are Vite asset imports (e.g. `import cover from "@/assets/blog/foo.jpg"`),
+// so `coverImage` is an identifier in the AST. Resolve it back to its import specifier and
+// normalise to the static URL the public site serves ("old images keep static URL").
+function collectImports(source) {
+  const file = ts.createSourceFile("blog.ts", source, ts.ScriptTarget.Latest, true);
+  const imports = new Map();
+  function visit(node) {
+    if (
+      ts.isImportDeclaration(node) &&
+      ts.isStringLiteral(node.moduleSpecifier) &&
+      node.importClause &&
+      node.importClause.name &&
+      ts.isIdentifier(node.importClause.name)
+    )
+      imports.set(node.importClause.name.text, node.moduleSpecifier.text);
+    ts.forEachChild(node, visit);
+  }
+  visit(file);
+  return imports;
+}
+
+function staticAssetUrl(specifier) {
+  return specifier.startsWith("@/") ? "/" + specifier.slice(2) : specifier;
+}
+
+function coverImageUrl(node, imports) {
+  const value = property(node, "coverImage");
+  if (!value) return null;
+  if (ts.isStringLiteral(value) || ts.isNoSubstitutionTemplateLiteral(value)) return value.text;
+  if (ts.isIdentifier(value)) {
+    const specifier = imports.get(value.text);
+    if (specifier) return staticAssetUrl(specifier);
+    throw new Error("Unresolved cover image import");
+  }
+  throw new Error("Unsupported cover image source");
+}
+
 function buildPosts(blog) {
+  const imports = collectImports(blog);
   return array(blog, "blogPosts").map((node) => {
     const postSlug = slug(required(node, "slug"));
     const content = required(node, "content");
@@ -121,6 +172,8 @@ function buildPosts(blog) {
       status: "published",
       publishAt: string(required(node, "date")),
       imageId: "journal-cover-" + postSlug,
+      readTime: optionalString(property(node, "readTime")),
+      coverImageId: coverImageUrl(node, imports),
       seoTitle: "",
       seoDescription: "",
     };
@@ -141,12 +194,16 @@ function buildProducts(catalogue) {
     if (!ts.isArrayLiteralExpression(images))
       throw new Error("Product images must be a literal array");
     const imageIds = images.elements.map((_, k) => `catalogue-image-${productSlug}-${k}`);
+    const nameVi = string(args[1]);
+    const nameEn = string(args[2]);
+    const descriptionVi = string(args[5]);
+    const descriptionEn = string(args[6]);
     return {
       productCode: String(index + 1).padStart(4, "0"),
-      name: string(args[1]),
+      name: nameVi,
       slug: productSlug,
-      shortDescription: string(args[5]),
-      description: string(args[5]),
+      shortDescription: descriptionVi,
+      description: descriptionVi,
       productType: string(args[3]),
       collection: string(args[4]),
       categorySlug: string(args[4]),
@@ -155,6 +212,20 @@ function buildProducts(catalogue) {
       tags: [],
       seoTitle: "",
       seoDescription: "",
+      nameEn,
+      shortDescriptionEn: descriptionEn,
+      descriptionEn,
+      dimensions: null,
+      pages: null,
+      materialVi: null,
+      materialEn: null,
+      formatVi: null,
+      formatEn: null,
+      occasion: optionalString(args[9]),
+      featured: args[8] ? boolean(args[8]) : false,
+      sortOrder: index + 1,
+      imageAltVi: `${nameVi} — sản phẩm BiBi Studio`,
+      imageAltEn: `${nameEn} — a BiBi Studio paper good`,
     };
   });
 }

@@ -19,6 +19,8 @@ const sampleData = {
       imageId: "journal-cover-bai-1",
       seoTitle: "",
       seoDescription: "",
+      readTime: "5 phút đọc",
+      coverImageId: "/assets/blog/test.jpg",
     },
     {
       slug: "bai-2",
@@ -31,6 +33,8 @@ const sampleData = {
       imageId: "journal-cover-bai-2",
       seoTitle: "",
       seoDescription: "",
+      readTime: "4 phút đọc",
+      coverImageId: "/assets/blog/test2.jpg",
     },
   ],
   products: [
@@ -48,6 +52,20 @@ const sampleData = {
       tags: ["Việt Nam"],
       seoTitle: "",
       seoDescription: "",
+      nameEn: "Product A",
+      shortDescriptionEn: "Short description",
+      descriptionEn: "Description A",
+      dimensions: "A5",
+      pages: "100",
+      materialVi: "Giấy",
+      materialEn: "Paper",
+      formatVi: "14x20cm",
+      formatEn: "14x20cm",
+      occasion: "womens-day-83",
+      featured: true,
+      sortOrder: 1,
+      imageAltVi: "Sản phẩm A — sản phẩm BiBi Studio",
+      imageAltEn: "Product A — a BiBi Studio paper good",
     },
   ],
   productCategories: [
@@ -92,10 +110,30 @@ test("seedContent inserts once, holds the author FK, and is idempotent", async (
     assert.equal(typeof envelope.html, "string");
   }
   assert.match(JSON.parse(posts[0].content).html, /<p>Nội dung 1<\/p>/);
+  const [postFields] = await f.pool.query(
+    "SELECT read_time, cover_image_id FROM posts ORDER BY slug",
+  );
+  assert.equal(postFields[0].read_time, "5 phút đọc");
+  assert.equal(postFields[0].cover_image_id, "/assets/blog/test.jpg");
   const [products] = await f.pool.query("SELECT category_id, image_ids, tags FROM products");
   assert.ok(products[0].category_id, "product category resolved by slug");
   assert.deepEqual(products[0].image_ids, ["catalogue-image-san-pham-a-0"]);
   assert.deepEqual(products[0].tags, ["Việt Nam"]);
+  const [productFields] = await f.pool.query(
+    "SELECT name_en, short_description_en, description_en, dimensions, pages, material_vi, material_en, format_vi, format_en, occasion, featured, sort_order, image_alt_vi, image_alt_en FROM products",
+  );
+  assert.equal(productFields[0].name_en, "Product A");
+  assert.equal(productFields[0].description_en, "Description A");
+  assert.equal(productFields[0].dimensions, "A5");
+  assert.equal(productFields[0].pages, "100");
+  assert.equal(productFields[0].material_vi, "Giấy");
+  assert.equal(productFields[0].material_en, "Paper");
+  assert.equal(productFields[0].format_vi, "14x20cm");
+  assert.equal(productFields[0].occasion, "womens-day-83");
+  assert.equal(productFields[0].featured, 1);
+  assert.equal(productFields[0].sort_order, 1);
+  assert.equal(productFields[0].image_alt_vi, "Sản phẩm A — sản phẩm BiBi Studio");
+  assert.equal(productFields[0].image_alt_en, "Product A — a BiBi Studio paper good");
 
   const second = await seedContent(f.pool, sampleData);
   assert.equal(second, 0);

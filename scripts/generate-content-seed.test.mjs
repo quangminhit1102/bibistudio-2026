@@ -3,7 +3,8 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { buildContentSeed } from "./generate-content-seed.mjs";
 
-const blog = `throw new Error('must not execute source');
+const blog = `import coverImage from "@/assets/blog/test.jpg";
+throw new Error('must not execute source');
 const blogPosts=[{
   slug:'test-post',
   title:'Tiêu đề',
@@ -11,7 +12,8 @@ const blogPosts=[{
   category:'Cảm hứng',
   author:'BiBi Studio',
   date:'2026-08-25',
-  coverImage:someImportedImage,
+  readTime:'5 phút đọc',
+  coverImage:coverImage,
   content:[
     {type:'paragraph', text:'Xin <chào>'},
     {type:'heading', text:'Phần 1', level:2},
@@ -22,7 +24,7 @@ const blogPosts=[{
 }];`;
 
 const catalogue = `const collections=[{slug:'motivation',name:{vi:'Động lực'},intro:{vi:'Giới thiệu'}}];
-const products=[p('test-notebook','Sổ','Notebook','notebook','motivation','Mô tả','Desc',['/a.webp','/b.webp'])];`;
+const products=[p('test-notebook','Sổ','Notebook','notebook','motivation','Mô tả','Desc',['/a.webp','/b.webp'],true,'womens-day-83')];`;
 
 test("buildContentSeed converts ContentBlock[] to HTML and maps categories/products without executing source", () => {
   const result = buildContentSeed(catalogue, blog);
@@ -30,6 +32,8 @@ test("buildContentSeed converts ContentBlock[] to HTML and maps categories/produ
   assert.equal(result.posts[0].categorySlug, "cam-hung");
   assert.equal(result.posts[0].status, "published");
   assert.equal(result.posts[0].publishAt, "2026-08-25");
+  assert.equal(result.posts[0].readTime, "5 phút đọc");
+  assert.equal(result.posts[0].coverImageId, "/assets/blog/test.jpg");
   assert.ok(result.posts[0].content.includes("<p>Xin &lt;chào&gt;</p>"));
   assert.ok(result.posts[0].content.includes("<h2>Phần 1</h2>"));
   assert.ok(result.posts[0].content.includes("<blockquote>Trích dẫn</blockquote>"));
@@ -45,6 +49,17 @@ test("buildContentSeed converts ContentBlock[] to HTML and maps categories/produ
     "catalogue-image-test-notebook-0",
     "catalogue-image-test-notebook-1",
   ]);
+  assert.equal(result.products[0].nameEn, "Notebook");
+  assert.equal(result.products[0].descriptionEn, "Desc");
+  assert.equal(result.products[0].shortDescriptionEn, "Desc");
+  assert.equal(result.products[0].featured, true);
+  assert.equal(result.products[0].occasion, "womens-day-83");
+  assert.equal(result.products[0].sortOrder, 1);
+  assert.equal(result.products[0].imageAltVi, "Sổ — sản phẩm BiBi Studio");
+  assert.equal(result.products[0].imageAltEn, "Notebook — a BiBi Studio paper good");
+  assert.equal(result.products[0].dimensions, null);
+  assert.equal(result.products[0].materialVi, null);
+  assert.equal(result.products[0].materialEn, null);
   assert.deepEqual(result.productCategories, [
     { slug: "motivation", name: "Động lực", description: "Giới thiệu", position: 0 },
   ]);
@@ -77,4 +92,25 @@ test("current static content generates 10 posts and the full product catalogue",
   assert.equal(result.contentCategories.length, 3);
   const codes = new Set(result.products.map((product) => product.productCode));
   assert.equal(codes.size, result.products.length);
+  assert.ok(
+    result.posts.every((post) => typeof post.readTime === "string" && post.readTime.length > 0),
+  );
+  assert.ok(
+    result.posts.every(
+      (post) =>
+        typeof post.coverImageId === "string" && post.coverImageId.startsWith("/assets/blog/"),
+    ),
+  );
+  const bunBo = result.products.find((product) => product.slug === "bun-bo-hue-notebook");
+  assert.equal(bunBo.nameEn, "Bun Bo Hue");
+  assert.equal(bunBo.featured, true);
+  assert.equal(bunBo.occasion, null);
+  const floral = result.products.find(
+    (product) => product.slug === "womens-day-floral-border-card",
+  );
+  assert.equal(floral.featured, true);
+  assert.equal(floral.occasion, "womens-day-83");
+  assert.equal(floral.materialEn, null);
+  assert.ok(result.products.every((product) => product.sortOrder >= 1));
+  assert.ok(result.products.every((product) => typeof product.imageAltVi === "string"));
 });
