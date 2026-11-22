@@ -57,9 +57,7 @@ async function history(c: Connection): Promise<RowDataPacket[]> {
   );
   return exists.n
     ? (
-        await c.query<RowDataPacket[]>(
-          "SELECT * FROM content_schema_migrations ORDER BY version",
-        )
+        await c.query<RowDataPacket[]>("SELECT * FROM content_schema_migrations ORDER BY version")
       )[0]
     : [];
 }

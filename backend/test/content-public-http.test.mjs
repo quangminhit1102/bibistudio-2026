@@ -76,7 +76,9 @@ const seed = {
       seoDescription: "",
     },
   ],
-  productCategories: [{ slug: "motivation", name: "Tạo động lực", description: "Mô tả", position: 0 }],
+  productCategories: [
+    { slug: "motivation", name: "Tạo động lực", description: "Mô tả", position: 0 },
+  ],
   contentCategories: [
     { slug: "cam-hung", name: "Cảm hứng", position: 0 },
     { slug: "huong-dan", name: "Hướng dẫn", position: 1 },

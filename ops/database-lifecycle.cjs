@@ -59,31 +59,31 @@ async function runDatabaseTool(config, dir, command, manifest) {
       ? [path.join(dir, "backend/dist/visitors/controls-cli.js"), controlsAction]
       : contextAction
         ? [path.join(dir, "backend/dist/visitors/context-cli.js"), contextAction]
-      : visitorAction
-        ? [path.join(dir, "backend/dist/visitors/cli.js"), visitorAction]
-        : profileCommand
-          ? profileAction === "backup"
-            ? [path.join(dir, "backend/dist/profile/backup-cli.js"), manifest.releaseId]
-            : [path.join(dir, "backend/dist/profile/cli.js"), profileAction]
-          : logCommand
-            ? logAction === "probe"
-              ? [
-                  path.join(dir, "backend/dist/access-logs/probe-cli.js"),
-                  manifest.releaseId,
-                  manifest.sourceSha,
-                  config.baseUrl,
-                ]
-              : [path.join(dir, "backend/dist/access-logs/cli.js"), logAction]
-            : probe
-              ? [
-                  path.join(dir, "backend/dist/db/probe-cli.js"),
-                  manifest.releaseId,
-                  manifest.sourceSha,
-                  config.baseUrl,
-                ]
-              : backup
-                ? [path.join(dir, "backend/dist/db/backup-cli.js"), manifest.releaseId]
-                : [path.join(dir, "backend/dist/db/cli.js"), command];
+        : visitorAction
+          ? [path.join(dir, "backend/dist/visitors/cli.js"), visitorAction]
+          : profileCommand
+            ? profileAction === "backup"
+              ? [path.join(dir, "backend/dist/profile/backup-cli.js"), manifest.releaseId]
+              : [path.join(dir, "backend/dist/profile/cli.js"), profileAction]
+            : logCommand
+              ? logAction === "probe"
+                ? [
+                    path.join(dir, "backend/dist/access-logs/probe-cli.js"),
+                    manifest.releaseId,
+                    manifest.sourceSha,
+                    config.baseUrl,
+                  ]
+                : [path.join(dir, "backend/dist/access-logs/cli.js"), logAction]
+              : probe
+                ? [
+                    path.join(dir, "backend/dist/db/probe-cli.js"),
+                    manifest.releaseId,
+                    manifest.sourceSha,
+                    config.baseUrl,
+                  ]
+                : backup
+                  ? [path.join(dir, "backend/dist/db/backup-cli.js"), manifest.releaseId]
+                  : [path.join(dir, "backend/dist/db/cli.js"), command];
   try {
     const { stdout } = await execute(path.join(config.runtimeBin, "node"), args, {
       cwd: path.join(dir, "backend"),

@@ -175,7 +175,7 @@ export function SlipForm({
               {draft.vatApplied ? "Có VAT" : "Không VAT"}
             </Badge>
             <small>Chỉ là nhãn trên phiếu, không tính thuế.</small>
-            {customer && draft.vatApplied !== (customer.vatRate > 0) && (
+            {customer && draft.vatApplied !== customer.vatRate > 0 && (
               <>
                 <small>Khác mặc định của khách</small>
                 <Button

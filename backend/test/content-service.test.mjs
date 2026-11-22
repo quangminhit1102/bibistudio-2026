@@ -79,10 +79,7 @@ test("content service CRUDs customers with revision concurrency and permission c
 test("content service CRUDs posts/products/categories with JSON columns and FK delete protection", async (t) => {
   const { service, actor } = await setup(t);
 
-  const cat = await service.createContentCategory(
-    { name: "Tin tức", slug: "tin-tuc" },
-    actor,
-  );
+  const cat = await service.createContentCategory({ name: "Tin tức", slug: "tin-tuc" }, actor);
   assert.equal(cat.revision, 1);
   const pcat = await service.createProductCategory({ name: "Sách", slug: "sach" }, actor);
   assert.equal(pcat.revision, 1);

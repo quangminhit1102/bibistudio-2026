@@ -45,7 +45,9 @@ test("buildContentSeed converts ContentBlock[] to HTML and maps categories/produ
     "catalogue-image-test-notebook-0",
     "catalogue-image-test-notebook-1",
   ]);
-  assert.deepEqual(result.productCategories, [{ slug: "motivation", name: "Động lực", description: "Giới thiệu", position: 0 }]);
+  assert.deepEqual(result.productCategories, [
+    { slug: "motivation", name: "Động lực", description: "Giới thiệu", position: 0 },
+  ]);
   assert.deepEqual(result.contentCategories, [{ slug: "cam-hung", name: "Cảm hứng", position: 0 }]);
   assert.ok(!JSON.stringify(result).includes("must not execute"));
 });
@@ -53,7 +55,10 @@ test("buildContentSeed converts ContentBlock[] to HTML and maps categories/produ
 test("buildContentSeed rejects non-literal slugs and duplicate products", () => {
   for (const broken of [
     catalogue.replace("'test-notebook'", "process.env.PRIVATE_VALUE"),
-    catalogue.replace("const products=[", "const products=[p('test-notebook','A','A','notebook','motivation','','',[]),p('test-notebook','B','B','notebook','motivation','','',[]),"),
+    catalogue.replace(
+      "const products=[",
+      "const products=[p('test-notebook','A','A','notebook','motivation','','',[]),p('test-notebook','B','B','notebook','motivation','','',[]),",
+    ),
   ])
     assert.throws(() => buildContentSeed(broken, blog));
 });

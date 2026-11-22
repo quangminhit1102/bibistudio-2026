@@ -1,6 +1,13 @@
 import type { AdminHttpClient } from "../../../lib/admin-http";
 import type { Resource } from "./contracts";
-import type { EntityKey, EntityService, ListInput, ListResult, CreateInput, AdminModels } from "./contracts";
+import type {
+  EntityKey,
+  EntityService,
+  ListInput,
+  ListResult,
+  CreateInput,
+  AdminModels,
+} from "./contracts";
 
 function basePath(entity: EntityKey, resource?: Resource): string {
   if (entity === "categories")
@@ -27,7 +34,10 @@ export function createHttpEntityService<K extends EntityKey>(
         size: String(input.pageSize),
       });
       if (input.search) q.set("q", input.search);
-      if (input.sort) { q.set("sort", input.sort.field); q.set("dir", input.sort.direction); }
+      if (input.sort) {
+        q.set("sort", input.sort.field);
+        q.set("dir", input.sort.direction);
+      }
       for (const [k, v] of Object.entries(input.filters ?? {})) if (v) q.set("f_" + k, v);
       return client.request<ListResult<AdminModels[K]>>(`${base}?${q}`, { signal: input.signal });
     },
@@ -38,7 +48,11 @@ export function createHttpEntityService<K extends EntityKey>(
       return client.request<AdminModels[K]>(base, { method: "POST", body: input });
     },
     async update(id, input, revision) {
-      return client.request<AdminModels[K]>(`${base}/${id}`, { method: "PUT", body: input, ifMatch: revision });
+      return client.request<AdminModels[K]>(`${base}/${id}`, {
+        method: "PUT",
+        body: input,
+        ifMatch: revision,
+      });
     },
     async remove(id, revision) {
       await client.request<void>(`${base}/${id}`, { method: "DELETE", ifMatch: revision });

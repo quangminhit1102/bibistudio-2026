@@ -48,9 +48,7 @@ test("content metadata pins assets and rejects altered SQL", async (t) => {
   const f = await fixture(t);
   await metadata.verifyContentAssets(join(f.dir, "backend"), f.manifest.content);
   await writeFile(join(f.dir, "backend/content-migrations/001_content.sql"), "changed");
-  await assert.rejects(
-    metadata.verifyContentAssets(join(f.dir, "backend"), f.manifest.content),
-  );
+  await assert.rejects(metadata.verifyContentAssets(join(f.dir, "backend"), f.manifest.content));
 });
 
 test("content prepare requires backup, migrates, seeds and verifies before activation", async (t) => {
@@ -70,12 +68,7 @@ test("content prepare requires backup, migrates, seeds and verifies before activ
   await assert.rejects(lifecycle.prepareContent({}, null, f, { run }));
   assert.equal(calls.length, 0);
   await lifecycle.prepareContent({}, null, f, { run, backupReceipt });
-  assert.deepEqual(calls, [
-    "content-status",
-    "content-migrate",
-    "content-status",
-    "content-seed",
-  ]);
+  assert.deepEqual(calls, ["content-status", "content-migrate", "content-status", "content-seed"]);
 });
 
 test("rollback verifies content with current tool without re-seeding", async (t) => {

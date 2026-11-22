@@ -60,17 +60,16 @@ test("content admin API requires auth, serves authorized lists and 404s unknown 
     "/product-categories",
     "/content-categories",
   ]) {
-    const response = await list(`${path}?page=1&size=10&q=test&sort=name&dir=asc&f_status=published`);
+    const response = await list(
+      `${path}?page=1&size=10&q=test&sort=name&dir=asc&f_status=published`,
+    );
     assert.equal(response.status, 200, path);
     const body = await response.json();
     assert.equal(body.total, 0, path);
     assert.deepEqual(body.items, [], path);
   }
 
-  assert.equal(
-    (await list("/customers/00000000-0000-4000-8000-000000000000")).status,
-    404,
-  );
+  assert.equal((await list("/customers/00000000-0000-4000-8000-000000000000")).status, 404);
 
   // A non-digit productCode must be rejected with 400 (spec §2).
   const badProduct = await write("/products", "POST", {

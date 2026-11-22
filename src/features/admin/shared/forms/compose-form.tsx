@@ -142,7 +142,9 @@ export default function ComposeForm({
             <Card>
               <div className="a-compose-stack">
                 {fields(
-                  post ? ["title", "slug", "excerpt"] : ["name", "productCode", "slug", "shortDescription"],
+                  post
+                    ? ["title", "slug", "excerpt"]
+                    : ["name", "productCode", "slug", "shortDescription"],
                 )}
               </div>
             </Card>

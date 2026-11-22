@@ -3,7 +3,9 @@ import { createHttpEntityService } from "./http-entity-service";
 import type { AdminHttpClient } from "../../../lib/admin-http";
 import type { ListResult } from "./contracts";
 
-function mockClient(overrides: Partial<Record<"request" | "requestBlob", ReturnType<typeof vi.fn>>> = {}) {
+function mockClient(
+  overrides: Partial<Record<"request" | "requestBlob", ReturnType<typeof vi.fn>>> = {},
+) {
   const request = overrides.request ?? vi.fn();
   const requestBlob = overrides.requestBlob ?? vi.fn();
   return { request, requestBlob, client: { request, requestBlob } as unknown as AdminHttpClient };
@@ -36,7 +38,10 @@ describe("createHttpEntityService", () => {
     const { client, request } = mockClient();
     request.mockResolvedValue(customersResult);
     await createHttpEntityService(client, "categories", "content").list({ page: 1, pageSize: 10 });
-    await createHttpEntityService(client, "categories", "bookstore").list({ page: 1, pageSize: 10 });
+    await createHttpEntityService(client, "categories", "bookstore").list({
+      page: 1,
+      pageSize: 10,
+    });
     expect(request).toHaveBeenNthCalledWith(1, "/api/content-categories?page=1&size=10", {
       signal: undefined,
     });
@@ -102,20 +107,21 @@ describe("createHttpEntityService", () => {
 
   it("bulk delete loops remove and reports failures", async () => {
     const { client, request } = mockClient();
-    request
-      .mockResolvedValueOnce(undefined)
-      .mockRejectedValueOnce(new Error("boom"));
+    request.mockResolvedValueOnce(undefined).mockRejectedValueOnce(new Error("boom"));
     const service = createHttpEntityService(client, "customers");
-    const result = await service.bulk(
-      { type: "delete" },
-      [
-        { id: "a", revision: 1 },
-        { id: "b", revision: 2 },
-      ],
-    );
+    const result = await service.bulk({ type: "delete" }, [
+      { id: "a", revision: 1 },
+      { id: "b", revision: 2 },
+    ]);
     expect(request).toHaveBeenCalledTimes(2);
-    expect(request).toHaveBeenNthCalledWith(1, "/api/customers/a", { method: "DELETE", ifMatch: 1 });
-    expect(request).toHaveBeenNthCalledWith(2, "/api/customers/b", { method: "DELETE", ifMatch: 2 });
+    expect(request).toHaveBeenNthCalledWith(1, "/api/customers/a", {
+      method: "DELETE",
+      ifMatch: 1,
+    });
+    expect(request).toHaveBeenNthCalledWith(2, "/api/customers/b", {
+      method: "DELETE",
+      ifMatch: 2,
+    });
     expect(result.updated).toBe(1);
     expect(result.failures).toEqual([{ id: "b", message: "boom" }]);
   });
@@ -124,10 +130,9 @@ describe("createHttpEntityService", () => {
     const { client, request } = mockClient();
     request.mockResolvedValue({ id: "a" });
     const service = createHttpEntityService(client, "customers");
-    const result = await service.bulk(
-      { type: "update", values: { name: "X" } },
-      [{ id: "a", revision: 5 }],
-    );
+    const result = await service.bulk({ type: "update", values: { name: "X" } }, [
+      { id: "a", revision: 5 },
+    ]);
     expect(request).toHaveBeenCalledWith("/api/customers/a", {
       method: "PUT",
       body: { name: "X" },

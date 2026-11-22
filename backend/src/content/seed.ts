@@ -68,10 +68,9 @@ async function upsertCategory(
      ON DUPLICATE KEY UPDATE id=id`,
     [id, cat.name, cat.slug, cat.description ?? null, cat.position ?? 0, now, now],
   );
-  const [[row]] = await c.execute<RowDataPacket[]>(
-    `SELECT id FROM \`${table}\` WHERE slug=?`,
-    [cat.slug],
-  );
+  const [[row]] = await c.execute<RowDataPacket[]>(`SELECT id FROM \`${table}\` WHERE slug=?`, [
+    cat.slug,
+  ]);
   return { id: String(row.id), fresh: result.affectedRows === 1 };
 }
 
@@ -88,10 +87,10 @@ export async function seedContent(pool: Pool, data: ContentSeedData): Promise<nu
     const now = new Date();
     let inserted = 0;
     await c.execute(
-      `INSERT INTO users (id,username,display_name,password_hash,active,is_master)
-       VALUES (?,?,?,?,1,NULL)
+      `INSERT INTO users (id,username,display_name,password_hash,active,is_master,deleted_at)
+       VALUES (?,?,?,?,1,NULL,?)
        ON DUPLICATE KEY UPDATE active=1`,
-      [SYSTEM_AUTHOR_ID, SYSTEM_AUTHOR_ID, "BiBi Studio", "!"],
+      [SYSTEM_AUTHOR_ID, SYSTEM_AUTHOR_ID, "BiBi Studio", "!", now],
     );
     const contentCategoryIds = new Map<string, string>();
     for (const cat of data.contentCategories ?? []) {
@@ -110,12 +109,12 @@ export async function seedContent(pool: Pool, data: ContentSeedData): Promise<nu
         `INSERT INTO posts (id,slug,title,excerpt,content,category_id,author_id,status,publish_at,image_id,seo_title,seo_description,created_at,updated_at,revision)
          VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,1)`,
         [
-          randomUUID(),
+          "journal-" + post.slug,
           post.slug,
           post.title,
           post.excerpt ?? null,
           richEnvelope(post.content),
-          post.categorySlug ? contentCategoryIds.get(post.categorySlug) ?? null : null,
+          post.categorySlug ? (contentCategoryIds.get(post.categorySlug) ?? null) : null,
           SYSTEM_AUTHOR_ID,
           post.status ?? "published",
           toDate(post.publishAt),
@@ -141,7 +140,7 @@ export async function seedContent(pool: Pool, data: ContentSeedData): Promise<nu
           product.description,
           product.productType,
           product.collection,
-          product.categorySlug ? productCategoryIds.get(product.categorySlug) ?? null : null,
+          product.categorySlug ? (productCategoryIds.get(product.categorySlug) ?? null) : null,
           product.status ?? "published",
           JSON.stringify(product.imageIds ?? []),
           JSON.stringify(product.tags ?? []),

@@ -46,7 +46,17 @@ interface Runtime {
   ensure: (entity: EntityKey) => Promise<void>;
 }
 const RuntimeContext = createContext<Runtime | null>(null);
-const serverEntities: EntityKey[] = ["users", "roles", "audit", "visitors", "sessions", "posts", "products", "categories", "customers"];
+const serverEntities: EntityKey[] = [
+  "users",
+  "roles",
+  "audit",
+  "visitors",
+  "sessions",
+  "posts",
+  "products",
+  "categories",
+  "customers",
+];
 const contentEntities: EntityKey[] = ["posts", "products", "categories", "customers"];
 function announce() {
   try {

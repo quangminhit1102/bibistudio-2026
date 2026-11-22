@@ -307,7 +307,11 @@ export function createContentService(pool: Pool, clock: Clock) {
     return { items: rows.map(map), total: Number(count.n), page, pageSize };
   }
 
-  function makeCategory(table: "product_categories" | "content_categories", code: "product" | "post", targetType: string) {
+  function makeCategory(
+    table: "product_categories" | "content_categories",
+    code: "product" | "post",
+    targetType: string,
+  ) {
     return {
       async list(input: ListInput, actor: AuthPrincipal): Promise<Page<CategoryDto>> {
         return authorized(actor, `${code}.view`, (c) =>
@@ -367,7 +371,7 @@ export function createContentService(pool: Pool, clock: Clock) {
       ): Promise<CategoryDto> {
         return authorized(actor, `${code}.update`, async (c) => {
           const sets: string[] = [];
-          const values: any[] = [];
+          const values: (string | number | boolean | null | Date)[] = [];
           for (const [key, col] of [
             ["name", "name"],
             ["slug", "slug"],
@@ -492,7 +496,7 @@ export function createContentService(pool: Pool, clock: Clock) {
   ): Promise<CustomerDto> {
     return authorized(actor, "customer.update", async (c) => {
       const sets: string[] = [];
-      const values: any[] = [];
+      const values: (string | number | boolean | null | Date)[] = [];
       for (const [key, col] of [
         ["name", "name"],
         ["kind", "kind"],
@@ -535,10 +539,10 @@ export function createContentService(pool: Pool, clock: Clock) {
   ): Promise<{ id: string }> {
     return authorized(actor, "customer.delete", async (c) => {
       try {
-        const [result] = await c.execute<ResultSetHeader>("DELETE FROM customers WHERE id=? AND revision=?", [
-          id,
-          revision,
-        ]);
+        const [result] = await c.execute<ResultSetHeader>(
+          "DELETE FROM customers WHERE id=? AND revision=?",
+          [id, revision],
+        );
         if (result.affectedRows === 0) {
           const [[existing]] = await c.execute<RowDataPacket[]>(
             "SELECT id FROM customers WHERE id=?",
@@ -569,7 +573,12 @@ export function createContentService(pool: Pool, clock: Clock) {
         {
           search: ["title", "slug", "excerpt"],
           filter: { status: "status", categoryId: "category_id", authorId: "author_id" },
-          sort: { title: "title", status: "status", publishAt: "publish_at", createdAt: "created_at" },
+          sort: {
+            title: "title",
+            status: "status",
+            publishAt: "publish_at",
+            createdAt: "created_at",
+          },
         },
         input,
         postDto,
@@ -624,7 +633,7 @@ export function createContentService(pool: Pool, clock: Clock) {
   ): Promise<PostDto> {
     return authorized(actor, "post.update", async (c) => {
       const sets: string[] = [];
-      const values: any[] = [];
+      const values: (string | number | boolean | null | Date)[] = [];
       for (const [key, col] of [
         ["slug", "slug"],
         ["title", "title"],
@@ -670,10 +679,10 @@ export function createContentService(pool: Pool, clock: Clock) {
   ): Promise<{ id: string }> {
     return authorized(actor, "post.delete", async (c) => {
       try {
-        const [result] = await c.execute<ResultSetHeader>("DELETE FROM posts WHERE id=? AND revision=?", [
-          id,
-          revision,
-        ]);
+        const [result] = await c.execute<ResultSetHeader>(
+          "DELETE FROM posts WHERE id=? AND revision=?",
+          [id, revision],
+        );
         if (result.affectedRows === 0) {
           const [[existing]] = await c.execute<RowDataPacket[]>("SELECT id FROM posts WHERE id=?", [
             id,
@@ -708,7 +717,12 @@ export function createContentService(pool: Pool, clock: Clock) {
             collection: "collection",
             categoryId: "category_id",
           },
-          sort: { name: "name", price: "price", productCode: "product_code", createdAt: "created_at" },
+          sort: {
+            name: "name",
+            price: "price",
+            productCode: "product_code",
+            createdAt: "created_at",
+          },
         },
         input,
         productDto,
@@ -769,7 +783,7 @@ export function createContentService(pool: Pool, clock: Clock) {
   ): Promise<ProductDto> {
     return authorized(actor, "product.update", async (c) => {
       const sets: string[] = [];
-      const values: any[] = [];
+      const values: (string | number | boolean | null | Date)[] = [];
       for (const [key, col] of [
         ["productCode", "product_code"],
         ["name", "name"],
@@ -824,10 +838,10 @@ export function createContentService(pool: Pool, clock: Clock) {
   ): Promise<{ id: string }> {
     return authorized(actor, "product.delete", async (c) => {
       try {
-        const [result] = await c.execute<ResultSetHeader>("DELETE FROM products WHERE id=? AND revision=?", [
-          id,
-          revision,
-        ]);
+        const [result] = await c.execute<ResultSetHeader>(
+          "DELETE FROM products WHERE id=? AND revision=?",
+          [id, revision],
+        );
         if (result.affectedRows === 0) {
           const [[existing]] = await c.execute<RowDataPacket[]>(
             "SELECT id FROM products WHERE id=?",

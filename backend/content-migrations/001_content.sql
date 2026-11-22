@@ -33,7 +33,7 @@ CREATE TABLE content_categories (
 ) ENGINE=InnoDB;
 
 CREATE TABLE posts (
-  id VARCHAR(36) PRIMARY KEY,
+  id VARCHAR(200) PRIMARY KEY,
   slug VARCHAR(191) NOT NULL,
   title VARCHAR(255) NOT NULL,
   excerpt TEXT NULL,

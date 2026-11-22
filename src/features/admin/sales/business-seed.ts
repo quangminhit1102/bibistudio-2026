@@ -29,7 +29,11 @@ export function seed(context?: { products?: AdminProduct[] }): SeedBatch {
   }));
   const products = (context?.products ?? []).filter(
     (p) =>
-      seedProductIds.has(p.id) && p.productCode && p.name && Number.isSafeInteger(p.price) && p.price >= 0,
+      seedProductIds.has(p.id) &&
+      p.productCode &&
+      p.name &&
+      Number.isSafeInteger(p.price) &&
+      p.price >= 0,
   );
   const counts = new Map<number, number>();
   const purchaseSlips: PurchaseSlip[] = products.length

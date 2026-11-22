@@ -30,7 +30,8 @@ function string(node) {
 }
 
 function number(node) {
-  if (!node || !ts.isNumericLiteral(node)) throw new Error("Content seed fields must be literal numbers");
+  if (!node || !ts.isNumericLiteral(node))
+    throw new Error("Content seed fields must be literal numbers");
   return Number(node.text);
 }
 
@@ -61,7 +62,10 @@ function slug(node) {
 
 // Matches src/features/admin/content/seed.ts escapeHtml + ContentBlock mapping exactly.
 function escapeHtml(text) {
-  return String(text).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+  return String(text).replace(
+    /[&<>"']/g,
+    (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c],
+  );
 }
 
 function blocksToHtml(postSlug, contentArray) {
@@ -71,7 +75,9 @@ function blocksToHtml(postSlug, contentArray) {
       if (type === "image") {
         const alt = escapeHtml(string(required(block, "alt")));
         const captionNode = property(block, "caption");
-        const caption = captionNode ? `<figcaption>${escapeHtml(string(captionNode))}</figcaption>` : "";
+        const caption = captionNode
+          ? `<figcaption>${escapeHtml(string(captionNode))}</figcaption>`
+          : "";
         return `<figure><img data-media-id="journal-inline-${postSlug}-${index}" alt="${alt}">${caption}</figure>`;
       }
       const levelNode = property(block, "level");
@@ -104,7 +110,8 @@ function buildPosts(blog) {
   return array(blog, "blogPosts").map((node) => {
     const postSlug = slug(required(node, "slug"));
     const content = required(node, "content");
-    if (!ts.isArrayLiteralExpression(content)) throw new Error("Blog content must be a literal array");
+    if (!ts.isArrayLiteralExpression(content))
+      throw new Error("Blog content must be a literal array");
     return {
       slug: postSlug,
       title: string(required(node, "title")),
@@ -131,7 +138,8 @@ function buildProducts(catalogue) {
     const args = node.arguments;
     const productSlug = slug(args[0]);
     const images = args[7];
-    if (!ts.isArrayLiteralExpression(images)) throw new Error("Product images must be a literal array");
+    if (!ts.isArrayLiteralExpression(images))
+      throw new Error("Product images must be a literal array");
     const imageIds = images.elements.map((_, k) => `catalogue-image-${productSlug}-${k}`);
     return {
       productCode: String(index + 1).padStart(4, "0"),

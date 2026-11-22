@@ -49,9 +49,7 @@ export function useEditorSession(entity: "posts" | "products", id?: string) {
         await service.create({
           ...config.defaults,
           ...editable,
-          ...(entity === "posts" && runtime.session
-            ? { authorId: runtime.session.userId }
-            : {}),
+          ...(entity === "posts" && runtime.session ? { authorId: runtime.session.userId } : {}),
         } as CreateInput<typeof entity>);
       await query.invalidateQueries({ queryKey: ["bibi-admin"] });
       flushSync(() => dirtyChanged(false));

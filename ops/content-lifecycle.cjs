@@ -17,8 +17,7 @@ async function prepareContent(config, current, candidate, { backupReceipt, run }
   let status = await execute(config, capable.dir, "content-status", capable.manifest);
   if (!["empty", "complete"].includes(status?.state))
     throw new Error("Unknown/dirty content schema");
-  if (status.state === "complete")
-    checkContentCompatibility(capable.manifest.content, status);
+  if (status.state === "complete") checkContentCompatibility(capable.manifest.content, status);
   if (candidate?.manifest?.content) {
     if (status.state === "empty")
       await execute(config, capable.dir, "content-migrate", capable.manifest);

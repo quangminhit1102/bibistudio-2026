@@ -17,7 +17,7 @@ const listQuery = z
     dir: z.enum(["asc", "desc"]).optional(),
   })
   .catchall(z.string());
-const id = (value: unknown) => validate(uuid, value);
+const id = (value: unknown) => validate(z.string().min(1).max(200), value);
 
 const categoryCreate = z
   .object({
@@ -104,7 +104,12 @@ const postUpdate = z
 
 const productCreate = z
   .object({
-    productCode: z.string().trim().min(1).max(64).regex(/^\d{1,64}$/),
+    productCode: z
+      .string()
+      .trim()
+      .min(1)
+      .max(64)
+      .regex(/^\d{1,64}$/),
     name: z.string().trim().min(1).max(255),
     slug: z.string().trim().min(1).max(191),
     shortDescription: z.string().nullable().optional(),
@@ -126,7 +131,13 @@ const productCreate = z
 const productUpdate = z
   .object({
     revision,
-    productCode: z.string().trim().min(1).max(64).regex(/^\d{1,64}$/).optional(),
+    productCode: z
+      .string()
+      .trim()
+      .min(1)
+      .max(64)
+      .regex(/^\d{1,64}$/)
+      .optional(),
     name: z.string().trim().min(1).max(255).optional(),
     slug: z.string().trim().min(1).max(191).optional(),
     shortDescription: z.string().nullable().optional(),
@@ -148,18 +159,18 @@ const productUpdate = z
   .refine((value) => Object.keys(value).length > 1);
 
 interface EntityApi {
-  list: (input: ListInput, actor: AuthPrincipal) => Promise<any>;
-  get: (id: string, actor: AuthPrincipal) => Promise<any>;
-  create: (input: any, actor: AuthPrincipal) => Promise<any>;
-  update: (id: string, input: any, revision: number, actor: AuthPrincipal) => Promise<any>;
-  remove: (id: string, revision: number, actor: AuthPrincipal) => Promise<{ id: string }>;
+  list(input: ListInput, actor: AuthPrincipal): Promise<unknown>;
+  get(id: string, actor: AuthPrincipal): Promise<unknown>;
+  create(input: unknown, actor: AuthPrincipal): Promise<unknown>;
+  update(id: string, input: unknown, revision: number, actor: AuthPrincipal): Promise<unknown>;
+  remove(id: string, revision: number, actor: AuthPrincipal): Promise<{ id: string }>;
 }
 
 function entity(
   service: EntityApi,
   permission: string,
-  createSchema: z.ZodType<any>,
-  updateSchema: z.ZodType<any>,
+  createSchema: z.ZodType<unknown>,
+  updateSchema: z.ZodType<unknown>,
   auth: AuthService,
   write: ReturnType<typeof requireBrowserOrigin>,
 ): Router {
@@ -179,11 +190,8 @@ function entity(
       ),
     );
   });
-  r.get(
-    "/:id",
-    authenticate(auth),
-    requirePermission(`${permission}.view`),
-    async (req, res) => res.json(await service.get(id(req.params.id), req.auth!)),
+  r.get("/:id", authenticate(auth), requirePermission(`${permission}.view`), async (req, res) =>
+    res.json(await service.get(id(req.params.id), req.auth!)),
   );
   r.post(
     "/",
@@ -199,7 +207,10 @@ function entity(
     write,
     requirePermission(`${permission}.update`),
     async (req, res) => {
-      const body = validate<any>(updateSchema, req.body);
+      const body = validate(updateSchema, req.body) as { revision: number } & Record<
+        string,
+        unknown
+      >;
       const { revision: version, ...input } = body;
       res.json(await service.update(id(req.params.id), input, version, req.auth!));
     },
@@ -210,10 +221,7 @@ function entity(
     write,
     requirePermission(`${permission}.delete`),
     async (req, res) => {
-      const { revision: version } = validate(
-        z.object({ revision }).strict(),
-        req.body,
-      );
+      const { revision: version } = validate(z.object({ revision }).strict(), req.body);
       res.json(await service.remove(id(req.params.id), version, req.auth!));
     },
   );

@@ -33,6 +33,12 @@ export async function createAuthFixture(
       fixture.pool,
       fileURLToPath(new URL("../../content-migrations", import.meta.url)),
     );
+    const { readFileSync } = await import("node:fs");
+    const { seedContent } = await import("../../dist/content/seed.js");
+    const seedData = JSON.parse(
+      readFileSync(fileURLToPath(new URL("../../content-seed.json", import.meta.url)), "utf8"),
+    );
+    await seedContent(fixture.pool, seedData);
   }
   const config = {
     jwtSecret: randomBytes(32).toString("hex"),

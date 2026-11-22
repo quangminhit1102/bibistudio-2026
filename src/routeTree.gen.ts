@@ -535,7 +535,6 @@ export interface FileRoutesByFullPath {
   '/admin/content/categories': typeof AdminContentCategoriesRoute
   '/admin/content/media': typeof AdminContentMediaRoute
   '/admin/content/posts': typeof AdminContentPostsRouteWithChildren
-
   '/admin/customers/$id': typeof AdminCustomersIdRouteWithChildren
   '/admin/customers/create': typeof AdminCustomersCreateRoute
   '/admin/products/$id': typeof AdminProductsIdRouteWithChildren
@@ -616,7 +615,6 @@ export interface FileRoutesByTo {
   '/admin/content/categories': typeof AdminContentCategoriesRoute
   '/admin/content/media': typeof AdminContentMediaRoute
   '/admin/content/posts': typeof AdminContentPostsRouteWithChildren
-
   '/admin/customers/$id': typeof AdminCustomersIdRouteWithChildren
   '/admin/customers/create': typeof AdminCustomersCreateRoute
   '/admin/products/$id': typeof AdminProductsIdRouteWithChildren
@@ -699,7 +697,6 @@ export interface FileRoutesById {
   '/admin/content/categories': typeof AdminContentCategoriesRoute
   '/admin/content/media': typeof AdminContentMediaRoute
   '/admin/content/posts': typeof AdminContentPostsRouteWithChildren
-
   '/admin/customers/$id': typeof AdminCustomersIdRouteWithChildren
   '/admin/customers/create': typeof AdminCustomersCreateRoute
   '/admin/products/$id': typeof AdminProductsIdRouteWithChildren
@@ -783,7 +780,6 @@ export interface FileRouteTypes {
     | '/admin/content/categories'
     | '/admin/content/media'
     | '/admin/content/posts'
-
     | '/admin/customers/$id'
     | '/admin/customers/create'
     | '/admin/products/$id'
@@ -864,7 +860,6 @@ export interface FileRouteTypes {
     | '/admin/content/categories'
     | '/admin/content/media'
     | '/admin/content/posts'
-
     | '/admin/customers/$id'
     | '/admin/customers/create'
     | '/admin/products/$id'
@@ -946,7 +941,6 @@ export interface FileRouteTypes {
     | '/admin/content/categories'
     | '/admin/content/media'
     | '/admin/content/posts'
-
     | '/admin/customers/$id'
     | '/admin/customers/create'
     | '/admin/products/$id'
@@ -1835,13 +1829,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

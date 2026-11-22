@@ -19,7 +19,10 @@ export const Route = createFileRoute("/blog/$slug")({
   head: ({ params, loaderData }) => {
     if (!loaderData) {
       return {
-        meta: [{ title: "Không tìm thấy bài viết — BiBi Studio" }, { name: "robots", content: "noindex" }],
+        meta: [
+          { title: "Không tìm thấy bài viết — BiBi Studio" },
+          { name: "robots", content: "noindex" },
+        ],
       };
     }
     const { post, seo } = loaderData;
@@ -85,9 +88,14 @@ function slugifyHeading(text: string, index: number) {
   return `${base || "muc"}-${index}`;
 }
 
-
 function PostPage() {
-  const { post, related }: { post: NonNullable<ReturnType<typeof getBlogPost>>; related: NonNullable<ReturnType<typeof getBlogPost>>[] } = Route.useLoaderData();
+  const {
+    post,
+    related,
+  }: {
+    post: NonNullable<ReturnType<typeof getBlogPost>>;
+    related: NonNullable<ReturnType<typeof getBlogPost>>[];
+  } = Route.useLoaderData();
 
   const toc = post.content
     .map((block, index) =>
@@ -96,8 +104,6 @@ function PostPage() {
         : null,
     )
     .filter((item): item is { id: string; text: string; level: 2 | 3 } => item !== null);
-
-
 
   return (
     <div className="min-h-screen bg-background">
@@ -131,9 +137,7 @@ function PostPage() {
           <h1 className="mt-4 text-[26px] font-semibold leading-[1.25] tracking-tight text-foreground md:text-[34px]">
             {post.title}
           </h1>
-          <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">
-            {post.excerpt}
-          </p>
+          <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">{post.excerpt}</p>
           <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] text-muted-foreground">
             <span className="font-medium text-foreground">{post.author}</span>
             <span>•</span>
@@ -155,10 +159,7 @@ function PostPage() {
               </h2>
               <ol className="mt-3 space-y-1.5">
                 {toc.map((item) => (
-                  <li
-                    key={item.id}
-                    className={item.level === 3 ? "pl-4" : ""}
-                  >
+                  <li key={item.id} className={item.level === 3 ? "pl-4" : ""}>
                     <a
                       href={`#${item.id}`}
                       className={`text-[14px] leading-snug text-foreground hover:text-accent hover:underline ${
@@ -236,15 +237,11 @@ function PostPage() {
                 {post.category}
               </span>
             </div>
-            <Link
-              to="/blog"
-              className="text-[13px] font-medium text-accent hover:underline"
-            >
+            <Link to="/blog" className="text-[13px] font-medium text-accent hover:underline">
               ← Quay lại Nhật ký
             </Link>
           </div>
         </article>
-
       </main>
       <SiteFooter />
     </div>
