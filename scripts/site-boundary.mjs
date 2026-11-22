@@ -6,6 +6,8 @@ import { join, relative, sep } from "node:path";
 const SOURCE_FILE = /\.(ts|tsx|css|json)$/;
 const SITE_ENTRY = "src/platform/site.ts";
 const SITE_IMPORT = /["']@site\//;
+// A relative path would always point at the default site, whatever SITE_DIR says.
+const SITE_RELATIVE_PATH = /["'](\.\.\/)+site(\/|["'])/;
 
 // Folders migrated so far. Later phases add `src/data`, the page routes and seeds.
 export const phaseOneBoundary = {
@@ -97,6 +99,12 @@ export async function findBoundaryViolations({
           file,
           line,
           reason: `imports @site directly; read site values through ${SITE_ENTRY}`,
+        });
+      if (SITE_RELATIVE_PATH.test(text))
+        violations.push({
+          file,
+          line,
+          reason: "uses a relative path into site/, which ignores SITE_DIR; use the @site alias",
         });
       const checked = allowed ? text.replace(allowed, "") : text;
       const hit = tokens.find(({ pattern }) => pattern.test(checked));

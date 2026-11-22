@@ -1,3 +1,6 @@
+/* Tailwind scans this site folder for class names (logo and, later, page components). */
+@source "./";
+
 /* Brand design tokens: colors, radius and typefaces. Core styles read these variables. */
 
 @theme inline {

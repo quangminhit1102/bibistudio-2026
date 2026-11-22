@@ -74,6 +74,19 @@ test("allows @site imports only in the platform entry point", async () => {
   assert.match(found[0].reason, /@site/);
 });
 
+test("reports a relative path into the site folder", async () => {
+  const found = await violations({
+    "src/lib/x.css": '@source "../../site";\n',
+    "src/lib/y.ts": 'import logo from "../../site/assets/logo";\n',
+    "src/lib/z.ts": 'import { helper } from "../site-contact";\n',
+  });
+  assert.deepEqual(
+    found.map((v) => v.file),
+    ["src/lib/x.css", "src/lib/y.ts"],
+  );
+  assert.match(found[0].reason, /SITE_DIR/);
+});
+
 test("ignores allowed internal identifiers", async () => {
   const found = await violations(
     {
