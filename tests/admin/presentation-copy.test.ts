@@ -6,7 +6,11 @@ import { userConfig } from "../../src/features/admin/accounts/config";
 import { readFileSync } from "node:fs";
 afterEach(() => vi.useRealTimers());
 it("dashboard and visitor copy do not present the interface as simulated", () => {
-  for (const path of ["dashboard/pages/dashboard.tsx", "analytics/pages/visitor-detail.tsx"]) {
+  for (const path of [
+    "dashboard/pages/dashboard.tsx",
+    "analytics/pages/visitors.tsx",
+    "analytics/server-visitors.tsx",
+  ]) {
     expect(readFileSync("src/features/admin/" + path, "utf8")).not.toMatch(/mô phỏng|giả lập/);
   }
 });

@@ -5,7 +5,7 @@ import { useAdmin } from "../../services/context";
 import { Field, Skeleton } from "../ui/primitives";
 import { calendarDate } from "../lib/text";
 import type { FormField, FormValues } from "./record-form";
-import { relationResource } from "./record-form";
+import { relationResource } from "./relation-resource";
 
 function TagInput({
   value,

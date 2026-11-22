@@ -1,10 +1,11 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { useQuery } from "@tanstack/react-query";
-import type { EntityKey, Resource } from "../../services/contracts";
+import type { EntityKey } from "../../services/contracts";
 import { useAdmin } from "../../services/context";
 import { Button, Field, Skeleton } from "../ui/primitives";
 import { calendarDate } from "../lib/text";
+import { relationResource } from "./relation-resource";
 const RichEditor = lazy(() => import("../../content/components/rich-editor"));
 const MediaPicker = lazy(() => import("../../content/components/media-picker"));
 export interface FormField {
@@ -32,11 +33,6 @@ export interface FormField {
   description?: string;
 }
 export type FormValues = Record<string, unknown>;
-export function relationResource(field: FormField): Resource | undefined {
-  if (field.entity !== "categories") return undefined;
-  const kind = field.filter?.kind;
-  return kind === "content" ? "content" : kind === "genre" ? "bookstore" : "products";
-}
 function RelationField({
   field,
   value,
