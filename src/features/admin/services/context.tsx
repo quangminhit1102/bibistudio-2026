@@ -11,6 +11,7 @@ import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { createAdminStore } from "../demo/store";
 import { ensureDataset } from "../demo/registry";
 import { createEntityService } from "./entity-service";
+import { createHttpEntityService } from "./http-entity-service";
 import type {
   AdminStore,
   DemoSession,
@@ -45,7 +46,7 @@ interface Runtime {
   ensure: (entity: EntityKey) => Promise<void>;
 }
 const RuntimeContext = createContext<Runtime | null>(null);
-const serverEntities: EntityKey[] = ["users", "roles", "audit", "visitors", "sessions"];
+const serverEntities: EntityKey[] = ["users", "roles", "audit", "visitors", "sessions", "posts", "products", "categories", "customers"];
 function announce() {
   try {
     localStorage.setItem(
@@ -178,7 +179,7 @@ export function AdminProvider({
   const service = useCallback(
     <K extends EntityKey>(entity: K, resource?: Resource) => {
       if (session?.kind === "http" && serverEntities.includes(entity))
-        throw new ServiceError("forbidden", "Dữ liệu này được quản lý qua API máy chủ");
+        return createHttpEntityService(auth.client!, entity, resource);
       return createEntityService(
         store,
         entity,
@@ -186,7 +187,7 @@ export function AdminProvider({
         resource ?? resourceForEntity(entity),
       );
     },
-    [store, session],
+    [store, session, auth.client],
   );
   const logout = useCallback(async () => {
     ++epoch.current;
