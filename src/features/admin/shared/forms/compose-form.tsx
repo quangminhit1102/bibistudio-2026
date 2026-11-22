@@ -143,7 +143,14 @@ export default function ComposeForm({
                 {fields(
                   post
                     ? ["title", "slug", "excerpt"]
-                    : ["name", "nameEn", "productCode", "slug", "shortDescription", "shortDescriptionEn"],
+                    : [
+                        "name",
+                        "nameEn",
+                        "productCode",
+                        "slug",
+                        "shortDescription",
+                        "shortDescriptionEn",
+                      ],
                 )}
               </div>
             </Card>
@@ -153,7 +160,16 @@ export default function ComposeForm({
                 {fields(
                   post
                     ? ["status", "categoryId", "publishAt", "readTime"]
-                    : ["status", "productType", "collection", "categoryId", "occasion", "featured", "sortOrder", "tags"],
+                    : [
+                        "status",
+                        "productType",
+                        "collection",
+                        "categoryId",
+                        "occasion",
+                        "featured",
+                        "sortOrder",
+                        "tags",
+                      ],
                 )}
               </div>
             </Card>

@@ -21,9 +21,14 @@ import { resolveSeo } from "@/lib/content-seo";
 import { SITE_URL, buildBreadcrumbSchema } from "@/lib/seo";
 
 function relatedFromList(product: Product, list: Product[], n = 8): Product[] {
-  const sameCollection = list.filter((x) => x.slug !== product.slug && x.collection === product.collection);
+  const sameCollection = list.filter(
+    (x) => x.slug !== product.slug && x.collection === product.collection,
+  );
   const sameType = list.filter(
-    (x) => x.slug !== product.slug && x.collection !== product.collection && x.productType === product.productType,
+    (x) =>
+      x.slug !== product.slug &&
+      x.collection !== product.collection &&
+      x.productType === product.productType,
   );
   return sameCollection.concat(sameType).slice(0, n);
 }

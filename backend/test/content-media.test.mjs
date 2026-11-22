@@ -120,9 +120,11 @@ test("missing media id is a 404 and reads validate against the stored size", asy
   });
   assert.equal(missing.status, 404);
   assert.equal(
-    (await fetch(f.base + "/api/media/not-a-uuid", {
-      headers: { Authorization: "Bearer " + f.master.accessToken },
-    })).status,
+    (
+      await fetch(f.base + "/api/media/not-a-uuid", {
+        headers: { Authorization: "Bearer " + f.master.accessToken },
+      })
+    ).status,
     400,
   );
 });

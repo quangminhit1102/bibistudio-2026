@@ -47,7 +47,9 @@ async function createContentMetadata(backend) {
       await Promise.all(
         names.map(async (name) => [
           name,
-          createHash("sha256").update(await readFile(join(dir, name))).digest("hex"),
+          createHash("sha256")
+            .update(await readFile(join(dir, name)))
+            .digest("hex"),
         ]),
       ),
     ),

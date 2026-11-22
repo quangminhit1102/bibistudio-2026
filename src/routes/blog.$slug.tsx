@@ -89,7 +89,10 @@ const proseClasses =
 
 function Toc({ toc }: { toc: TocItem[] }) {
   return (
-    <nav aria-label="Mục lục" className="mb-10 rounded-sm border border-border bg-secondary/40 px-5 py-5">
+    <nav
+      aria-label="Mục lục"
+      className="mb-10 rounded-sm border border-border bg-secondary/40 px-5 py-5"
+    >
       <h2 className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
         Mục lục
       </h2>

@@ -9,7 +9,8 @@ import { getPublicProducts } from "@/lib/content-api";
 import { toPublicProduct } from "@/lib/content-adapter";
 
 const title = "Bộ sưu tập — BiBi Studio";
-const description = "Bảy câu chuyện của BiBi Studio: Khám phá Việt Nam, Món ăn Việt Nam, Áo dài, Thiệp chúc mừng và hơn thế nữa.";
+const description =
+  "Bảy câu chuyện của BiBi Studio: Khám phá Việt Nam, Món ăn Việt Nam, Áo dài, Thiệp chúc mừng và hơn thế nữa.";
 
 export const Route = createFileRoute("/collections/")({
   loader: async () => {
@@ -34,21 +35,46 @@ function CollectionsPage() {
   const countByCollection = (id: string) => products.filter((p) => p.collection === id).length;
   return (
     <PageShell>
-      <PageIntro eyebrow="Collections" title="Mỗi bộ sưu tập là một chương." lead="Những câu chuyện về nơi chốn, hương vị và khoảnh khắc — kể lại bằng giấy." />
+      <PageIntro
+        eyebrow="Collections"
+        title="Mỗi bộ sưu tập là một chương."
+        lead="Những câu chuyện về nơi chốn, hương vị và khoảnh khắc — kể lại bằng giấy."
+      />
       <section className="mx-auto max-w-[1280px] space-y-24 px-6 pb-28 lg:px-12">
         {collections.map((c, i) => (
           <Reveal key={c.id}>
-            <Link to="/collections/$slug" params={{ slug: c.slug }} className={`group grid gap-8 md:grid-cols-2 md:items-center ${i % 2 ? "md:[&>*:first-child]:order-2" : ""}`}>
+            <Link
+              to="/collections/$slug"
+              params={{ slug: c.slug }}
+              className={`group grid gap-8 md:grid-cols-2 md:items-center ${i % 2 ? "md:[&>*:first-child]:order-2" : ""}`}
+            >
               <div className="overflow-hidden">
                 <div className="transition duration-700 ease-out group-hover:scale-[1.04]">
-                  {c.image ? <img src={c.image} alt={tx(c.name)} loading="lazy" className="aspect-[5/4] w-full object-cover" /> : <PaperPlaceholder label={tx(c.name)} ratio="5/4" />}
+                  {c.image ? (
+                    <img
+                      src={c.image}
+                      alt={tx(c.name)}
+                      loading="lazy"
+                      className="aspect-[5/4] w-full object-cover"
+                    />
+                  ) : (
+                    <PaperPlaceholder label={tx(c.name)} ratio="5/4" />
+                  )}
                 </div>
               </div>
               <div>
-                <span className="font-display text-xl text-kraft">{String(i + 1).padStart(2, "0")}</span>
-                <h2 className="mt-3 font-display text-4xl leading-tight md:text-5xl">{tx(c.name)}</h2>
-                <p className="mt-1 text-[13px] uppercase tracking-[0.2em] text-muted-foreground">{c.name.en}</p>
-                <p className="mt-6 max-w-md text-[15px] leading-relaxed text-muted-foreground">{tx(c.tagline)}</p>
+                <span className="font-display text-xl text-kraft">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                <h2 className="mt-3 font-display text-4xl leading-tight md:text-5xl">
+                  {tx(c.name)}
+                </h2>
+                <p className="mt-1 text-[13px] uppercase tracking-[0.2em] text-muted-foreground">
+                  {c.name.en}
+                </p>
+                <p className="mt-6 max-w-md text-[15px] leading-relaxed text-muted-foreground">
+                  {tx(c.tagline)}
+                </p>
                 <p className="eyebrow mt-8 flex items-center gap-2 text-foreground transition group-hover:gap-3">
                   {countByCollection(c.id)} sản phẩm · Khám phá <ArrowRight className="size-3.5" />
                 </p>

@@ -4,12 +4,21 @@ import { SlidersHorizontal, X } from "lucide-react";
 import { PageShell, PageIntro } from "@/components/page-shell";
 import { CatalogueGrid } from "@/components/catalogue-card";
 import { ContactBand } from "@/components/contact-cta";
-import { collections, getAllProducts, productTypes, tx, type CollectionId, type Product, type ProductTypeId } from "@/data/catalogue";
+import {
+  collections,
+  getAllProducts,
+  productTypes,
+  tx,
+  type CollectionId,
+  type Product,
+  type ProductTypeId,
+} from "@/data/catalogue";
 import { getPublicProducts } from "@/lib/content-api";
 import { toPublicProduct } from "@/lib/content-adapter";
 
 const title = "Sản phẩm — BiBi Studio";
-const description = "Danh mục sản phẩm BiBi Studio: sổ tay, thiệp, postcard, bao thư, giấy viết thư và magnet.";
+const description =
+  "Danh mục sản phẩm BiBi Studio: sổ tay, thiệp, postcard, bao thư, giấy viết thư và magnet.";
 const PAGE = 12;
 
 export const Route = createFileRoute("/products/")({
@@ -37,7 +46,15 @@ const sorts: { id: Sort; label: string }[] = [
   { id: "name", label: "Tên A–Z" },
 ];
 
-function Pill({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+function Pill({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
   return (
     <button
       type="button"
@@ -89,7 +106,8 @@ function ProductsPage() {
         (!q || `${p.name.vi} ${p.name.en}`.toLowerCase().includes(q.toLowerCase())),
     );
     if (sort === "newest") return [...list].reverse();
-    if (sort === "name") return [...list].sort((a, b) => tx(a.name).localeCompare(tx(b.name), "vi"));
+    if (sort === "name")
+      return [...list].sort((a, b) => tx(a.name).localeCompare(tx(b.name), "vi"));
     const order = collections.map((c) => c.id);
     return [...list].sort((a, b) => order.indexOf(a.collection) - order.indexOf(b.collection));
   }, [products, type, col, q, sort]);
@@ -98,34 +116,50 @@ function ProductsPage() {
   useEffect(() => {
     const el = sentinel.current;
     if (!el) return;
-    const io = new IntersectionObserver(([e]) => e.isIntersecting && setLimit((l) => l + PAGE), { rootMargin: "600px" });
+    const io = new IntersectionObserver(([e]) => e.isIntersecting && setLimit((l) => l + PAGE), {
+      rootMargin: "600px",
+    });
     io.observe(el);
     return () => io.disconnect();
   }, [items.length, limit]);
 
   const activeCount = (type !== "all" ? 1 : 0) + (col !== "all" ? 1 : 0) + (q ? 1 : 0);
-  const clear = () => { setType("all"); setCol("all"); setQ(""); };
+  const clear = () => {
+    setType("all");
+    setCol("all");
+    setQ("");
+  };
 
   const filters = (
     <div className="space-y-5">
       <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
         <span className="eyebrow w-full pb-1 sm:w-28">Loại</span>
-        <Pill active={type === "all"} onClick={() => setType("all")}>Tất cả</Pill>
+        <Pill active={type === "all"} onClick={() => setType("all")}>
+          Tất cả
+        </Pill>
         {productTypes.map((t) => (
-          <Pill key={t.id} active={type === t.id} onClick={() => setType(t.id)}>{tx(t.name)}</Pill>
+          <Pill key={t.id} active={type === t.id} onClick={() => setType(t.id)}>
+            {tx(t.name)}
+          </Pill>
         ))}
       </div>
       <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
         <span className="eyebrow w-full pb-1 sm:w-28">Bộ sưu tập</span>
-        <Pill active={col === "all"} onClick={() => setCol("all")}>Tất cả</Pill>
+        <Pill active={col === "all"} onClick={() => setCol("all")}>
+          Tất cả
+        </Pill>
         {collections.map((c) => (
-          <Pill key={c.id} active={col === c.id} onClick={() => setCol(c.id)}>{tx(c.name)}</Pill>
+          <Pill key={c.id} active={col === c.id} onClick={() => setCol(c.id)}>
+            {tx(c.name)}
+          </Pill>
         ))}
       </div>
       <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
         <span className="eyebrow w-full pb-1 sm:w-28">Sắp xếp</span>
         {sorts.map((s) => (
-          <Pill key={s.id} active={sort === s.id} onClick={() => setSort(s.id)}>{s.label}</Pill>
+          <Pill key={s.id} active={sort === s.id} onClick={() => setSort(s.id)}>
+            {s.label}
+          </Pill>
         ))}
       </div>
     </div>
@@ -133,7 +167,11 @@ function ProductsPage() {
 
   return (
     <PageShell>
-      <PageIntro eyebrow="Catalogue" title="Sản phẩm" lead="Khám phá các sản phẩm giấy của BiBi Studio theo loại sản phẩm hoặc theo bộ sưu tập." />
+      <PageIntro
+        eyebrow="Catalogue"
+        title="Sản phẩm"
+        lead="Khám phá các sản phẩm giấy của BiBi Studio theo loại sản phẩm hoặc theo bộ sưu tập."
+      />
       <section className="mx-auto max-w-[1280px] px-5 sm:px-6 lg:px-12">
         <div className="border-y border-border py-6">
           <div className="hidden md:block">{filters}</div>
@@ -160,7 +198,10 @@ function ProductsPage() {
             Đang xem {Math.min(limit, items.length)} / {items.length} sản phẩm
           </p>
           {activeCount > 0 && (
-            <button onClick={clear} className="flex items-center gap-1.5 text-[12px] text-muted-foreground underline underline-offset-4 hover:text-foreground">
+            <button
+              onClick={clear}
+              className="flex items-center gap-1.5 text-[12px] text-muted-foreground underline underline-offset-4 hover:text-foreground"
+            >
               <X className="size-3.5" /> Xóa lọc
             </button>
           )}
@@ -172,18 +213,41 @@ function ProductsPage() {
       </section>
 
       {sheet && (
-        <div className="fixed inset-0 z-[60] md:hidden" role="dialog" aria-modal="true" aria-label="Bộ lọc">
-          <button className="absolute inset-0 bg-foreground/30 animate-in fade-in" aria-label="Đóng bộ lọc" onClick={() => setSheet(false)} />
+        <div
+          className="fixed inset-0 z-[60] md:hidden"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Bộ lọc"
+        >
+          <button
+            className="absolute inset-0 bg-foreground/30 animate-in fade-in"
+            aria-label="Đóng bộ lọc"
+            onClick={() => setSheet(false)}
+          />
           <div className="absolute inset-x-0 bottom-0 max-h-[85svh] overflow-y-auto bg-background px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-4 animate-in slide-in-from-bottom duration-300">
             <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-border" />
             <div className="mb-6 flex items-center justify-between">
               <p className="font-display text-2xl">Bộ lọc</p>
-              <button onClick={() => setSheet(false)} aria-label="Đóng" className="grid size-10 place-items-center"><X className="size-5" /></button>
+              <button
+                onClick={() => setSheet(false)}
+                aria-label="Đóng"
+                className="grid size-10 place-items-center"
+              >
+                <X className="size-5" />
+              </button>
             </div>
             {filters}
             <div className="mt-8 flex gap-3">
-              <button onClick={clear} className="min-h-12 flex-1 border border-border text-[12px] uppercase tracking-[0.16em]">Xóa lọc</button>
-              <button onClick={() => setSheet(false)} className="min-h-12 flex-[2] bg-foreground text-[12px] uppercase tracking-[0.16em] text-background">
+              <button
+                onClick={clear}
+                className="min-h-12 flex-1 border border-border text-[12px] uppercase tracking-[0.16em]"
+              >
+                Xóa lọc
+              </button>
+              <button
+                onClick={() => setSheet(false)}
+                className="min-h-12 flex-[2] bg-foreground text-[12px] uppercase tracking-[0.16em] text-background"
+              >
                 Xem {items.length} sản phẩm
               </button>
             </div>

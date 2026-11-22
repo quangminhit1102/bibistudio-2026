@@ -29,7 +29,8 @@ export const Route = createFileRoute("/blog/")({
     const api = await getPublicPosts();
     const posts: PostView[] = api ? api.map(toPublicPost) : getAllBlogPosts().map(staticPostToView);
     const sorted = [...posts].sort(
-      (a, b) => (b.date ? new Date(b.date).getTime() : 0) - (a.date ? new Date(a.date).getTime() : 0),
+      (a, b) =>
+        (b.date ? new Date(b.date).getTime() : 0) - (a.date ? new Date(a.date).getTime() : 0),
     );
     const postPage = paginate(sorted, deps.page, POSTS_PER_PAGE);
     if (deps.page > postPage.totalPages) {

@@ -220,7 +220,5 @@ test("public collections endpoint returns name/slug/tagline", async (t) => {
   const { base } = await buildApp(t);
 
   const collections = await (await fetch(base + "/api/public/collections")).json();
-  assert.deepEqual(collections, [
-    { slug: "motivation", name: "Tạo động lực", tagline: "Mô tả" },
-  ]);
+  assert.deepEqual(collections, [{ slug: "motivation", name: "Tạo động lực", tagline: "Mô tả" }]);
 });
