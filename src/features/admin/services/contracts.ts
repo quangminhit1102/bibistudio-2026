@@ -60,6 +60,20 @@ export interface AdminProduct extends CatalogueRecord {
   categoryId: string;
   shortDescription: string;
   compareAt: number;
+  nameEn?: string | null;
+  shortDescriptionEn?: string | null;
+  descriptionEn?: string | null;
+  dimensions?: string | null;
+  pages?: string | null;
+  materialVi?: string | null;
+  materialEn?: string | null;
+  formatVi?: string | null;
+  formatEn?: string | null;
+  occasion?: string | null;
+  featured?: boolean;
+  sortOrder?: number;
+  imageAltVi?: string | null;
+  imageAltEn?: string | null;
 }
 export interface AdminBook extends CatalogueRecord {
   isbn: string;
@@ -127,6 +141,8 @@ export interface Post extends BaseRecord {
   imageId: string | null;
   seoTitle: string;
   seoDescription: string;
+  readTime?: string | null;
+  coverImageId?: string | null;
 }
 export type OrderStatus =
   "Pending" | "Confirmed" | "Processing" | "Shipped" | "Delivered" | "Cancelled" | "Refunded";
