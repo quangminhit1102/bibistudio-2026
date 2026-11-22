@@ -116,7 +116,9 @@ test("media upload rejects bodies over 2 MiB and unauthorized actors", async (t)
 test("media list returns uploaded metadata without filesystem paths", async (t) => {
   const f = await createMediaFixture(t);
   const a = await (await f.upload(pngImage(40, 60))).json();
-  const list = await fetch(f.base + "/api/media");
+  const list = await fetch(f.base + "/api/media", {
+    headers: { Authorization: "Bearer " + f.master.accessToken },
+  });
   assert.equal(list.status, 200);
   const body = await list.json();
   assert.equal(body.total, 1);
@@ -124,6 +126,21 @@ test("media list returns uploaded metadata without filesystem paths", async (t) 
   assert.equal(body.items[0].width, 40);
   assert.equal(body.items[0].height, 60);
   assert.ok(!JSON.stringify(body).includes(f.mediaDirectory));
+});
+
+test("media list requires a signed-in actor who can view content", async (t) => {
+  const f = await createMediaFixture(t);
+  const a = await (await f.upload(pngImage(40, 60))).json();
+  const anonymous = await fetch(f.base + "/api/media");
+  assert.equal(anonymous.status, 401);
+  assert.ok(!(await anonymous.text()).includes(a.id));
+  const forbidden = await fetch(f.base + "/api/media", {
+    headers: { Authorization: "Bearer " + f.user.accessToken },
+  });
+  assert.equal(forbidden.status, 403);
+  assert.ok(!(await forbidden.text()).includes(a.id));
+  // Published content embeds images by id, so a single file stays publicly readable.
+  assert.equal((await fetch(f.base + "/api/media/" + a.id)).status, 200);
 });
 
 test("missing media id is a 404 and reads validate against the stored size", async (t) => {
