@@ -25,7 +25,9 @@ function validateContentMetadata(data) {
     requiredMin: 8,
     compatibleMax: 8,
     migrationChecksums: Object.fromEntries(
-      Object.keys(data.migrationChecksums).sort().map((name) => [name, data.migrationChecksums[name]]),
+      Object.keys(data.migrationChecksums)
+        .sort()
+        .map((name) => [name, data.migrationChecksums[name]]),
     ),
   };
 }
