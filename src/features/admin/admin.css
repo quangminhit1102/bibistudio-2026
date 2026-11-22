@@ -24,7 +24,7 @@
 /* Article/product workspaces. Editor runtime is only loaded by edit routes. */
 .admin-root .a-compose-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 290px;
+  grid-template-columns: minmax(0, 1fr);
   gap: 24px;
   border: 0;
   padding: 0;
@@ -39,9 +39,6 @@
 }
 .admin-root .a-compose-layout .a-card {
   min-width: 0;
-}
-.admin-root .a-compose-card-fields {
-  margin-top: 20px;
 }
 .admin-root .a-compose-body {
   margin-top: 20px;
@@ -437,10 +434,6 @@
   font-size: 30px;
 }
 @media (max-width: 1150px) {
-  .admin-root .a-compose-layout {
-    grid-template-columns: minmax(0, 1fr) 250px;
-    gap: 18px;
-  }
   .admin-root .a-compose .a-page-title {
     flex-direction: column;
   }
@@ -449,22 +442,11 @@
   }
 }
 @media (max-width: 900px) {
-  .admin-root .a-compose-layout {
-    grid-template-columns: 1fr;
-  }
-  .admin-root .a-compose-layout > aside {
-    display: grid;
+  .admin-root .a-compose-fields {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    align-items: start;
-  }
-  .admin-root .a-compose-note {
-    grid-column: 1/-1;
   }
 }
 @media (max-width: 600px) {
-  .admin-root .a-compose-layout > aside {
-    display: flex;
-  }
   .admin-root .a-compose-fields {
     grid-template-columns: 1fr;
   }

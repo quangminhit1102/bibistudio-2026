@@ -146,6 +146,36 @@ export default function ComposeForm({
                 )}
               </div>
             </Card>
+            <Card>
+              <h2>{post ? "Thông tin bài viết" : "Phân loại & hiển thị"}</h2>
+              <div className="a-compose-fields">
+                {fields(
+                  post
+                    ? ["status", "categoryId", "publishAt"]
+                    : ["status", "productType", "collection", "categoryId", "tags"],
+                )}
+              </div>
+            </Card>
+            {post && (
+              <Card>
+                <h2>Ảnh bìa</h2>
+                <p className="a-compose-hint">Dùng trên thẻ bài viết và đầu trang chi tiết.</p>
+                <Controller
+                  name="imageId"
+                  control={control}
+                  render={({ field }) => (
+                    <Suspense fallback={<Skeleton rows={2} />}>
+                      <MediaPicker
+                        max={1}
+                        scope="content"
+                        value={field.value ? [String(field.value)] : []}
+                        onChange={(ids) => field.onChange(ids[0] ?? null)}
+                      />
+                    </Suspense>
+                  )}
+                />
+              </Card>
+            )}
             {!post && (
               <Card>
                 <h2>Ảnh sản phẩm</h2>
@@ -200,42 +230,10 @@ export default function ComposeForm({
               <summary>Thiết lập SEO</summary>
               <div className="a-compose-stack">{fields(["seoTitle", "seoDescription"])}</div>
             </details>
-          </div>
-          <aside className="a-compose-stack">
-            <Card>
-              <h2>{post ? "Thông tin bài viết" : "Phân loại & hiển thị"}</h2>
-              <div className="a-compose-stack a-compose-card-fields">
-                {fields(
-                  post
-                    ? ["status", "categoryId", "publishAt"]
-                    : ["status", "productType", "collection", "categoryId", "tags"],
-                )}
-              </div>
-            </Card>
-            {post && (
-              <Card>
-                <h2>Ảnh bìa</h2>
-                <p className="a-compose-hint">Dùng trên thẻ bài viết và đầu trang chi tiết.</p>
-                <Controller
-                  name="imageId"
-                  control={control}
-                  render={({ field }) => (
-                    <Suspense fallback={<Skeleton rows={2} />}>
-                      <MediaPicker
-                        max={1}
-                        scope="content"
-                        value={field.value ? [String(field.value)] : []}
-                        onChange={(ids) => field.onChange(ids[0] ?? null)}
-                      />
-                    </Suspense>
-                  )}
-                />
-              </Card>
-            )}
             <p className="a-compose-note">
               Xem trước sử dụng nội dung đang nhập, bao gồm thay đổi chưa lưu.
             </p>
-          </aside>
+          </div>
         </fieldset>
       </form>
       {preview && (
