@@ -19,7 +19,7 @@ test(
     const id = process.env.GITHUB_RUN_ID ? `${sha}-${process.env.GITHUB_RUN_ID}` : `local-${sha}`;
     const bundle = resolve(process.env.BIBI_VERIFY_BUNDLE ?? join(".releases", id));
     const manifest = JSON.parse(await readFile(join(bundle, "manifest.json"), "utf8"));
-    assert.equal(manifest.schemaVersion, 7);
+    assert.equal(manifest.schemaVersion, 8);
     assert.ok(manifest.visitorControls);
     assert.ok(manifest.visitorContext);
     const cleanup = [];
