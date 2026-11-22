@@ -7,6 +7,7 @@ import {
   assertStagingEvidence,
   validateRelease,
   latestReleaseId,
+  isMainHead,
 } from "./github-release.mjs";
 import { STAGES, E2E_SUITES } from "./check.mjs";
 const sha = "a".repeat(40);
@@ -215,4 +216,20 @@ test("production deploys automatically only after successful main push CI of thi
     (step) => step.run === "node scripts/deploy-client.mjs",
   );
   assert.equal(deploy.env.RELEASE_ID, "${{ steps.trusted.outputs.releaseId }}");
+});
+test("an automatic deploy is skipped when its commit is no longer the head of main", async () => {
+  const request = async (route) => {
+    assert.equal(route, "commits/main");
+    return { sha };
+  };
+  assert.equal(await isMainHead(sha, { request }), true);
+  assert.equal(await isMainHead("b".repeat(40), { request }), false);
+  const production = parse(
+    await readFile(new URL("../.github/workflows/production.yml", import.meta.url), "utf8"),
+  );
+  const steps = production.jobs.promote.steps;
+  const trusted = steps.findIndex((step) => step.id === "trusted");
+  assert.ok(trusted >= 0 && steps.length > trusted + 1);
+  for (const step of steps.slice(trusted + 1))
+    assert.equal(step.if, "steps.trusted.outputs.stale != 'true'");
 });

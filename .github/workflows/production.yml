@@ -1,6 +1,7 @@
 name: Deploy production
 # Automatic: every successful CI run for a push to main is promoted.
 # Manual: run this workflow; an empty release ID promotes the latest successful main CI run.
+# An automatic run whose commit is no longer the head of main skips itself (stale re-runs never downgrade).
 # Pause automatic deploys with repository variable AUTO_DEPLOY=false or "[skip deploy]" in the commit message.
 on:
   workflow_run:
@@ -60,16 +61,20 @@ jobs:
             ops/package-lock.json
       - id: trusted
         run: node scripts/github-release.mjs
-      - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0
+      - if: steps.trusted.outputs.stale != 'true'
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0
         with:
           artifact-ids: ${{ steps.trusted.outputs.artifactId }}
           run-id: ${{ steps.trusted.outputs.ciRunId }}
           github-token: ${{ github.token }}
           path: .release-download
           merge-multiple: true
-      - run: npm ci --ignore-scripts
-      - run: npx --no-install playwright install --with-deps chromium
-      - run: node scripts/deploy-client.mjs
+      - if: steps.trusted.outputs.stale != 'true'
+        run: npm ci --ignore-scripts
+      - if: steps.trusted.outputs.stale != 'true'
+        run: npx --no-install playwright install --with-deps chromium
+      - if: steps.trusted.outputs.stale != 'true'
+        run: node scripts/deploy-client.mjs
         env:
           RELEASE_ID: ${{ steps.trusted.outputs.releaseId }}
           DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
