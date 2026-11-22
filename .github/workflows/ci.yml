@@ -8,10 +8,46 @@ permissions:
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
+# Each job runs one stage of scripts/check.mjs; `npm run check` runs all of them locally.
+# Production deploys the artifact uploaded by `build` only when every job here succeeded.
 jobs:
-  verify:
+  static:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            backend/package-lock.json
+            ops/package-lock.json
+      - run: npm ci
+      - run: node scripts/check.mjs static
+  admin:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            backend/package-lock.json
+            ops/package-lock.json
+      - run: npm ci
+      - run: node scripts/check.mjs admin
+  backend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
     services:
       mysql:
         image: mariadb@sha256:d769e37960821dfdcf096954f6e7ac89f747e116c1bba98e48edd265dfc7deae
@@ -27,6 +63,7 @@ jobs:
       BIBI_TEST_DB_HOST: 127.0.0.1
       BIBI_TEST_DB_PORT: "33384"
       BIBI_TEST_DB_PASSWORD: ci-test-only
+      BIBI_TEST_DB_CONTAINER: ${{ job.services.mysql.id }}
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
         with:
@@ -41,25 +78,96 @@ jobs:
             backend/package-lock.json
             ops/package-lock.json
       - run: npm ci
+      - run: docker pull php:8.4-cli@sha256:d63e8b80cd4c6cfd01cfa7c910522e299cdc7ca1a2b6d6563db48df3c17e6c55
+      - run: node scripts/check.mjs backend
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        suite: [auth, visitor-analytics, admin-usability, profile, visitor-relay]
+    services:
+      mysql:
+        image: mariadb@sha256:d769e37960821dfdcf096954f6e7ac89f747e116c1bba98e48edd265dfc7deae
+        env:
+          MYSQL_ROOT_PASSWORD: ci-test-only
+          MYSQL_ROOT_HOST: "%"
+        ports:
+          - "127.0.0.1:33384:3306"
+        options: >-
+          --health-cmd="mysqladmin ping -h127.0.0.1 -pci-test-only --silent"
+          --health-interval=5s --health-timeout=3s --health-retries=30
+    env:
+      BIBI_TEST_DB_HOST: 127.0.0.1
+      BIBI_TEST_DB_PORT: "33384"
+      BIBI_TEST_DB_PASSWORD: ci-test-only
+      BIBI_TEST_DB_CONTAINER: ${{ job.services.mysql.id }}
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            backend/package-lock.json
+            ops/package-lock.json
+      - run: npm ci
       - run: node node_modules/playwright/cli.js install --with-deps chromium
       - run: docker pull php:8.4-cli@sha256:d63e8b80cd4c6cfd01cfa7c910522e299cdc7ca1a2b6d6563db48df3c17e6c55
-      - run: npm run check
+      - run: node scripts/check.mjs e2e ${{ matrix.suite }}
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: browser-evidence-${{ matrix.suite }}-${{ github.sha }}-${{ github.run_id }}
+          path: .superpowers/e2e/*/*.png
+          include-hidden-files: true
+          if-no-files-found: ignore
+          retention-days: 7
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      mysql:
+        image: mariadb@sha256:d769e37960821dfdcf096954f6e7ac89f747e116c1bba98e48edd265dfc7deae
         env:
-          BIBI_TEST_DB_CONTAINER: ${{ job.services.mysql.id }}
+          MYSQL_ROOT_PASSWORD: ci-test-only
+          MYSQL_ROOT_HOST: "%"
+        ports:
+          - "127.0.0.1:33384:3306"
+        options: >-
+          --health-cmd="mysqladmin ping -h127.0.0.1 -pci-test-only --silent"
+          --health-interval=5s --health-timeout=3s --health-retries=30
+    env:
+      BIBI_TEST_DB_HOST: 127.0.0.1
+      BIBI_TEST_DB_PORT: "33384"
+      BIBI_TEST_DB_PASSWORD: ci-test-only
+      BIBI_TEST_DB_CONTAINER: ${{ job.services.mysql.id }}
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            backend/package-lock.json
+            ops/package-lock.json
+      - run: npm ci
+      - run: node node_modules/playwright/cli.js install --with-deps chromium
+      - run: docker pull php:8.4-cli@sha256:d63e8b80cd4c6cfd01cfa7c910522e299cdc7ca1a2b6d6563db48df3c17e6c55
       - run: npm run build
       - run: node scripts/visitor-context-bundle-check.mjs
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
-          name: browser-evidence-${{ github.sha }}-${{ github.run_id }}
-          path: |
-            .superpowers/e2e/auth/*.png
-            .superpowers/e2e/access-logs/*.png
-            .superpowers/e2e/admin-usability/*.png
-            .superpowers/e2e/profile/*.png
-            .superpowers/e2e/visitor-analytics/*.png
-            .superpowers/e2e/visitor-relay/*.png
-            .superpowers/e2e/visitor-context-bundle/*.png
+          name: browser-evidence-bundle-${{ github.sha }}-${{ github.run_id }}
+          path: .superpowers/e2e/*/*.png
           include-hidden-files: true
           if-no-files-found: ignore
           retention-days: 7

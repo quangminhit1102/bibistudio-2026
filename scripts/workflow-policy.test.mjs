@@ -3,6 +3,7 @@ import { test } from "node:test";
 import { readFile, readdir } from "node:fs/promises";
 import { parse } from "yaml";
 import { assertTrustedRun, assertStagingEvidence, validateRelease } from "./github-release.mjs";
+import { STAGES, E2E_SUITES } from "./check.mjs";
 const sha = "a".repeat(40);
 test("production accepts a trusted CI artifact without querying staging", async () => {
   const id = `${sha}-123`;
@@ -120,8 +121,10 @@ test("workflows pin actions and isolate deployment credentials from CI", async (
     } else assert.ok(!source.includes("secrets."));
   }
   assert.ok(Object.hasOwn(workflows.ci.on, "pull_request"));
-  const upload = workflows.ci.jobs.verify.steps.find((step) =>
-    step.uses?.startsWith("actions/upload-artifact@"),
+  assert.equal(workflows.ci.jobs.verify, undefined);
+  const upload = workflows.ci.jobs.build.steps.find(
+    (step) =>
+      step.uses?.startsWith("actions/upload-artifact@") && step.with.name.startsWith("release-"),
   );
   assert.equal(
     upload.with["include-hidden-files"],
@@ -145,4 +148,16 @@ test("workflows pin actions and isolate deployment credentials from CI", async (
   assert.equal(workflows.rollback.on.workflow_dispatch.inputs.environment, undefined);
   assert.equal(workflows.rollback.jobs.rollback.steps.at(-1).env.DEPLOY_ENV, "production");
   assert.ok(!JSON.stringify(workflows.production).includes("npm run build"));
+});
+test("CI runs every check stage and every browser suite as its own job", async () => {
+  const ci = parse(await readFile(new URL("../.github/workflows/ci.yml", import.meta.url), "utf8"));
+  const commands = Object.values(ci.jobs).flatMap((job) => job.steps.map((step) => step.run ?? ""));
+  for (const stage of STAGES)
+    assert.ok(
+      commands.some((command) => command.startsWith(`node scripts/check.mjs ${stage}`)),
+      `no CI job runs the ${stage} stage`,
+    );
+  assert.deepEqual(ci.jobs.e2e.strategy.matrix.suite, E2E_SUITES);
+  assert.equal(ci.jobs.e2e.strategy["fail-fast"], false);
+  assert.ok(commands.includes("node scripts/check.mjs e2e ${{ matrix.suite }}"));
 });

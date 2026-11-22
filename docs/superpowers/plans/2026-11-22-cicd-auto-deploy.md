@@ -81,7 +81,7 @@
   | `admin` | 10 | 1 | không | không | không | `node scripts/check.mjs admin` |
   | `backend` | 15 | 0 | có | không | có | `node scripts/check.mjs backend` |
   | `e2e` (matrix `suite`) | 15 | 1 | có | có | có | `node scripts/check.mjs e2e ${{ matrix.suite }}` |
-  | `build` | 15 | 0 | không | có | có | `npm run build`, `node scripts/visitor-context-bundle-check.mjs` |
+  | `build` | 15 | 1 | có | có | có | `npm run build`, `node scripts/visitor-context-bundle-check.mjs` |
 
   - Job dùng MariaDB truyền `BIBI_TEST_DB_CONTAINER: ${{ job.services.mysql.id }}` như hiện nay.
   - `e2e` upload `browser-evidence-<suite>-<sha>-<run id>` (`if: always()`, 7 ngày); `build` upload `browser-evidence-bundle-<sha>-<run id>` cho `.superpowers/e2e/visitor-context-bundle/*.png`.
