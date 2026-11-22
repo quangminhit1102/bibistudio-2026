@@ -1,32 +1,55 @@
-export interface PublicPost {
-  id: string;
+export type LocalizedText = { vi: string; en: string };
+
+export interface PublicPostShape {
   slug: string;
   title: string;
   excerpt: string | null;
+  category_name: string | null;
+  author_name: string | null;
+  publish_at: string | null;
+  read_time: string | null;
+  cover_url: string | null;
+  content: string;
   seo_title: string;
   seo_description: string;
-  category_id: string | null;
-  author_id: string;
-  publish_at: string | null;
-  content: string;
 }
 
-export interface PublicProduct {
-  id: string;
-  name: string;
+export interface PublicProductShape {
   slug: string;
+  name: LocalizedText;
+  description: LocalizedText;
   short_description: string | null;
-  description: string;
   product_type: string;
   collection: string;
   price: number;
   compare_at: number;
-  image_ids: string[];
+  images: string[];
+  image_alt: LocalizedText;
+  dimensions: string | null;
+  pages: string | null;
+  material: LocalizedText;
+  format: LocalizedText;
+  occasion: string | null;
+  featured: boolean;
+  sort_order: number;
   seo_title: string;
   seo_description: string;
 }
 
-// SEO overlay reads are best-effort and client-side only. When `fetch` is
+export interface PublicCategoryShape {
+  name: string;
+  slug: string;
+  parent_id: string | null;
+  position: number;
+}
+
+export interface PublicCollectionShape {
+  slug: string;
+  name: string;
+  tagline: string;
+}
+
+// Public content reads are best-effort and client-side only. When `fetch` is
 // unavailable (SSR build/runtime) or the request fails, we return `null` so the
 // route `head` falls back to the static title/excerpt — identical to current
 // behavior. The fetch must never throw and break the route.
@@ -42,8 +65,22 @@ async function getJson<T>(path: string): Promise<T | null> {
   }
 }
 
-export const getPublicPost = (slug: string): Promise<PublicPost | null> =>
-  getJson<PublicPost>(`/api/public/posts/${encodeURIComponent(slug)}`);
+export const getPublicPost = (slug: string): Promise<PublicPostShape | null> =>
+  getJson<PublicPostShape>(`/api/public/posts/${encodeURIComponent(slug)}`);
 
-export const getPublicProduct = (slug: string): Promise<PublicProduct | null> =>
-  getJson<PublicProduct>(`/api/public/products/${encodeURIComponent(slug)}`);
+export const getPublicProduct = (slug: string): Promise<PublicProductShape | null> =>
+  getJson<PublicProductShape>(`/api/public/products/${encodeURIComponent(slug)}`);
+
+export const getPublicPosts = (): Promise<PublicPostShape[] | null> =>
+  getJson<PublicPostShape[]>("/api/public/posts");
+
+export const getPublicProducts = (): Promise<PublicProductShape[] | null> =>
+  getJson<PublicProductShape[]>("/api/public/products");
+
+export const getPublicCategories = (
+  scope: "product" | "content" = "product",
+): Promise<PublicCategoryShape[] | null> =>
+  getJson<PublicCategoryShape[]>(`/api/public/categories?scope=${encodeURIComponent(scope)}`);
+
+export const getPublicCollections = (): Promise<PublicCollectionShape[] | null> =>
+  getJson<PublicCollectionShape[]>("/api/public/collections");
