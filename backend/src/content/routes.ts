@@ -82,6 +82,8 @@ const postCreate = z
     imageId: z.string().max(64).nullable().optional(),
     seoTitle: z.string().max(100).optional(),
     seoDescription: z.string().max(320).optional(),
+    readTime: z.string().max(50).nullable().optional(),
+    coverImageId: z.string().max(200).nullable().optional(),
   })
   .strict();
 const postUpdate = z
@@ -98,6 +100,8 @@ const postUpdate = z
     imageId: z.string().max(64).nullable().optional(),
     seoTitle: z.string().max(100).optional(),
     seoDescription: z.string().max(320).optional(),
+    readTime: z.string().max(50).nullable().optional(),
+    coverImageId: z.string().max(200).nullable().optional(),
   })
   .strict()
   .refine((value) => Object.keys(value).length > 1);
@@ -126,6 +130,20 @@ const productCreate = z
     tags: z.array(z.string()).optional(),
     seoTitle: z.string().max(100).optional(),
     seoDescription: z.string().max(320).optional(),
+    nameEn: z.string().max(255).nullable().optional(),
+    shortDescriptionEn: z.string().nullable().optional(),
+    descriptionEn: z.string().nullable().optional(),
+    dimensions: z.string().max(100).nullable().optional(),
+    pages: z.string().max(50).nullable().optional(),
+    materialVi: z.string().max(255).nullable().optional(),
+    materialEn: z.string().max(255).nullable().optional(),
+    formatVi: z.string().max(100).nullable().optional(),
+    formatEn: z.string().max(100).nullable().optional(),
+    occasion: z.string().max(64).nullable().optional(),
+    featured: z.boolean().optional(),
+    sortOrder: z.number().int().optional(),
+    imageAltVi: z.string().max(255).nullable().optional(),
+    imageAltEn: z.string().max(255).nullable().optional(),
   })
   .strict();
 const productUpdate = z
@@ -154,6 +172,20 @@ const productUpdate = z
     tags: z.array(z.string()).optional(),
     seoTitle: z.string().max(100).optional(),
     seoDescription: z.string().max(320).optional(),
+    nameEn: z.string().max(255).nullable().optional(),
+    shortDescriptionEn: z.string().nullable().optional(),
+    descriptionEn: z.string().nullable().optional(),
+    dimensions: z.string().max(100).nullable().optional(),
+    pages: z.string().max(50).nullable().optional(),
+    materialVi: z.string().max(255).nullable().optional(),
+    materialEn: z.string().max(255).nullable().optional(),
+    formatVi: z.string().max(100).nullable().optional(),
+    formatEn: z.string().max(100).nullable().optional(),
+    occasion: z.string().max(64).nullable().optional(),
+    featured: z.boolean().optional(),
+    sortOrder: z.number().int().optional(),
+    imageAltVi: z.string().max(255).nullable().optional(),
+    imageAltEn: z.string().max(255).nullable().optional(),
   })
   .strict()
   .refine((value) => Object.keys(value).length > 1);

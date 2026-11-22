@@ -19,7 +19,7 @@ const allTables = [
 /** Expected completed_steps per migration version; must match the parsed SQL assets. */
 const versionStepCounts = new Map<number, number>([
   [1, 5],
-  [2, 2],
+  [2, 3],
 ]);
 
 export interface ContentSchemaStatus {
@@ -67,10 +67,12 @@ async function assets(directory: string): Promise<MigrationAsset[]> {
     .split(";")
     .map((s) => s.trim())
     .filter(Boolean);
-  if (secondStatements.length !== 2) throw new Error("Invalid content DDL assets");
+  if (secondStatements.length !== 3) throw new Error("Invalid content DDL assets");
   if (!/^ALTER TABLE products\s+ADD COLUMN /.test(secondStatements[0]))
     throw new Error("Invalid content DDL assets");
-  if (!/^CREATE TABLE media /.test(secondStatements[1]))
+  if (!/^ALTER TABLE posts\s+ADD COLUMN /.test(secondStatements[1]))
+    throw new Error("Invalid content DDL assets");
+  if (!/^CREATE TABLE media /.test(secondStatements[2]))
     throw new Error("Invalid content DDL assets");
 
   return [
@@ -79,7 +81,7 @@ async function assets(directory: string): Promise<MigrationAsset[]> {
       name: first.name,
       checksum: digest(first.sql),
       steps: tables.map((t, i) => ({ sql: firstStatements[i], target: t, create: true })),
-      verifyTargets: ["product_categories", "content_categories", "posts", "customers"],
+      verifyTargets: ["product_categories", "content_categories", "customers"],
     },
     {
       version: 2,
@@ -87,9 +89,10 @@ async function assets(directory: string): Promise<MigrationAsset[]> {
       checksum: digest(second.sql),
       steps: [
         { sql: secondStatements[0], target: "products", create: false },
-        { sql: secondStatements[1], target: "media", create: true },
+        { sql: secondStatements[1], target: "posts", create: false },
+        { sql: secondStatements[2], target: "media", create: true },
       ],
-      verifyTargets: ["products", "media"],
+      verifyTargets: ["products", "posts", "media"],
     },
   ];
 }
@@ -207,7 +210,9 @@ export async function migrateContent(
       if (asset.checksum !== row.checksum)
         throw new Error(`Content migration checksum mismatch: ${row.version}`);
       if (row.state !== "complete" && (!options.resumeDirty || row.state !== "dirty"))
-        throw new Error("Dirty content schema: inspect DDL and recover explicitly before migration");
+        throw new Error(
+          "Dirty content schema: inspect DDL and recover explicitly before migration",
+        );
     }
     if (!rows.length && (await Promise.all(allTables.map((t) => fingerprint(c, t)))).some(Boolean))
       throw new Error("Untracked content DDL; inspect manually");

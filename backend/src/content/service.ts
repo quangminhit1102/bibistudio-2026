@@ -79,6 +79,8 @@ export interface PostInput {
   imageId?: string | null;
   seoTitle?: string;
   seoDescription?: string;
+  readTime?: string | null;
+  coverImageId?: string | null;
 }
 export interface PostDto {
   id: string;
@@ -93,6 +95,8 @@ export interface PostDto {
   imageId: string | null;
   seoTitle: string;
   seoDescription: string;
+  readTime: string | null;
+  coverImageId: string | null;
   createdAt: string;
   updatedAt: string;
   revision: number;
@@ -115,6 +119,20 @@ export interface ProductInput {
   tags?: string[];
   seoTitle?: string;
   seoDescription?: string;
+  nameEn?: string | null;
+  shortDescriptionEn?: string | null;
+  descriptionEn?: string | null;
+  dimensions?: string | null;
+  pages?: string | null;
+  materialVi?: string | null;
+  materialEn?: string | null;
+  formatVi?: string | null;
+  formatEn?: string | null;
+  occasion?: string | null;
+  featured?: boolean;
+  sortOrder?: number;
+  imageAltVi?: string | null;
+  imageAltEn?: string | null;
 }
 export interface ProductDto {
   id: string;
@@ -135,6 +153,20 @@ export interface ProductDto {
   tags: string[];
   seoTitle: string;
   seoDescription: string;
+  nameEn: string | null;
+  shortDescriptionEn: string | null;
+  descriptionEn: string | null;
+  dimensions: string | null;
+  pages: string | null;
+  materialVi: string | null;
+  materialEn: string | null;
+  formatVi: string | null;
+  formatEn: string | null;
+  occasion: string | null;
+  featured: boolean;
+  sortOrder: number;
+  imageAltVi: string | null;
+  imageAltEn: string | null;
   createdAt: string;
   updatedAt: string;
   revision: number;
@@ -220,6 +252,8 @@ const postDto = (row: RowDataPacket): PostDto => ({
   imageId: row.image_id == null ? null : String(row.image_id),
   seoTitle: String(row.seo_title),
   seoDescription: String(row.seo_description),
+  readTime: row.read_time == null ? null : String(row.read_time),
+  coverImageId: row.cover_image_id == null ? null : String(row.cover_image_id),
   createdAt: iso(row.created_at)!,
   updatedAt: iso(row.updated_at)!,
   revision: Number(row.revision),
@@ -243,6 +277,20 @@ const productDto = (row: RowDataPacket): ProductDto => ({
   tags: jsonStrings(row.tags),
   seoTitle: String(row.seo_title),
   seoDescription: String(row.seo_description),
+  nameEn: row.name_en == null ? null : String(row.name_en),
+  shortDescriptionEn: row.short_description_en == null ? null : String(row.short_description_en),
+  descriptionEn: row.description_en == null ? null : String(row.description_en),
+  dimensions: row.dimensions == null ? null : String(row.dimensions),
+  pages: row.pages == null ? null : String(row.pages),
+  materialVi: row.material_vi == null ? null : String(row.material_vi),
+  materialEn: row.material_en == null ? null : String(row.material_en),
+  formatVi: row.format_vi == null ? null : String(row.format_vi),
+  formatEn: row.format_en == null ? null : String(row.format_en),
+  occasion: row.occasion == null ? null : String(row.occasion),
+  featured: Boolean(row.featured),
+  sortOrder: Number(row.sort_order),
+  imageAltVi: row.image_alt_vi == null ? null : String(row.image_alt_vi),
+  imageAltEn: row.image_alt_en == null ? null : String(row.image_alt_en),
   createdAt: iso(row.created_at)!,
   updatedAt: iso(row.updated_at)!,
   revision: Number(row.revision),
@@ -597,8 +645,8 @@ export function createContentService(pool: Pool, clock: Clock) {
       const id = randomUUID();
       const t = clock.now();
       await c.execute(
-        `INSERT INTO posts (id,slug,title,excerpt,content,category_id,author_id,status,publish_at,image_id,seo_title,seo_description,created_at,updated_at,revision)
-         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,1)`,
+        `INSERT INTO posts (id,slug,title,excerpt,content,category_id,author_id,status,publish_at,image_id,seo_title,seo_description,read_time,cover_image_id,created_at,updated_at,revision)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,1)`,
         [
           id,
           input.slug,
@@ -612,6 +660,8 @@ export function createContentService(pool: Pool, clock: Clock) {
           input.imageId ?? null,
           input.seoTitle ?? "",
           input.seoDescription ?? "",
+          input.readTime ?? null,
+          input.coverImageId ?? null,
           t,
           t,
         ],
@@ -645,6 +695,8 @@ export function createContentService(pool: Pool, clock: Clock) {
         ["imageId", "image_id"],
         ["seoTitle", "seo_title"],
         ["seoDescription", "seo_description"],
+        ["readTime", "read_time"],
+        ["coverImageId", "cover_image_id"],
       ] as const) {
         if (input[key] !== undefined) {
           sets.push(`${col}=?`);
@@ -741,8 +793,8 @@ export function createContentService(pool: Pool, clock: Clock) {
       const id = randomUUID();
       const t = clock.now();
       await c.execute(
-        `INSERT INTO products (id,product_code,name,slug,short_description,description,product_type,collection,category_id,price,compare_at,stock,reserved,status,image_ids,tags,seo_title,seo_description,created_at,updated_at,revision)
-         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,1)`,
+        `INSERT INTO products (id,product_code,name,slug,short_description,description,product_type,collection,category_id,price,compare_at,stock,reserved,status,image_ids,tags,seo_title,seo_description,name_en,short_description_en,description_en,dimensions,pages,material_vi,material_en,format_vi,format_en,occasion,featured,sort_order,image_alt_vi,image_alt_en,created_at,updated_at,revision)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,1)`,
         [
           id,
           input.productCode,
@@ -762,6 +814,20 @@ export function createContentService(pool: Pool, clock: Clock) {
           JSON.stringify(input.tags ?? []),
           input.seoTitle ?? "",
           input.seoDescription ?? "",
+          input.nameEn ?? null,
+          input.shortDescriptionEn ?? null,
+          input.descriptionEn ?? null,
+          input.dimensions ?? null,
+          input.pages ?? null,
+          input.materialVi ?? null,
+          input.materialEn ?? null,
+          input.formatVi ?? null,
+          input.formatEn ?? null,
+          input.occasion ?? null,
+          input.featured === true ? 1 : 0,
+          input.sortOrder ?? 0,
+          input.imageAltVi ?? null,
+          input.imageAltEn ?? null,
           t,
           t,
         ],
@@ -800,11 +866,28 @@ export function createContentService(pool: Pool, clock: Clock) {
         ["status", "status"],
         ["seoTitle", "seo_title"],
         ["seoDescription", "seo_description"],
+        ["nameEn", "name_en"],
+        ["shortDescriptionEn", "short_description_en"],
+        ["descriptionEn", "description_en"],
+        ["dimensions", "dimensions"],
+        ["pages", "pages"],
+        ["materialVi", "material_vi"],
+        ["materialEn", "material_en"],
+        ["formatVi", "format_vi"],
+        ["formatEn", "format_en"],
+        ["occasion", "occasion"],
+        ["sortOrder", "sort_order"],
+        ["imageAltVi", "image_alt_vi"],
+        ["imageAltEn", "image_alt_en"],
       ] as const) {
         if (input[key] !== undefined) {
           sets.push(`${col}=?`);
           values.push(input[key] ?? null);
         }
+      }
+      if (input.featured !== undefined) {
+        sets.push("featured=?");
+        values.push(input.featured ? 1 : 0);
       }
       if (input.imageIds !== undefined) {
         sets.push("image_ids=?");

@@ -92,13 +92,30 @@ test("content service CRUDs posts/products/categories with JSON columns and FK d
       content: "<p>Nội dung</p>",
       status: "published",
       categoryId: cat.id,
+      readTime: "5 phút đọc",
+      coverImageId: "journal-cover-bai-1",
     },
     actor,
   );
   assert.equal(post.authorId, actor.principal.id);
   assert.equal(post.status, "published");
   assert.equal(post.content, "<p>Nội dung</p>");
+  assert.equal(post.readTime, "5 phút đọc");
+  assert.equal(post.coverImageId, "journal-cover-bai-1");
   assert.equal(post.revision, 1);
+
+  const gotPost = await service.getPost(post.id, actor);
+  assert.equal(gotPost.readTime, "5 phút đọc");
+  assert.equal(gotPost.coverImageId, "journal-cover-bai-1");
+
+  const updatedPost = await service.updatePost(
+    post.id,
+    { readTime: "7 phút đọc", coverImageId: "journal-cover-bai-1b" },
+    post.revision,
+    actor,
+  );
+  assert.equal(updatedPost.readTime, "7 phút đọc");
+  assert.equal(updatedPost.coverImageId, "journal-cover-bai-1b");
 
   const published = await service.listPosts({ filters: { status: "published" } }, actor);
   assert.equal(published.total, 1);
@@ -116,6 +133,20 @@ test("content service CRUDs posts/products/categories with JSON columns and FK d
       imageIds: ["img-1", "img-2"],
       tags: ["mới", "hot"],
       price: 100000,
+      nameEn: "Product A",
+      shortDescriptionEn: "Short EN",
+      descriptionEn: "Desc EN",
+      dimensions: "15 x 21 cm",
+      pages: "200",
+      materialVi: "Giấy mỹ thuật",
+      materialEn: "Fine paper",
+      formatVi: "Bìa cứng",
+      formatEn: "Hardcover",
+      occasion: "tet",
+      featured: true,
+      sortOrder: 5,
+      imageAltVi: "Ảnh sản phẩm A",
+      imageAltEn: "Product A image",
     },
     actor,
   );
@@ -123,19 +154,50 @@ test("content service CRUDs posts/products/categories with JSON columns and FK d
   assert.deepEqual(product.tags, ["mới", "hot"]);
   assert.equal(product.price, 100000);
   assert.equal(product.productCode, "1001");
+  assert.equal(product.nameEn, "Product A");
+  assert.equal(product.shortDescriptionEn, "Short EN");
+  assert.equal(product.descriptionEn, "Desc EN");
+  assert.equal(product.dimensions, "15 x 21 cm");
+  assert.equal(product.pages, "200");
+  assert.equal(product.materialVi, "Giấy mỹ thuật");
+  assert.equal(product.materialEn, "Fine paper");
+  assert.equal(product.formatVi, "Bìa cứng");
+  assert.equal(product.formatEn, "Hardcover");
+  assert.equal(product.occasion, "tet");
+  assert.equal(product.featured, true);
+  assert.equal(product.sortOrder, 5);
+  assert.equal(product.imageAltVi, "Ảnh sản phẩm A");
+  assert.equal(product.imageAltEn, "Product A image");
 
   const gotProduct = await service.getProduct(product.id, actor);
   assert.deepEqual(gotProduct.imageIds, ["img-1", "img-2"]);
   assert.deepEqual(gotProduct.tags, ["mới", "hot"]);
+  assert.equal(gotProduct.nameEn, "Product A");
+  assert.equal(gotProduct.descriptionEn, "Desc EN");
+  assert.equal(gotProduct.materialVi, "Giấy mỹ thuật");
+  assert.equal(gotProduct.formatEn, "Hardcover");
+  assert.equal(gotProduct.occasion, "tet");
+  assert.equal(gotProduct.featured, true);
+  assert.equal(gotProduct.sortOrder, 5);
+  assert.equal(gotProduct.imageAltEn, "Product A image");
 
   const updatedProduct = await service.updateProduct(
     product.id,
-    { tags: ["cũ", "mới"], price: 120000 },
+    {
+      tags: ["cũ", "mới"],
+      price: 120000,
+      featured: false,
+      sortOrder: 9,
+      nameEn: "Product A2",
+    },
     product.revision,
     actor,
   );
   assert.deepEqual(updatedProduct.tags, ["cũ", "mới"]);
   assert.equal(updatedProduct.price, 120000);
+  assert.equal(updatedProduct.featured, false);
+  assert.equal(updatedProduct.sortOrder, 9);
+  assert.equal(updatedProduct.nameEn, "Product A2");
   assert.equal(updatedProduct.revision, 2);
 
   await assert.rejects(service.deleteContentCategory(cat.id, cat.revision, actor), {
@@ -147,7 +209,7 @@ test("content service CRUDs posts/products/categories with JSON columns and FK d
     code: "REFERENCED",
   });
 
-  await service.deletePost(post.id, post.revision, actor);
+  await service.deletePost(post.id, updatedPost.revision, actor);
   await service.deleteContentCategory(cat.id, cat.revision, actor);
 
   await service.deleteProduct(product.id, updatedProduct.revision, actor);

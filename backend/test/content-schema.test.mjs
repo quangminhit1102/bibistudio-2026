@@ -37,6 +37,13 @@ test("content schema reports empty before migration and complete after migrateCo
     new Set(columns.map((c) => c.COLUMN_NAME)),
     new Set(["name_en", "description_en", "featured", "sort_order", "image_alt_en"]),
   );
+  const [postColumns] = await f.pool.query(
+    "SELECT COLUMN_NAME FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name='posts' AND COLUMN_NAME IN ('read_time','cover_image_id')",
+  );
+  assert.deepEqual(
+    new Set(postColumns.map((c) => c.COLUMN_NAME)),
+    new Set(["read_time", "cover_image_id"]),
+  );
 });
 
 test("content schema upgrades a v8 ledger to v9 without touching version 1", async (t) => {
@@ -79,7 +86,7 @@ test("content schema upgrades a v8 ledger to v9 without touching version 1", asy
     "SELECT version,state,completed_steps FROM content_schema_migrations WHERE version=2",
   );
   assert.equal(v2.state, "complete");
-  assert.equal(v2.completed_steps, 2);
+  assert.equal(v2.completed_steps, 3);
 
   const complete = await contentSchemaStatus(f.pool, directory);
   assert.equal(complete.state, "complete");

@@ -14,6 +14,10 @@ ALTER TABLE products
   ADD COLUMN image_alt_vi VARCHAR(255) NULL,
   ADD COLUMN image_alt_en VARCHAR(255) NULL;
 
+ALTER TABLE posts
+  ADD COLUMN read_time VARCHAR(50) NULL,
+  ADD COLUMN cover_image_id VARCHAR(200) NULL;
+
 CREATE TABLE media (
   id VARCHAR(36) PRIMARY KEY,
   mime VARCHAR(64) NOT NULL,

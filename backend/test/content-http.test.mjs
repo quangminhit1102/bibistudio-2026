@@ -106,4 +106,45 @@ test("content admin API requires auth, serves authorized lists and 404s unknown 
   ).json();
   assert.equal(searched.total, 1);
   assert.equal(searched.items[0].productCode, "1001");
+
+  // New v9 fields round-trip through the Zod schemas and are echoed back.
+  const productV9 = await write("/products", "POST", {
+    productCode: "1002",
+    name: "Sản phẩm song ngữ",
+    slug: "san-pham-song-ngu",
+    description: "<p>Mô tả</p>",
+    productType: "notebook",
+    collection: "motivation",
+    nameEn: "Bilingual product",
+    descriptionEn: "English description",
+    dimensions: "15 x 21 cm",
+    materialVi: "Giấy mỹ thuật",
+    materialEn: "Fine paper",
+    formatVi: "Bìa cứng",
+    formatEn: "Hardcover",
+    occasion: "tet",
+    featured: true,
+    sortOrder: 7,
+    imageAltVi: "Ảnh song ngữ",
+    imageAltEn: "Bilingual image",
+  });
+  assert.equal(productV9.status, 201, "product with v9 fields is created");
+  const productV9Body = await productV9.json();
+  assert.equal(productV9Body.nameEn, "Bilingual product");
+  assert.equal(productV9Body.descriptionEn, "English description");
+  assert.equal(productV9Body.materialEn, "Fine paper");
+  assert.equal(productV9Body.featured, true);
+  assert.equal(productV9Body.sortOrder, 7);
+
+  const postV9 = await write("/posts", "POST", {
+    slug: "bai-v9",
+    title: "Bài v9",
+    content: "<p>Nội dung</p>",
+    readTime: "5 phút đọc",
+    coverImageId: "journal-cover-v9",
+  });
+  assert.equal(postV9.status, 201, "post with v9 fields is created");
+  const postV9Body = await postV9.json();
+  assert.equal(postV9Body.readTime, "5 phút đọc");
+  assert.equal(postV9Body.coverImageId, "journal-cover-v9");
 });
