@@ -143,7 +143,7 @@ export default function ComposeForm({
                 {fields(
                   post
                     ? ["title", "slug", "excerpt"]
-                    : ["name", "productCode", "slug", "shortDescription"],
+                    : ["name", "nameEn", "productCode", "slug", "shortDescription", "shortDescriptionEn"],
                 )}
               </div>
             </Card>
@@ -152,8 +152,8 @@ export default function ComposeForm({
               <div className="a-compose-fields">
                 {fields(
                   post
-                    ? ["status", "categoryId", "publishAt"]
-                    : ["status", "productType", "collection", "categoryId", "tags"],
+                    ? ["status", "categoryId", "publishAt", "readTime"]
+                    : ["status", "productType", "collection", "categoryId", "occasion", "featured", "sortOrder", "tags"],
                 )}
               </div>
             </Card>
@@ -223,6 +223,23 @@ export default function ComposeForm({
               <Card>
                 <h2>Mô tả chi tiết</h2>
                 <div className="a-compose-stack">{fields(["description", "descriptionEn"])}</div>
+              </Card>
+            )}
+            {!post && (
+              <Card>
+                <h2>Thuộc tính sản phẩm</h2>
+                <div className="a-compose-fields">
+                  {fields([
+                    "dimensions",
+                    "pages",
+                    "materialVi",
+                    "materialEn",
+                    "formatVi",
+                    "formatEn",
+                    "imageAltVi",
+                    "imageAltEn",
+                  ])}
+                </div>
               </Card>
             )}
             {!post && (

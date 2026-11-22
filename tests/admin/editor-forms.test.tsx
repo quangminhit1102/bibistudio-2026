@@ -126,7 +126,7 @@ it("previews an unsaved product without invoking save and keeps internal amounts
       onCancel={() => {}}
     />,
   );
-  await user.type(screen.getByLabelText(/^Tên sản phẩm/), " mới");
+  await user.type(screen.getByLabelText(/^Tên sản phẩm\s*\*?$/), " mới");
   await user.click(screen.getByRole("button", { name: "Xem trước" }));
   expect(screen.getByRole("dialog")).toHaveTextContent("Sổ tay mới");
   expect(screen.getByRole("dialog")).not.toHaveTextContent("123.456");

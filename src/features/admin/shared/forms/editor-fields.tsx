@@ -153,6 +153,7 @@ export function EditorFields({
               />
             ) : field.type === "select" ? (
               <select {...register(key, rule)}>
+                <option value="">Chọn…</option>
                 {field.options?.map((o) => (
                   <option key={o.value} value={o.value}>
                     {o.label}
@@ -190,6 +191,8 @@ export function EditorFields({
                   />
                 )}
               />
+            ) : field.type === "checkbox" ? (
+              <input type="checkbox" aria-label={field.label} {...register(key)} />
             ) : (
               <input
                 type={field.type === "number" ? "number" : "text"}
