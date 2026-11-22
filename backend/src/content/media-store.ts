@@ -1,4 +1,4 @@
-import { constants, lstatSync, realpathSync, type Stats } from "node:fs";
+import { constants, lstatSync, mkdirSync, realpathSync, type Stats } from "node:fs";
 import { open, lstat, unlink, rename } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
 import { isAbsolute, resolve, join } from "node:path";
@@ -33,6 +33,7 @@ export function createMediaStore({ root }: { root: string }) {
       )
   )
     throw new Error("Unsafe private media directory");
+  mkdirSync(resolve(root), { recursive: true });
   const directory = resolve(root),
     initial = lstatSync(directory);
   const owner = typeof process.getuid === "function" ? process.getuid() : undefined;
