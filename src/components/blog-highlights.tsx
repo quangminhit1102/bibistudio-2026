@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { getAllBlogPosts } from "@/data/blog";
 import { LazyImage } from "@/components/ui/lazy-image";
+import { site } from "@/platform/site";
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("vi-VN", {
@@ -20,7 +21,7 @@ export function BlogHighlights() {
         <div className="mb-8 flex items-end justify-between gap-4">
           <div>
             <h2 className="text-[20px] font-semibold tracking-tight text-foreground md:text-[24px]">
-              Nhật ký BiBi
+              Nhật ký {site.shortName}
             </h2>
             <p className="mt-1 text-[13px] text-muted-foreground">
               Cảm hứng viết tay, mẹo journaling và những câu chuyện nhỏ.

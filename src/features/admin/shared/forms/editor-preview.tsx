@@ -65,7 +65,7 @@ export default function EditorPreview({
       <div className="a-preview-stage">
         <article className={`a-brand-reader ${mobile ? "a-brand-reader-mobile" : ""}`}>
           <div className="a-preview-brand">
-            BiBi Studio <small>MADE WITH HEART</small>
+            {site.name} <small>MADE WITH HEART</small>
           </div>
           {post ? (
             <>
@@ -80,7 +80,7 @@ export default function EditorPreview({
                 </div>
                 <h1>{String(record.title || "Tiêu đề bài viết")}</h1>
                 <p className="a-preview-meta">
-                  {metadata.data?.author?.name ?? "BiBi Studio"}
+                  {metadata.data?.author?.name ?? site.name}
                   {record.publishAt ? ` · ${date(String(record.publishAt))}` : ""}
                 </p>
                 <p className="a-preview-excerpt">{String(record.excerpt ?? "")}</p>

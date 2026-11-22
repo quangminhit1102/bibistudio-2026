@@ -5,7 +5,7 @@ import { Reveal } from "@/components/brand/reveal";
 import { PaperPlaceholder } from "@/components/brand/paper-placeholder";
 import { ContactBand } from "@/components/contact-cta";
 import { CatalogueCard } from "@/components/catalogue-card";
-import { BrandMark } from "@/components/brand-logo";
+import { BrandMark } from "@/platform/site";
 import {
   collections,
   getAllProducts,

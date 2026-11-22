@@ -20,6 +20,7 @@ export type SiteLocation = {
 export type SiteConfig = {
   name: string;
   shortName: string;
+  tagline?: string;
   /** Public origin, `https://` only, no path. */
   url: string;
   locales: string[];

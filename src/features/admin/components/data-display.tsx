@@ -6,6 +6,7 @@ import { downloadBlob, makeCsv } from "../shared/lib/text";
 import { Example } from "./example";
 import { OverlayExample } from "./overlays";
 import { componentCatalogue } from "./catalogue";
+import { site } from "@/platform/site";
 const initialRows = Array.from({ length: 24 }, (_, i) => ({
   id: String(i + 1),
   name: ["Sổ tay Đà Nẵng", "Sổ tay Đà Lạt", "Thiệp Việt Nam"][i % 3],
@@ -206,7 +207,7 @@ export function DataExample({ name }: { name: string }) {
     );
   return (
     <Card>
-      <h3>Sản phẩm BiBi</h3>
+      <h3>Sản phẩm {site.shortName}</h3>
       <p>Khối nội dung dùng chung giữa các module.</p>
       <Button onClick={() => setLoaded(!loaded)}>{loaded ? "Đã theo dõi" : "Theo dõi khối"}</Button>
     </Card>

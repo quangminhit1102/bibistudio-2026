@@ -1,11 +1,10 @@
 // Magazine-style footer: brand story · products · collections · contact & map.
 import { Link } from "@tanstack/react-router";
 import { ArrowUpRight, MapPin } from "lucide-react";
-import { BrandLogo } from "./brand-logo";
 import { Reveal } from "./brand/reveal";
 import { collections, productTypes, tx } from "@/data/catalogue";
 import { mailHref, siteLocation, telHref } from "@/lib/site-contact";
-import { site } from "@/platform/site";
+import { BrandLogo, site } from "@/platform/site";
 
 const contact = site.contact;
 const studioLocation = siteLocation(site);
@@ -38,7 +37,7 @@ export function SiteFooter() {
               Một studio nhỏ làm đồ giấy lấy cảm hứng từ Việt Nam — mỗi sản phẩm bắt đầu từ một câu chuyện.
             </p>
             <Link to="/about" className="mt-6 inline-flex items-center gap-1.5 text-[12px] font-medium uppercase tracking-[0.2em] underline underline-offset-8 hover:text-accent">
-              Câu chuyện BiBi <ArrowUpRight className="size-3.5" />
+              Câu chuyện {site.shortName} <ArrowUpRight className="size-3.5" />
             </Link>
           </Reveal>
 
@@ -96,10 +95,10 @@ export function SiteFooter() {
 
       <div className="border-t border-border">
         <div className="mx-auto flex max-w-[1280px] flex-col gap-2 px-5 pb-24 pt-5 text-[11px] tracking-wider text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-6 xl:pb-5 lg:px-12">
-          <p>© {new Date().getFullYear()} BiBi Studio · Touch your heart</p>
+          <p>© {new Date().getFullYear()} {site.name}{site.tagline ? ` · ${site.tagline}` : ""}</p>
           <AnalyticsPrivacyControl />
           <p className="flex gap-5">
-            <Link to="/about" className="hover:text-foreground">Về BiBi</Link>
+            <Link to="/about" className="hover:text-foreground">Về {site.shortName}</Link>
             <Link to="/contact" className="hover:text-foreground">Liên hệ</Link>
             <Link to="/api-test" className="hover:text-foreground">Kiểm tra API</Link>
           </p>

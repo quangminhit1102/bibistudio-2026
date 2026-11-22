@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import type { EntityConfig } from "../shared/entity-manager";
 import { Badge } from "../shared/ui/primitives";
+import { site } from "@/platform/site";
 export const customerKinds = [
   { value: "bookstore", label: "Nhà sách" },
   { value: "individual", label: "Cá nhân" },
@@ -20,7 +21,7 @@ export function customerReturnTo(input: unknown): string {
 export const customerConfig: EntityConfig<"customers"> = {
   entity: "customers",
   title: "Khách mua hàng",
-  description: "Quản lý nhà sách, cá nhân và công ty mua sản phẩm của BiBi. Dữ liệu.",
+  description: `Quản lý nhà sách, cá nhân và công ty mua sản phẩm của ${site.shortName}. Dữ liệu.`,
   createHref: "/admin/customers/create",
   returnPath: "/admin/customers",
   allowDelete: false,

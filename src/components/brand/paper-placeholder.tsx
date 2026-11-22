@@ -1,3 +1,5 @@
+import { site } from "@/platform/site";
+
 // Branded neutral placeholder used whenever a product/collection image is missing.
 export function PaperPlaceholder({
   label,
@@ -17,7 +19,7 @@ export function PaperPlaceholder({
       role="img"
       aria-label={`${label} — hình ảnh sắp có`}
     >
-      <span className="font-display text-sm italic text-kraft">BiBi Studio</span>
+      <span className="font-display text-sm italic text-kraft">{site.name}</span>
       <span className="text-[11px] font-medium uppercase tracking-[0.3em] text-foreground/70">
         {label}
       </span>

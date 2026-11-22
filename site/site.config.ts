@@ -3,6 +3,7 @@ import { defineSite } from "../src/platform/site-contract.ts";
 export default defineSite({
   name: "BiBi Studio",
   shortName: "BiBi",
+  tagline: "Touch your heart",
   url: "https://bibistudio.vn",
   locales: ["vi", "en"],
   defaultLocale: "vi",

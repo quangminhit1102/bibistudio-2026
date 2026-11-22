@@ -2,11 +2,10 @@
 import { ArrowRight, Menu, Phone, X } from "lucide-react";
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { BrandLogo } from "./brand-logo";
 import { LanguageSwitcher } from "./language-switcher";
 import { QuickSearch } from "./quick-search";
 import { telHref } from "@/lib/site-contact";
-import { site } from "@/platform/site";
+import { BrandLogo, site } from "@/platform/site";
 import { collections, productTypes, tx } from "@/data/catalogue";
 
 type Mega = "products" | "collections";
@@ -15,7 +14,7 @@ const nav: { to: string; label: string; mega?: Mega }[] = [
   { to: "/products", label: "Sản phẩm", mega: "products" },
   { to: "/collections", label: "Bộ sưu tập", mega: "collections" },
   { to: "/blog", label: "Nhật ký" },
-  { to: "/about", label: "Về BiBi" },
+  { to: "/about", label: `Về ${site.shortName}` },
   { to: "/contact", label: "Liên hệ" },
 ];
 
@@ -68,7 +67,7 @@ export function SiteHeader() {
           {open ? <X className="size-5" /> : <Menu className="size-5" />}
         </button>
 
-        <Link to="/" aria-label="BiBi Studio — Trang chủ" className="min-w-0 justify-self-center">
+        <Link to="/" aria-label={`${site.name} — Trang chủ`} className="min-w-0 justify-self-center">
           <BrandLogo />
         </Link>
 
