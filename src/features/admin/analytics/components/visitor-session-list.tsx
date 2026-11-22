@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Trash2 } from "lucide-react";
+import { site } from "@/platform/site";
 import type { VisitorSessionDto } from "../../../../../backend/src/http/contracts";
 import { Button, ErrorState } from "../../shared/ui/primitives";
 import { dateTime } from "../../shared/lib/text";
@@ -15,8 +16,8 @@ function safePath(path: string) {
       /^\/(admin|api)(\/|$)/i.test(decoded)
     )
       return null;
-    const url = new URL(path, "https://bibistudio.vn");
-    return url.origin === "https://bibistudio.vn" && url.pathname === path ? path : null;
+    const url = new URL(path, site.url);
+    return url.origin === site.url && url.pathname === path ? path : null;
   } catch {
     return null;
   }

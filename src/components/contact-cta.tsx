@@ -1,14 +1,17 @@
 import { Link } from "@tanstack/react-router";
 import { Mail, Phone } from "lucide-react";
-import { contact } from "@/data/contact";
+import { mailHref, telHref } from "@/lib/site-contact";
+import { site } from "@/platform/site";
 
 export function ContactLinks({ className = "" }: { className?: string }) {
   const items = [
-    { label: "Điện thoại", value: contact.phoneDisplay, href: `tel:${contact.phone}`, Icon: Phone },
-    { label: "Email", value: contact.email, href: `mailto:${contact.email}`, Icon: Mail },
-    { label: "Zalo", value: contact.phoneDisplay, href: contact.zalo },
-    { label: "Facebook", value: "BiBi Studio", href: contact.facebook },
-    { label: "Messenger", value: "Nhắn tin", href: contact.messenger },
+    { label: "Điện thoại", value: site.contact.phoneDisplay, href: telHref(site), Icon: Phone },
+    { label: "Email", value: site.contact.email, href: mailHref(site), Icon: Mail },
+    ...site.contact.social.map((link) => ({
+      label: link.label,
+      value: link.display ?? link.label,
+      href: link.href,
+    })),
   ];
   return (
     <ul className={`divide-y divide-border border-y border-border ${className}`}>
@@ -38,16 +41,16 @@ export function ContactBand() {
           <h2 className="mt-5 font-display text-[2.35rem] leading-[1.05] text-foreground sm:text-4xl md:text-6xl">
             Bạn thích một sản phẩm?
             <br />
-            <em className="text-kraft">Hãy trò chuyện cùng BiBi.</em>
+            <em className="text-kraft">Hãy trò chuyện cùng {site.shortName}.</em>
           </h2>
           <p className="mt-6 max-w-md text-[15px] leading-relaxed text-muted-foreground">
-            Gọi điện, nhắn Zalo hoặc gửi email — BiBi Studio sẽ phản hồi bạn sớm nhất.
+            Gọi điện, nhắn Zalo hoặc gửi email — {site.name} sẽ phản hồi bạn sớm nhất.
           </p>
           <Link
             to="/contact"
             className="mt-8 inline-flex items-center gap-3 bg-foreground px-7 py-3.5 text-[12px] font-medium uppercase tracking-[0.22em] text-background transition hover:bg-accent"
           >
-            Liên hệ BiBi Studio
+            Liên hệ {site.name}
           </Link>
         </div>
         <ContactLinks />

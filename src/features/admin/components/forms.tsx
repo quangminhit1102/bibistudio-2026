@@ -5,6 +5,7 @@ import { prepareAvatar } from "../accounts/profile-avatar";
 import { Button, Field } from "../shared/ui/primitives";
 import { Example } from "./example";
 import { componentCatalogue } from "./catalogue";
+import { site } from "@/platform/site";
 export function FormExample({ name }: { name: string }) {
   const id = useId();
   const [mode, setMode] = useState("default");
@@ -211,7 +212,7 @@ export function FormExample({ name }: { name: string }) {
     input = (
       <div className="a-actions">
         <span>https://</span>
-        <input {...props} placeholder="bibistudio.vn" />
+        <input {...props} placeholder={new URL(site.url).host} />
       </div>
     );
   else

@@ -5,6 +5,7 @@ import { Button, ActionMenu, type ButtonVariant } from "../shared/ui/primitives"
 import { Example } from "./example";
 import { copyText } from "./clipboard";
 import { componentCatalogue } from "./catalogue";
+import { site } from "@/platform/site";
 export function ActionExample({ name }: { name: string }) {
   const [pressed, setPressed] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -27,8 +28,8 @@ export function ActionExample({ name }: { name: string }) {
       <Button
         onClick={async () => {
           try {
-            await copyText("BiBi Studio");
-            setMessage("Đã sao chép BiBi Studio.");
+            await copyText(site.name);
+            setMessage(`Đã sao chép ${site.name}.`);
           } catch (e) {
             setMessage((e as Error).message);
           }

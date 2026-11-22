@@ -2,7 +2,8 @@
 // Floating contact bar for quick customer outreach.
 // Order: Phone -> Zalo -> Facebook -> Message (Messenger).
 import { Phone } from "lucide-react";
-import { contact } from "@/data/contact";
+import { telHref } from "@/lib/site-contact";
+import { site } from "@/platform/site";
 
 interface ContactItem {
   id: string;
@@ -35,39 +36,39 @@ function MessengerIcon({ className = "size-5" }: { className?: string }) {
   );
 }
 
-const contacts: ContactItem[] = [
-  {
-    id: "phone",
-    href: "tel:0392969000",
-    label: "Gọi ngay",
-    title: "Hotline: 0392 969 000",
-    bg: "bg-[#25d366] hover:bg-[#1ebe5a]",
-    icon: <Phone className="size-5" />,
-  },
-  {
-    id: "zalo",
-    href: "https://zalo.me/0392969000",
-    label: "Zalo",
-    title: "Chat Zalo: 0392 969 000",
+const phoneItem: ContactItem = {
+  id: "phone",
+  href: telHref(site),
+  label: "Gọi ngay",
+  title: `Hotline: ${site.contact.phoneDisplay}`,
+  bg: "bg-[#25d366] hover:bg-[#1ebe5a]",
+  icon: <Phone className="size-5" />,
+};
+
+const socialStyles: Record<string, Pick<ContactItem, "title" | "bg" | "icon">> = {
+  zalo: {
+    title: `Chat Zalo: ${site.contact.phoneDisplay}`,
     bg: "bg-[#0068ff] hover:bg-[#0056d6]",
     icon: <ZaloIcon className="size-5" />,
   },
-  {
-    id: "facebook",
-    href: contact.facebook,
-    label: "Facebook",
-    title: "Fanpage BiBi Studio",
+  facebook: {
+    title: `Fanpage ${site.name}`,
     bg: "bg-[#1877f2] hover:bg-[#1466d2]",
     icon: <FacebookIcon className="size-5" />,
   },
-  {
-    id: "messenger",
-    href: contact.messenger,
-    label: "Messenger",
+  messenger: {
     title: "Nhắn tin Messenger",
     bg: "bg-[#0084ff] hover:bg-[#0070d9]",
     icon: <MessengerIcon className="size-5" />,
   },
+};
+
+// Channels without a known icon are left out of the floating bar.
+const contacts: ContactItem[] = [
+  phoneItem,
+  ...site.contact.social.flatMap(({ id, label, href }) =>
+    socialStyles[id] ? [{ id, label, href, ...socialStyles[id] }] : [],
+  ),
 ];
 
 export function FloatingContact() {

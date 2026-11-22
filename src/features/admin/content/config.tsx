@@ -2,11 +2,12 @@ import { Link } from "@tanstack/react-router";
 import type { EntityConfig } from "../shared/entity-manager";
 import { Badge } from "../shared/ui/primitives";
 import { date } from "../shared/lib/text";
+import { site } from "@/platform/site";
 export const postConfig: EntityConfig<"posts"> = {
   entity: "posts",
   duplicate: true,
   title: "Bài viết",
-  description: "Nhật ký, ý tưởng và những câu chuyện từ BiBi — dữ liệu.",
+  description: `Nhật ký, ý tưởng và những câu chuyện từ ${site.shortName} — dữ liệu.`,
   createHref: "/admin/content/posts/create",
   editHref: (id) => `/admin/content/posts/${id}/edit`,
   detailHref: (id) => `/admin/content/posts/${id}`,

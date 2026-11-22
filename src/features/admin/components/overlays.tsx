@@ -5,6 +5,7 @@ import { Popover, HoverCard, AlertDialog } from "radix-ui";
 import { Button, Modal, ConfirmDialog, Tooltip, ActionMenu } from "../shared/ui/primitives";
 import { Example } from "./example";
 import { componentCatalogue } from "./catalogue";
+import { site } from "@/platform/site";
 export function OverlayExample({ name }: { name: string }) {
   const [open, setOpen] = useState(false);
   const [result, setResult] = useState("");
@@ -74,7 +75,7 @@ export function OverlayExample({ name }: { name: string }) {
         <HoverCard.Portal container={portal}>
           <HoverCard.Content className="a-popover" sideOffset={8}>
             <strong>Minh Nguyễn</strong>
-            <p>Biên tập catalogue · BiBi Studio</p>
+            <p>Biên tập catalogue · {site.name}</p>
             <span>Hồ sơ</span>
             <HoverCard.Arrow />
           </HoverCard.Content>

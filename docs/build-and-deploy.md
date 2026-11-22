@@ -46,6 +46,12 @@ FE mặc định `http://localhost:5173`; `/api` proxy tới BE `127.0.0.1:3001`
 
 `.env.example` mô tả tên cấu hình; env thật bị gitignore. Setup sinh `.env.local` cho runtime và `.env.migration.local` cho thao tác DB có chủ đích. Không chép key/env production vào source hoặc VITE_*. API local mới có auth/account/role/permission/audit/customer-access; các module kinh doanh/content/media vẫn lưu local. Chỉ `/api/health` đạt chưa đủ chứng minh đăng nhập/MySQL sẵn sàng.
 
+### Cấu hình site (`site/`)
+
+Mọi thứ riêng của thương hiệu nằm trong `site/`: `site.config.ts` (tên, domain, liên hệ, SEO, font, module admin), `theme.css` (màu và font) và `assets/` (logo). Phần lõi (`src/`) chỉ đọc qua `src/platform/site.ts`; `scripts/site-boundary.test.mjs` chạy trong `npm run check` và báo lỗi khi tên thương hiệu, domain, số điện thoại hay email của site xuất hiện lại trong các thư mục lõi đã tách.
+
+Build đọc site từ biến môi trường `SITE_DIR` (mặc định `site`), ví dụ `SITE_DIR=sites/khac npm run build:cpanel`. Thiếu `site.config.ts` thì build dừng và nêu đường dẫn bị thiếu. Trang chủ, giới thiệu, liên hệ, dữ liệu mẫu và `src/data` chưa tách; tên kỹ thuật nội bộ có `bibi` (biến môi trường, cookie, header, khóa lưu trữ) giữ nguyên.
+
 ## 2. CI và artifact
 
 [CI](../.github/workflows/ci.yml) chạy cho PR và push main/codex. PR không nhận deploy secrets. CI dùng Node24, `npm ci`, `npm run check`, `npm run build`. Chỉ successful main-push CI mới tạo artifact phát hành.

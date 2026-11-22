@@ -12,6 +12,7 @@ import type { ErrorComponentProps } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
+import { site } from "@/platform/site";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { FloatingContact } from "../components/floating-contact";
 import { isAdminPath } from "../lib/admin-boundary";
@@ -82,8 +83,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "BiBi Studio" },
-      { name: "author", content: "BiBi Studio" },
+      { title: site.name },
+      { name: "author", content: site.name },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -92,12 +93,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: appCss,
       },
-      { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      {
-        rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=Inter:wght@300;400;500;600&display=swap",
-      },
+      ...(site.preconnect ?? []).map(({ href, crossOrigin }) => ({
+        rel: "preconnect",
+        href,
+        ...(crossOrigin ? { crossOrigin: "anonymous" as const } : {}),
+      })),
+      ...site.fonts.map(({ href }) => ({ rel: "stylesheet", href })),
       { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
     ],
   }),
@@ -118,7 +119,7 @@ function RootShell({ children }: { children: ReactNode }) {
     );
   }
   return (
-    <html lang="vi">
+    <html lang={site.defaultLocale}>
       <head>
         <HeadContent />
       </head>

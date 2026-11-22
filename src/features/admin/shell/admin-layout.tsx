@@ -15,6 +15,7 @@ import { SidebarNavigation } from "./sidebar-navigation";
 import { HeaderNotifications } from "../notifications/header-menu";
 import { ErrorState } from "../shared/ui/primitives";
 import { Button, Modal, NoticeProvider, Skeleton } from "../shared/ui/primitives";
+import { site } from "@/platform/site";
 const GlobalSearch = lazy(() => import("./global-search"));
 export function AdminLayout() {
   const runtime = useAdmin();
@@ -108,9 +109,10 @@ export function AdminLayout() {
   const nav = (
     <>
       <Link to={home as "/admin"} className="a-wordmark">
-        <b>B</b>
+        <b>{site.admin.title.charAt(0)}</b>
         <span>
-          BiBi Admin<small>KHÔNG GIAN QUẢN TRỊ</small>
+          {site.admin.title}
+          <small>KHÔNG GIAN QUẢN TRỊ</small>
         </span>
       </Link>
       <SidebarNavigation
@@ -166,7 +168,7 @@ export function AdminLayout() {
                   <div className="a-breadcrumb">
                     <span>Quản trị</span>
                     <span>/</span>
-                    <strong>{active?.label ?? "BiBi Admin"}</strong>
+                    <strong>{active?.label ?? site.admin.title}</strong>
                   </div>
                   <div className="a-top-actions">
                     {canSearch && (
@@ -212,7 +214,7 @@ export function AdminLayout() {
                   )}
                 </main>
                 <footer className="a-app-footer">
-                  BiBi Studio <span>Quản trị nội dung</span>
+                  {site.name} <span>Quản trị nội dung</span>
                 </footer>
               </div>
               <Modal
