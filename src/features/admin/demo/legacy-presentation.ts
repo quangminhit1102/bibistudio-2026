@@ -1,5 +1,6 @@
 import baseline from "./legacy-presentation.json";
 import type { EntityKey } from "../services/contracts";
+import { site } from "@/platform/site";
 export function legacyPresentationBaseline(
   entity: EntityKey,
   id: string,
@@ -8,7 +9,7 @@ export function legacyPresentationBaseline(
     const i = Number(id.split("-")[1]) - 1;
     return {
       name: [
-        "Chào mừng đến BiBi Admin",
+        `Chào mừng đến ${site.admin.title}`,
         "Kiểm tra sản phẩm đang nháp",
         "Báo cáo demo đã sẵn sàng",
         "Cập nhật thông tin hồ sơ",
