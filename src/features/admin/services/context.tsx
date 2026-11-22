@@ -47,6 +47,7 @@ interface Runtime {
 }
 const RuntimeContext = createContext<Runtime | null>(null);
 const serverEntities: EntityKey[] = ["users", "roles", "audit", "visitors", "sessions", "posts", "products", "categories", "customers"];
+const contentEntities: EntityKey[] = ["posts", "products", "categories", "customers"];
 function announce() {
   try {
     localStorage.setItem(
@@ -178,8 +179,10 @@ export function AdminProvider({
   );
   const service = useCallback(
     <K extends EntityKey>(entity: K, resource?: Resource) => {
-      if (session?.kind === "http" && serverEntities.includes(entity))
+      if (session?.kind === "http" && contentEntities.includes(entity))
         return createHttpEntityService(auth.client!, entity, resource);
+      if (session?.kind === "http" && serverEntities.includes(entity))
+        throw new ServiceError("forbidden", "Dữ liệu này được quản lý qua API máy chủ");
       return createEntityService(
         store,
         entity,
