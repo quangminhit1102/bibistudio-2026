@@ -105,3 +105,35 @@ test("smoke warns, without failing, when a page lacks the static security header
     Object.keys(secure).map((name) => `::warning::Page is served without ${name}`),
   );
 });
+test("smoke warns, without failing, when the page's hashed script is not cached as immutable", async () => {
+  const request = (cacheControl) => async (url) => {
+    const path = new URL(url).pathname;
+    if (path === "/api/unknown") return Response.json({ error: "Not found" }, { status: 404 });
+    if (path.startsWith("/products/"))
+      return new Response('<html><script type="module" src="/assets/app-1a2b3c4d.js"></script>', {
+        headers: { "content-type": "text/html", ...secure },
+      });
+    if (path === "/assets/app-1a2b3c4d.js")
+      return new Response("js", {
+        headers: { "content-type": "text/javascript", "cache-control": cacheControl },
+      });
+    if (path.startsWith("/catalogue/"))
+      return new Response("image", { headers: { "content-type": "image/jpeg" } });
+    if (path === "/api/health") return Response.json({ ok: true });
+    return Response.json({ releaseId: "x", sourceSha: "y" });
+  };
+  const options = { baseUrl: "https://example.invalid", expectedRelease: "x", expectedSha: "y" };
+  const warnings = [];
+  const warn = (message) => warnings.push(message);
+  await smoke({
+    ...options,
+    warn,
+    request: request("public, max-age=31536000, immutable"),
+  });
+  assert.deepEqual(warnings, []);
+  // The host's default until the deploy tools on the server are updated.
+  await smoke({ ...options, warn, request: request("public, max-age=604800") });
+  assert.deepEqual(warnings, [
+    "::warning::/assets/app-1a2b3c4d.js is not cached as immutable (public, max-age=604800)",
+  ]);
+});

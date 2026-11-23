@@ -171,8 +171,17 @@ async function verify(config, m) {
   } while (Date.now() < deadline);
   throw last ?? new Error("Health check timed out");
 }
+// Everything in the shared assets directory has a content hash in its name, so a browser
+// never needs to ask for it again. The rules live beside the files, not in a release:
+// mergeAssets would treat a release's copy as an immutable asset and refuse later edits.
+const ASSET_RULES =
+  "<IfModule mod_headers.c>\n" +
+  '  Header set Cache-Control "public, max-age=31536000, immutable"\n' +
+  "</IfModule>\n";
 async function applyRouting(config, m) {
+  const assetRules = path.join(config.site, "assets", ".htaccess");
   if (m.isBaseline) {
+    await fs.rm(assetRules, { force: true });
     await atomicWrite(
       path.join(config.site, ".htaccess"),
       await fs.readFile(path.join(config.root, "baseline.htaccess")),
@@ -180,6 +189,8 @@ async function applyRouting(config, m) {
     );
     return;
   }
+  await fs.mkdir(path.dirname(assetRules), { recursive: true });
+  await atomicWrite(assetRules, ASSET_RULES, 0o644);
   const publicLink = path.join(config.site, "_bibi"),
     target = path.join(config.root, "current/frontend");
   try {

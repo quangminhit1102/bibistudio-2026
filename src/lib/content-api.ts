@@ -49,30 +49,57 @@ export interface PublicCollectionShape {
   tagline: string;
 }
 
-// Public content reads are best-effort and client-side only. When `fetch` is
-// unavailable (SSR build/runtime) or the request fails, we return `null` so the
-// route `head` falls back to the static title/excerpt — identical to current
-// behavior. The fetch must never throw and break the route.
-async function getJson<T>(path: string): Promise<T | null> {
+export type PublicPostSummary = Omit<PublicPostShape, "content">;
+
+export type PublicLookup<T> =
+  { status: "found"; value: T } | { status: "missing" } | { status: "unavailable" };
+
+const UNAVAILABLE = { status: "unavailable" } as const;
+
+// Public content reads are client-side only and never throw. `missing` means the API itself
+// answered 404 (the content was removed or unpublished); every other failure, including
+// `fetch` being absent during an SSR build, is `unavailable`, so callers may fall back to the
+// bundled copy. A 404 without a JSON body is the host's error page for a stopped backend.
+async function lookup<T>(path: string): Promise<PublicLookup<T>> {
   const fetchImpl = typeof globalThis.fetch === "function" ? globalThis.fetch : undefined;
-  if (!fetchImpl) return null;
+  if (!fetchImpl) return UNAVAILABLE;
   try {
-    const response = await fetchImpl(path, { cache: "no-store" });
-    if (!response.ok) return null;
-    return (await response.json()) as T;
+    const response = await fetchImpl(path);
+    if (response.ok) return { status: "found", value: (await response.json()) as T };
+    const fromApi =
+      response.status === 404 &&
+      (response.headers.get("content-type") ?? "").includes("application/json");
+    return fromApi ? { status: "missing" } : UNAVAILABLE;
   } catch {
-    return null;
+    return UNAVAILABLE;
   }
 }
 
-export const getPublicPost = (slug: string): Promise<PublicPostShape | null> =>
-  getJson<PublicPostShape>(`/api/public/posts/${encodeURIComponent(slug)}`);
+// Where a detail page takes its content from; `null` means "not found". Content the API
+// reports as missing stays missing: the bundled copy only covers an unavailable API.
+export function pickSource<T, B>(
+  api: PublicLookup<T>,
+  bundled: () => B | undefined,
+): { from: "api"; value: T } | { from: "bundle"; value: B } | null {
+  if (api.status === "found") return { from: "api", value: api.value };
+  if (api.status === "missing") return null;
+  const value = bundled();
+  return value === undefined ? null : { from: "bundle", value };
+}
 
-export const getPublicProduct = (slug: string): Promise<PublicProductShape | null> =>
-  getJson<PublicProductShape>(`/api/public/products/${encodeURIComponent(slug)}`);
+async function getJson<T>(path: string): Promise<T | null> {
+  const result = await lookup<T>(path);
+  return result.status === "found" ? result.value : null;
+}
 
-export const getPublicPosts = (): Promise<PublicPostShape[] | null> =>
-  getJson<PublicPostShape[]>("/api/public/posts");
+export const findPublicPost = (slug: string): Promise<PublicLookup<PublicPostShape>> =>
+  lookup<PublicPostShape>(`/api/public/posts/${encodeURIComponent(slug)}`);
+
+export const findPublicProduct = (slug: string): Promise<PublicLookup<PublicProductShape>> =>
+  lookup<PublicProductShape>(`/api/public/products/${encodeURIComponent(slug)}`);
+
+export const getPublicPosts = (): Promise<PublicPostSummary[] | null> =>
+  getJson<PublicPostSummary[]>("/api/public/posts");
 
 export const getPublicProducts = (): Promise<PublicProductShape[] | null> =>
   getJson<PublicProductShape[]>("/api/public/products");

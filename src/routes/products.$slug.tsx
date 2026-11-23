@@ -16,7 +16,7 @@ import {
   tx,
   type Product,
 } from "@/data/catalogue";
-import { getPublicProduct, getPublicProducts } from "@/lib/content-api";
+import { findPublicProduct, getPublicProducts, pickSource } from "@/lib/content-api";
 import { attributeRows } from "@/lib/catalogue-attributes";
 import { toPublicProduct } from "@/lib/content-adapter";
 import { resolveSeo } from "@/lib/content-seo";
@@ -41,20 +41,21 @@ export const Route = createFileRoute("/products/$slug")({
   loader: async ({ params }) => {
     const type = getProductTypeBySlug(params.slug);
     if (type) return { kind: "type" as const, typeId: type.id };
-    const apiProduct = await getPublicProduct(params.slug);
-    if (apiProduct) {
-      const product = toPublicProduct(apiProduct);
-      const list = await getPublicProducts();
-      const related = list
-        ? relatedFromList(product, list.map(toPublicProduct))
-        : relatedProducts(product, 8);
-      return { kind: "product" as const, product, related, seo: apiProduct };
-    }
-    const product = getProduct(params.slug);
-    if (product) {
-      return { kind: "product" as const, product, related: relatedProducts(product, 8), seo: null };
-    }
-    throw notFound();
+    const [api, list] = await Promise.all([findPublicProduct(params.slug), getPublicProducts()]);
+    const source = pickSource(api, () => getProduct(params.slug));
+    if (!source) throw notFound();
+    if (source.from === "bundle")
+      return {
+        kind: "product" as const,
+        product: source.value,
+        related: relatedProducts(source.value, 8),
+        seo: null,
+      };
+    const product = toPublicProduct(source.value);
+    const related = list
+      ? relatedFromList(product, list.map(toPublicProduct))
+      : relatedProducts(product, 8);
+    return { kind: "product" as const, product, related, seo: source.value };
   },
   head: ({ loaderData, params }) => {
     if (!loaderData)

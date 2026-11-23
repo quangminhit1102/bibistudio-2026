@@ -24,8 +24,12 @@ const nullable = (value: unknown): string | null => (value == null ? null : Stri
 // A published post is public only once its publish time has passed.
 const LIVE_POST = "p.status='published' AND (p.publish_at IS NULL OR p.publish_at <= ?)";
 
+// Lists are read whole by the public pages. The cap bounds what one anonymous request can
+// make the database and the response carry until the lists are paginated.
+export const PUBLIC_LIST_LIMIT = 500;
+
 export function createContentPublicService(pool: Pool, clock: Clock) {
-  const postShape = (row: RowDataPacket) => {
+  const postSummary = (row: RowDataPacket) => {
     const coverRef = row.cover_image_id ?? row.image_id;
     return {
       slug: String(row.slug),
@@ -36,11 +40,11 @@ export function createContentPublicService(pool: Pool, clock: Clock) {
       publish_at: nullable(row.publish_at),
       read_time: nullable(row.read_time),
       cover_url: coverRef == null ? null : resolveImage(String(coverRef)),
-      content: str(row.content),
       seo_title: str(row.seo_title),
       seo_description: str(row.seo_description),
     };
   };
+  const postShape = (row: RowDataPacket) => ({ ...postSummary(row), content: str(row.content) });
   const productShape = (row: RowDataPacket) => ({
     slug: String(row.slug),
     name: { vi: str(row.name), en: str(row.name_en) },
@@ -66,16 +70,17 @@ export function createContentPublicService(pool: Pool, clock: Clock) {
   return {
     async listPosts() {
       const [rows] = await pool.query<RowDataPacket[]>(
-        `SELECT p.id,p.slug,p.title,p.excerpt,p.content,p.seo_title,p.seo_description,p.publish_at,p.read_time,p.image_id,p.cover_image_id,
+        `SELECT p.id,p.slug,p.title,p.excerpt,p.seo_title,p.seo_description,p.publish_at,p.read_time,p.image_id,p.cover_image_id,
                 c.name AS category_name,u.display_name AS author_name
          FROM posts p
          LEFT JOIN content_categories c ON c.id=p.category_id
          LEFT JOIN users u ON u.id=p.author_id
          WHERE ${LIVE_POST}
-         ORDER BY p.publish_at DESC`,
-        [clock.now()],
+         ORDER BY p.publish_at DESC, p.slug
+         LIMIT ?`,
+        [clock.now(), PUBLIC_LIST_LIMIT],
       );
-      return rows.map(postShape);
+      return rows.map(postSummary);
     },
     async getPost(slug: string) {
       const [[row]] = await pool.query<RowDataPacket[]>(
@@ -93,7 +98,9 @@ export function createContentPublicService(pool: Pool, clock: Clock) {
       const [rows] = await pool.query<RowDataPacket[]>(
         `SELECT id,name,slug,short_description,description,product_type,collection,price,compare_at,image_ids,seo_title,seo_description,
                 name_en,short_description_en,description_en,dimensions,pages,material_vi,material_en,format_vi,format_en,occasion,featured,sort_order,image_alt_vi,image_alt_en
-         FROM products WHERE status='published' ORDER BY sort_order, name`,
+         FROM products WHERE status='published' ORDER BY sort_order, name, slug
+         LIMIT ?`,
+        [PUBLIC_LIST_LIMIT],
       );
       return rows.map(productShape);
     },
