@@ -109,7 +109,7 @@ function ProductsPage() {
     if (sort === "newest") return [...list].reverse();
     if (sort === "name")
       return [...list].sort((a, b) => tx(a.name).localeCompare(tx(b.name), "vi"));
-    const order = collections.map((c) => c.id);
+    const order: string[] = collections.map((c) => c.id);
     return [...list].sort((a, b) => order.indexOf(a.collection) - order.indexOf(b.collection));
   }, [products, type, col, q, sort]);
 

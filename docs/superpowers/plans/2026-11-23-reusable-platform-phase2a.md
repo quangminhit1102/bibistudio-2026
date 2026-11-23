@@ -117,7 +117,8 @@ Spec section 4 requires that the previous release keeps working on the new schem
 - `src/lib/content-adapter.ts`: delete `asType`, `asCollection`; pass `api.product_type` and `api.collection` through; `occasion` kept only when it is a declared option value.
 - `collections.$slug.tsx`: replace `c.id === "greeting-cards"` and `occasions` with `groupAttribute(c.slug)` and its options. `index.tsx`: occasion strip uses `selectOptions("occasion")`.
 - `products.$slug.tsx`: the spec table (lines 162-165) becomes `attributeRows(p)`.
-- `src/features/admin/products/config.tsx`: `occasionOptions` and the attribute form fields come from `catalogue.attributes` (`localized-text` → `<key>Vi`/`<key>En` fields with the existing label suffixes); field keys and labels stay identical for BiBi.
+- `src/features/admin/products/config.tsx`: `occasionOptions` comes from `selectOptions("occasion")`. The other attribute form fields stay as they are: the admin store and API still have fixed columns, so generating the form from the config waits for `products.attributes` in 2b.
+- `collections.$slug.tsx` also lists, under the usual "Sản phẩm trong bộ sưu tập" heading, products of a grouped collection that carry none of the declared options (empty for BiBi's data today).
 
 - [ ] **Step 1: Failing tests.** `catalogue-attributes.test.ts`: `groupAttribute("greeting-cards")?.key === "occasion"`; `groupAttribute("motivation") === undefined`; `attributeRows` on a product with `dimensions: "A5"`, `material: { vi: "Giấy", en: "Paper" }` and no pages returns `[["Kích thước","A5"],["Chất liệu","Giấy"]]`. Adapter test: API product with `product_type: "sticker"`, `collection: "summer"`, `occasion: "unknown-day"` maps to `productType "sticker"`, `collection "summer"`, `occasion undefined`; `tx(getProductType("sticker").name) === "sticker"`; `tx(getCollection("summer").name) === "summer"`.
 - [ ] **Step 2:** `node scripts/check.mjs admin` → fail.
@@ -125,12 +126,13 @@ Spec section 4 requires that the previous release keeps working on the new schem
 - [ ] **Step 4:** `node scripts/check.mjs admin` and `node scripts/check.mjs static` → pass.
 - [ ] **Step 5:** Commit `refactor(platform): product attributes and collection grouping come from site/catalogue.config`.
 
-### Task 4: Boundary guard, docs, visual parity, PR
+### Task 4: Docs, visual parity, PR
 
 **Files:**
-- Modify: `scripts/site-boundary.mjs` and its test (core must not contain the option values declared in the site catalogue's `groupBy` attributes, checked in the migrated folders plus `src/routes/collections.$slug.tsx`), `AGENTS.md` (one line: attributes and grouping live in `site/catalogue.config.ts`), `docs/build-and-deploy.md` (bootstrap is required before a release with a third content migration; list of `ops/` files to copy), spec section 7 (note the 2a/2b split).
+- Modify: `AGENTS.md` (one line: attributes and grouping live in `site/catalogue.config.ts`), `docs/build-and-deploy.md` (bootstrap is required before a release with a third content migration), spec section 7 (note the 2a/2b split).
 
-- [ ] **Step 1:** Failing boundary test: a core file containing `"womens-day-83"` is reported with file and line.
-- [ ] **Step 2:** Implement; `npm run check` and `npm run build` pass.
-- [ ] **Step 3:** Visual parity against `main`: home, `/collections/greeting-cards`, `/collections/explore-vietnam`, `/products/notebooks`, one product detail, at 390 and 1440 px wide; rendered text identical. Record the result in the PR.
-- [ ] **Step 4:** Commit, push, open the PR against `main`. Do not merge.
+No new boundary rule in this PR: the existing guard already forbids `@site/*` imports outside `src/platform/site.ts`. A rule against catalogue vocabulary in core would have to exempt the admin type and collection lists, which only leave core in 2b; it is added there.
+
+- [ ] **Step 1:** `npm run check` and `npm run build` pass.
+- [ ] **Step 2:** Visual parity against `main`: home, `/collections/greeting-cards`, `/collections/explore-vietnam`, `/products/notebooks`, one product detail, at 390 and 1440 px wide; rendered text identical. Record the result in the PR.
+- [ ] **Step 3:** Commit, push, open the PR against `main`. Do not merge.

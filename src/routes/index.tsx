@@ -18,7 +18,7 @@ import { FilmStrip, Parallax, ScrollExpand, SplitWords } from "@/components/bran
 import { buildOrganizationSchema } from "@/lib/seo";
 import heroImg from "@/assets/hero-desk.jpg";
 import { HeroSlides, type HeroSlide as Slide } from "@/components/brand/hero-slides";
-import { occasions } from "@/data/catalogue";
+import { selectOptions, text } from "@/lib/catalogue-attributes";
 import { getPublicProducts } from "@/lib/content-api";
 import { toPublicProduct } from "@/lib/content-adapter";
 
@@ -312,21 +312,21 @@ function Home() {
           </p>
         </Reveal>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {occasions.map((o, i) => {
-            const n = products.filter((p) => p.occasion === o.id).length;
+          {selectOptions("occasion").map((o, i) => {
+            const n = products.filter((p) => p.occasion === o.value).length;
             return (
-              <Reveal key={o.id} variant="paper" delay={(i % 4) * 80}>
+              <Reveal key={o.value} variant="paper" delay={(i % 4) * 80}>
                 <Link
                   to="/collections/$slug"
                   params={{ slug: "greeting-cards" }}
-                  hash={o.id}
+                  hash={o.value}
                   className={`group flex h-full min-h-32 flex-col justify-between border border-border p-4 transition duration-500 hover:-translate-y-1 hover:shadow-paper sm:p-5 ${n ? "bg-card" : "bg-transparent"}`}
                 >
                   <span className="font-display text-sm text-kraft">
                     {String(i + 1).padStart(2, "0")}
                   </span>
                   <span>
-                    <span className="block font-display text-2xl leading-tight">{tx(o.name)}</span>
+                    <span className="block font-display text-2xl leading-tight">{text(o.label)}</span>
                     <span className="mt-1 block text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
                       {n ? `${n} mẫu` : "Sắp ra mắt"}
                     </span>

@@ -16,6 +16,7 @@ import {
   type Product,
 } from "@/data/catalogue";
 import { getPublicProduct, getPublicProducts } from "@/lib/content-api";
+import { attributeRows } from "@/lib/catalogue-attributes";
 import { toPublicProduct } from "@/lib/content-adapter";
 import { resolveSeo } from "@/lib/content-seo";
 import { SITE_URL, buildBreadcrumbSchema } from "@/lib/seo";
@@ -158,12 +159,7 @@ function ProductDetail({ product, related }: { product: Product; related: Produc
   const p = product;
   const t = getProductType(p.productType);
   const c = getCollection(p.collection);
-  const details = [
-    ["Kích thước", p.dimensions],
-    ["Chất liệu", p.material && tx(p.material)],
-    ["Số trang", p.pages],
-    ["Định dạng", p.format && tx(p.format)],
-  ].filter(([, v]) => v) as [string, string][];
+  const details = attributeRows(p);
 
   return (
     <PageShell>

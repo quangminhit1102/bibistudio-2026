@@ -75,37 +75,15 @@ export type Collection = {
   image?: string;
 };
 
-// Occasions (dịp lễ) group greeting cards inside the "greeting-cards" collection.
-export type OccasionId =
-  | "womens-day-83"
-  | "birthday"
-  | "womens-day-2010"
-  | "teachers-day-2011"
-  | "christmas"
-  | "tet"
-  | "valentine"
-  | "thank-you";
-
-export type Occasion = { id: OccasionId; name: Localized; note: Localized };
-
-export const occasions: Occasion[] = [
-  { id: "womens-day-83", name: { vi: "8/3 — Quốc tế Phụ nữ", en: "Mar 8 — International Women's Day" }, note: { vi: "Những tấm thiệp hoa tươi sắc màu dành tặng mẹ, chị, bạn gái và đồng nghiệp.", en: "Bright floral cards for mothers, sisters, partners and colleagues." } },
-  { id: "birthday", name: { vi: "Sinh nhật", en: "Birthday" }, note: { vi: "Lời chúc tuổi mới gửi trong một tấm thiệp nhỏ.", en: "Birthday wishes folded into a little card." } },
-  { id: "womens-day-2010", name: { vi: "20/10 — Phụ nữ Việt Nam", en: "Oct 20 — Vietnamese Women's Day" }, note: { vi: "Ngày riêng của phụ nữ Việt, dịp để nói lời trân trọng.", en: "Vietnam's own day to honour the women around you." } },
-  { id: "teachers-day-2011", name: { vi: "20/11 — Nhà giáo Việt Nam", en: "Nov 20 — Vietnamese Teachers' Day" }, note: { vi: "Gửi thầy cô một lời cảm ơn viết tay.", en: "A handwritten thank-you for teachers." } },
-  { id: "christmas", name: { vi: "Giáng sinh", en: "Christmas" }, note: { vi: "Ấm áp cuối năm, thiệp xanh đỏ và những lời chúc mùa lễ.", en: "Warm year-end greetings for the festive season." } },
-  { id: "tet", name: { vi: "Lì xì Tết", en: "Tet & Lucky Money" }, note: { vi: "Bao lì xì và thiệp chúc Tết cho năm mới sum vầy.", en: "Lucky-money envelopes and New Year cards." } },
-  { id: "valentine", name: { vi: "Valentine 14/2", en: "Valentine's Day" }, note: { vi: "Cho những lời yêu khó nói thành lời.", en: "For feelings that are hard to say out loud." } },
-  { id: "thank-you", name: { vi: "Cảm ơn & chúc mừng", en: "Thank You & Congrats" }, note: { vi: "Khai trương, tốt nghiệp, năm mới — mọi dịp đáng mừng.", en: "Openings, graduations, new year — every happy occasion." } },
-];
-
 export type Product = {
   id: string;
   slug: string;
   name: Localized;
-  productType: ProductTypeId;
-  collection: CollectionId;
-  occasion?: OccasionId;
+  /** Product type id and collection id; a value outside the known lists is shown as is. */
+  productType: string;
+  collection: string;
+  /** Option value of the site's `occasion` attribute. */
+  occasion?: string;
   description: Localized;
   dimensions?: string;
   material?: Localized;
@@ -117,6 +95,9 @@ export type Product = {
   sortOrder: number;
   status: "published" | "draft";
 };
+
+/** A catalogue entry whose id may be outside the known list. */
+type AnyId<T extends { id: string }> = Omit<T, "id"> & { id: string };
 
 export const productTypes: ProductType[] = [
   { id: "notebook", slug: "notebooks", name: { vi: "Sổ tay", en: "Notebook" }, plural: { vi: "Sổ tay", en: "Notebooks" }, tagline: { vi: "Những khoảng giấy nhỏ cho suy nghĩ lớn.", en: "Small spaces for big thoughts." }, image: "/catalogue/collection-notebooks.webp" },
@@ -151,7 +132,7 @@ function p(
   descriptionEn: string,
   images: string[],
   featured = false,
-  occasion?: OccasionId,
+  occasion?: string,
 ): Product {
   order += 1;
   return {
@@ -256,15 +237,32 @@ export const tx = (l: Localized) => l.vi; // VI is the active language; EN conte
 
 const live = () => products.filter((x) => x.status === "published").sort((a, b) => a.sortOrder - b.sortOrder);
 
-export const getProductType = (id: ProductTypeId) => productTypes.find((t) => t.id === id)!;
+const own = (id: string): Localized => ({ vi: id, en: id });
+const none: Localized = { vi: "", en: "" };
+
+/** A type or collection outside the known list is labelled with its own id. */
+export const getProductType = (id: string): AnyId<ProductType> =>
+  productTypes.find((t) => t.id === id) ?? {
+    id,
+    slug: id,
+    name: own(id),
+    plural: own(id),
+    tagline: none,
+  };
 export const getProductTypeBySlug = (slug: string) => productTypes.find((t) => t.slug === slug);
-export const getCollection = (id: CollectionId) => collections.find((c) => c.id === id)!;
+export const getCollection = (id: string): AnyId<Collection> =>
+  collections.find((c) => c.id === id) ?? {
+    id,
+    slug: id,
+    name: own(id),
+    tagline: none,
+    intro: none,
+  };
 export const getCollectionBySlug = (slug: string) => collections.find((c) => c.slug === slug);
 export const getProduct = (slug: string) => live().find((x) => x.slug === slug);
 export const getAllProducts = live;
-export const productsByType = (id: ProductTypeId) => live().filter((x) => x.productType === id);
-export const productsByCollection = (id: CollectionId) => live().filter((x) => x.collection === id);
-export const productsByOccasion = (id: OccasionId) => live().filter((x) => x.occasion === id);
+export const productsByType = (id: string) => live().filter((x) => x.productType === id);
+export const productsByCollection = (id: string) => live().filter((x) => x.collection === id);
 export const relatedProducts = (prod: Product, n = 4) =>
   live().filter((x) => x.slug !== prod.slug && x.collection === prod.collection).concat(
     live().filter((x) => x.slug !== prod.slug && x.collection !== prod.collection && x.productType === prod.productType),

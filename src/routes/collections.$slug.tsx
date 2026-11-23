@@ -10,11 +10,10 @@ import {
   collections,
   getAllProducts,
   getCollectionBySlug,
-  occasions,
   tx,
-  type CollectionId,
   type Product,
 } from "@/data/catalogue";
+import { attributeValue, groupAttribute, text } from "@/lib/catalogue-attributes";
 import { getPublicProducts } from "@/lib/content-api";
 import { toPublicProduct } from "@/lib/content-adapter";
 import { site } from "@/platform/site";
@@ -77,7 +76,7 @@ export const Route = createFileRoute("/collections/$slug")({
 });
 
 function CollectionPage() {
-  const { id, products }: { id: CollectionId; products: Product[] } = Route.useLoaderData();
+  const { id, products }: { id: string; products: Product[] } = Route.useLoaderData();
   const c = collections.find((x) => x.id === id)!;
   const ch = chapters[c.slug] ?? {};
   const signature = c.id === "explore-vietnam";
@@ -85,10 +84,20 @@ function CollectionPage() {
   const next = collections[(idx + 1) % collections.length];
   const inCollection = (collectionId: string) =>
     products.filter((p) => p.collection === collectionId);
-  const byOccasion = (occasionId: string) => products.filter((p) => p.occasion === occasionId);
+  // A site may group one collection by a select attribute (e.g. cards by occasion).
+  const group = groupAttribute(c.slug);
+  const groups = group?.options ?? [];
+  const inGroup = (value: string) =>
+    group ? products.filter((p) => attributeValue(p, group.key) === value) : [];
   const count = inCollection(c.id).length;
-  const live = occasions.filter((o) => byOccasion(o.id).length > 0);
-  const soon = occasions.filter((o) => byOccasion(o.id).length === 0);
+  const live = groups.filter((o) => inGroup(o.value).length > 0);
+  const soon = groups.filter((o) => inGroup(o.value).length === 0);
+  // Products of this collection that carry none of the declared options still get listed.
+  const ungrouped = group
+    ? inCollection(c.id).filter(
+        (p) => !groups.some((o) => o.value === attributeValue(p, group.key)),
+      )
+    : [];
 
   return (
     <PageShell>
@@ -152,22 +161,22 @@ function CollectionPage() {
         </Reveal>
       )}
 
-      {c.id === "greeting-cards" ? (
+      {group ? (
         <section className="mx-auto max-w-[1280px] px-5 py-16 sm:px-6 lg:px-12">
           <nav
-            aria-label="Chọn dịp"
+            aria-label={`Chọn ${text(group?.label).toLowerCase()}`}
             className="sticky top-0 z-30 -mx-5 mb-12 border-y border-border bg-background/95 px-5 backdrop-blur sm:-mx-6 sm:px-6 lg:mx-0 lg:px-0"
           >
             <ul className="no-scrollbar flex gap-6 overflow-x-auto py-4">
-              {occasions.map((o) => {
-                const n = byOccasion(o.id).length;
+              {groups.map((o) => {
+                const n = inGroup(o.value).length;
                 return (
-                  <li key={o.id} className="shrink-0">
+                  <li key={o.value} className="shrink-0">
                     <a
-                      href={`#${o.id}`}
+                      href={`#${o.value}`}
                       className={`text-[13px] transition hover:text-foreground ${n ? "text-foreground" : "text-muted-foreground/70"}`}
                     >
-                      {tx(o.name)}
+                      {text(o.label)}
                       {n ? <sup className="ml-1 text-[10px] text-kraft">{n}</sup> : null}
                     </a>
                   </li>
@@ -177,16 +186,16 @@ function CollectionPage() {
           </nav>
           <div className="space-y-20">
             {live.map((o) => {
-              const items = byOccasion(o.id);
+              const items = inGroup(o.value);
               return (
-                <div key={o.id} id={o.id} className="scroll-mt-24">
+                <div key={o.value} id={o.value} className="scroll-mt-24">
                   <Reveal>
                     <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-                      <h2 className="font-display text-4xl md:text-5xl">{tx(o.name)}</h2>
+                      <h2 className="font-display text-4xl md:text-5xl">{text(o.label)}</h2>
                       <span className="eyebrow">{items.length} mẫu</span>
                     </div>
                     <p className="mt-2 max-w-lg text-[15px] leading-relaxed text-muted-foreground">
-                      {tx(o.note)}
+                      {text(o.note)}
                     </p>
                   </Reveal>
                   <div className="mt-8">
@@ -201,17 +210,25 @@ function CollectionPage() {
               <p className="eyebrow">Sắp ra mắt</p>
               <ul className="mt-5 flex flex-wrap gap-x-8 gap-y-4">
                 {soon.map((o) => (
-                  <li key={o.id} id={o.id} className="scroll-mt-24">
+                  <li key={o.value} id={o.value} className="scroll-mt-24">
                     <span
                       className="font-display text-2xl text-muted-foreground"
-                      title={tx(o.note)}
+                      title={text(o.note)}
                     >
-                      {tx(o.name)}
+                      {text(o.label)}
                     </span>
                   </li>
                 ))}
               </ul>
             </Reveal>
+          )}
+          {ungrouped.length > 0 && (
+            <div className="mt-20">
+              <h2 className="eyebrow mb-10 border-b border-border pb-6 text-foreground">
+                Sản phẩm trong bộ sưu tập
+              </h2>
+              <CatalogueGrid items={ungrouped} />
+            </div>
           )}
         </section>
       ) : (
