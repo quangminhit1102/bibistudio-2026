@@ -3,7 +3,7 @@ import type { EntityConfig } from "../shared/entity-manager";
 import { Badge } from "../shared/ui/primitives";
 import { MediaImage } from "../content/components/media-image";
 import { money } from "../shared/lib/text";
-import { occasions, tx } from "@/data/catalogue";
+import { selectOptions, text } from "@/lib/catalogue-attributes";
 export const statuses = [
   { value: "draft", label: "Nháp" },
   { value: "published", label: "Đang hiển thị" },
@@ -26,7 +26,10 @@ export const collectionOptions = [
   { value: "pressed-flower-cards", label: "Thiệp ép hoa khô" },
   { value: "spiral-cards", label: "Thiệp xoắn" },
 ];
-export const occasionOptions = occasions.map((o) => ({ value: o.id, label: tx(o.name) }));
+export const occasionOptions = selectOptions("occasion").map((o) => ({
+  value: o.value,
+  label: text(o.label) || o.value,
+}));
 export const productConfig: EntityConfig<"products"> = {
   entity: "products",
   title: "Sản phẩm",

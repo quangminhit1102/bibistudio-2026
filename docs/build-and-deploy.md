@@ -50,9 +50,9 @@ FE mặc định `http://localhost:5173`; `/api` proxy tới BE `127.0.0.1:3001`
 
 ### Cấu hình site (`site/`)
 
-Mọi thứ riêng của thương hiệu nằm trong `site/`: `site.config.ts` (tên, domain, liên hệ, SEO, font, module admin), `theme.css` (màu và font) và `assets/` (logo). Phần lõi (`src/`) chỉ đọc qua `src/platform/site.ts`; `scripts/site-boundary.test.mjs` chạy trong `npm run check` và báo lỗi khi tên thương hiệu, domain, số điện thoại hay email của site xuất hiện lại trong các thư mục lõi đã tách.
+Mọi thứ riêng của thương hiệu nằm trong `site/`: `site.config.ts` (tên, domain, liên hệ, SEO, font, module admin), `catalogue.config.ts` (thuộc tính sản phẩm và cách nhóm sản phẩm trong một bộ sưu tập), `theme.css` (màu và font) và `assets/` (logo). Phần lõi (`src/`) chỉ đọc qua `src/platform/site.ts`; `scripts/site-boundary.test.mjs` chạy trong `npm run check` và báo lỗi khi tên thương hiệu, domain, số điện thoại hay email của site xuất hiện lại trong các thư mục lõi đã tách.
 
-Build đọc site từ biến môi trường `SITE_DIR` (mặc định `site`), ví dụ `SITE_DIR=sites/khac npm run build:cpanel`. Thiếu `site.config.ts` thì build dừng và nêu đường dẫn bị thiếu. Trang chủ, giới thiệu, liên hệ, dữ liệu mẫu và `src/data` chưa tách; tên kỹ thuật nội bộ có `bibi` (biến môi trường, cookie, header, khóa lưu trữ) giữ nguyên.
+Build đọc site từ biến môi trường `SITE_DIR` (mặc định `site`), ví dụ `SITE_DIR=sites/khac npm run build:cpanel`. Thiếu `site.config.ts` hoặc `catalogue.config.ts` thì build dừng và nêu đường dẫn bị thiếu. Trang chủ, giới thiệu, liên hệ, dữ liệu mẫu và `src/data` chưa tách; tên kỹ thuật nội bộ có `bibi` (biến môi trường, cookie, header, khóa lưu trữ) giữ nguyên.
 
 ## 2. CI và artifact
 
@@ -142,6 +142,8 @@ Header bảo mật của trang tĩnh (HSTS, `nosniff`, `Referrer-Policy`, CSP �
 File có hash trong `/assets` được cache một năm kèm `immutable`: `ops/deploy.cjs` ghi `assets/.htaccess` ngay trong thư mục assets dùng chung mỗi lần activation/rollback và xóa file này khi quay về baseline. Quy tắc không nằm trong release vì bước gộp assets coi mọi file trong `frontend/assets` là bất biến và sẽ từ chối bản sửa sau này. Vì thuộc deploy tools, thay đổi chỉ có hiệu lực sau khi bootstrap lại; trước đó hosting vẫn trả `max-age=604800` mặc định và smoke in cảnh báo, không làm deploy thất bại. Mới kiểm trên Apache `httpd:2.4`, chưa kiểm trên LiteSpeed thật.
 
 API công khai `/api/public/*` trả `Cache-Control: public, max-age=60` cho phản hồi thành công; 404 và lỗi giữ `no-store`. Nội dung vừa sửa trong admin có thể hiện trễ tối đa một phút trên trình duyệt đã mở trang đó.
+
+Migration nội dung: backend và `ops/content-metadata.cjs` chấp nhận schema mới hơn bản đóng gói đúng một bước. Backend coi nội dung là sẵn sàng khi mọi phiên bản nó biết đều `complete` và các phiên bản mới hơn cũng `complete`; nhờ vậy release này là đích rollback hợp lệ sau khi phiên bản 3 chạy. Tools trên host chỉ nhận file thứ ba tên `003_content_catalogue.sql` sau khi bootstrap lại từ commit có thay đổi này. Release đầu tiên mang migration thứ ba vì thế cần hai điều kiện: release có thay đổi này đã lên production, và deploy tools đã bootstrap lại. Thiếu điều kiện thứ hai, receiver từ chối upload với `Invalid content metadata`, production không đổi.
 
 Tạo/cấp quyền key mới, mở rộng truy cập hoặc chuyển production lần đầu cần xác nhận phù hợp. Không đọc/in private key để điều tra một job lỗi.
 

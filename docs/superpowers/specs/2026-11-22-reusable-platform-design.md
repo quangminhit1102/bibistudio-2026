@@ -129,6 +129,8 @@ Mỗi giai đoạn là một PR độc lập, merge xong site BiBi vẫn chạy.
 - Thêm test ranh giới (mục 8) ở chế độ chỉ kiểm các file đã chuyển.
 
 ### Giai đoạn 2: danh mục và thuộc tính sản phẩm từ dữ liệu
+> Cập nhật 2026-11-23: giai đoạn này tách thành hai PR. Bản đang chạy và deploy tools trên host chỉ chấp nhận đúng hai phiên bản migration nội dung, nên migration phiên bản 3 không thể lên và rollback trong một release. PR 2a (`docs/superpowers/plans/2026-11-23-reusable-platform-phase2a.md`) không đổi DB: cho backend và deploy tools chấp nhận schema mới hơn một bước, thêm `site/catalogue.config.ts`, bỏ `asType`/`asCollection` và nhánh `greeting-cards`. PR 2b làm phần còn lại bên dưới, sau khi 2a đã lên production và deploy tools đã bootstrap lại.
+
 - Bộ sưu tập đã có sẵn trong DB: bảng `product_categories` trên production chứa đúng 7 bộ sưu tập (nạp từ seed), có trang quản lý trong admin và `GET /api/public/collections`. Dùng lại bảng này, không tạo bảng danh mục chung mới.
 - Migration nội dung phiên bản 3:
   - Bảng `product_types`, cùng cấu trúc với `product_categories` (không có `parent_id`).

@@ -71,3 +71,16 @@ test("loadSiteConfig names the missing file", async () => {
     return true;
   });
 });
+
+test("loadSiteConfig names a missing catalogue config", async (t) => {
+  const { mkdtemp, rm, writeFile } = await import("node:fs/promises");
+  const { tmpdir } = await import("node:os");
+  const { join } = await import("node:path");
+  const dir = await mkdtemp(join(tmpdir(), "site-html-"));
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  await writeFile(join(dir, "site.config.ts"), "export default {};\n");
+  await assert.rejects(
+    loadSiteConfig(dir),
+    /Site catalogue config not found: .*catalogue\.config\.ts/,
+  );
+});

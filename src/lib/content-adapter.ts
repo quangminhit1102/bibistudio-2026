@@ -1,29 +1,16 @@
 import type { PublicPostSummary, PublicProductShape } from "./content-api";
 import { getBlogPost, type ContentBlock } from "@/data/blog";
-import { collections, getProduct, occasions, productTypes } from "@/data/catalogue";
-import type { CollectionId, OccasionId, Product, ProductTypeId } from "@/data/catalogue";
+import { getProduct } from "@/data/catalogue";
+import type { Product } from "@/data/catalogue";
+import { selectOptions } from "./catalogue-attributes";
 import { site } from "@/platform/site";
 
 // Map the public API content shapes to the shapes the existing public components
-// already render. The static `collections` / `productTypes` / `occasions` vocab is a
-// fixed closed set used for nav/labels/occasion groups; only the dynamic products/posts
-// come from the API. Unknown vocab ids fall back to a safe default rather than crashing
-// `getProductType`/`getCollection` (which assume a match).
+// already render. Product type and collection pass through as stored: a value outside
+// the known lists is labelled with its own slug, never relabelled as another type.
 
-const typeIds = new Set<string>(productTypes.map((t) => t.id));
-const collectionIds = new Set<string>(collections.map((c) => c.id));
-const occasionIds = new Set<string>(occasions.map((o) => o.id));
-
-function asType(value: string): ProductTypeId {
-  return typeIds.has(value) ? (value as ProductTypeId) : "notebook";
-}
-
-function asCollection(value: string): CollectionId {
-  return collectionIds.has(value) ? (value as CollectionId) : "explore-vietnam";
-}
-
-function asOccasion(value: string | null): OccasionId | undefined {
-  return value && occasionIds.has(value) ? (value as OccasionId) : undefined;
+function asOccasion(value: string | null): string | undefined {
+  return value && selectOptions("occasion").some((o) => o.value === value) ? value : undefined;
 }
 
 function localized(value: { vi: string; en: string }, fallbackVi = ""): { vi: string; en: string } {
@@ -38,8 +25,8 @@ export function toPublicProduct(api: PublicProductShape): Product {
     id: api.slug,
     slug: api.slug,
     name: localized(api.name),
-    productType: asType(api.product_type),
-    collection: asCollection(api.collection),
+    productType: api.product_type,
+    collection: api.collection,
     occasion: asOccasion(api.occasion),
     description: localized(api.description, api.short_description ?? undefined),
     dimensions: api.dimensions ?? undefined,

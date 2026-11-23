@@ -148,21 +148,29 @@ export async function contentSchemaStatus(
     const untracked = (await Promise.all(allTables.map((t) => fingerprint(pool, t)))).some(Boolean);
     return { version: 8, state: untracked ? "dirty" : "empty", migrationChecksums };
   }
+  const newest = list[list.length - 1].version;
+  const newer = rows.filter((r) => r.version > newest);
   for (const row of rows) {
+    if (newer.includes(row)) continue;
     const asset = list.find((a) => a.version === row.version);
     if (!asset) return { version: 8, state: "incompatible", migrationChecksums };
     if (asset.checksum !== row.checksum)
       return { version: 8, state: "incompatible", migrationChecksums };
   }
-  for (const row of rows) {
-    if (row.state !== "complete") continue;
-    const asset = list.find((a) => a.version === row.version)!;
-    try {
-      await verify(pool, row, asset);
-    } catch {
-      return { version: 8, state: "dirty", migrationChecksums };
+  if (newer.some((r) => r.state !== "complete"))
+    return { version: 8, state: "incompatible", migrationChecksums };
+  // A newer complete migration owns the table definitions; only additive changes are
+  // allowed there, so the packaged release trusts the ledger instead of its own DDL hashes.
+  if (!newer.length)
+    for (const row of rows) {
+      if (row.state !== "complete") continue;
+      const asset = list.find((a) => a.version === row.version)!;
+      try {
+        await verify(pool, row, asset);
+      } catch {
+        return { version: 8, state: "dirty", migrationChecksums };
+      }
     }
-  }
   const complete = list.every((asset) => {
     const row = rows.find((r) => r.version === asset.version);
     return row && row.state === "complete" && row.completed_steps === asset.steps.length;
@@ -175,10 +183,13 @@ export async function assertContentReady(connection: Connection): Promise<void> 
     const [rows] = await connection.query<RowDataPacket[]>(
       "SELECT version,state,completed_steps FROM content_schema_migrations ORDER BY version",
     );
+    const newest = Math.max(...versionStepCounts.keys());
+    const known = rows.filter((r) => versionStepCounts.has(r.version));
     if (
-      rows.length === versionStepCounts.size &&
+      known.length === versionStepCounts.size &&
+      known.every((r) => r.completed_steps === versionStepCounts.get(r.version)) &&
       rows.every(
-        (r) => r.state === "complete" && r.completed_steps === versionStepCounts.get(r.version),
+        (r) => r.state === "complete" && (versionStepCounts.has(r.version) || r.version > newest),
       )
     )
       return;
