@@ -15,6 +15,9 @@ import { migrateVisitorContext } from "../../backend/dist/visitors/context-schem
 import { prepareCountryDataset } from "../../scripts/prepare-geoip.mjs";
 import { startLocalAnalyticsRelay } from "../../scripts/local-analytics-relay.mjs";
 
+// The tracker's batch interval (`schedule()` in src/lib/visitor-tracker.ts).
+const BATCH_MS = 15000;
+
 test(
   "browser to real PHP to Express/MySQL: identity, snapshots, privacy, replay and bounded fallback",
   { timeout: 240000 },
@@ -135,8 +138,20 @@ test(
         viewport: { width: 1440, height: 1000 },
         reducedMotion: "reduce",
       });
+      // The tracker arms its batch timer only after the dynamically imported
+      // runtime and all of its module dependencies have loaded. Record that
+      // moment so the test never advances a clock the tracker is not on yet.
+      const watchBatchTimer = (p) =>
+        p.addInitScript((batchMs) => {
+          const schedule = window.setTimeout;
+          window.setTimeout = function (handler, delay, ...rest) {
+            if (delay === batchMs) window.__batchTimerArmed = true;
+            return schedule.call(window, handler, delay, ...rest);
+          };
+        }, BATCH_MS);
       const page = await context.newPage();
       await page.clock.install({ time: Date.now() });
+      await watchBatchTimer(page);
       console.log("relay-e2e: clock installed");
       page.setDefaultTimeout(20000);
       page.setDefaultNavigationTimeout(90000);
@@ -147,7 +162,7 @@ test(
       page.on("pageerror", (e) => errors.push(e.message));
       const evidence = resolve(".superpowers/e2e/visitor-relay");
       await mkdir(evidence, { recursive: true });
-      async function go(p, path) {
+      async function go(p, path, { armed = !path.startsWith("/admin") } = {}) {
         console.log("relay-e2e: navigating " + path);
         await p.clock.resume();
         // The Vite development server holds a live HMR connection, so
@@ -164,11 +179,14 @@ test(
         await p.goto(base + path, { waitUntil: "domcontentloaded", timeout: 90000 });
         if (trackingReady) {
           await trackingReady;
-          // The dynamic module response precedes React's effect that creates
-          // the tracker. Let that effect commit before freezing the test clock.
-          await p.evaluate(
-            () => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))),
-          );
+          // The runtime module response precedes its own imports and React's
+          // effect that creates the tracker. Wait for the tracker itself before
+          // freezing the test clock; a page with a privacy signal never arms it.
+          if (armed) await p.waitForFunction(() => window.__batchTimerArmed === true);
+          else
+            await p.evaluate(
+              () => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))),
+            );
         }
         console.log("relay-e2e: loaded " + path);
         if (!path.startsWith("/admin"))
@@ -186,7 +204,7 @@ test(
         f.clock.set(new Date());
         const response = p.waitForResponse(predicate, { timeout: 20000 });
         console.log("relay-e2e: advancing batch timer");
-        await p.clock.fastForward(15050);
+        await p.clock.fastForward(BATCH_MS + 50);
         const result = await response;
         console.log("relay-e2e: batch HTTP " + result.status());
         await result.finished();
@@ -367,7 +385,7 @@ test(
         privatePage.on("request", (r) => {
           if (new URL(r.url()).pathname === "/api/analytics/relay/collect.php") sent++;
         });
-        await go(privatePage, "/products/da-lat-map-notebook");
+        await go(privatePage, "/products/da-lat-map-notebook", { armed: false });
         await privatePage.clock.fastForward(60000);
         await privatePage.waitForTimeout(100);
         assert.equal(sent, 0);
@@ -377,6 +395,7 @@ test(
       const fallbackContext = await makeContext();
       const fallbackPage = await fallbackContext.newPage();
       await fallbackPage.clock.install({ time: Date.now() });
+      await watchBatchTimer(fallbackPage);
       await go(fallbackPage, "/products/da-lat-map-notebook");
       assert.equal(
         (
