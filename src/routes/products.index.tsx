@@ -11,8 +11,7 @@ import { toPublicProduct } from "@/lib/content-adapter";
 import { site } from "@/platform/site";
 
 const title = `Sản phẩm${site.seo.titleSuffix}`;
-const description =
-  `Danh mục sản phẩm ${site.name}: sổ tay, thiệp, postcard, bao thư, giấy viết thư và magnet.`;
+const description = `Danh mục sản phẩm ${site.name}: sổ tay, thiệp, postcard, bao thư, giấy viết thư và magnet.`;
 const PAGE = 12;
 
 export const Route = createFileRoute("/products/")({
@@ -61,11 +60,14 @@ function Pill({
   );
 }
 
+// The "everything" choice of a filter; no type code or collection slug is empty.
+const ALL = "";
+
 function ProductsPage() {
   const { products }: { products: Product[] } = Route.useLoaderData();
   const { productTypes, collections } = useTaxonomy();
-  const [type, setType] = useState("all");
-  const [col, setCol] = useState("all");
+  const [type, setType] = useState(ALL);
+  const [col, setCol] = useState(ALL);
   const [q, setQ] = useState("");
   const [sort, setSort] = useState<Sort>("newest");
   const [sheet, setSheet] = useState(false);
@@ -96,8 +98,8 @@ function ProductsPage() {
     const all = products;
     const list = all.filter(
       (p) =>
-        (type === "all" || p.productType === type) &&
-        (col === "all" || p.collection === col) &&
+        (type === ALL || p.productType === type) &&
+        (col === ALL || p.collection === col) &&
         (!q || `${p.name.vi} ${p.name.en}`.toLowerCase().includes(q.toLowerCase())),
     );
     if (sort === "newest") return [...list].reverse();
@@ -118,10 +120,10 @@ function ProductsPage() {
     return () => io.disconnect();
   }, [items.length, limit]);
 
-  const activeCount = (type !== "all" ? 1 : 0) + (col !== "all" ? 1 : 0) + (q ? 1 : 0);
+  const activeCount = (type !== ALL ? 1 : 0) + (col !== ALL ? 1 : 0) + (q ? 1 : 0);
   const clear = () => {
-    setType("all");
-    setCol("all");
+    setType(ALL);
+    setCol(ALL);
     setQ("");
   };
 
@@ -129,7 +131,7 @@ function ProductsPage() {
     <div className="space-y-5">
       <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
         <span className="eyebrow w-full pb-1 sm:w-28">Loại</span>
-        <Pill active={type === "all"} onClick={() => setType("all")}>
+        <Pill active={type === ALL} onClick={() => setType(ALL)}>
           Tất cả
         </Pill>
         {productTypes.map((t) => (
@@ -140,7 +142,7 @@ function ProductsPage() {
       </div>
       <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
         <span className="eyebrow w-full pb-1 sm:w-28">Bộ sưu tập</span>
-        <Pill active={col === "all"} onClick={() => setCol("all")}>
+        <Pill active={col === ALL} onClick={() => setCol(ALL)}>
           Tất cả
         </Pill>
         {collections.map((c) => (
