@@ -84,3 +84,24 @@ test("loadSiteConfig names a missing catalogue config", async (t) => {
     /Site catalogue config not found: .*catalogue\.config\.ts/,
   );
 });
+
+test("loadSiteConfig names the first missing page or messages file", async (t) => {
+  const { mkdir, mkdtemp, rm, writeFile } = await import("node:fs/promises");
+  const { tmpdir } = await import("node:os");
+  const { join } = await import("node:path");
+  const dir = await mkdtemp(join(tmpdir(), "site-html-"));
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  await writeFile(join(dir, "site.config.ts"), "export default { name: 'X' };\n");
+  await writeFile(join(dir, "catalogue.config.ts"), "export default {};\n");
+  await assert.rejects(loadSiteConfig(dir), /Site file not found: .*messages[\\/]vi\.ts/);
+
+  await mkdir(join(dir, "messages"));
+  await writeFile(join(dir, "messages/vi.ts"), "export default {};\n");
+  await mkdir(join(dir, "pages"));
+  await writeFile(join(dir, "pages/home.tsx"), "export default () => null;\n");
+  await writeFile(join(dir, "pages/about.tsx"), "export default () => null;\n");
+  await assert.rejects(loadSiteConfig(dir), /Site file not found: .*pages[\\/]contact\.tsx/);
+
+  await writeFile(join(dir, "pages/contact.tsx"), "export default () => null;\n");
+  assert.equal((await loadSiteConfig(dir)).name, "X");
+});

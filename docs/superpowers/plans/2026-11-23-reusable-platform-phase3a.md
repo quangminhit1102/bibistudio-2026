@@ -23,14 +23,14 @@ the public interface by editing `site/` only.
 ## Design
 
 1. **Site pages.** `site/pages/home.tsx`, `site/pages/about.tsx`, `site/pages/contact.tsx`
-   hold the page bodies and their `title` / `description`. `site/pages/index.ts` exports
-   `pages = { home, about, contact }`, each `{ title, description, Page }`.
-   `src/platform/site.ts` re-exports `pages` (it stays the only core module that imports
-   `@site/*`). The routes `src/routes/index.tsx`, `about.tsx`, `contact.tsx` keep the loader
-   and the head, and render `pages.<name>.Page`. Site pages may import core components
-   (`@/components/*`, `@/lib/*`); core never imports a site page except through the platform.
-   Images used only by these pages (`src/assets/hero-desk.jpg`, `src/assets/about/*`) move to
-   `site/assets/`.
+   hold the page bodies. Each reaches its route through one module of `src/platform/pages/`
+   (`home.ts`, `about.ts`, `contact.ts`), so a page loads with its own route only; importing
+   the pages from `src/platform/site.ts` would put all three in the chunk every route loads.
+   The routes `src/routes/index.tsx`, `about.tsx`, `contact.tsx` keep the loader and the head
+   (title and description are message keys) and render the site page. Site pages may import
+   core components (`@/components/*`, `@/lib/*`); core never imports a site page except
+   through `src/platform/pages/`. Images used only by these pages (`src/assets/hero-desk.jpg`,
+   `src/assets/about/*`) move to `site/assets/`.
 2. **Interface texts.** `site/messages/vi.ts` exports one flat object of texts. Its type
    `Messages` lives in `src/platform/site-contract.ts`, so a site that misses a key fails
    type checking. `src/lib/messages.ts` exports `t(key, values?)`, which fills `{name}`

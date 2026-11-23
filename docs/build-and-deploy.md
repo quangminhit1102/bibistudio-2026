@@ -50,9 +50,9 @@ FE mặc định `http://localhost:5173`; `/api` proxy tới BE `127.0.0.1:3001`
 
 ### Cấu hình site (`site/`)
 
-Mọi thứ riêng của thương hiệu nằm trong `site/`: `site.config.ts` (tên, domain, liên hệ, SEO, font, module admin), `catalogue.config.ts` (thuộc tính sản phẩm và cách nhóm sản phẩm trong một bộ sưu tập), `theme.css` (màu và font) và `assets/` (logo). Phần lõi (`src/`) chỉ đọc qua `src/platform/site.ts`; `scripts/site-boundary.test.mjs` chạy trong `npm run check` và báo lỗi khi tên thương hiệu, domain, số điện thoại hay email của site xuất hiện lại trong các thư mục lõi đã tách.
+Mọi thứ riêng của thương hiệu nằm trong `site/`: `site.config.ts` (tên, domain, liên hệ, SEO, font, module admin), `catalogue.config.ts` (thuộc tính sản phẩm và cách nhóm sản phẩm trong một bộ sưu tập), `theme.css` (màu và font), `messages/vi.ts` (mọi chữ của giao diện công khai), `pages/` (thân trang chủ, giới thiệu, liên hệ) và `assets/` (logo, ảnh của ba trang đó). Phần lõi (`src/`) chỉ đọc qua `src/platform/site.ts` và `src/platform/pages/`; chữ giao diện lấy bằng `t()` trong `src/lib/messages.ts`; `scripts/site-boundary.test.mjs` chạy trong `npm run check` và báo lỗi khi tên thương hiệu, domain, số điện thoại hay email của site xuất hiện lại trong các thư mục lõi đã tách.
 
-Build đọc site từ biến môi trường `SITE_DIR` (mặc định `site`), ví dụ `SITE_DIR=sites/khac npm run build:cpanel`. Thiếu `site.config.ts` hoặc `catalogue.config.ts` thì build dừng và nêu đường dẫn bị thiếu. Trang chủ, giới thiệu, liên hệ, dữ liệu mẫu và `src/data` chưa tách; tên kỹ thuật nội bộ có `bibi` (biến môi trường, cookie, header, khóa lưu trữ) giữ nguyên.
+Build đọc site từ biến môi trường `SITE_DIR` (mặc định `site`), ví dụ `SITE_DIR=sites/khac npm run build:cpanel`. Thiếu `site.config.ts`, `catalogue.config.ts`, `messages/vi.ts` hoặc một trong ba file `pages/home.tsx`, `pages/about.tsx`, `pages/contact.tsx` thì build dừng và nêu đường dẫn bị thiếu; `messages/vi.ts` thiếu một khóa thì kiểm tra kiểu báo lỗi. Dữ liệu mẫu, ảnh sản phẩm và `src/data` chưa tách; tên kỹ thuật nội bộ có `bibi` (biến môi trường, cookie, header, khóa lưu trữ) giữ nguyên.
 
 ## 2. CI và artifact
 
