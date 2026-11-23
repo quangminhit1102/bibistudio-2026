@@ -1,5 +1,6 @@
 import type { Pool, RowDataPacket } from "mysql2/promise";
 import type { Clock } from "../config";
+import { mergeAttributes } from "./legacy-attributes";
 
 const imageIds = (value: unknown): string[] => {
   if (value == null) return [];
@@ -17,6 +18,21 @@ const imageIds = (value: unknown): string[] => {
 
 const resolveImage = (value: string): string =>
   value.startsWith("/") || value.startsWith("http") ? value : `/api/media/${value}`;
+
+// `{ "<locale>": { name, plural?, tagline?, intro? } }`; a row without any reads as `{}`.
+const translations = (value: unknown): Record<string, Record<string, string>> => {
+  let parsed = value;
+  if (typeof parsed === "string") {
+    try {
+      parsed = JSON.parse(parsed);
+    } catch {
+      return {};
+    }
+  }
+  return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+    ? (parsed as Record<string, Record<string, string>>)
+    : {};
+};
 
 const str = (value: unknown): string => (value == null ? "" : String(value));
 const nullable = (value: unknown): string | null => (value == null ? null : String(value));
@@ -65,6 +81,15 @@ export function createContentPublicService(pool: Pool, clock: Clock) {
     sort_order: Number(row.sort_order),
     seo_title: str(row.seo_title),
     seo_description: str(row.seo_description),
+    // Every attribute by the site's key; the fields above stay for older pages.
+    attributes: mergeAttributes(row.attributes, row),
+  });
+  const taxonomyShape = (row: RowDataPacket) => ({
+    slug: String(row.slug),
+    name: String(row.name),
+    tagline: nullable(row.description) ?? "",
+    translations: translations(row.translations),
+    image: row.image == null || row.image === "" ? null : resolveImage(String(row.image)),
   });
 
   return {
@@ -97,7 +122,7 @@ export function createContentPublicService(pool: Pool, clock: Clock) {
     async listProducts() {
       const [rows] = await pool.query<RowDataPacket[]>(
         `SELECT id,name,slug,short_description,description,product_type,collection,price,compare_at,image_ids,seo_title,seo_description,
-                name_en,short_description_en,description_en,dimensions,pages,material_vi,material_en,format_vi,format_en,occasion,featured,sort_order,image_alt_vi,image_alt_en
+                name_en,short_description_en,description_en,dimensions,pages,material_vi,material_en,format_vi,format_en,occasion,featured,sort_order,image_alt_vi,image_alt_en,attributes
          FROM products WHERE status='published' ORDER BY sort_order, name, slug
          LIMIT ?`,
         [PUBLIC_LIST_LIMIT],
@@ -107,7 +132,7 @@ export function createContentPublicService(pool: Pool, clock: Clock) {
     async getProduct(slug: string) {
       const [[row]] = await pool.query<RowDataPacket[]>(
         `SELECT id,name,slug,short_description,description,product_type,collection,price,compare_at,image_ids,seo_title,seo_description,
-                name_en,short_description_en,description_en,dimensions,pages,material_vi,material_en,format_vi,format_en,occasion,featured,sort_order,image_alt_vi,image_alt_en
+                name_en,short_description_en,description_en,dimensions,pages,material_vi,material_en,format_vi,format_en,occasion,featured,sort_order,image_alt_vi,image_alt_en,attributes
          FROM products WHERE slug=? AND status='published'`,
         [slug],
       );
@@ -122,13 +147,16 @@ export function createContentPublicService(pool: Pool, clock: Clock) {
     },
     async listCollections() {
       const [rows] = await pool.query<RowDataPacket[]>(
-        "SELECT name,slug,description FROM product_categories ORDER BY position",
+        "SELECT name,slug,description,translations,image FROM product_categories WHERE active=1 ORDER BY position, name",
       );
-      return rows.map((row) => ({
-        slug: String(row.slug),
-        name: String(row.name),
-        tagline: nullable(row.description) ?? "",
-      }));
+      return rows.map(taxonomyShape);
+    },
+    /** `code` is what a product's `product_type` holds; `slug` is the URL segment. */
+    async listProductTypes() {
+      const [rows] = await pool.query<RowDataPacket[]>(
+        "SELECT code,name,slug,description,translations,image FROM product_types WHERE active=1 ORDER BY position, name",
+      );
+      return rows.map((row) => ({ code: String(row.code), ...taxonomyShape(row) }));
     },
   };
 }

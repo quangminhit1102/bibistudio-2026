@@ -29,5 +29,6 @@ export function contentPublicRoutes(pool: Pool, clock: Clock): Router {
     cached(res, await svc.listCategories(String(req.query.scope ?? "product"))),
   );
   r.get("/collections", async (_req, res) => cached(res, await svc.listCollections()));
+  r.get("/product-types", async (_req, res) => cached(res, await svc.listProductTypes()));
   return r;
 }
