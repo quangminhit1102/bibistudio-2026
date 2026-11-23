@@ -61,7 +61,8 @@ test("buildContentSeed converts ContentBlock[] to HTML and maps categories/produ
   assert.equal(result.posts[0].status, "published");
   assert.equal(result.posts[0].publishAt, "2026-08-25");
   assert.equal(result.posts[0].readTime, "5 phút đọc");
-  assert.equal(result.posts[0].coverImageId, "/journal/test.jpg");
+  assert.equal(result.posts[0].imageId, "/journal/test.jpg");
+  assert.equal(result.posts[0].coverImageId, null);
   assert.ok(result.posts[0].content.includes("<p>Xin &lt;chào&gt;</p>"));
   assert.ok(result.posts[0].content.includes("<h2>Phần 1</h2>"));
   assert.ok(result.posts[0].content.includes("<blockquote>Trích dẫn</blockquote>"));
@@ -178,12 +179,12 @@ test("current static content generates 10 posts and the full product catalogue",
   );
   assert.ok(
     result.posts.every(
-      (post) => typeof post.coverImageId === "string" && post.coverImageId.startsWith("/journal/"),
+      (post) => post.imageId.startsWith("/journal/") && post.coverImageId === null,
     ),
   );
   // Every image is a public file of the repository, so a fresh database shows all of them.
   const files = [
-    ...result.posts.map((post) => post.coverImageId),
+    ...result.posts.map((post) => post.imageId),
     ...result.products.flatMap((product) => product.imageIds),
   ];
   assert.equal(files.length, 87);

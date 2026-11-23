@@ -152,19 +152,25 @@ function journalImages(source) {
   return constants;
 }
 
+// `posts.image_id` is VARCHAR(64).
+function storedCover(path) {
+  if (path.length > 64) throw new Error(`Cover image path is longer than 64 characters: ${path}`);
+  return path;
+}
+
 function coverImageUrl(node, constants) {
   let value = property(node, "coverImage");
   if (!value) return null;
   if (ts.isIdentifier(value)) value = constants.get(value.text);
   if (value && (ts.isStringLiteral(value) || ts.isNoSubstitutionTemplateLiteral(value)))
-    return value.text;
+    return storedCover(value.text);
   if (
     value &&
     ts.isCallExpression(value) &&
     ts.isIdentifier(value.expression) &&
     value.expression.text === "journalImage"
   )
-    return "/journal/" + string(value.arguments[0]);
+    return storedCover("/journal/" + string(value.arguments[0]));
   throw new Error("Unsupported cover image source");
 }
 
@@ -199,9 +205,11 @@ function buildPosts(blog) {
       categorySlug: categorySlug(string(required(node, "category"))),
       status: "published",
       publishAt: string(required(node, "date")),
-      imageId: "journal-cover-" + postSlug,
+      // The admin's cover picker edits `image_id`, so the cover goes there: a path kept in
+      // `cover_image_id` would win over every later replacement.
+      imageId: coverImageUrl(node, constants),
       readTime: optionalString(property(node, "readTime")),
-      coverImageId: coverImageUrl(node, constants),
+      coverImageId: null,
       seoTitle: "",
       seoDescription: "",
     };
