@@ -41,10 +41,15 @@ export function planImageRefs(seed, api) {
       continue;
     }
     const from = found.cover_url == null ? null : stored(found.cover_url);
-    if (from === item.coverImageId || !item.coverImageId) continue;
-    if (from === `journal-cover-${item.slug}`)
-      plan.posts.push({ slug: item.slug, from, to: item.coverImageId });
-    else plan.skipped.push({ kind: "post", slug: item.slug, reason: "changed in the admin" });
+    const to = item.imageId;
+    if (!to?.startsWith("/") || from === to) continue;
+    const note = (list, reason) => list.push({ kind: "post", slug: item.slug, reason });
+    // What a seed has stored for this post so far: the placeholder, or the build's own path.
+    const seeded = [`journal-cover-${item.slug}`, `/assets/blog/${to.split("/").pop()}`];
+    if (!seeded.includes(from)) note(plan.skipped, "changed in the admin");
+    else if (to.length > 64)
+      note(plan.problems, "the path is longer than the 64 characters of image_id");
+    else plan.posts.push({ slug: item.slug, from, to });
   }
   return plan;
 }
@@ -78,17 +83,19 @@ export function applySql(plan) {
   return [
     header(plan, "Points seeded image references at the public files. Undo with 3-rollback.sql."),
     `CREATE TABLE IF NOT EXISTS ${BACKUP} (`,
-    "  kind VARCHAR(8) NOT NULL, slug VARCHAR(191) NOT NULL, old_value TEXT NULL, saved_at DATETIME NOT NULL,",
+    "  kind VARCHAR(8) NOT NULL, slug VARCHAR(191) NOT NULL, old_value TEXT NULL, old_cover TEXT NULL, saved_at DATETIME NOT NULL,",
     "  PRIMARY KEY (kind, slug)",
     ");",
     "START TRANSACTION;",
     "-- The first run keeps the values as they were; a second run does not overwrite them.",
     `INSERT INTO ${BACKUP} (kind, slug, old_value, saved_at) SELECT 'product', slug, image_ids, NOW() FROM products WHERE slug IN (${list(plan.products)}) ON DUPLICATE KEY UPDATE kind = VALUES(kind);`,
-    `INSERT INTO ${BACKUP} (kind, slug, old_value, saved_at) SELECT 'post', slug, cover_image_id, NOW() FROM posts WHERE slug IN (${list(plan.posts)}) ON DUPLICATE KEY UPDATE kind = VALUES(kind);`,
+    `INSERT INTO ${BACKUP} (kind, slug, old_value, old_cover, saved_at) SELECT 'post', slug, image_id, cover_image_id, NOW() FROM posts WHERE slug IN (${list(plan.posts)}) ON DUPLICATE KEY UPDATE kind = VALUES(kind);`,
     ...plan.products.map((p) => setImages(p.slug, p.to, p.from)),
+    // The cover goes to image_id, the column the admin's cover picker edits; cover_image_id
+    // is emptied because the public API prefers it over image_id.
     ...plan.posts.map(
       (p) =>
-        `UPDATE posts SET cover_image_id = ${q(p.to)} WHERE slug = ${q(p.slug)} AND COALESCE(cover_image_id, image_id) = ${q(p.from)};`,
+        `UPDATE posts SET image_id = ${q(p.to)}, cover_image_id = NULL WHERE slug = ${q(p.slug)} AND COALESCE(cover_image_id, image_id) = ${q(p.from)};`,
     ),
     "COMMIT;",
     "",
@@ -102,7 +109,7 @@ export function rollbackSql(plan) {
     ...plan.products.map((p) => setImages(p.slug, p.from, p.to)),
     ...plan.posts.map(
       (p) =>
-        `UPDATE posts p JOIN ${BACKUP} b ON b.kind = 'post' AND b.slug = p.slug SET p.cover_image_id = b.old_value WHERE p.slug = ${q(p.slug)} AND p.cover_image_id = ${q(p.to)};`,
+        `UPDATE posts p JOIN ${BACKUP} b ON b.kind = 'post' AND b.slug = p.slug SET p.image_id = b.old_value, p.cover_image_id = b.old_cover WHERE p.slug = ${q(p.slug)} AND p.image_id = ${q(p.to)} AND p.cover_image_id IS NULL;`,
     ),
     "COMMIT;",
     `-- When the site has been checked again: DROP TABLE ${BACKUP};`,
@@ -137,20 +144,37 @@ export async function checkContent(seed, api, base, fetchImage) {
     for (const item of seed[key] ?? [])
       if (!api[key].some((found) => found.slug === item.slug))
         missing.push({ kind, slug: item.slug });
+  // An entry of the seed must keep an image: the bundled one stops being shown with the fallback.
+  const seeded = (key, slug, has) =>
+    (seed[key] ?? []).some((item) => item.slug === slug && has(item));
   const refs = [
-    ...api.products.flatMap((p) => p.images.map((url) => ({ kind: "product", slug: p.slug, url }))),
-    ...api.posts.map((p) => ({ kind: "post", slug: p.slug, url: p.cover_url ?? null })),
+    ...api.products.flatMap((p) =>
+      p.images.length
+        ? p.images.map((url) => ({ kind: "product", slug: p.slug, url }))
+        : seeded("products", p.slug, (item) => item.imageIds?.length)
+          ? [{ kind: "product", slug: p.slug, url: null }]
+          : [],
+    ),
+    ...api.posts.flatMap((p) =>
+      p.cover_url || seeded("posts", p.slug, (item) => item.imageId)
+        ? [{ kind: "post", slug: p.slug, url: p.cover_url ?? null }]
+        : [],
+    ),
   ];
+  // Only the site's own files are requested; an address elsewhere is listed, not visited.
+  const own = (url) => new URL(url, base).origin === new URL(base).origin;
+  const external = refs.filter((ref) => ref.url && !own(ref.url));
   const state = await loads(
-    refs.flatMap((ref) => (ref.url ? [ref.url] : [])),
+    refs.flatMap((ref) => (ref.url && own(ref.url) ? [ref.url] : [])),
     base,
     fetchImage,
   );
   const broken = refs.flatMap((ref) => {
+    if (ref.url && !own(ref.url)) return [];
     const found = ref.url ? state.get(ref.url) : { ok: false, status: null };
     return found.ok ? [] : [{ ...ref, status: found.status }];
   });
-  return { missing, broken, checked: state.size };
+  return { missing, broken, external, checked: state.size };
 }
 
 async function readApi(base) {
@@ -166,7 +190,8 @@ async function readApi(base) {
   return { products, posts };
 }
 
-const head = (url) => fetch(url, { method: "HEAD" });
+// A redirect is not followed: the file itself must be at the address the database names.
+const head = (url) => fetch(url, { method: "HEAD", redirect: "manual" });
 const lines = (items, text) =>
   items.map((item) => `- ${item.kind} \`${item.slug}\`: ${text(item)}`);
 
@@ -179,12 +204,14 @@ async function main([command, ...rest]) {
   const api = await readApi(base);
 
   if (command === "verify") {
-    const { missing, broken, checked } = await checkContent(seed, api, base, head);
+    const { missing, broken, external, checked } = await checkContent(seed, api, base, head);
     console.log(
       `${api.products.length} products, ${api.posts.length} posts, ${checked} image URLs checked at ${base}`,
     );
     for (const line of lines(missing, () => "in the seed, missing from the API")) console.log(line);
     for (const line of lines(broken, (b) => `${b.url ?? "no image"} (HTTP ${b.status ?? "-"})`))
+      console.log(line);
+    for (const line of lines(external, (e) => `${e.url} is on another site, not checked`))
       console.log(line);
     if (missing.length || broken.length) {
       console.log(`NOT READY: ${missing.length} missing, ${broken.length} images do not load.`);
