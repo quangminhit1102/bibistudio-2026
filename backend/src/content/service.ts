@@ -240,6 +240,24 @@ const unknownValue = (fields: string[]): ApiError =>
     fields.map((field) => ({ field, message: "Giá trị không tồn tại" })),
   );
 
+const slugInUse = (): ApiError =>
+  new ApiError(400, "INVALID_INPUT", "Dữ liệu không hợp lệ", [
+    { field: "slug", message: "Đường dẫn đã được dùng" },
+  ]);
+/** A product type's page and a product's page share `/products/<slug>`. */
+async function assertPageSlugFree(
+  c: PoolConnection,
+  otherTable: "products" | "product_types",
+  slug: string | undefined,
+) {
+  if (slug === undefined) return;
+  const [[row]] = await c.execute<RowDataPacket[]>(
+    `SELECT 1 FROM \`${otherTable}\` WHERE slug=? LOCK IN SHARE MODE`,
+    [slug],
+  );
+  if (row) throw slugInUse();
+}
+
 const legacyAttributeFields = [
   ["dimensions", "dimensions"],
   ["pages", "pages"],
@@ -503,6 +521,7 @@ export function createContentService(pool: Pool, clock: Clock) {
       },
       async create(input: Input, actor: AuthPrincipal): Promise<Dto> {
         return authorized(actor, `${code}.create`, async (c) => {
+          if (isType) await assertPageSlugFree(c, "products", input.slug);
           const id = randomUUID();
           const t = clock.now();
           const columns: Record<string, string | number | Date | null> = {
@@ -544,6 +563,7 @@ export function createContentService(pool: Pool, clock: Clock) {
         actor: AuthPrincipal,
       ): Promise<Dto> {
         return authorized(actor, `${code}.update`, async (c) => {
+          if (isType) await assertPageSlugFree(c, "products", input.slug);
           const sets: string[] = [];
           const values: (string | number | boolean | null | Date)[] = [];
           for (const [key, col] of [
@@ -967,6 +987,7 @@ export function createContentService(pool: Pool, clock: Clock) {
   async function createProduct(input: ProductInput, actor: AuthPrincipal): Promise<ProductDto> {
     return authorized(actor, "product.create", async (c) => {
       await assertTaxonomy(c, input);
+      await assertPageSlugFree(c, "product_types", input.slug);
       const { attributes, columns } = nextAttributes({}, input);
       const id = randomUUID();
       const t = clock.now();
@@ -1028,6 +1049,7 @@ export function createContentService(pool: Pool, clock: Clock) {
   ): Promise<ProductDto> {
     return authorized(actor, "product.update", async (c) => {
       await assertTaxonomy(c, input);
+      await assertPageSlugFree(c, "product_types", input.slug);
       const sets: string[] = [];
       const values: (string | number | boolean | null | Date)[] = [];
       if (touchesAttributes(input)) {

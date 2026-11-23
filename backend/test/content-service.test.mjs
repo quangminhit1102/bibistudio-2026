@@ -458,3 +458,40 @@ test("products follow a collection whose slug changes", async (t) => {
   assert.equal(moved.collection, "lunar-new-year");
   assert.equal(moved.revision, product.revision + 1);
 });
+
+test("a product type and a product cannot share a page slug", async (t) => {
+  const { service, actor } = await setup(t);
+  const type = await service.createProductType(
+    { code: "magnet", name: "Magnet", slug: "magnets" },
+    actor,
+  );
+  await service.createProductCategory({ name: "Khám phá", slug: "explore" }, actor);
+  const base = { productCode: "M1", name: "A", description: "", productType: "magnet" };
+  const taken = {
+    status: 400,
+    code: "INVALID_INPUT",
+    details: [{ field: "slug", message: "Đường dẫn đã được dùng" }],
+  };
+  await assert.rejects(
+    service.createProduct({ ...base, slug: "magnets", collection: "explore" }, actor),
+    taken,
+  );
+  const product = await service.createProduct(
+    { ...base, slug: "da-lat-magnet", collection: "explore" },
+    actor,
+  );
+  await assert.rejects(
+    service.updateProduct(product.id, { slug: "magnets" }, product.revision, actor),
+    taken,
+  );
+  await assert.rejects(
+    service.createProductType({ code: "other", name: "Khác", slug: "da-lat-magnet" }, actor),
+    taken,
+  );
+  await assert.rejects(
+    service.updateProductType(type.id, { slug: "da-lat-magnet" }, type.revision, actor),
+    taken,
+  );
+  // A collection's page lives under /collections, so it may share the slug.
+  await service.createProductCategory({ name: "Magnet", slug: "magnets" }, actor);
+});
