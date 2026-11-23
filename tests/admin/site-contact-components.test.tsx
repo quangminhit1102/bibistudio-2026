@@ -1,9 +1,10 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-vi.mock("@/platform/site", async () => {
+vi.mock("@/platform/site", async (importOriginal) => {
   const { defineSite } = await import("@/platform/site-contract");
   return {
+    ...(await importOriginal<typeof import("@/platform/site")>()),
     site: defineSite({
       name: "Example",
       shortName: "Ex",
