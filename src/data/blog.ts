@@ -1,15 +1,18 @@
 import { paginate, POSTS_PER_PAGE } from "./pagination";
 import type { Paged } from "./pagination";
-import slowWritingImage from "@/assets/blog/slow-writing.jpg";
-import choosingNotebookImage from "@/assets/blog/choosing-notebook.jpg";
-import bulletJournalImage from "@/assets/blog/bullet-journal.jpg";
-import scrapbookImage from "@/assets/blog/scrapbook.jpg";
-import penGuideImage from "@/assets/blog/pen-guide.jpg";
-import studyDeskImage from "@/assets/blog/study-desk.jpg";
-import notebookPurposeImage from "@/assets/blog/notebook-purpose.jpg";
-import penCareImage from "@/assets/blog/pen-care.jpg";
-import septemberJournalImage from "@/assets/blog/september-journal.jpg";
-import handmadeGiftImage from "@/assets/blog/handmade-gift.jpg";
+// Journal images are public files, so a post in the database can name the same path.
+const journalImage = (file: string) =>
+  `${import.meta.env.BASE_URL.replace(/\/$/, "")}/journal/${file}`;
+const slowWritingImage = journalImage("slow-writing.jpg");
+const choosingNotebookImage = journalImage("choosing-notebook.jpg");
+const bulletJournalImage = journalImage("bullet-journal.jpg");
+const scrapbookImage = journalImage("scrapbook.jpg");
+const penGuideImage = journalImage("pen-guide.jpg");
+const studyDeskImage = journalImage("study-desk.jpg");
+const notebookPurposeImage = journalImage("notebook-purpose.jpg");
+const penCareImage = journalImage("pen-care.jpg");
+const septemberJournalImage = journalImage("september-journal.jpg");
+const handmadeGiftImage = journalImage("handmade-gift.jpg");
 
 export type ContentBlock =
   | { type: "paragraph"; text: string }
@@ -30,7 +33,6 @@ export type BlogPost = {
   relatedHandles: string[];
 };
 
-
 export function getBlogPost(slug: string): BlogPost | undefined {
   return blogPosts.find((p) => p.slug === slug);
 }
@@ -45,7 +47,6 @@ export function getBlogPostsPage(page: number, pageSize = POSTS_PER_PAGE): Paged
   );
   return paginate(sorted, page, pageSize);
 }
-
 
 const blogPosts: BlogPost[] = [
   {
