@@ -55,12 +55,15 @@ export default defineSite({
     modules: [
       "content",
       "products",
+      "inventory",
       "customers",
       "sales",
       "analytics",
       "accounts",
       "audit",
+      "notifications",
       "settings",
+      "components",
     ],
   },
 });
