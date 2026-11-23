@@ -496,6 +496,43 @@ test("a product type and a product cannot share a page slug", async (t) => {
   await service.createProductCategory({ name: "Magnet", slug: "magnets" }, actor);
 });
 
+test("records that already share a page slug can still be edited", async (t) => {
+  const { service, actor, pool } = await setup(t);
+  const type = await service.createProductType(
+    { code: "magnet", name: "Magnet", slug: "magnets" },
+    actor,
+  );
+  await service.createProductCategory({ name: "Khám phá", slug: "explore" }, actor);
+  const product = await service.createProduct(
+    {
+      productCode: "M1",
+      name: "A",
+      slug: "da-lat-magnet",
+      description: "",
+      productType: "magnet",
+      collection: "explore",
+    },
+    actor,
+  );
+  // Saved before the rule existed.
+  await pool.query("UPDATE products SET slug='magnets' WHERE id=?", [product.id]);
+  // The admin forms send the unchanged slug with every save.
+  const edited = await service.updateProduct(
+    product.id,
+    { name: "B", slug: "magnets" },
+    product.revision,
+    actor,
+  );
+  assert.equal(edited.name, "B");
+  const renamed = await service.updateProductType(
+    type.id,
+    { name: "Nam châm", slug: "magnets" },
+    type.revision,
+    actor,
+  );
+  assert.equal(renamed.name, "Nam châm");
+});
+
 test("a plain text for a per-language attribute is kept as its Vietnamese text", async (t) => {
   const { service, actor } = await setup(t);
   await service.createProductType({ code: "card", name: "Thiệp", slug: "cards" }, actor);

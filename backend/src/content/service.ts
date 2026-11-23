@@ -244,13 +244,25 @@ const slugInUse = (): ApiError =>
   new ApiError(400, "INVALID_INPUT", "Dữ liệu không hợp lệ", [
     { field: "slug", message: "Đường dẫn đã được dùng" },
   ]);
-/** A product type's page and a product's page share `/products/<slug>`. */
+/**
+ * A product type's page and a product's page share `/products/<slug>`. `own` is the record
+ * being updated: the slug it already has is not checked, so a record saved before this rule
+ * can still be edited.
+ */
 async function assertPageSlugFree(
   c: PoolConnection,
   otherTable: "products" | "product_types",
   slug: string | undefined,
+  own?: { table: "products" | "product_types"; id: string },
 ) {
   if (slug === undefined) return;
+  if (own) {
+    const [[current]] = await c.execute<RowDataPacket[]>(
+      `SELECT slug FROM \`${own.table}\` WHERE id=?`,
+      [own.id],
+    );
+    if (current && String(current.slug) === slug) return;
+  }
   const [[row]] = await c.execute<RowDataPacket[]>(
     `SELECT 1 FROM \`${otherTable}\` WHERE slug=? LOCK IN SHARE MODE`,
     [slug],
@@ -563,7 +575,7 @@ export function createContentService(pool: Pool, clock: Clock) {
         actor: AuthPrincipal,
       ): Promise<Dto> {
         return authorized(actor, `${code}.update`, async (c) => {
-          if (isType) await assertPageSlugFree(c, "products", input.slug);
+          if (isType) await assertPageSlugFree(c, "products", input.slug, { table, id });
           const sets: string[] = [];
           const values: (string | number | boolean | null | Date)[] = [];
           for (const [key, col] of [
@@ -1049,7 +1061,7 @@ export function createContentService(pool: Pool, clock: Clock) {
   ): Promise<ProductDto> {
     return authorized(actor, "product.update", async (c) => {
       await assertTaxonomy(c, input);
-      await assertPageSlugFree(c, "product_types", input.slug);
+      await assertPageSlugFree(c, "product_types", input.slug, { table: "products", id });
       const sets: string[] = [];
       const values: (string | number | boolean | null | Date)[] = [];
       if (touchesAttributes(input)) {
