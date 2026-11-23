@@ -85,3 +85,43 @@ export function defineSite(config: SiteConfig): SiteConfig {
 export function siteUrl(site: Pick<SiteConfig, "url">, path = ""): string {
   return path ? `${site.url}/${path.replace(/^\/+/, "")}` : site.url;
 }
+
+/** Text per locale code, e.g. `{ vi: "Sổ tay", en: "Notebook" }`. */
+export type Localized = Record<string, string>;
+export type AttributeOption = { value: string; label: Localized; note?: Localized };
+export type ProductAttribute =
+  | { key: string; label: Localized; type: "text" | "localized-text" }
+  | { key: string; label: Localized; type: "select"; options: AttributeOption[] };
+export type SelectAttribute = Extract<ProductAttribute, { type: "select" }>;
+
+export type CatalogueConfig = {
+  /** Product attributes in display order. */
+  attributes: ProductAttribute[];
+  /** Collection slug -> key of the `select` attribute its products are grouped by. */
+  groupBy: Record<string, string>;
+};
+
+function failCatalogue(field: string, reason: string): never {
+  throw new Error(`Invalid catalogue config: ${field} ${reason}`);
+}
+
+export function defineCatalogue(config: CatalogueConfig): CatalogueConfig {
+  const keys = new Set<string>();
+  for (const attribute of config.attributes) {
+    const field = `attributes.${attribute.key}`;
+    if (!/^[a-z][a-zA-Z0-9]*$/.test(attribute.key))
+      failCatalogue(field, "key must start with a lowercase letter and use letters and digits");
+    if (keys.has(attribute.key)) failCatalogue(field, "is declared twice");
+    keys.add(attribute.key);
+    if (attribute.type !== "select") continue;
+    if (attribute.options.length === 0) failCatalogue(field, "must list at least one option");
+    const values = attribute.options.map((option) => option.value);
+    if (new Set(values).size !== values.length) failCatalogue(field, "has a duplicate option value");
+  }
+  for (const [collection, key] of Object.entries(config.groupBy)) {
+    const attribute = config.attributes.find((a) => a.key === key);
+    if (attribute?.type !== "select")
+      failCatalogue(`groupBy.${collection}`, `must name a declared select attribute, got "${key}"`);
+  }
+  return deepFreeze(structuredClone(config));
+}

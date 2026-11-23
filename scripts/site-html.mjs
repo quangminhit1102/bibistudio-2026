@@ -37,6 +37,8 @@ export function renderSiteHtml(html, site) {
 export async function loadSiteConfig(siteDir = process.env.SITE_DIR ?? "site") {
   const file = resolve(siteDir, "site.config.ts");
   if (!existsSync(file)) throw new Error(`Site config not found: ${file}`);
+  const catalogue = resolve(siteDir, "catalogue.config.ts");
+  if (!existsSync(catalogue)) throw new Error(`Site catalogue config not found: ${catalogue}`);
   return (await import(pathToFileURL(file).href)).default;
 }
 

@@ -69,6 +69,34 @@ test("previous one-file content release remains inspectable with exact checksums
   await assert.rejects(metadata.verifyContentAssets(join(f.dir, "backend"), f.manifest.content));
 });
 
+test("content metadata accepts the third migration only as 003_content_catalogue.sql", async (t) => {
+  const f = await fixture(t);
+  const two = f.manifest.content;
+  const withThird = (name, base = two.migrationChecksums) => ({
+    ...two,
+    migrationChecksums: { ...base, [name]: "a".repeat(64) },
+  });
+  assert.deepEqual(
+    Object.keys(
+      metadata.validateContentMetadata(withThird("003_content_catalogue.sql")).migrationChecksums,
+    ),
+    ["001_content.sql", "002_content_v9.sql", "003_content_catalogue.sql"],
+  );
+  assert.throws(() => metadata.validateContentMetadata(withThird("003_other.sql")));
+  assert.throws(() =>
+    metadata.validateContentMetadata(
+      withThird("003_content_catalogue.sql", {
+        "001_content.sql": two.migrationChecksums["001_content.sql"],
+      }),
+    ),
+  );
+  await writeFile(join(f.dir, "backend/content-migrations/003_content_catalogue.sql"), "SELECT 1;");
+  const three = await metadata.createContentMetadata(join(f.dir, "backend"));
+  assert.equal(Object.keys(three.migrationChecksums).length, 3);
+  await metadata.verifyContentAssets(join(f.dir, "backend"), three);
+  await assert.rejects(metadata.verifyContentAssets(join(f.dir, "backend"), two));
+});
+
 test("content metadata pins assets and rejects altered SQL", async (t) => {
   const f = await fixture(t);
   await metadata.verifyContentAssets(join(f.dir, "backend"), f.manifest.content);
