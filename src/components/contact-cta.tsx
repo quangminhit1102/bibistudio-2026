@@ -6,7 +6,12 @@ import { t } from "@/lib/messages";
 
 export function ContactLinks({ className = "" }: { className?: string }) {
   const items = [
-    { label: t("contact.phone"), value: site.contact.phoneDisplay, href: telHref(site), Icon: Phone },
+    {
+      label: t("contact.phone"),
+      value: site.contact.phoneDisplay,
+      href: telHref(site),
+      Icon: Phone,
+    },
     { label: t("contact.email"), value: site.contact.email, href: mailHref(site), Icon: Mail },
     ...site.contact.social.map((link) => ({
       label: link.label,
