@@ -34,6 +34,8 @@ export interface PublicProductShape {
   sort_order: number;
   seo_title: string;
   seo_description: string;
+  /** Every attribute by the site's key: text, or a text per language. */
+  attributes?: Record<string, string | LocalizedText>;
 }
 
 export interface PublicCategoryShape {
@@ -43,10 +45,20 @@ export interface PublicCategoryShape {
   position: number;
 }
 
+/** `{ "<locale>": { name, plural?, tagline?, intro? } }` */
+export type PublicTranslations = Record<string, Record<string, string>>;
+
 export interface PublicCollectionShape {
   slug: string;
   name: string;
   tagline: string;
+  translations?: PublicTranslations;
+  image?: string | null;
+}
+
+export interface PublicProductTypeShape extends PublicCollectionShape {
+  /** What a product's `product_type` holds; `slug` is the URL segment. */
+  code: string;
 }
 
 export type PublicPostSummary = Omit<PublicPostShape, "content">;
@@ -111,3 +123,6 @@ export const getPublicCategories = (
 
 export const getPublicCollections = (): Promise<PublicCollectionShape[] | null> =>
   getJson<PublicCollectionShape[]>("/api/public/collections");
+
+export const getPublicProductTypes = (): Promise<PublicProductTypeShape[] | null> =>
+  getJson<PublicProductTypeShape[]>("/api/public/product-types");
