@@ -136,6 +136,15 @@ test("content admin API requires auth, serves authorized lists and 404s unknown 
     400,
     "content categories have no image",
   );
+  assert.equal(
+    (await write("/product-categories", "POST", { name: "Dài", slug: "a".repeat(51) })).status,
+    400,
+    "a collection slug must fit the column a product stores it in",
+  );
+  assert.equal(
+    (await write("/content-categories", "POST", { name: "Dài", slug: "a".repeat(51) })).status,
+    201,
+  );
   const unknownType = await write("/products", "POST", {
     productCode: "1000",
     name: "Sản phẩm",
