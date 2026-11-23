@@ -7,6 +7,7 @@ import { ContactBand, ContactLinks } from "@/components/contact-cta";
 import { PaperPlaceholder } from "@/components/brand/paper-placeholder";
 import {
   getCollection,
+  getCollectionBySlug,
   getProduct,
   getProductType,
   getProductTypeBySlug,
@@ -85,7 +86,9 @@ export const Route = createFileRoute("/products/$slug")({
         children: JSON.stringify(
           buildBreadcrumbSchema([
             { name: "Sản phẩm", url: `${SITE_URL}/products` },
-            { name: tx(t.plural), url: `${SITE_URL}/products/${t.slug}` },
+            ...(getProductTypeBySlug(t.slug)
+              ? [{ name: tx(t.plural), url: `${SITE_URL}/products/${t.slug}` }]
+              : []),
             { name: tx(p.name), url: `${SITE_URL}/products/${params.slug}` },
           ]),
         ),
@@ -159,6 +162,9 @@ function ProductDetail({ product, related }: { product: Product; related: Produc
   const p = product;
   const t = getProductType(p.productType);
   const c = getCollection(p.collection);
+  // Only a known type or collection has a page of its own to link to.
+  const typeHasPage = getProductTypeBySlug(t.slug) !== undefined;
+  const collectionHasPage = getCollectionBySlug(c.slug) !== undefined;
   const details = attributeRows(p);
 
   return (
@@ -171,13 +177,21 @@ function ProductDetail({ product, related }: { product: Product; related: Produc
           Trang chủ
         </Link>{" "}
         /{" "}
-        <Link to="/collections/$slug" params={{ slug: c.slug }} className="hover:text-foreground">
-          {tx(c.name)}
-        </Link>{" "}
+        {collectionHasPage ? (
+          <Link to="/collections/$slug" params={{ slug: c.slug }} className="hover:text-foreground">
+            {tx(c.name)}
+          </Link>
+        ) : (
+          tx(c.name)
+        )}{" "}
         /{" "}
-        <Link to="/products/$slug" params={{ slug: t.slug }} className="hover:text-foreground">
-          {tx(t.plural)}
-        </Link>{" "}
+        {typeHasPage ? (
+          <Link to="/products/$slug" params={{ slug: t.slug }} className="hover:text-foreground">
+            {tx(t.plural)}
+          </Link>
+        ) : (
+          tx(t.plural)
+        )}{" "}
         / <span className="text-foreground">{tx(p.name)}</span>
       </nav>
 
@@ -197,13 +211,17 @@ function ProductDetail({ product, related }: { product: Product; related: Produc
         <div className="lg:sticky lg:top-8 lg:self-start">
           <p className="eyebrow">{tx(t.name)}</p>
           <h1 className="mt-4 font-display text-5xl leading-[1.02] md:text-6xl">{tx(p.name)}</h1>
-          <Link
-            to="/collections/$slug"
-            params={{ slug: c.slug }}
-            className="mt-3 inline-block text-[14px] text-kraft hover:underline"
-          >
-            Bộ sưu tập {tx(c.name)}
-          </Link>
+          {collectionHasPage ? (
+            <Link
+              to="/collections/$slug"
+              params={{ slug: c.slug }}
+              className="mt-3 inline-block text-[14px] text-kraft hover:underline"
+            >
+              Bộ sưu tập {tx(c.name)}
+            </Link>
+          ) : (
+            <p className="mt-3 text-[14px] text-kraft">Bộ sưu tập {tx(c.name)}</p>
+          )}
           <p className="mt-8 text-[15px] leading-relaxed text-muted-foreground">
             {tx(p.description)}
           </p>
