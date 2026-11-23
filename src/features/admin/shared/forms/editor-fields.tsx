@@ -1,11 +1,9 @@
-import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { Controller, useFormContext } from "react-hook-form";
-import { useAdmin } from "../../services/context";
 import { Field, Skeleton } from "../ui/primitives";
 import { calendarDate } from "../lib/text";
 import type { FormField, FormValues } from "./record-form";
-import { relationResource } from "./relation-resource";
+import { useRelationOptions, withStored } from "./relation-options";
 
 function TagInput({
   value,
@@ -53,24 +51,7 @@ function RelationInput({
   value: unknown;
   onChange: (value: unknown) => void;
 }) {
-  const runtime = useAdmin();
-  const options = useQuery({
-    queryKey: ["bibi-admin", "editor-options", field.entity, field.filter],
-    queryFn: async () => {
-      await runtime.ensure(field.entity!);
-      const result = await runtime
-        .service(field.entity!, relationResource(field))
-        .list({ page: 1, pageSize: 500 });
-      return result.items
-        .filter((row) =>
-          Object.entries(field.filter ?? {}).every(([key, v]) => {
-            const rowValue = (row as unknown as FormValues)[key];
-            return rowValue === undefined || String(rowValue) === v;
-          }),
-        )
-        .map((row) => ({ value: row.id, label: "name" in row ? String(row.name) : row.id }));
-    },
-  });
+  const options = useRelationOptions(field, "editor-options");
   if (options.isPending) return <Skeleton rows={1} />;
   if (options.error)
     return (
@@ -97,7 +78,7 @@ function RelationInput({
       }
     >
       {!multiple && <option value="">Chọn…</option>}
-      {options.data.map((option) => (
+      {withStored(options.data, value).map((option) => (
         <option key={option.value} value={option.value}>
           {option.label}
         </option>

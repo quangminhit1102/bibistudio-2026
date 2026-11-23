@@ -55,9 +55,16 @@ const serverEntities: EntityKey[] = [
   "posts",
   "products",
   "categories",
+  "productTypes",
   "customers",
 ];
-const contentEntities: EntityKey[] = ["posts", "products", "categories", "customers"];
+const contentEntities: EntityKey[] = [
+  "posts",
+  "products",
+  "categories",
+  "productTypes",
+  "customers",
+];
 function announce() {
   try {
     localStorage.setItem(

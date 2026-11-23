@@ -86,6 +86,17 @@ export const schemas = {
       active: z.boolean(),
     })
     .passthrough(),
+  productTypes: z
+    .object({
+      name,
+      code: z
+        .string()
+        .regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, "Mã chỉ gồm chữ thường, số và dấu gạch nối"),
+      slug: name,
+      position: amount,
+      active: z.boolean(),
+    })
+    .passthrough(),
   authors: z.object({ name }).passthrough(),
   publishers: z
     .object({ name, email: z.union([z.literal(""), z.string().email()]).optional() })
@@ -152,6 +163,17 @@ export async function validateRecord<K extends EntityKey>(
       )
     )
       throw new ServiceError("validation", `${field} đã tồn tại.`);
+  }
+  if (entity === "productTypes") {
+    const type = row as AdminModels["productTypes"];
+    if (
+      (records as AdminModels["productTypes"][]).some(
+        (r) => r.id !== type.id && r.code === type.code,
+      )
+    )
+      throw new ServiceError("validation", "code đã tồn tại.");
+    if (old && (old as AdminModels["productTypes"]).code !== type.code)
+      throw new ServiceError("validation", "Không thể đổi mã của loại sản phẩm.");
   }
   if (entity === "categories") {
     const c = row as AdminModels["categories"];
@@ -235,6 +257,11 @@ export async function validateRecord<K extends EntityKey>(
   }
 }
 export async function assertDeletable(entity: EntityKey, id: string, tx: AdminTransaction) {
+  if (entity === "productTypes") {
+    const code = (await tx.get("productTypes", id))?.code;
+    if ((await tx.list("products")).some((p) => p.productType === code))
+      throw new ServiceError("validation", "Loại sản phẩm đang được dùng bởi sản phẩm.");
+  }
   if (entity === "customers" && (await tx.list("purchaseSlips")).some((s) => s.customerId === id))
     throw new ServiceError(
       "validation",

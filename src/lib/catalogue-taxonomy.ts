@@ -24,12 +24,13 @@ const bundled: Taxonomy = { productTypes: bundledTypes, collections: bundledColl
 let current = bundled;
 const listeners = new Set<() => void>();
 
-function localized(api: PublicCollectionShape, field: string, fallback: string): Localized {
-  const vi = api.translations?.vi?.[field] || fallback;
+/** A text per language: `vi` as given, `en` from the translations, else the same as `vi`. */
+function localized(api: PublicCollectionShape, field: string, vi: string): Localized {
   return { vi, en: api.translations?.en?.[field] || vi };
 }
 
 function toType(api: PublicProductTypeShape): TypeView {
+  // The name and tagline columns are the Vietnamese texts an admin edits.
   const name = localized(api, "name", api.name);
   return {
     id: api.code,
@@ -49,8 +50,8 @@ function toCollection(api: PublicCollectionShape): CollectionView {
     id: api.slug,
     slug: api.slug,
     name: localized(api, "name", api.name),
-    tagline: localized(api, "tagline", ""),
-    // Before collections had translations, the description held the intro.
+    tagline: localized(api, "tagline", api.translations?.vi?.tagline || ""),
+    // A collection's description column is its intro.
     intro: localized(api, "intro", api.tagline),
     image: api.image ?? bundledCollections.find((c) => c.id === api.slug)?.image,
   };

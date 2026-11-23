@@ -17,7 +17,7 @@ export function createAdminStore(
   const db = () =>
     (connection ??= (async () => {
       try {
-        return await openDB(name, 2, {
+        return await openDB(name, 3, {
           upgrade(d) {
             for (const entity of entityKeys)
               if (!d.objectStoreNames.contains(entity))

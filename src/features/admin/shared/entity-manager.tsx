@@ -7,6 +7,12 @@ import { useAdmin, useEntity, useRole } from "../services/context";
 import { can, resourceForEntity } from "../accounts/permissions";
 import type { AdminModels, CreateInput, EntityKey, Resource } from "../services/contracts";
 import { RecordForm, type FormField, type FormValues } from "./forms/record-form";
+import {
+  useRelationOptions,
+  withStored,
+  type Option,
+  type RelationSpec,
+} from "./forms/relation-options";
 import { DataTable, type TableState } from "./tables/data-table";
 import {
   ActionMenu,
@@ -20,6 +26,28 @@ import {
 import { downloadBlob, makeCsv, date } from "./lib/text";
 import { UnsavedDialog } from "./forms/preference-form";
 import { internalTarget } from "./lib/navigation";
+function FilterSelect({
+  filter,
+  value,
+  onChange,
+}: {
+  filter: NonNullable<EntityConfig<EntityKey>["filters"]>[number];
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  const related = useRelationOptions(filter, "options", Boolean(filter.entity));
+  const options = filter.options ?? withStored(related.data ?? [], value);
+  return (
+    <select aria-label={filter.label} value={value} onChange={(e) => onChange(e.target.value)}>
+      <option value="">{filter.label}: Tất cả</option>
+      {options.map((o) => (
+        <option key={o.value} value={o.value}>
+          {o.label}
+        </option>
+      ))}
+    </select>
+  );
+}
 export interface EntityConfig<K extends EntityKey> {
   entity: K;
   title: string;
@@ -27,7 +55,8 @@ export interface EntityConfig<K extends EntityKey> {
   fields: FormField[];
   defaults: CreateInput<K>;
   columns?: ColumnDef<AdminModels[K], unknown>[];
-  filters?: { field: string; label: string; options: { value: string; label: string }[] }[];
+  /** Choices are `options`, or the records of `entity` (see `RelationSpec`). */
+  filters?: ({ field: string; label: string; options?: Option[] } & RelationSpec)[];
   fixedFilters?: Record<string, string>;
   resource?: Resource;
   createHref?: string;
@@ -329,25 +358,18 @@ export function EntityManager<K extends EntityKey>({ config }: { config: EntityC
           </>
         )}
         {config.filters?.map((f) => (
-          <select
+          <FilterSelect
             key={f.field}
-            aria-label={f.label}
+            filter={f}
             value={state.filters[f.field] ?? ""}
-            onChange={(e) =>
+            onChange={(value) =>
               updateState({
                 ...state,
                 page: 1,
-                filters: { ...state.filters, [f.field]: e.target.value },
+                filters: { ...state.filters, [f.field]: value },
               })
             }
-          >
-            <option value="">{f.label}: Tất cả</option>
-            {f.options.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
+          />
         ))}
         {Object.values(selected).some(Boolean) && permitted("delete") && (
           <Button variant="destructive" onClick={() => setBulkDelete(true)}>

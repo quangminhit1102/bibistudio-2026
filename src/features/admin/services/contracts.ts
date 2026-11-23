@@ -83,9 +83,27 @@ export interface AdminBook extends CatalogueRecord {
   year: number;
   language: string;
 }
-export interface Category extends NamedRecord {
+/** The texts a public page shows for a product type or collection, one form field each. */
+export interface TaxonomyTexts {
+  translations?: Record<string, Record<string, string>>;
+  image?: string | null;
+  nameEn?: string;
+  plural?: string;
+  pluralEn?: string;
+  tagline?: string;
+  taglineEn?: string;
+  introEn?: string;
+}
+export interface Category extends NamedRecord, TaxonomyTexts {
   parentId: string | null;
   kind: "product" | "content" | "genre";
+  slug: string;
+  position: number;
+  active: boolean;
+}
+export interface ProductTypeRecord extends NamedRecord, TaxonomyTexts {
+  /** What a product's `productType` holds; `slug` is the URL segment. */
+  code: string;
   slug: string;
   position: number;
   active: boolean;
@@ -236,6 +254,7 @@ export interface AdminModels {
   products: AdminProduct;
   books: AdminBook;
   categories: Category;
+  productTypes: ProductTypeRecord;
   authors: Author;
   publishers: Publisher;
   roles: Role;
@@ -259,6 +278,7 @@ export const entityKeys: EntityKey[] = [
   "products",
   "books",
   "categories",
+  "productTypes",
   "authors",
   "publishers",
   "roles",

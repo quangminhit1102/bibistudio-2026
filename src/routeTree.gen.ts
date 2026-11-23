@@ -63,6 +63,7 @@ import { Route as AdminProductsCategoriesRouteImport } from './routes/admin.prod
 import { Route as AdminProductsCreateRouteImport } from './routes/admin.products.create'
 import { Route as AdminProductsInventoryRouteImport } from './routes/admin.products.inventory'
 import { Route as AdminProductsListRouteImport } from './routes/admin.products.list'
+import { Route as AdminProductsTypesRouteImport } from './routes/admin.products.types'
 import { Route as AdminSalesIndexRouteImport } from './routes/admin.sales.index'
 import { Route as AdminSalesOrderHistoryRouteImport } from './routes/admin.sales.order-history'
 import { Route as AdminSalesOrdersRouteImport } from './routes/admin.sales.orders'
@@ -364,6 +365,11 @@ const AdminProductsListRoute = AdminProductsListRouteImport.update({
   path: '/products/list',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminProductsTypesRoute = AdminProductsTypesRouteImport.update({
+  id: '/products/types',
+  path: '/products/types',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminSalesIndexRoute = AdminSalesIndexRouteImport.update({
   id: '/sales/',
   path: '/sales/',
@@ -542,6 +548,7 @@ export interface FileRoutesByFullPath {
   '/admin/products/create': typeof AdminProductsCreateRoute
   '/admin/products/inventory': typeof AdminProductsInventoryRoute
   '/admin/products/list': typeof AdminProductsListRoute
+  '/admin/products/types': typeof AdminProductsTypesRoute
   '/admin/sales/order-history': typeof AdminSalesOrderHistoryRoute
   '/admin/sales/orders': typeof AdminSalesOrdersRouteWithChildren
   '/admin/sales/reports': typeof AdminSalesReportsRoute
@@ -622,6 +629,7 @@ export interface FileRoutesByTo {
   '/admin/products/create': typeof AdminProductsCreateRoute
   '/admin/products/inventory': typeof AdminProductsInventoryRoute
   '/admin/products/list': typeof AdminProductsListRoute
+  '/admin/products/types': typeof AdminProductsTypesRoute
   '/admin/sales/order-history': typeof AdminSalesOrderHistoryRoute
   '/admin/sales/orders': typeof AdminSalesOrdersRouteWithChildren
   '/admin/sales/reports': typeof AdminSalesReportsRoute
@@ -704,6 +712,7 @@ export interface FileRoutesById {
   '/admin/products/create': typeof AdminProductsCreateRoute
   '/admin/products/inventory': typeof AdminProductsInventoryRoute
   '/admin/products/list': typeof AdminProductsListRoute
+  '/admin/products/types': typeof AdminProductsTypesRoute
   '/admin/sales/order-history': typeof AdminSalesOrderHistoryRoute
   '/admin/sales/orders': typeof AdminSalesOrdersRouteWithChildren
   '/admin/sales/reports': typeof AdminSalesReportsRoute
@@ -787,6 +796,7 @@ export interface FileRouteTypes {
     | '/admin/products/create'
     | '/admin/products/inventory'
     | '/admin/products/list'
+    | '/admin/products/types'
     | '/admin/sales/order-history'
     | '/admin/sales/orders'
     | '/admin/sales/reports'
@@ -867,6 +877,7 @@ export interface FileRouteTypes {
     | '/admin/products/create'
     | '/admin/products/inventory'
     | '/admin/products/list'
+    | '/admin/products/types'
     | '/admin/sales/order-history'
     | '/admin/sales/orders'
     | '/admin/sales/reports'
@@ -948,6 +959,7 @@ export interface FileRouteTypes {
     | '/admin/products/create'
     | '/admin/products/inventory'
     | '/admin/products/list'
+    | '/admin/products/types'
     | '/admin/sales/order-history'
     | '/admin/sales/orders'
     | '/admin/sales/reports'
@@ -1375,6 +1387,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminProductsListRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/products/types': {
+      id: '/admin/products/types'
+      path: '/products/types'
+      fullPath: '/admin/products/types'
+      preLoaderRoute: typeof AdminProductsTypesRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/sales/': {
       id: '/admin/sales/'
       path: '/sales'
@@ -1737,6 +1756,7 @@ interface AdminRouteChildren {
   AdminProductsCreateRoute: typeof AdminProductsCreateRoute
   AdminProductsInventoryRoute: typeof AdminProductsInventoryRoute
   AdminProductsListRoute: typeof AdminProductsListRoute
+  AdminProductsTypesRoute: typeof AdminProductsTypesRoute
   AdminSalesOrderHistoryRoute: typeof AdminSalesOrderHistoryRoute
   AdminSalesOrdersRoute: typeof AdminSalesOrdersRouteWithChildren
   AdminSalesReportsRoute: typeof AdminSalesReportsRoute
@@ -1792,6 +1812,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminProductsCreateRoute: AdminProductsCreateRoute,
   AdminProductsInventoryRoute: AdminProductsInventoryRoute,
   AdminProductsListRoute: AdminProductsListRoute,
+  AdminProductsTypesRoute: AdminProductsTypesRoute,
   AdminSalesOrderHistoryRoute: AdminSalesOrderHistoryRoute,
   AdminSalesOrdersRoute: AdminSalesOrdersRouteWithChildren,
   AdminSalesReportsRoute: AdminSalesReportsRoute,

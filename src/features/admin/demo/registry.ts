@@ -42,6 +42,7 @@ export const groupForEntity: Record<EntityKey, Group> = {
   roles: "accounts",
   users: "accounts",
   categories: "taxonomy",
+  productTypes: "taxonomy",
   products: "products",
   books: "bookstore",
   authors: "bookstore",

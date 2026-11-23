@@ -44,7 +44,8 @@ describe("catalogue taxonomy", () => {
           name: "Sticker",
           tagline: "Dán ở đâu cũng vui",
           translations: {
-            vi: { plural: "Bộ sticker" },
+            // The name column is what an admin edits, so it wins over the copy kept here.
+            vi: { name: "Tên cũ", plural: "Bộ sticker" },
             en: { name: "Sticker", plural: "Stickers" },
           },
           image: "/api/media/abc",

@@ -2,11 +2,12 @@ import { expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { legacyDestination } from "../../src/features/admin/shell/legacy-destination";
 import { navigation } from "../../src/features/admin/shell/navigation";
-it("has a flat product group with exactly four direct destinations", () => {
+it("has a flat product group with exactly five direct destinations", () => {
   const group = navigation.find((g) => g.label === "Quản lý sản phẩm")!;
   expect(group.items.map((i) => i.label)).toEqual([
     "Danh sách sản phẩm",
     "Thêm sản phẩm",
+    "Loại sản phẩm",
     "Danh mục",
     "Tồn kho",
   ]);
