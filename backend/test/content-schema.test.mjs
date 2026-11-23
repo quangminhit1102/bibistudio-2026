@@ -113,3 +113,41 @@ test("content schema reports dirty when only some tables exist", async (t) => {
   assert.equal(status.state, "dirty");
   assert.equal(status.version, 8);
 });
+
+async function migratedWithNewerRow(t, state) {
+  const f = await createAuthFixture(t, { visitorHistory: false });
+  const schema = await import("../dist/content/schema.js");
+  await schema.migrateContent(f.pool, directory);
+  await f.pool.query(
+    "INSERT INTO content_schema_migrations(version,checksum,state,completed_steps,ddl_hashes,applied_at) VALUES(3,REPEAT('a',64),?,1,'{}',UTC_TIMESTAMP(3))",
+    [state],
+  );
+  await f.pool.query("ALTER TABLE products ADD COLUMN attributes JSON NULL");
+  return { pool: f.pool, ...schema };
+}
+
+test("a newer complete schema version keeps the packaged release ready", async (t) => {
+  const f = await migratedWithNewerRow(t, "complete");
+  await assert.doesNotReject(f.assertContentReady(f.pool));
+  const status = await f.contentSchemaStatus(f.pool, directory);
+  assert.equal(status.state, "complete");
+  assert.equal(status.version, 8);
+  assert.deepEqual(Object.keys(status.migrationChecksums).sort(), [
+    "001_content.sql",
+    "002_content_v9.sql",
+  ]);
+  await assert.rejects(f.migrateContent(f.pool, directory), /newer/i);
+});
+
+test("a newer incomplete schema version is not ready", async (t) => {
+  const f = await migratedWithNewerRow(t, "dirty");
+  await assert.rejects(f.assertContentReady(f.pool), { status: 503, code: "CONTENT_NOT_READY" });
+  assert.equal((await f.contentSchemaStatus(f.pool, directory)).state, "incompatible");
+});
+
+test("a newer complete version does not hide a dirty packaged version", async (t) => {
+  const f = await migratedWithNewerRow(t, "complete");
+  await f.pool.query("UPDATE content_schema_migrations SET state='dirty' WHERE version=2");
+  await assert.rejects(f.assertContentReady(f.pool), { status: 503, code: "CONTENT_NOT_READY" });
+  assert.equal((await f.contentSchemaStatus(f.pool, directory)).state, "dirty");
+});
