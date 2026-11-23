@@ -240,10 +240,15 @@ const unknownValue = (fields: string[]): ApiError =>
     fields.map((field) => ({ field, message: "Giá trị không tồn tại" })),
   );
 
-const slugInUse = (): ApiError =>
-  new ApiError(400, "INVALID_INPUT", "Dữ liệu không hợp lệ", [
-    { field: "slug", message: "Đường dẫn đã được dùng" },
-  ]);
+const invalidSlug = (message: string): ApiError =>
+  new ApiError(400, "INVALID_INPUT", "Dữ liệu không hợp lệ", [{ field: "slug", message }]);
+const slugInUse = (): ApiError => invalidSlug("Đường dẫn đã được dùng");
+// A product stores its collection's slug in a column of this many characters.
+const collectionSlugLength = 50;
+const assertCollectionSlug = (slug: string) => {
+  if (slug.length > collectionSlugLength)
+    throw invalidSlug(`Đường dẫn dài tối đa ${collectionSlugLength} ký tự`);
+};
 /**
  * A product type's page and a product's page share `/products/<slug>`. `own` is the record
  * being updated: the slug it already has is not checked, so a record saved before this rule
@@ -534,6 +539,7 @@ export function createContentService(pool: Pool, clock: Clock) {
       async create(input: Input, actor: AuthPrincipal): Promise<Dto> {
         return authorized(actor, `${code}.create`, async (c) => {
           if (isType) await assertPageSlugFree(c, "products", input.slug);
+          if (table === "product_categories") assertCollectionSlug(input.slug);
           const id = randomUUID();
           const t = clock.now();
           const columns: Record<string, string | number | Date | null> = {
@@ -607,6 +613,7 @@ export function createContentService(pool: Pool, clock: Clock) {
               [id],
             );
             previousSlug = row && String(row.slug);
+            if (input.slug !== previousSlug) assertCollectionSlug(input.slug);
           }
           if (sets.length) {
             const [result] = await c.execute<ResultSetHeader>(

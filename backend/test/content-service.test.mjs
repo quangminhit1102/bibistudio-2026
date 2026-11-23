@@ -562,3 +562,33 @@ test("a plain text for a per-language attribute is kept as its Vietnamese text",
   });
   assert.equal(edited.materialVi, "Giấy kraft");
 });
+
+test("a collection slug must fit the column a product stores it in", async (t) => {
+  const { service, actor, pool } = await setup(t);
+  const long = "a".repeat(51);
+  const tooLong = {
+    status: 400,
+    code: "INVALID_INPUT",
+    details: [{ field: "slug", message: "Đường dẫn dài tối đa 50 ký tự" }],
+  };
+  await assert.rejects(service.createProductCategory({ name: "Dài", slug: long }, actor), tooLong);
+  // Blog categories are not stored on products.
+  await service.createContentCategory({ name: "Dài", slug: long }, actor);
+  const collection = await service.createProductCategory(
+    { name: "Khám phá", slug: "a".repeat(50) },
+    actor,
+  );
+  await assert.rejects(
+    service.updateProductCategory(collection.id, { slug: long }, collection.revision, actor),
+    tooLong,
+  );
+  // Saved before the rule existed; the admin form sends the unchanged slug with every save.
+  await pool.query("UPDATE product_categories SET slug=? WHERE id=?", [long, collection.id]);
+  const edited = await service.updateProductCategory(
+    collection.id,
+    { name: "Khám phá Việt Nam", slug: long },
+    collection.revision,
+    actor,
+  );
+  assert.equal(edited.name, "Khám phá Việt Nam");
+});

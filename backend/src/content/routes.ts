@@ -43,11 +43,9 @@ const categoryUpdate = z
   .object({ revision, ...optional(categoryFields) })
   .strict()
   .refine(changesSomething);
-// A product stores its collection's slug in a column of 50 characters.
-const productCategoryFields = { ...categoryFields, slug: categoryFields.slug.max(50) };
-const productCategoryCreate = z.object({ ...productCategoryFields, ...localizedFields }).strict();
+const productCategoryCreate = z.object({ ...categoryFields, ...localizedFields }).strict();
 const productCategoryUpdate = z
-  .object({ revision, ...optional(productCategoryFields), ...localizedFields })
+  .object({ revision, ...optional(categoryFields), ...localizedFields })
   .strict()
   .refine(changesSomething);
 
