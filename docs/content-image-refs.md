@@ -54,7 +54,8 @@ bài viết thêm từ admin không có ảnh bìa thì không.
 3. Chủ site đọc `report.md` và đồng ý.
 4. Sao lưu DB (cPanel > Backup, hoặc phpMyAdmin > Export hai bảng `products`, `posts`).
 5. Trong phpMyAdmin, chọn DB của site, chạy `1-preview.sql`. Lệnh chỉ đọc; so số dòng và
-   giá trị với `report.md`.
+   giá trị với `report.md`. Cột `editor_cover` khác rỗng nghĩa là bài viết đó đã có ảnh bìa
+   chọn trong admin mà API chưa hiện; `2-apply.sql` sẽ không đổi bài đó.
 6. Chạy `2-apply.sql`. File chạy trong một transaction, lưu giá trị cũ vào bảng
    `content_image_refs_backup` rồi mới sửa. Mỗi lệnh sửa chỉ khớp dòng còn giữ mã giả, nên
    chạy lại lần hai không đổi gì.

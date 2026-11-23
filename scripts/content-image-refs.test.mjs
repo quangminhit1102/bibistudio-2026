@@ -113,6 +113,11 @@ test("the SQL changes only rows that still hold the seeded value, and undoes onl
   const preview = previewSql(plan);
   assert.doesNotMatch(preview, /\b(UPDATE|INSERT|DELETE|CREATE|DROP|ALTER)\b/);
   assert.match(preview, /SELECT/);
+  // A post apply would leave alone is told apart: the cover an editor picked is shown.
+  assert.match(
+    preview,
+    /IF\(cover_image_id IS NOT NULL AND image_id NOT IN \(CONCAT\('journal-cover-', slug\), cover_image_id\), image_id, NULL\)/,
+  );
 });
 
 test("SQL values are escaped", () => {

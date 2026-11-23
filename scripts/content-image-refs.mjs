@@ -73,8 +73,9 @@ const header = (plan, title) =>
 export function previewSql(plan) {
   return [
     header(plan, "Read only: the rows the change would touch, with their current values."),
-    `SELECT 'product' AS kind, slug, image_ids AS current_value FROM products WHERE slug IN (${list(plan.products)})`,
-    `UNION ALL SELECT 'post', slug, COALESCE(cover_image_id, image_id) FROM posts WHERE slug IN (${list(plan.posts)});`,
+    "-- editor_cover: a cover an editor picked that the public API does not show yet; such a post is left alone.",
+    `SELECT 'product' AS kind, slug, image_ids AS current_value, NULL AS editor_cover FROM products WHERE slug IN (${list(plan.products)})`,
+    `UNION ALL SELECT 'post', slug, COALESCE(cover_image_id, image_id), IF(cover_image_id IS NOT NULL AND image_id NOT IN (CONCAT('journal-cover-', slug), cover_image_id), image_id, NULL) FROM posts WHERE slug IN (${list(plan.posts)});`,
     "",
   ].join("\n");
 }
