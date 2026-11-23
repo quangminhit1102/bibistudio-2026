@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { test } from "node:test";
 import { loadSiteConfig, renderSiteHtml } from "./site-html.mjs";
+import { messageKeys } from "../src/platform/site-contract.ts";
 
 const template = `<html lang="%SITE_LANG%"><head><title>%SITE_NAME%</title>
 <meta name="description" content="%SITE_DESCRIPTION%" />
@@ -96,7 +97,8 @@ test("loadSiteConfig names the first missing page or messages file", async (t) =
   await assert.rejects(loadSiteConfig(dir), /Site file not found: .*messages[\\/]vi\.ts/);
 
   await mkdir(join(dir, "messages"));
-  await writeFile(join(dir, "messages/vi.ts"), "export default {};\n");
+  const worded = Object.fromEntries(messageKeys.map((key) => [key, key]));
+  await writeFile(join(dir, "messages/vi.ts"), `export default ${JSON.stringify(worded)};\n`);
   await mkdir(join(dir, "pages"));
   await writeFile(join(dir, "pages/home.tsx"), "export default () => null;\n");
   await writeFile(join(dir, "pages/about.tsx"), "export default () => null;\n");
@@ -104,4 +106,23 @@ test("loadSiteConfig names the first missing page or messages file", async (t) =
 
   await writeFile(join(dir, "pages/contact.tsx"), "export default () => null;\n");
   assert.equal((await loadSiteConfig(dir)).name, "X");
+});
+
+test("loadSiteConfig names the texts a site does not word", async (t) => {
+  const { mkdir, mkdtemp, rm, writeFile } = await import("node:fs/promises");
+  const { tmpdir } = await import("node:os");
+  const { join } = await import("node:path");
+  const dir = await mkdtemp(join(tmpdir(), "site-"));
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  await mkdir(join(dir, "messages"));
+  await mkdir(join(dir, "pages"));
+  await writeFile(join(dir, "site.config.ts"), "export default { name: 'X' };\n");
+  await writeFile(join(dir, "catalogue.config.ts"), "export default {};\n");
+  for (const page of ["home", "about", "contact"])
+    await writeFile(join(dir, `pages/${page}.tsx`), "export default () => null;\n");
+  const worded = Object.fromEntries(messageKeys.slice(2).map((key) => [key, key]));
+  await writeFile(join(dir, "messages/vi.ts"), `export default ${JSON.stringify(worded)};\n`);
+  await assert.rejects(loadSiteConfig(dir), {
+    message: `Site messages lack: ${messageKeys[0]}, ${messageKeys[1]}`,
+  });
 });

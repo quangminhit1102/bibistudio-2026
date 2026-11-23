@@ -1,6 +1,7 @@
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
+import { defineMessages } from "../src/platform/site-contract.ts";
 
 const escapeHtml = (value) =>
   String(value)
@@ -46,7 +47,10 @@ export async function loadSiteConfig(siteDir = process.env.SITE_DIR ?? "site") {
     const path = resolve(siteDir, name);
     if (!existsSync(path)) throw new Error(`Site file not found: ${path}`);
   }
-  return (await import(pathToFileURL(file).href)).default;
+  const load = async (path) => (await import(pathToFileURL(path).href)).default;
+  // The cPanel build does not type-check the site, so its texts are checked here.
+  defineMessages(await load(resolve(siteDir, "messages/vi.ts")));
+  return load(file);
 }
 
 /** Vite plugin: renders the HTML entry with the active site's values. */
