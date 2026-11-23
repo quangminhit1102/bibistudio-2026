@@ -22,7 +22,6 @@ export const phaseOneBoundary = {
     "src/styles.css",
   ],
   exclude: [
-    /^src\/routes\/(index|about|contact)\.tsx$/,
     /^src\/features\/admin\/demo\/legacy-presentation\.json$/,
     /(^|\/)seed\.ts$/,
     /\.test\./,

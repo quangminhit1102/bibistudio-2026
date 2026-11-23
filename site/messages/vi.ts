@@ -53,6 +53,12 @@ const messages: Messages = {
   backToTop: "Lên đầu trang",
   "language.heading": "Ngôn ngữ / Language",
   "language.soon": "Sắp ra mắt",
+  "home.title": `${site.name} — Little things, made to touch your heart`,
+  "home.description": `${site.name} sáng tạo sổ tay, thiệp, postcard, bao thư, giấy viết thư và magnet lấy cảm hứng từ Việt Nam và những câu chuyện nhỏ.`,
+  "about.title": `Về ${site.name} — Touch your heart`,
+  "about.description": `${site.name} là studio đồ giấy sáng tạo: sổ tay, thiệp, postcard và giấy viết thư lấy cảm hứng từ Việt Nam.`,
+  "contact.title": `Liên hệ${site.seo.titleSuffix}`,
+  "contact.description": `Liên hệ ${site.name} qua điện thoại, Zalo, email hoặc Facebook, và xem bản đồ vị trí tại Đường sách Nguyễn Văn Bình, Quận 1, TP. Hồ Chí Minh.`,
 };
 
 export default messages;

@@ -1,4 +1,5 @@
 // The contract between the reusable core and one brand's `site/` directory.
+import type { Product } from "@/data/catalogue";
 
 export type NavItem = { to: string; label: string };
 export type SocialLink = {
@@ -177,5 +178,14 @@ export type MessageKey =
   | "floating.messenger"
   | "backToTop"
   | "language.heading"
-  | "language.soon";
+  | "language.soon"
+  | "home.title"
+  | "home.description"
+  | "about.title"
+  | "about.description"
+  | "contact.title"
+  | "contact.description";
 export type Messages = Record<MessageKey, string>;
+
+/** What the home route hands to the site's home page. */
+export type HomePageProps = { products: Product[] };
