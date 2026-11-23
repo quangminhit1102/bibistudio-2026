@@ -41,15 +41,21 @@ first two need a deploy and an approval between them, so they cannot be one PR.
 2. **The seed stores public paths.** `scripts/generate-content-seed.mjs` writes
    `/catalogue/...` for product images and `/journal/...` for post covers, so a new site's
    database is correct from its first deploy. The API already returns a value that starts
-   with `/` unchanged (`backend/src/content/public-service.ts`).
+   with `/` unchanged (`backend/src/content/public-service.ts`). A post's cover goes to
+   `image_id`, the column the admin's cover picker edits, and `cover_image_id` stays empty:
+   the public API prefers `cover_image_id`, so a path kept there would hide every cover an
+   editor picks later. `image_id` is `VARCHAR(64)`; a longer path stops the generator.
 3. **The admin shows a public path.** `resolveMedia` returns an id that is a public path as
    the image URL instead of asking `/api/media/` for it, so the product and post forms keep
    showing the image after the data change.
 4. **`scripts/content-image-refs.mjs`.** `plan` reads the seed and a site's public API and
    writes a report and three SQL files (preview, apply, rollback); `verify` checks that every
    seed entry is in the API and every image the API names loads. The tool never writes to a
-   database. A row is planned only while it still holds exactly the seeded placeholder, and
-   only when its new file is already served.
+   database. A row is planned only while it still holds exactly what a seed stored (the
+   placeholder, or for a cover the `/assets/blog/<file>` path of the seed before this one),
+   and only when its new file is already served. `verify` requests only the site's own
+   addresses, without following redirects; it expects an image where the seed had one, so a
+   post an editor published without a cover does not fail it.
 
 ## Tasks
 

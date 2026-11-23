@@ -28,11 +28,22 @@ node scripts/content-image-refs.mjs verify --api https://bibistudio.vn
 
 `plan` chỉ đưa vào SQL những dòng:
 
-- còn giữ đúng mã giả ban đầu (dòng đã sửa trong admin được ghi ở mục "Left alone");
+- còn giữ đúng giá trị seed đã ghi: mã giả, hoặc với ảnh bìa là đường dẫn
+  `/assets/blog/<file>` của bản seed trước (dòng đã sửa trong admin được ghi ở mục "Left
+  alone");
 - có file đích đang được site phục vụ (dòng chưa có file ghi ở mục "Waiting", và lệnh thoát
   với mã lỗi).
 
-Mục "Problems" liệt kê mục có trong seed nhưng API không có, hoặc số ảnh khác nhau.
+Mục "Problems" liệt kê mục có trong seed nhưng API không có, số ảnh khác nhau, hoặc đường
+dẫn ảnh bìa dài hơn 64 ký tự.
+
+Ảnh bìa bài viết được ghi vào cột `image_id` (cột mà ô chọn ảnh bìa trong admin sửa) và cột
+`cover_image_id` được để trống, vì API ưu tiên `cover_image_id`: nếu ghi vào đó, ảnh bìa
+chọn lại trong admin sau này sẽ không hiện ra.
+
+`verify` chỉ gọi địa chỉ của chính site và không đi theo chuyển hướng; ảnh ở site khác được
+liệt kê là chưa kiểm. Sản phẩm hoặc bài viết của seed mà API không còn ảnh nào bị báo lỗi;
+bài viết thêm từ admin không có ảnh bìa thì không.
 
 ## Thứ tự thực hiện
 
@@ -53,7 +64,8 @@ Mục "Problems" liệt kê mục có trong seed nhưng API không có, hoặc s
 ## Hoàn tác
 
 Chạy `3-rollback.sql` trong phpMyAdmin. File trả từng dòng về giá trị trong
-`content_image_refs_backup`, và chỉ với dòng còn giữ đúng giá trị mà `2-apply.sql` đã ghi.
+`content_image_refs_backup` (với bài viết là cả `image_id` và `cover_image_id`), và chỉ với
+dòng còn giữ đúng giá trị mà `2-apply.sql` đã ghi.
 Dòng đã được sửa trong admin sau đó được giữ nguyên. Chạy lại lần hai không đổi gì.
 
 Bảng `content_image_refs_backup` được giữ lại sau khi hoàn tác. Xóa bảng khi không còn cần:
@@ -68,7 +80,8 @@ công khai hiện cùng một ảnh, nên hoàn tác không làm mất ảnh tr�
 - MariaDB 10.11 thử nghiệm với 74 sản phẩm và 10 bài viết như production cùng một sản phẩm
   thêm từ admin: preview không đổi gì; apply đổi 68 sản phẩm và 10 bài viết; apply lần hai
   không đổi gì; sản phẩm của admin và 6 sản phẩm không ảnh giữ nguyên; rollback trả đúng
-  trạng thái đầu, trừ một dòng cố ý sửa sau apply; rollback lần hai không đổi gì.
+  trạng thái đầu, trừ một sản phẩm và một bài viết cố ý sửa sau apply; rollback lần hai
+  không đổi gì.
 
 ## Chưa kiểm
 
