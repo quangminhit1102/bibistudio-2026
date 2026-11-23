@@ -240,30 +240,34 @@ export default function Dashboard() {
                     kind="bar"
                   />
                 </Module>
-                <Access resource="products">
-                  <Card>
-                    <h2>Sản phẩm sắp hết hàng</h2>
-                    <div className="a-table-wrap" style={{ marginTop: 18 }}>
-                      <table className="a-table" style={{ minWidth: 300 }}>
-                        <tbody>
-                          {r.products
-                            .filter((p) => p.stock - p.reserved < 35)
-                            .slice(0, 6)
-                            .map((p) => (
-                              <tr key={p.id}>
-                                <td>
-                                  <Link to={("/admin/products/" + p.id) as "/admin"}>{p.name}</Link>
-                                </td>
-                                <td>
-                                  <Badge tone="warning">{p.stock - p.reserved} khả dụng</Badge>
-                                </td>
-                              </tr>
-                            ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </Card>
-                </Access>
+                <Module id="inventory">
+                  <Access resource="products">
+                    <Card>
+                      <h2>Sản phẩm sắp hết hàng</h2>
+                      <div className="a-table-wrap" style={{ marginTop: 18 }}>
+                        <table className="a-table" style={{ minWidth: 300 }}>
+                          <tbody>
+                            {r.products
+                              .filter((p) => p.stock - p.reserved < 35)
+                              .slice(0, 6)
+                              .map((p) => (
+                                <tr key={p.id}>
+                                  <td>
+                                    <Link to={("/admin/products/" + p.id) as "/admin"}>
+                                      {p.name}
+                                    </Link>
+                                  </td>
+                                  <td>
+                                    <Badge tone="warning">{p.stock - p.reserved} khả dụng</Badge>
+                                  </td>
+                                </tr>
+                              ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </Card>
+                  </Access>
+                </Module>
                 {!server && (
                   <Access resource="audit">
                     <Card>
