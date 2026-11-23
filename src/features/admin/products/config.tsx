@@ -243,7 +243,7 @@ export const productTypeConfig: EntityConfig<"productTypes"> = {
       type: "text",
       required: true,
       createOnly: true,
-      description: "Chữ thường, số và dấu gạch nối, ví dụ: greeting-card.",
+      description: "Chữ thường, số và dấu gạch nối, ví dụ: loai-moi.",
     },
     { key: "slug", label: "Đường dẫn", type: "text", required: true },
     { key: "plural", label: "Tên trên trang danh sách", type: "text" },

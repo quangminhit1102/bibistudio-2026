@@ -145,6 +145,10 @@ API công khai `/api/public/*` trả `Cache-Control: public, max-age=60` cho ph�
 
 Migration nội dung: backend và `ops/content-metadata.cjs` chấp nhận schema mới hơn bản đóng gói đúng một bước. Backend coi nội dung là sẵn sàng khi mọi phiên bản nó biết đều `complete` và các phiên bản mới hơn cũng `complete`; nhờ vậy release này là đích rollback hợp lệ sau khi phiên bản 3 chạy. Tools trên host chỉ nhận file thứ ba tên `003_content_catalogue.sql` sau khi bootstrap lại từ commit có thay đổi này. Release đầu tiên mang migration thứ ba vì thế cần hai điều kiện: release có thay đổi này đã lên production, và deploy tools đã bootstrap lại. Thiếu điều kiện thứ hai, receiver từ chối upload với `Invalid content metadata`, production không đổi.
 
+Migration nội dung thứ ba (`003_content_catalogue.sql`) chỉ thêm: bảng `product_types`, cột `translations` và `image` trên `product_categories`, cột `attributes` trên `products`; không sửa hay xóa cột cũ. Chưa chạy trên production. Sau khi chạy, đích rollback hợp lệ là release có thay đổi "chấp nhận schema mới hơn một bước" ở trên hoặc mới hơn; release cũ hơn thế từ chối DB ở phiên bản 3. Rollback không gỡ bảng và cột mới: release cũ bỏ qua chúng, và các cột thuộc tính cũ (`dimensions`, `pages`, `material_*`, `format_*`, `occasion`) vẫn được ghi song song với `attributes` nên dữ liệu sửa ở bản mới vẫn đọc được ở bản cũ.
+
+Loại sản phẩm có hai giá trị khác nhau: `code` lưu trên `products.product_type` và không đổi được sau khi tạo, `slug` là đường dẫn trang công khai (`notebook` và `notebooks`). Bộ sưu tập dùng `product_categories.slug` cho cả hai. Seed chỉ thêm loại sản phẩm khi bảng còn trống và chỉ điền `translations`, `image`, `attributes` khi còn `NULL`, nên chạy lại không ghi đè nội dung đã sửa trong admin. Trang công khai lấy hai danh sách này từ `/api/public/product-types` và `/api/public/collections`; khi API lỗi hoặc trả danh sách rỗng thì dùng danh sách đóng gói trong `src/data/catalogue.ts`.
+
 Tạo/cấp quyền key mới, mở rộng truy cập hoặc chuyển production lần đầu cần xác nhận phù hợp. Không đọc/in private key để điều tra một job lỗi.
 
 ## 7. Staging đang tắt và cách bật lại

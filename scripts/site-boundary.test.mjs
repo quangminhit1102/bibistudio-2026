@@ -1,8 +1,9 @@
 import assert from "node:assert/strict";
-import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { test } from "node:test";
+import { buildContentSeed } from "./generate-content-seed.mjs";
 import { root } from "./runtime.mjs";
 import { findBoundaryViolations, phaseOneBoundary } from "./site-boundary.mjs";
 import { loadSiteConfig } from "./site-html.mjs";
@@ -109,10 +110,49 @@ test("skips excluded paths and files outside the checked folders", async () => {
   assert.deepEqual(found, []);
 });
 
+test("reports a product type or collection of the site named in core code", async () => {
+  const found = await violations(
+    {
+      "src/lib/options.ts": [
+        'export const types = [{ value: "notebook", label: "Sổ tay" }];',
+        "const page = `/products/${slug}`;",
+        'const hint = "ví dụ: notebook-a5";',
+        "const first = products.filter((p) => p.collection === 'tet');",
+      ].join("\n"),
+      "src/lib/layout.ts": 'export const signature = "tet";\n',
+    },
+    { taxonomy: ["notebook", "notebooks", "tet"], taxonomyExclude: [/layout\.ts$/] },
+  );
+  assert.deepEqual(
+    found.map((v) => [v.file, v.line]),
+    [
+      ["src/lib/options.ts", 1],
+      ["src/lib/options.ts", 4],
+    ],
+  );
+  assert.match(found[0].reason, /"notebook"/);
+});
+
+async function siteTaxonomy() {
+  const [catalogue, blog] = await Promise.all(
+    ["src/data/catalogue.ts", "src/data/blog.ts"].map((file) => readFile(join(root, file), "utf8")),
+  );
+  const seed = buildContentSeed(catalogue, blog);
+  return [
+    ...new Set([
+      ...seed.productTypes.flatMap((type) => [type.code, type.slug]),
+      ...seed.productCategories.map((collection) => collection.slug),
+    ]),
+  ];
+}
+
 test("the repository keeps site-specific values out of migrated core folders", async () => {
+  const taxonomy = await siteTaxonomy();
+  assert.ok(taxonomy.length > 0);
   const found = await findBoundaryViolations({
     root,
     site: await loadSiteConfig(join(root, process.env.SITE_DIR ?? "site")),
+    taxonomy,
     ...phaseOneBoundary,
   });
   assert.deepEqual(found, []);
