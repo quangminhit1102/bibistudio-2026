@@ -64,9 +64,7 @@ export async function browserSmoke(baseUrl) {
         .every((i) => i.complete && i.naturalWidth > 0),
     );
     await page.goto(`${baseUrl}/api-test`);
-    await page
-      .getByText("Kết nối thành công — phiên bản FE và BE khớp nhau.", { exact: true })
-      .waitFor({ timeout: 30000 });
+    await page.locator('[role="status"][data-state="matched"]').waitFor({ timeout: 30000 });
     if (errors.length) throw new Error(errors.join("\n"));
     await mkdir(".releases/evidence", { recursive: true });
     await page.screenshot({ path: ".releases/evidence/api-test.png", fullPage: true });

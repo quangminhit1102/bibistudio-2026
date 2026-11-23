@@ -43,6 +43,13 @@ function ApiTestPage() {
   const matched =
     state.data?.backend.releaseId === frontend.releaseId &&
     state.data?.backend.sourceSha === frontend.sourceSha;
+  const status = state.loading
+    ? "loading"
+    : state.error
+      ? "error"
+      : matched
+        ? "matched"
+        : "mismatched";
   return (
     <PageShell>
       <PageIntro
@@ -51,7 +58,8 @@ function ApiTestPage() {
         lead={t("apiTest.lead")}
       />
       <section className="mx-auto max-w-[1280px] px-5 pb-24 sm:px-6 lg:px-12">
-        <div role="status" className="mb-6 rounded border border-border p-5">
+        {/* The deploy's browser check waits for `data-state="matched"`, whatever the site's wording. */}
+        <div role="status" data-state={status} className="mb-6 rounded border border-border p-5">
           {state.loading
             ? t("apiTest.loading")
             : state.error
