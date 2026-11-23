@@ -137,6 +137,14 @@ Secret hoạt động là `DEPLOY_SSH_KEY` trong GitHub environment `production`
 
 Deploy tools ở `/home/vhplasti/bibi-deploy/tools`, ngoài archive ứng dụng. Sửa `ops` cần kiểm tra source và bootstrap qua cPanel với đúng commit/checksum; deploy ứng dụng không tự ghi đè receiver. Bản `deploy.cjs` hiện đã bootstrap từ `032ec991fe11673b8a00298c0276fbcad59fa83b`, SHA256 `52132e6231d0360f61608fd12e8b6431780342f4e4402fbc6bc8950ab93bba53`; stable Passenger và visitor-context/PHP tools cùng source. Thay đổi production-only ở workflow/scripts không cần đổi tool này.
 
+Khi một bước deploy lỗi, log của run Deploy production nêu lý do, không cần vào hosting:
+
+- `npm ci` (cài thư viện backend của bản mới, chạy với `--loglevel=verbose`): `npm ci failed: stopped at the 180 s limit` hoặc `exit code N`, kèm tối đa 25 dòng cuối npm đã in.
+- Bước tự kiểm tra (probe): `Private database probe failed (exit code 1; step "version"; SyntaxError, after GET /api/version HTTP 200)`. Tên bước, request cuối và mã HTTP là chữ cố định; lỗi chỉ được nêu bằng tên lớp và mã lỗi (`TypeError ECONNRESET`, `TimeoutError`), không bao giờ in thông báo lỗi, vì thông báo có thể chứa host hay tài khoản DB.
+- Các lệnh riêng tư khác (migrate, backup, ...) chỉ thêm cách kết thúc: `exit code N` hoặc `stopped at its time limit`.
+
+Tên bước của probe nằm trong backend của release, nên chỉ có ở release build sau thay đổi này; phần `npm ci` và cách kết thúc nằm trong deploy tools, có hiệu lực sau khi bootstrap lại. Mới kiểm bằng test trên máy phát triển, chưa kiểm trên hosting.
+
 Header bảo mật của trang tĩnh (HSTS, `nosniff`, `Referrer-Policy`, CSP ở chế độ Report-Only) nằm ở hai nơi giống hệt nhau, có test giữ đồng bộ: `public/.htaccess` đi theo mỗi release nên có hiệu lực ngay sau một lần deploy thường cho HTML và file trong `_bibi`; `ops/frontend.htaccess.template` phủ thêm `/assets` nhưng chỉ có hiệu lực sau khi bootstrap lại deploy tools. Smoke in cảnh báo, không làm deploy thất bại, nếu trang thiếu các header này. `/api` dùng header của Helmet.
 
 File có hash trong `/assets` được cache một năm kèm `immutable`: `ops/deploy.cjs` ghi `assets/.htaccess` ngay trong thư mục assets dùng chung mỗi lần activation/rollback và xóa file này khi quay về baseline. Quy tắc không nằm trong release vì bước gộp assets coi mọi file trong `frontend/assets` là bất biến và sẽ từ chối bản sửa sau này. Vì thuộc deploy tools, thay đổi chỉ có hiệu lực sau khi bootstrap lại; trước đó hosting vẫn trả `max-age=604800` mặc định và smoke in cảnh báo, không làm deploy thất bại. Mới kiểm trên Apache `httpd:2.4`, chưa kiểm trên LiteSpeed thật.

@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { mkdtemp, mkdir, writeFile, readFile, rm, readlink, readdir, stat } from "node:fs/promises";
+import { createRequire } from "node:module";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import deploy from "../ops/deploy.cjs";
@@ -228,4 +229,86 @@ test("failed explicit rollback verification restores current release and routing
   );
   assert.ok((await readlink(join(config.root, "current"))).endsWith(second));
   assert.equal(await readFile(join(config.site, ".htaccess"), "utf8"), before);
+});
+
+async function fakeNpm(t, script) {
+  const dir = await mkdtemp(join(tmpdir(), "bibi-npm-"));
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  await mkdir(join(dir, "release/backend"), { recursive: true });
+  const npmBin = join(dir, "npm");
+  await writeFile(npmBin, "#!/bin/sh\n" + script, { mode: 0o755 });
+  return { config: { npmBin, runtimeBin: dir }, dir: join(dir, "release") };
+}
+test(
+  "a failed npm install reports its exit code and last lines",
+  { skip: process.platform === "win32" },
+  async (t) => {
+    const { config, dir } = await fakeNpm(
+      t,
+      'echo "args: $*" >&2\necho "npm error code EDQUOT" >&2\necho "npm http fetch GET https://user:token@registry.test/x" >&2\nexit 7\n',
+    );
+    await assert.rejects(deploy.install(config, dir), (error) => {
+      assert.match(error.message, /^npm ci failed: exit code 7; its last lines:\n/);
+      assert.match(
+        error.message,
+        /args: ci --omit=dev --ignore-scripts --no-audit --no-fund --loglevel=verbose/,
+      );
+      assert.match(error.message, /npm error code EDQUOT/);
+      assert.match(error.message, /https:\/\/\*\*\*@registry\.test/);
+      assert.doesNotMatch(error.message, /token/);
+      return true;
+    });
+  },
+);
+test(
+  "an npm install stopped at its time limit says so and keeps what npm printed",
+  { skip: process.platform === "win32" },
+  async (t) => {
+    const { config, dir } = await fakeNpm(
+      t,
+      'echo "npm verbose reify waiting" >&2\nexec sleep 30\n',
+    );
+    await assert.rejects(deploy.install(config, dir, { timeout: 500 }), {
+      message:
+        "npm ci failed: stopped at the 0.5 s limit; its last lines:\n  npm verbose reify waiting",
+    });
+    const silent = await fakeNpm(t, "exec sleep 30\n");
+    await assert.rejects(deploy.install(silent.config, silent.dir, { timeout: 500 }), {
+      message: "npm ci failed: stopped at the 0.5 s limit; it printed nothing",
+    });
+  },
+);
+test("a failed private tool reports how it ended and only a plain probe step", () => {
+  const { failureDetail } = createRequire(import.meta.url)("../ops/database-lifecycle.cjs");
+  const report = (extra) =>
+    JSON.stringify({ ok: false, error: "Release DB/auth/analytics probe failed", ...extra });
+  assert.equal(
+    failureDetail({
+      code: 1,
+      stderr:
+        report({ step: "version", reason: "SyntaxError, after GET /api/version HTTP 200" }) + "\n",
+    }),
+    ' (exit code 1; step "version"; SyntaxError, after GET /api/version HTTP 200)',
+  );
+  assert.equal(failureDetail({ code: 1, stderr: report({}) }), " (exit code 1)");
+  assert.equal(
+    failureDetail({
+      killed: true,
+      code: null,
+      stderr: "Access denied for user x using password y",
+    }),
+    " (stopped at its time limit)",
+  );
+  assert.equal(
+    failureDetail({
+      code: 1,
+      stderr: report({ step: "login", reason: "password=hunter2 'quoted'" }),
+    }),
+    ' (exit code 1; step "login")',
+  );
+  assert.equal(
+    failureDetail({ code: 1, stderr: report({ step: "x\ny", reason: "ok" }) }),
+    " (exit code 1)",
+  );
+  assert.equal(failureDetail({}), "");
 });

@@ -9,6 +9,31 @@ const { verifyAccessLogAssets, checkAccessLogCompatibility } = require("./access
 const { verifyVisitorAssets, checkVisitorCompatibility } = require("./visitor-metadata.cjs");
 
 /** Fixed host-only commands. No SQL, password or arbitrary executable from SSH input. */
+const SAFE_DETAIL = /^[\w ,./:-]{1,160}$/;
+// How a private tool ended, for the deploy log. Its output is never repeated, except the step and
+// reason a release probe names in its JSON error line, and only when they are plain short text.
+function failureDetail(error) {
+  const parts = [];
+  if (error.killed) parts.push("stopped at its time limit");
+  else if (typeof error.code === "number") parts.push(`exit code ${error.code}`);
+  for (const line of String(error.stderr ?? "")
+    .trim()
+    .split("\n")
+    .reverse()) {
+    let report;
+    try {
+      report = JSON.parse(line);
+    } catch {
+      continue;
+    }
+    if (typeof report?.step !== "string" || !SAFE_DETAIL.test(report.step)) continue;
+    parts.push(`step "${report.step}"`);
+    if (typeof report.reason === "string" && SAFE_DETAIL.test(report.reason))
+      parts.push(report.reason);
+    break;
+  }
+  return parts.length ? ` (${parts.join("; ")})` : "";
+}
 async function runDatabaseTool(config, dir, command, manifest) {
   if (
     ![
@@ -108,7 +133,9 @@ async function runDatabaseTool(config, dir, command, manifest) {
         /* Safe generic failure below. */
       }
     }
-    throw new Error(`Private database ${command} failed; activation forbidden`);
+    throw new Error(
+      `Private database ${command} failed${failureDetail(error)}; activation forbidden`,
+    );
   }
 }
 async function verifyReleaseProbe(config, { dir, manifest }, { run = runDatabaseTool } = {}) {
@@ -246,4 +273,10 @@ async function prepareDatabase(config, release, { run = runDatabaseTool, backupR
     ...(accessLogs ? { accessLogs } : {}),
   };
 }
-module.exports = { prepareDatabase, assertRollbackCompatible, runDatabaseTool, verifyReleaseProbe };
+module.exports = {
+  prepareDatabase,
+  assertRollbackCompatible,
+  runDatabaseTool,
+  verifyReleaseProbe,
+  failureDetail,
+};
