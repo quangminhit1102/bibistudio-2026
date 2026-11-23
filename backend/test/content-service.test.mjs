@@ -495,3 +495,33 @@ test("a product type and a product cannot share a page slug", async (t) => {
   // A collection's page lives under /collections, so it may share the slug.
   await service.createProductCategory({ name: "Magnet", slug: "magnets" }, actor);
 });
+
+test("a plain text for a per-language attribute is kept as its Vietnamese text", async (t) => {
+  const { service, actor } = await setup(t);
+  await service.createProductType({ code: "card", name: "Thiệp", slug: "cards" }, actor);
+  await service.createProductCategory({ name: "Thiệp", slug: "cards" }, actor);
+  const product = await service.createProduct(
+    {
+      productCode: "C1",
+      name: "A",
+      slug: "c1",
+      description: "",
+      productType: "card",
+      collection: "cards",
+      materialVi: "Giấy",
+      materialEn: "Paper",
+    },
+    actor,
+  );
+  const edited = await service.updateProduct(
+    product.id,
+    { attributes: { material: "Giấy kraft", dimensions: { vi: "A6", en: "A6" } } },
+    product.revision,
+    actor,
+  );
+  assert.deepEqual(edited.attributes, {
+    dimensions: "A6",
+    material: { vi: "Giấy kraft", en: "" },
+  });
+  assert.equal(edited.materialVi, "Giấy kraft");
+});

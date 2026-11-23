@@ -39,11 +39,13 @@ export function attributesFromLegacy(row: LegacyRow): Attributes {
 export function legacyFromAttributes(attributes: Attributes): LegacyAttributeColumns {
   const one = (key: string) => {
     const value = attributes[key];
-    return typeof value === "string" && value ? value : null;
+    return (typeof value === "string" ? value : value?.vi) || null;
   };
+  // A plain text for a per-language attribute is its Vietnamese text.
   const side = (key: string, locale: "vi" | "en") => {
     const value = attributes[key];
-    return (typeof value === "object" && value !== null && value[locale]) || null;
+    if (typeof value === "string") return (locale === "vi" && value) || null;
+    return value?.[locale] || null;
   };
   return {
     dimensions: one("dimensions"),
