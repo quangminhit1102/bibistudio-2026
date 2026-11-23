@@ -20,10 +20,14 @@ export const groupAttribute = (collectionSlug: string): SelectAttribute | undefi
     ? select(catalogue.groupBy[collectionSlug])
     : undefined;
 
+/** A product's value for a site attribute: from `attributes`, else the field of that name. */
 export function attributeValue(product: Product, key: string): string | undefined {
-  const value = (product as Record<string, unknown>)[key];
+  const value = product.attributes?.[key] ?? (product as Record<string, unknown>)[key];
   if (typeof value === "string") return value || undefined;
-  if (value && typeof value === "object") return tx(value as Product["name"]) || undefined;
+  if (value && typeof value === "object") {
+    const text = value as Partial<Product["name"]>;
+    return text.vi || text.en || undefined;
+  }
   return undefined;
 }
 

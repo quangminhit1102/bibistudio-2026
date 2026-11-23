@@ -89,15 +89,14 @@ export type Product = {
   material?: Localized;
   pages?: string;
   format?: Localized;
+  /** Every attribute by the site's key, when the product comes from the API. */
+  attributes?: Record<string, string | Localized>;
   images: string[];
   imageAlt?: Localized;
   featured?: boolean;
   sortOrder: number;
   status: "published" | "draft";
 };
-
-/** A catalogue entry whose id may be outside the known list. */
-type AnyId<T extends { id: string }> = Omit<T, "id"> & { id: string };
 
 export const productTypes: ProductType[] = [
   { id: "notebook", slug: "notebooks", name: { vi: "Sổ tay", en: "Notebook" }, plural: { vi: "Sổ tay", en: "Notebooks" }, tagline: { vi: "Những khoảng giấy nhỏ cho suy nghĩ lớn.", en: "Small spaces for big thoughts." }, image: "/catalogue/collection-notebooks.webp" },
@@ -237,28 +236,6 @@ export const tx = (l: Localized) => l.vi; // VI is the active language; EN conte
 
 const live = () => products.filter((x) => x.status === "published").sort((a, b) => a.sortOrder - b.sortOrder);
 
-const own = (id: string): Localized => ({ vi: id, en: id });
-const none: Localized = { vi: "", en: "" };
-
-/** A type or collection outside the known list is labelled with its own id. */
-export const getProductType = (id: string): AnyId<ProductType> =>
-  productTypes.find((t) => t.id === id) ?? {
-    id,
-    slug: id,
-    name: own(id),
-    plural: own(id),
-    tagline: none,
-  };
-export const getProductTypeBySlug = (slug: string) => productTypes.find((t) => t.slug === slug);
-export const getCollection = (id: string): AnyId<Collection> =>
-  collections.find((c) => c.id === id) ?? {
-    id,
-    slug: id,
-    name: own(id),
-    tagline: none,
-    intro: none,
-  };
-export const getCollectionBySlug = (slug: string) => collections.find((c) => c.slug === slug);
 export const getProduct = (slug: string) => live().find((x) => x.slug === slug);
 export const getAllProducts = live;
 export const productsByType = (id: string) => live().filter((x) => x.productType === id);

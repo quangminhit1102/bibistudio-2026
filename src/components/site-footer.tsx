@@ -2,7 +2,8 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowUpRight, MapPin } from "lucide-react";
 import { Reveal } from "./brand/reveal";
-import { collections, productTypes, tx } from "@/data/catalogue";
+import { tx } from "@/data/catalogue";
+import { useTaxonomy } from "@/lib/catalogue-taxonomy";
 import { mailHref, siteLocation, telHref } from "@/lib/site-contact";
 import { BrandLogo, site } from "@/platform/site";
 
@@ -24,6 +25,7 @@ function Col({ title, children, delay = 0 }: { title: string; children: React.Re
 const linkCls = "group inline-flex items-center gap-1.5 text-[14px] text-foreground/80 transition hover:translate-x-1 hover:text-foreground";
 
 export function SiteFooter() {
+  const { productTypes, collections } = useTaxonomy();
   return (
     <footer className="relative overflow-hidden border-t border-border bg-background">
       <div className="mx-auto max-w-[1280px] px-5 pt-20 sm:px-6 lg:px-12">

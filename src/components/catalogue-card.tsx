@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
-import { type Product, getCollection, getProductType, tx } from "@/data/catalogue";
+import { type Product, tx } from "@/data/catalogue";
+import { getCollection, getProductType, useTaxonomy } from "@/lib/catalogue-taxonomy";
 import { PaperPlaceholder } from "@/components/brand/paper-placeholder";
 import { Reveal } from "@/components/brand/reveal";
 import { Tilt } from "@/components/brand/motion";
@@ -8,6 +9,7 @@ import { Tilt } from "@/components/brand/motion";
 export const productTransitionName = (slug: string) => `product-${slug}`;
 
 export function CatalogueCard({ product, index = 0 }: { product: Product; index?: number }) {
+  useTaxonomy();
   const type = getProductType(product.productType);
   const col = getCollection(product.collection);
   const [main, alt] = product.images;

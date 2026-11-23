@@ -6,13 +6,8 @@ import { PaperPlaceholder } from "@/components/brand/paper-placeholder";
 import { Reveal } from "@/components/brand/reveal";
 import { SplitWords } from "@/components/brand/motion";
 import { SITE_URL } from "@/lib/seo";
-import {
-  collections,
-  getAllProducts,
-  getCollectionBySlug,
-  tx,
-  type Product,
-} from "@/data/catalogue";
+import { getAllProducts, tx, type Product } from "@/data/catalogue";
+import { getCollectionBySlug, loadTaxonomy, useTaxonomy } from "@/lib/catalogue-taxonomy";
 import { attributeValue, groupAttribute, text } from "@/lib/catalogue-attributes";
 import { getPublicProducts } from "@/lib/content-api";
 import { toPublicProduct } from "@/lib/content-adapter";
@@ -28,13 +23,13 @@ const chapters: Record<string, { quote?: string; themes?: string[] }> = {
 
 export const Route = createFileRoute("/collections/$slug")({
   loader: async ({ params }) => {
+    const [api] = await Promise.all([getPublicProducts(), loadTaxonomy()]);
     const c = getCollectionBySlug(params.slug);
     if (!c) throw notFound();
-    const api = await getPublicProducts();
     return { id: c.id, products: api ? api.map(toPublicProduct) : getAllProducts() };
   },
   head: ({ loaderData }) => {
-    const c = loaderData && collections.find((x) => x.id === loaderData.id);
+    const c = loaderData && getCollectionBySlug(loaderData.id);
     if (!c)
       return {
         meta: [{ title: `Không tìm thấy${site.seo.titleSuffix}` }, { name: "robots", content: "noindex" }],
@@ -77,7 +72,9 @@ export const Route = createFileRoute("/collections/$slug")({
 
 function CollectionPage() {
   const { id, products }: { id: string; products: Product[] } = Route.useLoaderData();
-  const c = collections.find((x) => x.id === id)!;
+  const { collections } = useTaxonomy();
+  // The loader found it; a list reloaded without it falls back to the first collection.
+  const c = collections.find((x) => x.id === id) ?? collections[0];
   const ch = chapters[c.slug] ?? {};
   const signature = c.id === "explore-vietnam";
   const idx = collections.indexOf(c);

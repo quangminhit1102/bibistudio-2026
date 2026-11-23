@@ -4,15 +4,8 @@ import { SlidersHorizontal, X } from "lucide-react";
 import { PageShell, PageIntro } from "@/components/page-shell";
 import { CatalogueGrid } from "@/components/catalogue-card";
 import { ContactBand } from "@/components/contact-cta";
-import {
-  collections,
-  getAllProducts,
-  productTypes,
-  tx,
-  type CollectionId,
-  type Product,
-  type ProductTypeId,
-} from "@/data/catalogue";
+import { getAllProducts, tx, type Product } from "@/data/catalogue";
+import { loadTaxonomy, useTaxonomy } from "@/lib/catalogue-taxonomy";
 import { getPublicProducts } from "@/lib/content-api";
 import { toPublicProduct } from "@/lib/content-adapter";
 import { site } from "@/platform/site";
@@ -24,7 +17,7 @@ const PAGE = 12;
 
 export const Route = createFileRoute("/products/")({
   loader: async () => {
-    const api = await getPublicProducts();
+    const [api] = await Promise.all([getPublicProducts(), loadTaxonomy()]);
     return { products: api ? api.map(toPublicProduct) : getAllProducts() };
   },
   head: () => ({
@@ -70,8 +63,9 @@ function Pill({
 
 function ProductsPage() {
   const { products }: { products: Product[] } = Route.useLoaderData();
-  const [type, setType] = useState<ProductTypeId | "all">("all");
-  const [col, setCol] = useState<CollectionId | "all">("all");
+  const { productTypes, collections } = useTaxonomy();
+  const [type, setType] = useState("all");
+  const [col, setCol] = useState("all");
   const [q, setQ] = useState("");
   const [sort, setSort] = useState<Sort>("newest");
   const [sheet, setSheet] = useState(false);
@@ -111,7 +105,7 @@ function ProductsPage() {
       return [...list].sort((a, b) => tx(a.name).localeCompare(tx(b.name), "vi"));
     const order: string[] = collections.map((c) => c.id);
     return [...list].sort((a, b) => order.indexOf(a.collection) - order.indexOf(b.collection));
-  }, [products, type, col, q, sort]);
+  }, [products, collections, type, col, q, sort]);
 
   useEffect(() => setLimit(PAGE), [type, col, q, sort]);
   useEffect(() => {

@@ -4,7 +4,8 @@ import { PageShell, PageIntro } from "@/components/page-shell";
 import { PaperPlaceholder } from "@/components/brand/paper-placeholder";
 import { Reveal } from "@/components/brand/reveal";
 import { ContactBand } from "@/components/contact-cta";
-import { collections, getAllProducts, tx, type Product } from "@/data/catalogue";
+import { getAllProducts, tx, type Product } from "@/data/catalogue";
+import { loadTaxonomy, useTaxonomy } from "@/lib/catalogue-taxonomy";
 import { getPublicProducts } from "@/lib/content-api";
 import { toPublicProduct } from "@/lib/content-adapter";
 import { site } from "@/platform/site";
@@ -15,7 +16,7 @@ const description =
 
 export const Route = createFileRoute("/collections/")({
   loader: async () => {
-    const api = await getPublicProducts();
+    const [api] = await Promise.all([getPublicProducts(), loadTaxonomy()]);
     return { products: api ? api.map(toPublicProduct) : getAllProducts() };
   },
   head: () => ({
@@ -33,6 +34,7 @@ export const Route = createFileRoute("/collections/")({
 
 function CollectionsPage() {
   const { products }: { products: Product[] } = Route.useLoaderData();
+  const { collections } = useTaxonomy();
   const countByCollection = (id: string) => products.filter((p) => p.collection === id).length;
   return (
     <PageShell>

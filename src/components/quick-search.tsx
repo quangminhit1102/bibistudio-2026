@@ -1,7 +1,8 @@
 import { Link } from "@tanstack/react-router";
 import { Search, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { getAllProducts, getProductType, tx } from "@/data/catalogue";
+import { getAllProducts, tx } from "@/data/catalogue";
+import { getProductType, useTaxonomy } from "@/lib/catalogue-taxonomy";
 
 const norm = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").toLowerCase();
 
@@ -21,11 +22,13 @@ export function QuickSearch({ className = "" }: { className?: string }) {
     return () => { document.removeEventListener("keydown", key); document.body.style.overflow = prev; };
   }, [open]);
 
+  const lists = useTaxonomy();
   const results = useMemo(() => {
     const n = norm(q.trim());
     if (!n) return [];
     return getAllProducts().filter((p) => norm(`${p.name.vi} ${p.name.en} ${tx(getProductType(p.productType).name)}`).includes(n)).slice(0, 12);
-  }, [q]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- getProductType reads `lists`
+  }, [q, lists]);
 
   const close = () => { setOpen(false); setQ(""); };
 

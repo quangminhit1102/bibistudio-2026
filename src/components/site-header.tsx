@@ -6,7 +6,8 @@ import { LanguageSwitcher } from "./language-switcher";
 import { QuickSearch } from "./quick-search";
 import { telHref } from "@/lib/site-contact";
 import { BrandLogo, site } from "@/platform/site";
-import { collections, productTypes, tx } from "@/data/catalogue";
+import { tx } from "@/data/catalogue";
+import { useTaxonomy } from "@/lib/catalogue-taxonomy";
 
 type Mega = "products" | "collections";
 const nav: { to: string; label: string; mega?: Mega }[] = [
@@ -19,6 +20,7 @@ const nav: { to: string; label: string; mega?: Mega }[] = [
 ];
 
 function MegaPanel({ kind, onDone }: { kind: Mega; onDone: () => void }) {
+  const { productTypes, collections } = useTaxonomy();
   const items =
     kind === "products"
       ? productTypes.map((t) => ({ key: t.id, to: "/products/$slug" as const, slug: t.slug, name: tx(t.plural), sub: tx(t.tagline), image: t.image }))
