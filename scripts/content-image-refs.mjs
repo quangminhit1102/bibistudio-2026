@@ -92,10 +92,12 @@ export function applySql(plan) {
     `INSERT INTO ${BACKUP} (kind, slug, old_value, old_cover, saved_at) SELECT 'post', slug, image_id, cover_image_id, NOW() FROM posts WHERE slug IN (${list(plan.posts)}) ON DUPLICATE KEY UPDATE kind = VALUES(kind);`,
     ...plan.products.map((p) => setImages(p.slug, p.to, p.from)),
     // The cover goes to image_id, the column the admin's cover picker edits; cover_image_id
-    // is emptied because the public API prefers it over image_id.
+    // is emptied because the public API prefers it over image_id. A cover an editor has
+    // picked sits in image_id even while the API still shows cover_image_id, so image_id
+    // must hold a seeded value too.
     ...plan.posts.map(
       (p) =>
-        `UPDATE posts SET image_id = ${q(p.to)}, cover_image_id = NULL WHERE slug = ${q(p.slug)} AND COALESCE(cover_image_id, image_id) = ${q(p.from)};`,
+        `UPDATE posts SET image_id = ${q(p.to)}, cover_image_id = NULL WHERE slug = ${q(p.slug)} AND COALESCE(cover_image_id, image_id) = ${q(p.from)} AND (image_id IS NULL OR image_id IN (${q(`journal-cover-${p.slug}`)}, ${q(p.from)}));`,
     ),
     "COMMIT;",
     "",

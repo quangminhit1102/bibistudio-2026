@@ -89,7 +89,7 @@ test("the SQL changes only rows that still hold the seeded value, and undoes onl
   );
   assert.ok(
     apply.includes(
-      `UPDATE posts SET image_id = '/journal/first.jpg', cover_image_id = NULL WHERE slug = 'first-post' AND COALESCE(cover_image_id, image_id) = 'journal-cover-first-post';`,
+      `UPDATE posts SET image_id = '/journal/first.jpg', cover_image_id = NULL WHERE slug = 'first-post' AND COALESCE(cover_image_id, image_id) = 'journal-cover-first-post' AND (image_id IS NULL OR image_id IN ('journal-cover-first-post', 'journal-cover-first-post'));`,
     ),
   );
   assert.ok(
@@ -166,6 +166,13 @@ test("a cover stored by the earlier seed as the build's own path is planned too"
     { slug: "first-post", from: "/assets/blog/first.jpg", to: "/journal/first.jpg" },
   ]);
   assert.deepEqual(plan.skipped, []);
+  // The API shows the earlier seed's path even after an editor picked a cover, so the SQL
+  // also asks that image_id is still a seeded value.
+  assert.ok(
+    applySql(plan).includes(
+      `AND COALESCE(cover_image_id, image_id) = '/assets/blog/first.jpg' AND (image_id IS NULL OR image_id IN ('journal-cover-first-post', '/assets/blog/first.jpg'));`,
+    ),
+  );
 });
 
 test("a cover path longer than image_id holds is a problem, not a change", () => {
