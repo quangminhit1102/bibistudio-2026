@@ -148,6 +148,9 @@ test("public posts endpoints serve only published posts with full shape", async 
     ["post-new", "post-old"],
   );
   for (const post of posts) assert.equal(post.status, undefined, "status not leaked");
+  for (const post of posts) assert.equal("content" in post, false, "list carries no article body");
+  assert.equal(posts[0].excerpt, "Tóm tắt mới");
+  assert.equal(posts[0].seo_title, "SEO mới");
 
   const detail = await fetch(base + "/api/public/posts/post-old");
   assert.equal(detail.status, 200);
@@ -159,6 +162,7 @@ test("public posts endpoints serve only published posts with full shape", async 
   assert.equal(post.author_name, "BiBi Studio");
   assert.equal(post.read_time, "5 phút đọc");
   assert.equal(post.cover_url, "/assets/blog/old.jpg");
+  assert.match(post.content, /Nội dung cũ/);
 
   const fresh = await (await fetch(base + "/api/public/posts/post-new")).json();
   assert.equal(fresh.category_name, "Hướng dẫn");
@@ -249,4 +253,76 @@ test("public collections endpoint returns name/slug/tagline", async (t) => {
 
   const collections = await (await fetch(base + "/api/public/collections")).json();
   assert.deepEqual(collections, [{ slug: "motivation", name: "Tạo động lực", tagline: "Mô tả" }]);
+});
+
+test("successful public reads are cacheable for a minute, misses are not", async (t) => {
+  const { base } = await buildApp(t);
+
+  for (const path of [
+    "/api/public/posts",
+    "/api/public/posts/post-old",
+    "/api/public/products",
+    "/api/public/products/san-pham-a",
+    "/api/public/categories",
+    "/api/public/collections",
+  ]) {
+    const response = await fetch(base + path);
+    assert.equal(response.status, 200, path);
+    assert.equal(response.headers.get("cache-control"), "public, max-age=60", path);
+  }
+  for (const path of ["/api/public/posts/missing-slug", "/api/public/products/san-pham-b"]) {
+    const response = await fetch(base + path);
+    assert.equal(response.status, 404, path);
+    assert.equal(response.headers.get("cache-control"), "no-store", path);
+  }
+  assert.equal((await fetch(base + "/api/health")).headers.get("cache-control"), "no-store");
+});
+
+test("public lists stop at the row limit", async (t) => {
+  const { f, base } = await buildApp(t);
+  const { PUBLIC_LIST_LIMIT } = await import("../dist/content/public-service.js");
+  assert.equal(PUBLIC_LIST_LIMIT, 500);
+
+  const [[category]] = await f.pool.query("SELECT id FROM product_categories LIMIT 1");
+  const [[template]] = await f.pool.query("SELECT * FROM products WHERE slug='san-pham-a'");
+  const [[post]] = await f.pool.query("SELECT * FROM posts WHERE slug='post-old'");
+  const { randomUUID } = await import("node:crypto");
+  const rows = (source, patch) =>
+    Array.from({ length: PUBLIC_LIST_LIMIT + 5 }, (_, i) =>
+      Object.values({ ...source, id: randomUUID(), ...patch(i) }).map((value) =>
+        value !== null && typeof value === "object" && !(value instanceof Date)
+          ? JSON.stringify(value)
+          : value,
+      ),
+    );
+  assert.ok(category);
+  await f.pool.query(
+    `INSERT INTO products (${Object.keys(template)
+      .map((key) => "`" + key + "`")
+      .join(",")}) VALUES ?`,
+    [
+      rows(template, (i) => ({
+        slug: `bulk-${i}`,
+        product_code: `B${String(i).padStart(4, "0")}`,
+        sort_order: 100 + i,
+      })),
+    ],
+  );
+  await f.pool.query(
+    `INSERT INTO posts (${Object.keys(post)
+      .map((key) => "`" + key + "`")
+      .join(",")}) VALUES ?`,
+    [rows(post, (i) => ({ slug: `bulk-${i}`, publish_at: "2025-01-01 00:00:00" }))],
+  );
+
+  const products = await (await fetch(base + "/api/public/products")).json();
+  assert.equal(products.length, PUBLIC_LIST_LIMIT);
+  assert.equal(products[0].slug, "san-pham-a", "lowest sort order first");
+  const posts = await (await fetch(base + "/api/public/posts")).json();
+  assert.equal(posts.length, PUBLIC_LIST_LIMIT);
+  assert.deepEqual(
+    posts.slice(0, 2).map((item) => item.slug),
+    ["post-new", "post-old"],
+    "newest first",
+  );
 });

@@ -4,7 +4,7 @@ import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { SimpleBreadcrumb } from "@/components/ui/simple-breadcrumb";
 import { getBlogPost } from "@/data/blog";
-import { getPublicPost } from "@/lib/content-api";
+import { findPublicPost, pickSource } from "@/lib/content-api";
 import { staticPostToView, toPublicPost, type PostView } from "@/lib/content-adapter";
 import { renderArticle, slugifyHeading, type TocItem } from "@/lib/content-html";
 import { resolveSeo } from "@/lib/content-seo";
@@ -14,11 +14,11 @@ import { site } from "@/platform/site";
 
 export const Route = createFileRoute("/blog/$slug")({
   loader: async ({ params }) => {
-    const api = await getPublicPost(params.slug);
-    if (api) return { post: toPublicPost(api) };
-    const legacy = getBlogPost(params.slug);
-    if (legacy) return { post: staticPostToView(legacy) };
-    throw notFound();
+    const source = pickSource(await findPublicPost(params.slug), () => getBlogPost(params.slug));
+    if (!source) throw notFound();
+    return {
+      post: source.from === "api" ? toPublicPost(source.value) : staticPostToView(source.value),
+    };
   },
   head: ({ params, loaderData }) => {
     if (!loaderData) {

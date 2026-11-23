@@ -1,4 +1,4 @@
-import type { PublicPostShape, PublicProductShape } from "./content-api";
+import type { PublicPostSummary, PublicProductShape } from "./content-api";
 import { getBlogPost, type ContentBlock } from "@/data/blog";
 import { collections, getProduct, occasions, productTypes } from "@/data/catalogue";
 import type { CollectionId, OccasionId, Product, ProductTypeId } from "@/data/catalogue";
@@ -71,7 +71,8 @@ export type PostView = {
   content: { kind: "blocks"; blocks: ContentBlock[] } | { kind: "html"; html: string };
 };
 
-export function toPublicPost(api: PublicPostShape): PostView {
+// The list endpoint sends summaries without the article body; only the detail has `content`.
+export function toPublicPost(api: PublicPostSummary & { content?: string }): PostView {
   const legacy = getBlogPost(api.slug);
   return {
     slug: api.slug,
@@ -84,7 +85,7 @@ export function toPublicPost(api: PublicPostShape): PostView {
     coverImage: legacy ? legacy.coverImage : (api.cover_url ?? ""),
     seoTitle: api.seo_title,
     seoDescription: api.seo_description,
-    content: { kind: "html", html: api.content },
+    content: { kind: "html", html: api.content ?? "" },
   };
 }
 

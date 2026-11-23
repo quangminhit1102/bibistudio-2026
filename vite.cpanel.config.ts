@@ -4,7 +4,7 @@ import { existsSync, renameSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { defineConfig, type ConfigEnv, type Plugin } from "vite";
 import tsConfigPaths from "vite-tsconfig-paths";
-import { tanstackRouterGenerator } from "@tanstack/router-plugin/vite";
+import { tanStackRouterCodeSplitter, tanstackRouterGenerator } from "@tanstack/router-plugin/vite";
 import { siteHtmlPlugin } from "./scripts/site-html.mjs";
 
 const emitCpanelIndex = (): Plugin => ({
@@ -34,7 +34,9 @@ export default defineConfig(({ mode }: ConfigEnv) => {
     },
     resolve: { alias: { "@site": siteDir } },
     plugins: [
+      // Each route's component loads on demand; loaders and head stay in the entry chunk.
       tanstackRouterGenerator({ target: "react" }),
+      tanStackRouterCodeSplitter({ target: "react", autoCodeSplitting: true }),
       react(),
       tailwindcss(),
       tsConfigPaths(),
