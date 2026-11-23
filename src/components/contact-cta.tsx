@@ -2,11 +2,12 @@ import { Link } from "@tanstack/react-router";
 import { Mail, Phone } from "lucide-react";
 import { mailHref, telHref } from "@/lib/site-contact";
 import { site } from "@/platform/site";
+import { t } from "@/lib/messages";
 
 export function ContactLinks({ className = "" }: { className?: string }) {
   const items = [
-    { label: "Điện thoại", value: site.contact.phoneDisplay, href: telHref(site), Icon: Phone },
-    { label: "Email", value: site.contact.email, href: mailHref(site), Icon: Mail },
+    { label: t("contact.phone"), value: site.contact.phoneDisplay, href: telHref(site), Icon: Phone },
+    { label: t("contact.email"), value: site.contact.email, href: mailHref(site), Icon: Mail },
     ...site.contact.social.map((link) => ({
       label: link.label,
       value: link.display ?? link.label,
@@ -37,20 +38,20 @@ export function ContactBand() {
     <section className="paper-texture">
       <div className="mx-auto grid max-w-[1280px] gap-10 px-5 py-20 sm:px-6 md:grid-cols-[1.2fr_1fr] md:items-end md:py-32 lg:px-12">
         <div>
-          <p className="eyebrow">Liên hệ</p>
+          <p className="eyebrow">{t("nav.contact")}</p>
           <h2 className="mt-5 font-display text-[2.35rem] leading-[1.05] text-foreground sm:text-4xl md:text-6xl">
-            Bạn thích một sản phẩm?
+            {t("contactBand.title")}
             <br />
-            <em className="text-kraft">Hãy trò chuyện cùng {site.shortName}.</em>
+            <em className="text-kraft">{t("contactBand.accent")}</em>
           </h2>
           <p className="mt-6 max-w-md text-[15px] leading-relaxed text-muted-foreground">
-            Gọi điện, nhắn Zalo hoặc gửi email — {site.name} sẽ phản hồi bạn sớm nhất.
+            {t("contactBand.text")}
           </p>
           <Link
             to="/contact"
             className="mt-8 inline-flex items-center gap-3 bg-foreground px-7 py-3.5 text-[12px] font-medium uppercase tracking-[0.22em] text-background transition hover:bg-accent"
           >
-            Liên hệ {site.name}
+            {t("contactBand.action")}
           </Link>
         </div>
         <ContactLinks />

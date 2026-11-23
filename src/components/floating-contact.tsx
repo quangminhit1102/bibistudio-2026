@@ -4,6 +4,7 @@
 import { Phone } from "lucide-react";
 import { telHref } from "@/lib/site-contact";
 import { site } from "@/platform/site";
+import { t } from "@/lib/messages";
 
 interface ContactItem {
   id: string;
@@ -39,25 +40,25 @@ function MessengerIcon({ className = "size-5" }: { className?: string }) {
 const phoneItem: ContactItem = {
   id: "phone",
   href: telHref(site),
-  label: "Gọi ngay",
-  title: `Hotline: ${site.contact.phoneDisplay}`,
+  label: t("floating.call"),
+  title: t("floating.phone"),
   bg: "bg-[#25d366] hover:bg-[#1ebe5a]",
   icon: <Phone className="size-5" />,
 };
 
 const socialStyles: Record<string, Pick<ContactItem, "title" | "bg" | "icon">> = {
   zalo: {
-    title: `Chat Zalo: ${site.contact.phoneDisplay}`,
+    title: t("floating.zalo"),
     bg: "bg-[#0068ff] hover:bg-[#0056d6]",
     icon: <ZaloIcon className="size-5" />,
   },
   facebook: {
-    title: `Fanpage ${site.name}`,
+    title: t("floating.facebook"),
     bg: "bg-[#1877f2] hover:bg-[#1466d2]",
     icon: <FacebookIcon className="size-5" />,
   },
   messenger: {
-    title: "Nhắn tin Messenger",
+    title: t("floating.messenger"),
     bg: "bg-[#0084ff] hover:bg-[#0070d9]",
     icon: <MessengerIcon className="size-5" />,
   },
@@ -75,7 +76,7 @@ export function FloatingContact() {
   return (
     <div
       className="floating-contact fixed inset-x-0 bottom-3 z-40 mx-auto flex w-fit items-center gap-2 rounded-full border border-border bg-background/95 p-1.5 shadow-lg backdrop-blur xl:inset-x-auto xl:bottom-auto xl:right-3 xl:top-1/2 xl:mx-0 xl:-translate-y-1/2 xl:flex-col xl:gap-3 xl:rounded-none xl:border-0 xl:bg-transparent xl:p-0 xl:shadow-none xl:backdrop-blur-none"
-      aria-label="Liên hệ mua hàng"
+      aria-label={t("floating.label")}
     >
       {contacts.map((c) => (
         <a

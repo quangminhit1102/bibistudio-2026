@@ -15,6 +15,7 @@ export default defineConfig({
       "tests/admin/**/*.test.{ts,tsx}",
       "src/lib/content-*.test.ts",
       "src/lib/catalogue-*.test.ts",
+      "src/lib/messages.test.ts",
     ],
     setupFiles: ["tests/admin/setup.ts"],
     pool: "threads",
