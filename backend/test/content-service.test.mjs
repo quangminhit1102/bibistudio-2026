@@ -83,6 +83,11 @@ test("content service CRUDs posts/products/categories with JSON columns and FK d
   assert.equal(cat.revision, 1);
   const pcat = await service.createProductCategory({ name: "Sách", slug: "sach" }, actor);
   assert.equal(pcat.revision, 1);
+  const collection = await service.createProductCategory(
+    { name: "Nổi bật", slug: "featured" },
+    actor,
+  );
+  await service.createProductType({ code: "book", name: "Sách", slug: "books" }, actor);
 
   const post = await service.createPost(
     {
@@ -212,11 +217,244 @@ test("content service CRUDs posts/products/categories with JSON columns and FK d
   await service.deletePost(post.id, updatedPost.revision, actor);
   await service.deleteContentCategory(cat.id, cat.revision, actor);
 
+  // A collection is also held by the products that name it in `collection`.
+  await assert.rejects(service.deleteProductCategory(collection.id, collection.revision, actor), {
+    status: 409,
+    code: "REFERENCED",
+  });
   await service.deleteProduct(product.id, updatedProduct.revision, actor);
   await service.deleteProductCategory(pcat.id, pcat.revision, actor);
+  await service.deleteProductCategory(collection.id, collection.revision, actor);
 
   assert.equal((await service.listPosts({}, actor)).total, 0);
   assert.equal((await service.listProducts({}, actor)).total, 0);
   assert.equal((await service.listContentCategories({}, actor)).total, 0);
   assert.equal((await service.listProductCategories({}, actor)).total, 0);
+});
+
+test("product types are managed with the product permissions and protected while in use", async (t) => {
+  const { service, actor, userActor } = await setup(t);
+  await assert.rejects(service.listProductTypes({}, userActor), { status: 403 });
+  await assert.rejects(
+    service.createProductType({ code: "magnet", name: "Magnet", slug: "magnets" }, userActor),
+    { status: 403 },
+  );
+
+  const type = await service.createProductType(
+    {
+      code: "magnet",
+      name: "Magnet",
+      slug: "magnets",
+      description: "Trên cửa tủ lạnh",
+      position: 3,
+      translations: { vi: { name: "Magnet", plural: "Magnet" }, en: { name: "Magnet" } },
+      image: "/catalogue/magnet.webp",
+    },
+    actor,
+  );
+  assert.deepEqual(
+    { ...type, id: "", createdAt: "", updatedAt: "" },
+    {
+      id: "",
+      code: "magnet",
+      name: "Magnet",
+      slug: "magnets",
+      description: "Trên cửa tủ lạnh",
+      position: 3,
+      active: true,
+      translations: { vi: { name: "Magnet", plural: "Magnet" }, en: { name: "Magnet" } },
+      image: "/catalogue/magnet.webp",
+      createdAt: "",
+      updatedAt: "",
+      revision: 1,
+    },
+  );
+  assert.deepEqual(await service.getProductType(type.id, actor), type);
+  const found = await service.listProductTypes({ search: "magnet" }, actor);
+  assert.equal(found.total, 1);
+
+  const renamed = await service.updateProductType(
+    type.id,
+    { name: "Nam châm", image: null, code: "ignored" },
+    type.revision,
+    actor,
+  );
+  assert.equal(renamed.name, "Nam châm");
+  assert.equal(renamed.image, null);
+  assert.equal(renamed.code, "magnet", "the stored code never changes");
+  await assert.rejects(service.updateProductType(type.id, { name: "X" }, 1, actor), {
+    status: 409,
+  });
+
+  const category = await service.createProductCategory(
+    {
+      name: "Khám phá",
+      slug: "explore",
+      translations: { en: { name: "Explore", intro: "Places" } },
+      image: "/catalogue/explore.webp",
+    },
+    actor,
+  );
+  assert.deepEqual(category.translations, { en: { name: "Explore", intro: "Places" } });
+  assert.equal(category.image, "/catalogue/explore.webp");
+
+  const product = await service.createProduct(
+    {
+      productCode: "M1",
+      name: "Cầu Rồng",
+      slug: "cau-rong",
+      description: "",
+      productType: "magnet",
+      collection: "explore",
+    },
+    actor,
+  );
+  await assert.rejects(service.deleteProductType(type.id, renamed.revision, actor), {
+    status: 409,
+  });
+  await service.deleteProduct(product.id, product.revision, actor);
+  assert.deepEqual(await service.deleteProductType(type.id, renamed.revision, actor), {
+    id: type.id,
+  });
+});
+
+test("a product must use an existing product type and collection", async (t) => {
+  const { service, actor, pool } = await setup(t);
+  await service.createProductType({ code: "magnet", name: "Magnet", slug: "magnets" }, actor);
+  await service.createProductCategory({ name: "Khám phá", slug: "explore" }, actor);
+  const base = { productCode: "M1", name: "A", slug: "a", description: "" };
+  // The URL slug of a type is not its code.
+  for (const [productType, collection, field] of [
+    ["magnets", "explore", "productType"],
+    ["magnet", "nowhere", "collection"],
+  ])
+    await assert.rejects(service.createProduct({ ...base, productType, collection }, actor), {
+      status: 400,
+      code: "INVALID_INPUT",
+      details: [{ field, message: "Giá trị không tồn tại" }],
+    });
+  const product = await service.createProduct(
+    { ...base, productType: "magnet", collection: "explore" },
+    actor,
+  );
+  await assert.rejects(
+    service.updateProduct(product.id, { productType: "gone" }, product.revision, actor),
+    { status: 400, code: "INVALID_INPUT" },
+  );
+  await assert.rejects(
+    service.updateProduct(product.id, { collection: "gone" }, product.revision, actor),
+    { status: 400, code: "INVALID_INPUT" },
+  );
+  // A product whose type was removed behind its back can still be edited in other fields.
+  await pool.query("UPDATE products SET product_type='gone' WHERE id=?", [product.id]);
+  const edited = await service.updateProduct(product.id, { name: "B" }, product.revision, actor);
+  assert.equal(edited.name, "B");
+});
+
+test("legacy attribute fields and attributes are written together", async (t) => {
+  const { service, actor, pool } = await setup(t);
+  await service.createProductType({ code: "card", name: "Thiệp", slug: "cards" }, actor);
+  await service.createProductCategory({ name: "Thiệp", slug: "cards" }, actor);
+  const base = {
+    productCode: "C1",
+    slug: "c1",
+    description: "",
+    productType: "card",
+    collection: "cards",
+  };
+  const legacy = await service.createProduct(
+    { ...base, name: "A", dimensions: "A6", materialVi: "Giấy", occasion: "tet" },
+    actor,
+  );
+  assert.deepEqual(legacy.attributes, {
+    dimensions: "A6",
+    material: { vi: "Giấy", en: "" },
+    occasion: "tet",
+  });
+
+  const modern = await service.createProduct(
+    {
+      ...base,
+      productCode: "C2",
+      slug: "c2",
+      name: "B",
+      attributes: { pages: "12", format: { vi: "Gấp đôi", en: "Folded" }, weight: "20g" },
+    },
+    actor,
+  );
+  assert.equal(modern.pages, "12");
+  assert.equal(modern.formatVi, "Gấp đôi");
+  assert.equal(modern.formatEn, "Folded");
+  assert.equal(modern.occasion, null);
+  assert.deepEqual(modern.attributes, {
+    pages: "12",
+    format: { vi: "Gấp đôi", en: "Folded" },
+    weight: "20g",
+  });
+
+  // A legacy field in an update changes only its own key; other attributes stay.
+  const cleared = await service.updateProduct(
+    modern.id,
+    { pages: null, occasion: "birthday" },
+    modern.revision,
+    actor,
+  );
+  assert.deepEqual(cleared.attributes, {
+    format: { vi: "Gấp đôi", en: "Folded" },
+    weight: "20g",
+    occasion: "birthday",
+  });
+  assert.equal(cleared.pages, null);
+
+  // `attributes` in an update replaces the whole set, legacy columns included.
+  const replaced = await service.updateProduct(
+    modern.id,
+    { attributes: { dimensions: "10 x 15 cm" } },
+    cleared.revision,
+    actor,
+  );
+  assert.deepEqual(replaced.attributes, { dimensions: "10 x 15 cm" });
+  assert.equal(replaced.dimensions, "10 x 15 cm");
+  assert.equal(replaced.formatVi, null);
+  assert.equal(replaced.occasion, null);
+
+  // An older release only writes the columns; they decide what is read.
+  await pool.query("UPDATE products SET occasion='tet', dimensions=NULL WHERE id=?", [modern.id]);
+  const afterOldRelease = await service.getProduct(modern.id, actor);
+  assert.deepEqual(afterOldRelease.attributes, { occasion: "tet" });
+  const [[stored]] = await pool.query(
+    "SELECT attributes, dimensions, occasion FROM products WHERE id=?",
+    [legacy.id],
+  );
+  assert.deepEqual(stored.attributes, {
+    dimensions: "A6",
+    material: { vi: "Giấy", en: "" },
+    occasion: "tet",
+  });
+});
+
+test("products follow a collection whose slug changes", async (t) => {
+  const { service, actor } = await setup(t);
+  await service.createProductType({ code: "card", name: "Thiệp", slug: "cards" }, actor);
+  const collection = await service.createProductCategory({ name: "Tết", slug: "tet" }, actor);
+  const product = await service.createProduct(
+    {
+      productCode: "1",
+      name: "A",
+      slug: "a",
+      description: "",
+      productType: "card",
+      collection: "tet",
+    },
+    actor,
+  );
+  await service.updateProductCategory(
+    collection.id,
+    { slug: "lunar-new-year" },
+    collection.revision,
+    actor,
+  );
+  const moved = await service.getProduct(product.id, actor);
+  assert.equal(moved.collection, "lunar-new-year");
+  assert.equal(moved.revision, product.revision + 1);
 });

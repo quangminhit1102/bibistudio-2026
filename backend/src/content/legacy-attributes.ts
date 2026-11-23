@@ -23,7 +23,7 @@ export const legacyAttributeKeys: readonly string[] = [...plain, ...localized];
 
 const text = (value: unknown): string => (value == null ? "" : String(value));
 
-type LegacyRow = { [K in keyof LegacyAttributeColumns]?: unknown } & Record<string, unknown>;
+type LegacyRow = LegacyAttributeColumns | Record<string, unknown>;
 
 export function attributesFromLegacy(row: LegacyRow): Attributes {
   const result: Attributes = {};

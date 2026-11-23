@@ -8,6 +8,14 @@ import { assertPermission } from "../authorization/permissions";
 import { writeAudit } from "../audit/repository";
 import { ApiError } from "../http/errors";
 import { assertContentReady } from "./schema";
+import {
+  attributesFromLegacy,
+  legacyAttributeKeys,
+  legacyFromAttributes,
+  mergeAttributes,
+  type Attributes,
+  type LegacyAttributeColumns,
+} from "./legacy-attributes";
 
 export interface ListInput {
   search?: string;
@@ -23,6 +31,9 @@ export interface Page<T> {
   pageSize: number;
 }
 
+/** `{ "<locale>": { name, plural?, tagline?, intro? } }` */
+export type Translations = Record<string, Record<string, string>>;
+
 export interface CategoryInput {
   name: string;
   slug: string;
@@ -30,6 +41,9 @@ export interface CategoryInput {
   parentId?: string | null;
   position?: number;
   active?: boolean;
+  /** Product categories only. */
+  translations?: Translations | null;
+  image?: string | null;
 }
 export interface CategoryDto {
   id: string;
@@ -39,6 +53,27 @@ export interface CategoryDto {
   parentId: string | null;
   position: number;
   active: boolean;
+  /** Product categories only. */
+  translations?: Translations | null;
+  image?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  revision: number;
+}
+export interface ProductTypeInput extends Omit<CategoryInput, "parentId"> {
+  /** What products store in `productType`. Set once; `slug` is the URL segment. */
+  code: string;
+}
+export interface ProductTypeDto {
+  id: string;
+  code: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  position: number;
+  active: boolean;
+  translations: Translations | null;
+  image: string | null;
   createdAt: string;
   updatedAt: string;
   revision: number;
@@ -133,6 +168,8 @@ export interface ProductInput {
   sortOrder?: number;
   imageAltVi?: string | null;
   imageAltEn?: string | null;
+  /** Keyed by the site's attribute key. In an update it replaces the whole set. */
+  attributes?: Attributes;
 }
 export interface ProductDto {
   id: string;
@@ -167,6 +204,7 @@ export interface ProductDto {
   sortOrder: number;
   imageAltVi: string | null;
   imageAltEn: string | null;
+  attributes: Attributes;
   createdAt: string;
   updatedAt: string;
   revision: number;
@@ -194,6 +232,50 @@ const conflict = (): ApiError =>
   new ApiError(409, "CONFLICT", "Dữ liệu đã thay đổi, vui lòng tải lại");
 const referenced = (): ApiError =>
   new ApiError(409, "REFERENCED", "Không thể xóa dữ liệu đang được tham chiếu");
+const unknownValue = (fields: string[]): ApiError =>
+  new ApiError(
+    400,
+    "INVALID_INPUT",
+    "Dữ liệu không hợp lệ",
+    fields.map((field) => ({ field, message: "Giá trị không tồn tại" })),
+  );
+
+const legacyAttributeFields = [
+  ["dimensions", "dimensions"],
+  ["pages", "pages"],
+  ["materialVi", "material_vi"],
+  ["materialEn", "material_en"],
+  ["formatVi", "format_vi"],
+  ["formatEn", "format_en"],
+  ["occasion", "occasion"],
+] as const satisfies readonly (readonly [keyof ProductInput, keyof LegacyAttributeColumns])[];
+
+/**
+ * The attributes a write leaves behind, as the JSON and as the legacy columns. `current` is
+ * what the product has now; `attributes` in the input replaces it, and a legacy field in the
+ * input then decides its own key.
+ */
+function nextAttributes(current: Attributes, input: Partial<ProductInput>) {
+  const base = input.attributes ?? current;
+  const columns = legacyFromAttributes(base);
+  for (const [field, column] of legacyAttributeFields)
+    if (input[field] !== undefined) columns[column] = input[field] || null;
+  const attributes: Attributes = { ...base };
+  for (const key of legacyAttributeKeys) delete attributes[key];
+  return { attributes: { ...attributes, ...attributesFromLegacy(columns) }, columns };
+}
+const touchesAttributes = (input: Partial<ProductInput>): boolean =>
+  input.attributes !== undefined || legacyAttributeFields.some(([f]) => input[f] !== undefined);
+
+function translationsOf(value: unknown): Translations | null {
+  if (value == null) return null;
+  if (typeof value !== "string") return value as Translations;
+  try {
+    return JSON.parse(value) as Translations;
+  } catch {
+    return null;
+  }
+}
 
 function isReferenced(error: unknown): boolean {
   return (
@@ -221,6 +303,26 @@ const categoryDto = (row: RowDataPacket): CategoryDto => ({
   parentId: row.parent_id == null ? null : String(row.parent_id),
   position: Number(row.position),
   active: Boolean(row.active),
+  ...("translations" in row
+    ? {
+        translations: translationsOf(row.translations),
+        image: row.image == null ? null : String(row.image),
+      }
+    : {}),
+  createdAt: iso(row.created_at)!,
+  updatedAt: iso(row.updated_at)!,
+  revision: Number(row.revision),
+});
+const productTypeDto = (row: RowDataPacket): ProductTypeDto => ({
+  id: String(row.id),
+  code: String(row.code),
+  name: String(row.name),
+  slug: String(row.slug),
+  description: row.description == null ? null : String(row.description),
+  position: Number(row.position),
+  active: Boolean(row.active),
+  translations: translationsOf(row.translations),
+  image: row.image == null ? null : String(row.image),
   createdAt: iso(row.created_at)!,
   updatedAt: iso(row.updated_at)!,
   revision: Number(row.revision),
@@ -291,6 +393,7 @@ const productDto = (row: RowDataPacket): ProductDto => ({
   sortOrder: Number(row.sort_order),
   imageAltVi: row.image_alt_vi == null ? null : String(row.image_alt_vi),
   imageAltEn: row.image_alt_en == null ? null : String(row.image_alt_en),
+  attributes: mergeAttributes(row.attributes, row),
   createdAt: iso(row.created_at)!,
   updatedAt: iso(row.updated_at)!,
   revision: Number(row.revision),
@@ -355,52 +458,74 @@ export function createContentService(pool: Pool, clock: Clock) {
     return { items: rows.map(map), total: Number(count.n), page, pageSize };
   }
 
-  function makeCategory(
-    table: "product_categories" | "content_categories",
+  /**
+   * CRUD for the three flat lists: content categories, product categories (collections)
+   * and product types. `products.collection` holds a product category slug and
+   * `products.product_type` a product type code, both as plain strings, so the checks a
+   * foreign key would do are done here.
+   */
+  function makeCategory<Input extends CategoryInput | ProductTypeInput, Dto>(
+    table: "product_categories" | "content_categories" | "product_types",
     code: "product" | "post",
     targetType: string,
+    dto: (row: RowDataPacket) => Dto,
   ) {
+    const isType = table === "product_types";
+    const localized = table !== "content_categories";
+    // The column of `products` that points at this table, and the column it points to.
+    const usedBy = isType
+      ? (["product_type", "code"] as const)
+      : table === "product_categories"
+        ? (["collection", "slug"] as const)
+        : null;
     return {
-      async list(input: ListInput, actor: AuthPrincipal): Promise<Page<CategoryDto>> {
+      async list(input: ListInput, actor: AuthPrincipal): Promise<Page<Dto>> {
         return authorized(actor, `${code}.view`, (c) =>
           queryList(
             c,
             table,
             {
-              search: ["name", "slug"],
-              filter: { active: "active", parentId: "parent_id" },
+              search: isType ? ["name", "slug", "code"] : ["name", "slug"],
+              filter: isType ? { active: "active" } : { active: "active", parentId: "parent_id" },
               sort: { name: "name", position: "position", createdAt: "created_at" },
             },
             input,
-            categoryDto,
+            dto,
           ),
         );
       },
-      async get(id: string, actor: AuthPrincipal): Promise<CategoryDto> {
+      async get(id: string, actor: AuthPrincipal): Promise<Dto> {
         return authorized(actor, `${code}.view`, async (c) => {
           const row = await readRow(c, table, id);
           if (!row) throw notFound();
-          return categoryDto(row);
+          return dto(row);
         });
       },
-      async create(input: CategoryInput, actor: AuthPrincipal): Promise<CategoryDto> {
+      async create(input: Input, actor: AuthPrincipal): Promise<Dto> {
         return authorized(actor, `${code}.create`, async (c) => {
           const id = randomUUID();
           const t = clock.now();
+          const columns: Record<string, string | number | Date | null> = {
+            id,
+            name: input.name,
+            slug: input.slug,
+            description: input.description ?? null,
+            position: input.position ?? 0,
+            active: input.active === false ? 0 : 1,
+            created_at: t,
+            updated_at: t,
+            revision: 1,
+          };
+          if ("code" in input) columns.code = input.code;
+          else columns.parent_id = input.parentId ?? null;
+          if (localized) {
+            columns.translations = input.translations ? JSON.stringify(input.translations) : null;
+            columns.image = input.image ?? null;
+          }
+          const names = Object.keys(columns);
           await c.execute(
-            `INSERT INTO \`${table}\` (id,name,slug,description,parent_id,position,active,created_at,updated_at,revision)
-             VALUES (?,?,?,?,?,?,?,?,?,1)`,
-            [
-              id,
-              input.name,
-              input.slug,
-              input.description ?? null,
-              input.parentId ?? null,
-              input.position ?? 0,
-              input.active === false ? 0 : 1,
-              t,
-              t,
-            ],
+            `INSERT INTO \`${table}\` (${names.join(",")}) VALUES (${names.map(() => "?").join(",")})`,
+            Object.values(columns),
           );
           await writeAudit(c, {
             actorId: actor.principal.id,
@@ -408,15 +533,16 @@ export function createContentService(pool: Pool, clock: Clock) {
             targetType,
             targetId: id,
           });
-          return categoryDto((await readRow(c, table, id))!);
+          return dto((await readRow(c, table, id))!);
         });
       },
+      /** A product type's `code` is what products store, so it is never changed here. */
       async update(
         id: string,
         input: Partial<CategoryInput>,
         revision: number,
         actor: AuthPrincipal,
-      ): Promise<CategoryDto> {
+      ): Promise<Dto> {
         return authorized(actor, `${code}.update`, async (c) => {
           const sets: string[] = [];
           const values: (string | number | boolean | null | Date)[] = [];
@@ -424,8 +550,9 @@ export function createContentService(pool: Pool, clock: Clock) {
             ["name", "name"],
             ["slug", "slug"],
             ["description", "description"],
-            ["parentId", "parent_id"],
+            ...(isType ? [] : ([["parentId", "parent_id"]] as const)),
             ["position", "position"],
+            ...(localized ? ([["image", "image"]] as const) : []),
           ] as const) {
             if (input[key] !== undefined) {
               sets.push(`${col}=?`);
@@ -436,6 +563,19 @@ export function createContentService(pool: Pool, clock: Clock) {
             sets.push("active=?");
             values.push(input.active ? 1 : 0);
           }
+          if (localized && input.translations !== undefined) {
+            sets.push("translations=?");
+            values.push(input.translations ? JSON.stringify(input.translations) : null);
+          }
+          // Products follow a collection whose slug changes.
+          let previousSlug: string | undefined;
+          if (table === "product_categories" && input.slug !== undefined) {
+            const [[row]] = await c.execute<RowDataPacket[]>(
+              "SELECT slug FROM product_categories WHERE id=? FOR UPDATE",
+              [id],
+            );
+            previousSlug = row && String(row.slug);
+          }
           if (sets.length) {
             const [result] = await c.execute<ResultSetHeader>(
               `UPDATE \`${table}\` SET ${sets.join(",")}, updated_at=?, revision=revision+1 WHERE id=? AND revision=?`,
@@ -443,6 +583,11 @@ export function createContentService(pool: Pool, clock: Clock) {
             );
             if (result.affectedRows === 0) throw conflict();
           }
+          if (previousSlug !== undefined && input.slug !== previousSlug)
+            await c.execute(
+              "UPDATE products SET collection=?, updated_at=?, revision=revision+1 WHERE collection=?",
+              [input.slug!, clock.now(), previousSlug],
+            );
           await writeAudit(c, {
             actorId: actor.principal.id,
             action: `${targetType}.update`,
@@ -450,11 +595,26 @@ export function createContentService(pool: Pool, clock: Clock) {
             targetId: id,
             metadata: { changedFields: Object.keys(input) },
           });
-          return categoryDto((await readRow(c, table, id))!);
+          return dto((await readRow(c, table, id))!);
         });
       },
       async remove(id: string, revision: number, actor: AuthPrincipal): Promise<{ id: string }> {
         return authorized(actor, `${code}.delete`, async (c) => {
+          if (usedBy) {
+            // Locking reads: a product saved while this runs is either seen here or
+            // waits and then fails its own check.
+            const [[row]] = await c.execute<RowDataPacket[]>(
+              `SELECT \`${usedBy[1]}\` AS value FROM \`${table}\` WHERE id=? FOR UPDATE`,
+              [id],
+            );
+            if (row) {
+              const [[used]] = await c.execute<RowDataPacket[]>(
+                `SELECT 1 FROM products WHERE \`${usedBy[0]}\`=? LIMIT 1 LOCK IN SHARE MODE`,
+                [String(row.value)],
+              );
+              if (used) throw referenced();
+            }
+          }
           try {
             const [result] = await c.execute<ResultSetHeader>(
               `DELETE FROM \`${table}\` WHERE id=? AND revision=?`,
@@ -788,13 +948,31 @@ export function createContentService(pool: Pool, clock: Clock) {
       return productDto(row);
     });
   }
+  /** `productType` must be a product type code and `collection` a product category slug. */
+  async function assertTaxonomy(c: PoolConnection, input: Partial<ProductInput>) {
+    const unknown: string[] = [];
+    for (const [field, table, column] of [
+      ["productType", "product_types", "code"],
+      ["collection", "product_categories", "slug"],
+    ] as const) {
+      if (input[field] === undefined) continue;
+      const [[row]] = await c.execute<RowDataPacket[]>(
+        `SELECT 1 FROM \`${table}\` WHERE \`${column}\`=? LOCK IN SHARE MODE`,
+        [input[field]],
+      );
+      if (!row) unknown.push(field);
+    }
+    if (unknown.length) throw unknownValue(unknown);
+  }
   async function createProduct(input: ProductInput, actor: AuthPrincipal): Promise<ProductDto> {
     return authorized(actor, "product.create", async (c) => {
+      await assertTaxonomy(c, input);
+      const { attributes, columns } = nextAttributes({}, input);
       const id = randomUUID();
       const t = clock.now();
       await c.execute(
-        `INSERT INTO products (id,product_code,name,slug,short_description,description,product_type,collection,category_id,price,compare_at,stock,reserved,status,image_ids,tags,seo_title,seo_description,name_en,short_description_en,description_en,dimensions,pages,material_vi,material_en,format_vi,format_en,occasion,featured,sort_order,image_alt_vi,image_alt_en,created_at,updated_at,revision)
-         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,1)`,
+        `INSERT INTO products (id,product_code,name,slug,short_description,description,product_type,collection,category_id,price,compare_at,stock,reserved,status,image_ids,tags,seo_title,seo_description,name_en,short_description_en,description_en,dimensions,pages,material_vi,material_en,format_vi,format_en,occasion,featured,sort_order,image_alt_vi,image_alt_en,created_at,updated_at,revision,attributes)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,1,?)`,
         [
           id,
           input.productCode,
@@ -817,19 +995,20 @@ export function createContentService(pool: Pool, clock: Clock) {
           input.nameEn ?? null,
           input.shortDescriptionEn ?? null,
           input.descriptionEn ?? null,
-          input.dimensions ?? null,
-          input.pages ?? null,
-          input.materialVi ?? null,
-          input.materialEn ?? null,
-          input.formatVi ?? null,
-          input.formatEn ?? null,
-          input.occasion ?? null,
+          columns.dimensions,
+          columns.pages,
+          columns.material_vi,
+          columns.material_en,
+          columns.format_vi,
+          columns.format_en,
+          columns.occasion,
           input.featured === true ? 1 : 0,
           input.sortOrder ?? 0,
           input.imageAltVi ?? null,
           input.imageAltEn ?? null,
           t,
           t,
+          JSON.stringify(attributes),
         ],
       );
       await writeAudit(c, {
@@ -848,8 +1027,27 @@ export function createContentService(pool: Pool, clock: Clock) {
     actor: AuthPrincipal,
   ): Promise<ProductDto> {
     return authorized(actor, "product.update", async (c) => {
+      await assertTaxonomy(c, input);
       const sets: string[] = [];
       const values: (string | number | boolean | null | Date)[] = [];
+      if (touchesAttributes(input)) {
+        const [[row]] = await c.execute<RowDataPacket[]>(
+          "SELECT * FROM products WHERE id=? FOR UPDATE",
+          [id],
+        );
+        if (row) {
+          const { attributes, columns } = nextAttributes(
+            mergeAttributes(row.attributes, row),
+            input,
+          );
+          for (const [column, value] of Object.entries(columns)) {
+            sets.push(`${column}=?`);
+            values.push(value);
+          }
+          sets.push("attributes=?");
+          values.push(JSON.stringify(attributes));
+        }
+      }
       for (const [key, col] of [
         ["productCode", "product_code"],
         ["name", "name"],
@@ -869,13 +1067,6 @@ export function createContentService(pool: Pool, clock: Clock) {
         ["nameEn", "name_en"],
         ["shortDescriptionEn", "short_description_en"],
         ["descriptionEn", "description_en"],
-        ["dimensions", "dimensions"],
-        ["pages", "pages"],
-        ["materialVi", "material_vi"],
-        ["materialEn", "material_en"],
-        ["formatVi", "format_vi"],
-        ["formatEn", "format_en"],
-        ["occasion", "occasion"],
         ["sortOrder", "sort_order"],
         ["imageAltVi", "image_alt_vi"],
         ["imageAltEn", "image_alt_en"],
@@ -947,8 +1138,24 @@ export function createContentService(pool: Pool, clock: Clock) {
     });
   }
 
-  const productCategories = makeCategory("product_categories", "product", "product_category");
-  const contentCategories = makeCategory("content_categories", "post", "content_category");
+  const productCategories = makeCategory<CategoryInput, CategoryDto>(
+    "product_categories",
+    "product",
+    "product_category",
+    categoryDto,
+  );
+  const contentCategories = makeCategory<CategoryInput, CategoryDto>(
+    "content_categories",
+    "post",
+    "content_category",
+    categoryDto,
+  );
+  const productTypes = makeCategory<ProductTypeInput, ProductTypeDto>(
+    "product_types",
+    "product",
+    "product_type",
+    productTypeDto,
+  );
 
   return {
     listCustomers,
@@ -976,6 +1183,11 @@ export function createContentService(pool: Pool, clock: Clock) {
     createContentCategory: contentCategories.create,
     updateContentCategory: contentCategories.update,
     deleteContentCategory: contentCategories.remove,
+    listProductTypes: productTypes.list,
+    getProductType: productTypes.get,
+    createProductType: productTypes.create,
+    updateProductType: productTypes.update,
+    deleteProductType: productTypes.remove,
   };
 }
 export type ContentService = ReturnType<typeof createContentService>;
