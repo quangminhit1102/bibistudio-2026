@@ -3,6 +3,7 @@ import { site } from "@/platform/site";
 import {
   adminModules,
   disabledAdminPath,
+  moduleEnabled,
   moduleForAdminPath,
 } from "../../src/features/admin/modules";
 import { buildNavigation } from "../../src/features/admin/shell/navigation";
@@ -84,7 +85,22 @@ describe("admin modules", () => {
     expect(disabledAdminPath("/admin/settings/profile", on)).toBe(false);
   });
 
-  it("the site lists only modules that exist, each once", () => {
+  it("a module is on only while the modules it works on are", () => {
+    const on = new Set(["inventory", "content"]);
+    expect(moduleEnabled("inventory", on)).toBe(false);
+    expect(disabledAdminPath("/admin/products/inventory", on)).toBe(true);
+    expect(paths(["inventory", "content"]).map(([group]) => group)).toEqual([
+      "overview",
+      "content",
+      "management",
+    ]);
+    expect(moduleEnabled("inventory", new Set(["inventory", "products"]))).toBe(true);
+  });
+
+  it("the site lists only modules that exist, each once, with the modules they work on", () => {
+    for (const module of adminModules)
+      if (module.id !== "core" && site.admin.modules.includes(module.id))
+        expect(site.admin.modules).toEqual(expect.arrayContaining(module.requires ?? []));
     expect(site.admin.modules.filter((id) => !every.includes(id))).toEqual([]);
     expect(new Set(site.admin.modules).size).toBe(site.admin.modules.length);
   });

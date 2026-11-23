@@ -14,8 +14,8 @@ the dashboard.
 
 1. **Module manifests.** Each admin feature folder exports a manifest from `module.ts`: its
    `id`, the permission `resource` that is switched off with it, the path prefixes it owns,
-   its menu items (each naming its menu group) and `browserOnly` when its data is kept only
-   in the browser. `src/features/admin/modules.ts` lists the manifests in menu order and
+   its menu items (each naming its menu group), the modules it `requires` (stock needs
+   products) and `browserOnly` when its data is kept only in the browser. `src/features/admin/modules.ts` lists the manifests in menu order and
    answers three questions: is a module on, is a resource on, which module owns a path.
 2. **Module ids.** The eight of the spec (`content`, `products`, `customers`, `sales`,
    `analytics`, `accounts`, `audit`, `settings`) plus `inventory`, `notifications` and

@@ -30,6 +30,8 @@ export type AdminModule = {
   resource?: Resource;
   /** Address prefixes the module owns. */
   paths: string[];
+  /** Modules this one works on; it is on only while they are. */
+  requires?: AdminModuleId[];
   /** Its data is kept only in the browser. */
   browserOnly?: boolean;
   items: (NavigationItem & { group: NavigationGroupId })[];
@@ -54,13 +56,14 @@ export const adminModules: AdminModule[] = [
 
 export const enabledModules: ReadonlySet<string> = new Set(site.admin.modules);
 const isOn = (module: AdminModule, enabled: ReadonlySet<string>) =>
-  module.id === "core" || enabled.has(module.id);
+  module.id === "core" ||
+  (enabled.has(module.id) && (module.requires ?? []).every((id) => enabled.has(id)));
 
 export function moduleEnabled(
   id: AdminModuleId,
   enabled: ReadonlySet<string> = enabledModules,
 ): boolean {
-  return enabled.has(id);
+  return adminModules.some((module) => module.id === id && isOn(module, enabled));
 }
 
 export function modulesOn(enabled: ReadonlySet<string> = enabledModules): AdminModule[] {
@@ -96,5 +99,5 @@ export function disabledAdminPath(
   enabled: ReadonlySet<string> = enabledModules,
 ): boolean {
   const owner = moduleForAdminPath(pathname);
-  return owner !== null && !enabled.has(owner);
+  return owner !== null && !moduleEnabled(owner, enabled);
 }
