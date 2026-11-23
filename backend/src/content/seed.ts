@@ -1,11 +1,21 @@
 import { randomUUID } from "node:crypto";
 import type { Pool, PoolConnection, RowDataPacket, ResultSetHeader } from "mysql2/promise";
+import { attributesFromLegacy } from "./legacy-attributes";
+
+/** `{ "<locale>": { name, plural?, tagline?, intro? } }` */
+export type SeedTranslations = Record<string, Record<string, string>>;
 
 export interface SeedCategory {
   slug: string;
   name: string;
   description?: string | null;
   position?: number;
+  translations?: SeedTranslations | null;
+  image?: string | null;
+}
+export interface SeedProductType extends SeedCategory {
+  /** The value products store in `product_type`; `slug` is the URL segment. */
+  code: string;
 }
 export interface SeedPost {
   slug: string;
@@ -54,6 +64,7 @@ export interface ContentSeedData {
   posts: SeedPost[];
   products: SeedProduct[];
   productCategories: SeedCategory[];
+  productTypes?: SeedProductType[];
   contentCategories: SeedCategory[];
 }
 
@@ -71,6 +82,8 @@ const toDate = (value: string | Date | null | undefined): Date | null =>
  */
 const richEnvelope = (html: string): string => JSON.stringify({ format: "html-v1", html });
 
+const json = (value: unknown): string | null => (value == null ? null : JSON.stringify(value));
+
 async function upsertCategory(
   c: PoolConnection,
   table: "content_categories" | "product_categories",
@@ -78,11 +91,21 @@ async function upsertCategory(
   now: Date,
 ): Promise<{ id: string; fresh: boolean }> {
   const id = randomUUID();
+  const extra = table === "product_categories";
   const [result] = await c.execute<ResultSetHeader>(
-    `INSERT INTO \`${table}\` (id,name,slug,description,parent_id,position,active,created_at,updated_at,revision)
-     VALUES (?,?,?,?,NULL,?,1,?,?,1)
+    `INSERT INTO \`${table}\` (id,name,slug,description,parent_id,position,active,created_at,updated_at,revision${extra ? ",translations,image" : ""})
+     VALUES (?,?,?,?,NULL,?,1,?,?,1${extra ? ",?,?" : ""})
      ON DUPLICATE KEY UPDATE id=id`,
-    [id, cat.name, cat.slug, cat.description ?? null, cat.position ?? 0, now, now],
+    [
+      id,
+      cat.name,
+      cat.slug,
+      cat.description ?? null,
+      cat.position ?? 0,
+      now,
+      now,
+      ...(extra ? [json(cat.translations), cat.image ?? null] : []),
+    ],
   );
   const [[row]] = await c.execute<RowDataPacket[]>(`SELECT id FROM \`${table}\` WHERE slug=?`, [
     cat.slug,
@@ -90,18 +113,78 @@ async function upsertCategory(
   return { id: String(row.id), fresh: result.affectedRows === 1 };
 }
 
-/** Idempotent one-shot seed. Inserts posts/products only when `posts` is empty. */
+async function seedProductTypes(
+  c: PoolConnection,
+  types: SeedProductType[],
+  now: Date,
+): Promise<number> {
+  const [[{ n }]] = await c.query<RowDataPacket[]>("SELECT COUNT(*) n FROM product_types");
+  if (n > 0) return 0;
+  for (const type of types)
+    await c.execute(
+      `INSERT INTO product_types (id,code,name,slug,description,position,active,translations,image,created_at,updated_at,revision)
+       VALUES (?,?,?,?,?,?,1,?,?,?,?,1)`,
+      [
+        randomUUID(),
+        type.code,
+        type.name,
+        type.slug,
+        type.description ?? null,
+        type.position ?? 0,
+        json(type.translations),
+        type.image ?? null,
+        now,
+        now,
+      ],
+    );
+  return types.length;
+}
+
+/**
+ * Fills what migration 3 added on rows that were seeded before it. Each rule only touches
+ * rows nobody has written since: a category with neither translations nor image, a
+ * product without attributes.
+ */
+async function backfillCatalogue(c: PoolConnection, data: ContentSeedData): Promise<number> {
+  let changed = 0;
+  for (const cat of data.productCategories ?? []) {
+    if (cat.translations == null && cat.image == null) continue;
+    const [result] = await c.execute<ResultSetHeader>(
+      "UPDATE product_categories SET translations=?, image=? WHERE slug=? AND translations IS NULL AND image IS NULL",
+      [json(cat.translations), cat.image ?? null, cat.slug],
+    );
+    changed += result.affectedRows;
+  }
+  const [rows] = await c.query<RowDataPacket[]>(
+    "SELECT id,dimensions,pages,material_vi,material_en,format_vi,format_en,occasion FROM products WHERE attributes IS NULL",
+  );
+  for (const row of rows) {
+    await c.execute("UPDATE products SET attributes=? WHERE id=? AND attributes IS NULL", [
+      JSON.stringify(attributesFromLegacy(row)),
+      row.id,
+    ]);
+    changed++;
+  }
+  return changed;
+}
+
+/**
+ * Idempotent seed, run on every deploy. Posts, products and categories are inserted only
+ * when `posts` is empty; product types only when there are none; then the catalogue
+ * backfill. Returns the number of rows written.
+ */
 export async function seedContent(pool: Pool, data: ContentSeedData): Promise<number> {
   const c = await pool.getConnection();
   try {
     await c.beginTransaction();
+    const now = new Date();
+    let inserted = await seedProductTypes(c, data.productTypes ?? [], now);
     const [[{ n }]] = await c.query<RowDataPacket[]>("SELECT COUNT(*) n FROM posts");
     if (n > 0) {
+      inserted += await backfillCatalogue(c, data);
       await c.commit();
-      return 0;
+      return inserted;
     }
-    const now = new Date();
-    let inserted = 0;
     await c.execute(
       `INSERT INTO users (id,username,display_name,password_hash,active,is_master,deleted_at)
        VALUES (?,?,?,?,1,NULL,?)
@@ -147,8 +230,8 @@ export async function seedContent(pool: Pool, data: ContentSeedData): Promise<nu
     }
     for (const product of data.products ?? []) {
       await c.execute(
-        `INSERT INTO products (id,product_code,name,slug,short_description,description,product_type,collection,category_id,price,compare_at,stock,reserved,status,image_ids,tags,seo_title,seo_description,name_en,short_description_en,description_en,dimensions,pages,material_vi,material_en,format_vi,format_en,occasion,featured,sort_order,image_alt_vi,image_alt_en,created_at,updated_at,revision)
-         VALUES (?,?,?,?,?,?,?,?,?,0,0,0,0,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,1)`,
+        `INSERT INTO products (id,product_code,name,slug,short_description,description,product_type,collection,category_id,price,compare_at,stock,reserved,status,image_ids,tags,seo_title,seo_description,name_en,short_description_en,description_en,dimensions,pages,material_vi,material_en,format_vi,format_en,occasion,featured,sort_order,image_alt_vi,image_alt_en,created_at,updated_at,revision,attributes)
+         VALUES (?,?,?,?,?,?,?,?,?,0,0,0,0,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,1,?)`,
         [
           randomUUID(),
           product.productCode,
@@ -180,6 +263,17 @@ export async function seedContent(pool: Pool, data: ContentSeedData): Promise<nu
           product.imageAltEn ?? null,
           now,
           now,
+          JSON.stringify(
+            attributesFromLegacy({
+              dimensions: product.dimensions,
+              pages: product.pages,
+              material_vi: product.materialVi,
+              material_en: product.materialEn,
+              format_vi: product.formatVi,
+              format_en: product.formatEn,
+              occasion: product.occasion,
+            }),
+          ),
         ],
       );
       inserted++;

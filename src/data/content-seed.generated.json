@@ -2439,43 +2439,256 @@
       "slug": "explore-vietnam",
       "name": "Khám phá Việt Nam",
       "description": "Việt Nam qua lăng kính của giấy: phố cổ, mái ngói, dòng sông và nhịp sống thường ngày.",
-      "position": 0
+      "position": 0,
+      "translations": {
+        "vi": {
+          "name": "Khám phá Việt Nam",
+          "tagline": "Những miền đất, hương vị và câu chuyện thường ngày của Việt Nam.",
+          "intro": "Việt Nam qua lăng kính của giấy: phố cổ, mái ngói, dòng sông và nhịp sống thường ngày."
+        },
+        "en": {
+          "name": "Explore Vietnam",
+          "tagline": "Places, flavours and everyday stories from Vietnam.",
+          "intro": "Vietnam interpreted through paper goods: old streets, tiled roofs, rivers and everyday life."
+        }
+      },
+      "image": "/catalogue/collection-explore-vietnam.webp"
     },
     {
       "slug": "vietnamese-food",
       "name": "Món ăn Việt Nam",
       "description": "Những món ăn gắn với ký ức, được vẽ lại thành sổ tay và postcard.",
-      "position": 1
+      "position": 1,
+      "translations": {
+        "vi": {
+          "name": "Món ăn Việt Nam",
+          "tagline": "Hương vị quen thuộc, được nhớ lại trên giấy.",
+          "intro": "Những món ăn gắn với ký ức, được vẽ lại thành sổ tay và postcard."
+        },
+        "en": {
+          "name": "Vietnamese Food",
+          "tagline": "Familiar flavours, remembered in paper.",
+          "intro": "Dishes tied to memory, illustrated as notebooks and postcards."
+        }
+      },
+      "image": "/catalogue/collection-vietnamese-food.webp"
     },
     {
       "slug": "motivation",
       "name": "Sổ tay tạo động lực",
       "description": "Từ một nụ cười, một giấc mơ đến niềm tin rằng mọi điều đều có thể — mỗi cuốn sổ là một lời nhắc dịu dàng để bạn tiếp tục viết, tiếp tục làm và tiếp tục vui sống.",
-      "position": 2
+      "position": 2,
+      "translations": {
+        "vi": {
+          "name": "Sổ tay tạo động lực",
+          "tagline": "Những lời nhắc nhỏ cho ngày bình thường.",
+          "intro": "Từ một nụ cười, một giấc mơ đến niềm tin rằng mọi điều đều có thể — mỗi cuốn sổ là một lời nhắc dịu dàng để bạn tiếp tục viết, tiếp tục làm và tiếp tục vui sống."
+        },
+        "en": {
+          "name": "Motivation",
+          "tagline": "Small reminders for ordinary days.",
+          "intro": "From a smile and a dream to the belief that anything is possible, each notebook is a gentle reminder to keep writing, doing and living with joy."
+        }
+      },
+      "image": null
     },
     {
       "slug": "ao-dai",
       "name": "Áo dài",
       "description": "Tà áo dài qua nét vẽ mềm mại trên thiệp và postcard.",
-      "position": 3
+      "position": 3,
+      "translations": {
+        "vi": {
+          "name": "Áo dài",
+          "tagline": "Nét thanh lịch Việt, tái hiện trên giấy.",
+          "intro": "Tà áo dài qua nét vẽ mềm mại trên thiệp và postcard."
+        },
+        "en": {
+          "name": "Ao Dai",
+          "tagline": "Vietnamese elegance, reimagined in paper.",
+          "intro": "The ao dai in soft illustration, on cards and postcards."
+        }
+      },
+      "image": "/catalogue/collection-ao-dai.webp"
     },
     {
       "slug": "greeting-cards",
       "name": "Thiệp chúc mừng",
       "description": "Mỗi dịp trong năm là một lý do để viết vài dòng: 8/3, sinh nhật, 20/10, 20/11, Giáng sinh, lì xì Tết… Thiệp BiBi được chia theo từng dịp, để bạn luôn tìm được đúng tấm thiệp cho đúng người, đúng ngày.",
-      "position": 4
+      "position": 4,
+      "translations": {
+        "vi": {
+          "name": "Thiệp chúc mừng",
+          "tagline": "Lời chúc cho những khoảnh khắc ý nghĩa.",
+          "intro": "Mỗi dịp trong năm là một lý do để viết vài dòng: 8/3, sinh nhật, 20/10, 20/11, Giáng sinh, lì xì Tết… Thiệp BiBi được chia theo từng dịp, để bạn luôn tìm được đúng tấm thiệp cho đúng người, đúng ngày."
+        },
+        "en": {
+          "name": "Greeting Cards",
+          "tagline": "Words for the moments that matter.",
+          "intro": "Every occasion in the year is a reason to write a few lines: Mar 8, birthdays, Oct 20, Nov 20, Christmas, Tet… BiBi cards are grouped by occasion, so you always find the right card for the right person on the right day."
+        }
+      },
+      "image": null
     },
     {
       "slug": "pressed-flower-cards",
       "name": "Thiệp ép hoa khô",
       "description": "Hoa, lá khô được ép và dán lên nền giấy thủ công nhuộm màu, hoàn thiện bằng viền răng cưa kiểu thiệp xưa. Mỗi tấm thiệp là một cành hoa thật giữ được dáng đẹp theo năm tháng.",
-      "position": 5
+      "position": 5,
+      "translations": {
+        "vi": {
+          "name": "Thiệp ép hoa khô",
+          "tagline": "Hoa thật được ép khô, dán từng cánh tay.",
+          "intro": "Hoa, lá khô được ép và dán lên nền giấy thủ công nhuộm màu, hoàn thiện bằng viền răng cưa kiểu thiệp xưa. Mỗi tấm thiệp là một cành hoa thật giữ được dáng đẹp theo năm tháng."
+        },
+        "en": {
+          "name": "Pressed Flower Cards",
+          "tagline": "Real dried flowers, pressed petal by petal.",
+          "intro": "Dried flowers and leaves are pressed and laid on hand-dyed craft paper, finished with a vintage scalloped edge. Each card keeps a real flower, beautiful for years."
+        }
+      },
+      "image": null
     },
     {
       "slug": "spiral-cards",
       "name": "Thiệp xoắn",
       "description": "Thiệp xoắn mở ra thành một hình ảnh bất ngờ.",
-      "position": 6
+      "position": 6,
+      "translations": {
+        "vi": {
+          "name": "Thiệp xoắn",
+          "tagline": "Tấm thiệp mở ra một bất ngờ nhỏ.",
+          "intro": "Thiệp xoắn mở ra thành một hình ảnh bất ngờ."
+        },
+        "en": {
+          "name": "Spiral Cards",
+          "tagline": "Paper that unfolds into a little surprise.",
+          "intro": "Cards that unfold into a little surprise."
+        }
+      },
+      "image": null
+    }
+  ],
+  "productTypes": [
+    {
+      "code": "notebook",
+      "slug": "notebooks",
+      "name": "Sổ tay",
+      "description": "Những khoảng giấy nhỏ cho suy nghĩ lớn.",
+      "position": 0,
+      "translations": {
+        "vi": {
+          "name": "Sổ tay",
+          "plural": "Sổ tay",
+          "tagline": "Những khoảng giấy nhỏ cho suy nghĩ lớn."
+        },
+        "en": {
+          "name": "Notebook",
+          "plural": "Notebooks",
+          "tagline": "Small spaces for big thoughts."
+        }
+      },
+      "image": "/catalogue/collection-notebooks.webp"
+    },
+    {
+      "code": "greeting-card",
+      "slug": "greeting-cards",
+      "name": "Thiệp",
+      "description": "Lời muốn nói, gửi trong một tấm thiệp.",
+      "position": 1,
+      "translations": {
+        "vi": {
+          "name": "Thiệp",
+          "plural": "Thiệp",
+          "tagline": "Lời muốn nói, gửi trong một tấm thiệp."
+        },
+        "en": {
+          "name": "Greeting Card",
+          "plural": "Greeting Cards",
+          "tagline": "Words you want to say, folded in paper."
+        }
+      },
+      "image": "/catalogue/collection-ao-dai.webp"
+    },
+    {
+      "code": "postcard",
+      "slug": "postcards",
+      "name": "Postcard",
+      "description": "Một khung hình nhỏ để gửi đi xa.",
+      "position": 2,
+      "translations": {
+        "vi": {
+          "name": "Postcard",
+          "plural": "Postcard",
+          "tagline": "Một khung hình nhỏ để gửi đi xa."
+        },
+        "en": {
+          "name": "Postcard",
+          "plural": "Postcards",
+          "tagline": "A small picture to send far away."
+        }
+      },
+      "image": "/catalogue/collection-explore-vietnam.webp"
+    },
+    {
+      "code": "envelope",
+      "slug": "envelopes",
+      "name": "Bao thư",
+      "description": "Giữ trọn lời nhắn bên trong.",
+      "position": 3,
+      "translations": {
+        "vi": {
+          "name": "Bao thư",
+          "plural": "Bao thư",
+          "tagline": "Giữ trọn lời nhắn bên trong."
+        },
+        "en": {
+          "name": "Envelope",
+          "plural": "Envelopes",
+          "tagline": "Keeping a message safe inside."
+        }
+      },
+      "image": null
+    },
+    {
+      "code": "letter-paper",
+      "slug": "letter-paper",
+      "name": "Giấy viết thư",
+      "description": "Cho những lá thư viết tay.",
+      "position": 4,
+      "translations": {
+        "vi": {
+          "name": "Giấy viết thư",
+          "plural": "Giấy viết thư",
+          "tagline": "Cho những lá thư viết tay."
+        },
+        "en": {
+          "name": "Letter Paper",
+          "plural": "Letter Paper",
+          "tagline": "For letters written by hand."
+        }
+      },
+      "image": null
+    },
+    {
+      "code": "magnet",
+      "slug": "magnets",
+      "name": "Magnet",
+      "description": "Một mảnh ký ức trên cửa tủ lạnh.",
+      "position": 5,
+      "translations": {
+        "vi": {
+          "name": "Magnet",
+          "plural": "Magnet",
+          "tagline": "Một mảnh ký ức trên cửa tủ lạnh."
+        },
+        "en": {
+          "name": "Magnet",
+          "plural": "Magnets",
+          "tagline": "A little memory on the fridge door."
+        }
+      },
+      "image": "/catalogue/magnet-cau-rong.webp"
     }
   ],
   "contentCategories": [

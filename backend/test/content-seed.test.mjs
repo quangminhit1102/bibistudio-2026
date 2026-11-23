@@ -156,8 +156,151 @@ test("seedContent seeds the generated legacy dataset idempotently", async (t) =>
     data.posts.length +
       data.products.length +
       data.productCategories.length +
+      data.productTypes.length +
       data.contentCategories.length,
   );
   const second = await seedContent(f.pool, data);
   assert.equal(second, 0);
+});
+
+const catalogueData = {
+  ...sampleData,
+  productTypes: [
+    {
+      code: "notebook",
+      slug: "notebooks",
+      name: "Sổ tay",
+      description: "Giấy nhỏ",
+      position: 0,
+      translations: { vi: { name: "Sổ tay", plural: "Sổ tay" }, en: { name: "Notebook" } },
+      image: "/catalogue/n.webp",
+    },
+    {
+      code: "envelope",
+      slug: "envelopes",
+      name: "Bao thư",
+      description: null,
+      position: 1,
+      translations: { vi: { name: "Bao thư" } },
+      image: null,
+    },
+  ],
+  productCategories: [
+    {
+      slug: "motivation",
+      name: "Tạo động lực",
+      description: "Mô tả",
+      position: 0,
+      translations: { vi: { name: "Tạo động lực", intro: "Mô tả" }, en: { name: "Motivation" } },
+      image: "/catalogue/m.webp",
+    },
+    {
+      slug: "ao-dai",
+      name: "Áo dài",
+      description: null,
+      position: 1,
+      translations: { vi: { name: "Áo dài" } },
+      image: "/catalogue/a.webp",
+    },
+  ],
+};
+
+test("a first seed writes product types, category translations and product attributes", async (t) => {
+  const f = await createAuthFixture(t, { visitorHistory: false });
+  const { migrateContent } = await import("../dist/content/schema.js");
+  await migrateContent(f.pool, directory);
+  const { seedContent } = await import("../dist/content/seed.js");
+  assert.equal(await seedContent(f.pool, catalogueData), 2 + 1 + 2 + 2 + 2);
+  const [types] = await f.pool.query(
+    "SELECT code,slug,name,description,position,active,translations,image FROM product_types ORDER BY position",
+  );
+  assert.deepEqual(
+    { ...types[0] },
+    {
+      code: "notebook",
+      slug: "notebooks",
+      name: "Sổ tay",
+      description: "Giấy nhỏ",
+      position: 0,
+      active: 1,
+      translations: { vi: { name: "Sổ tay", plural: "Sổ tay" }, en: { name: "Notebook" } },
+      image: "/catalogue/n.webp",
+    },
+  );
+  assert.equal(types[1].code, "envelope");
+  const [[category]] = await f.pool.query(
+    "SELECT translations,image FROM product_categories WHERE slug='motivation'",
+  );
+  assert.deepEqual(category.translations.en, { name: "Motivation" });
+  assert.equal(category.image, "/catalogue/m.webp");
+  const [[product]] = await f.pool.query("SELECT attributes FROM products");
+  assert.deepEqual(product.attributes, {
+    dimensions: "A5",
+    pages: "100",
+    material: { vi: "Giấy", en: "Paper" },
+    format: { vi: "14x20cm", en: "14x20cm" },
+    occasion: "womens-day-83",
+  });
+  assert.equal(await seedContent(f.pool, catalogueData), 0);
+});
+
+test("a database seeded before version 3 is filled once and admin edits are kept", async (t) => {
+  const f = await createAuthFixture(t, { visitorHistory: false });
+  const { migrateContent } = await import("../dist/content/schema.js");
+  await migrateContent(f.pool, directory);
+  const { seedContent } = await import("../dist/content/seed.js");
+  await seedContent(f.pool, catalogueData);
+  // The state production is in right after migration 3: rows exist, new columns are NULL.
+  await f.pool.query("DELETE FROM product_types");
+  await f.pool.query("UPDATE product_categories SET translations=NULL, image=NULL");
+  await f.pool.query("UPDATE products SET attributes=NULL");
+  await f.pool.query(
+    "UPDATE product_categories SET image='/uploaded-by-admin.webp' WHERE slug='ao-dai'",
+  );
+  await f.pool.query(
+    "INSERT INTO products (id,product_code,name,slug,description,product_type,collection,image_ids,tags,material_en,created_at,updated_at) VALUES('p2','0002','Thiệp','thiep','','greeting-card','ao-dai','[]','[]','Card',NOW(3),NOW(3)),('p3','0003','Trống','trong','','greeting-card','ao-dai','[]','[]',NULL,NOW(3),NOW(3))",
+  );
+
+  // 2 product types + 1 category + 3 products.
+  assert.equal(await seedContent(f.pool, catalogueData), 2 + 1 + 3);
+
+  const [[{ n: types }]] = await f.pool.query("SELECT COUNT(*) n FROM product_types");
+  assert.equal(types, 2);
+  const [categories] = await f.pool.query(
+    "SELECT slug,translations,image FROM product_categories ORDER BY slug",
+  );
+  assert.deepEqual(
+    categories.map((c) => ({ ...c })),
+    [
+      { slug: "ao-dai", translations: null, image: "/uploaded-by-admin.webp" },
+      {
+        slug: "motivation",
+        translations: { vi: { name: "Tạo động lực", intro: "Mô tả" }, en: { name: "Motivation" } },
+        image: "/catalogue/m.webp",
+      },
+    ],
+  );
+  const [products] = await f.pool.query("SELECT slug,attributes FROM products ORDER BY slug");
+  assert.deepEqual(
+    products.map((p) => ({ ...p })),
+    [
+      {
+        slug: "san-pham-a",
+        attributes: {
+          dimensions: "A5",
+          pages: "100",
+          material: { vi: "Giấy", en: "Paper" },
+          format: { vi: "14x20cm", en: "14x20cm" },
+          occasion: "womens-day-83",
+        },
+      },
+      { slug: "thiep", attributes: { material: { vi: "", en: "Card" } } },
+      { slug: "trong", attributes: {} },
+    ],
+  );
+
+  assert.equal(await seedContent(f.pool, catalogueData), 0);
+  // An admin who removed a seeded type keeps it removed as long as any type is left.
+  await f.pool.query("DELETE FROM product_types WHERE code='envelope'");
+  assert.equal(await seedContent(f.pool, catalogueData), 0);
 });
