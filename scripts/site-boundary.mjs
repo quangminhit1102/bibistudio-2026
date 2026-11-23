@@ -43,7 +43,7 @@ export const phaseOneBoundary = {
     "BibiLocal",
   ],
   // The stylesheet is the one place that pulls in the site's theme file.
-  siteImportFiles: [SITE_ENTRY, "src/styles.css"],
+  siteImportFiles: [SITE_ENTRY, "src/platform/pages/", "src/styles.css"],
   // Still names collections for its page layout; moves to site content in phase 3.
   taxonomyExclude: [/^src\/routes\/collections\.\$slug\.tsx$/],
 };
@@ -103,6 +103,10 @@ export async function findBoundaryViolations({
   for (const file of files) {
     const lines = (await readFile(join(root, file), "utf8")).split("\n");
     const checksTaxonomy = named && !taxonomyExclude.some((rule) => rule.test(file));
+    // An entry ending in "/" allows every file of that folder.
+    const mayImportSite = siteImportFiles.some((entry) =>
+      entry.endsWith("/") ? file.startsWith(entry) : file === entry,
+    );
     lines.forEach((text, index) => {
       const line = index + 1;
       const type = checksTaxonomy && named.exec(text);
@@ -112,7 +116,7 @@ export async function findBoundaryViolations({
           line,
           reason: `names the site's product type or collection "${type[2]}"; read the lists from the API`,
         });
-      if (SITE_IMPORT.test(text) && !siteImportFiles.includes(file))
+      if (SITE_IMPORT.test(text) && !mayImportSite)
         violations.push({
           file,
           line,

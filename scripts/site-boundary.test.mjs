@@ -75,6 +75,20 @@ test("allows @site imports only in the platform entry point", async () => {
   assert.match(found[0].reason, /@site/);
 });
 
+test("allows @site imports in every file of a folder listed with a trailing slash", async () => {
+  const found = await violations(
+    {
+      "src/platform/pages/home.ts": 'export { default } from "@site/pages/home";\n',
+      "src/platform/pages-extra.ts": 'export { default } from "@site/pages/home";\n',
+    },
+    { siteImportFiles: ["src/platform/pages/"] },
+  );
+  assert.deepEqual(
+    found.map((v) => v.file),
+    ["src/platform/pages-extra.ts"],
+  );
+});
+
 test("reports a relative path into the site folder", async () => {
   const found = await violations({
     "src/lib/x.css": '@source "../../site";\n',
