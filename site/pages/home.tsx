@@ -10,7 +10,7 @@ import { tx } from "@/data/catalogue";
 import { FilmStrip, Parallax, ScrollExpand, SplitWords } from "@/components/brand/motion";
 import { HeroSlides, type HeroSlide as Slide } from "@/components/brand/hero-slides";
 import { selectOptions, text } from "@/lib/catalogue-attributes";
-import { getCollection, useTaxonomy, type CollectionView } from "@/lib/catalogue-taxonomy";
+import { useTaxonomy, type CollectionView } from "@/lib/catalogue-taxonomy";
 import type { HomePageProps } from "@/platform/site-contract";
 import { BrandMark } from "../assets/brand-logo";
 import heroImg from "../assets/hero-desk.jpg";
@@ -61,24 +61,26 @@ function CollectionTile({
 }
 
 export default function HomePage({ products }: HomePageProps) {
-  const { productTypes } = useTaxonomy();
-  const ev = getCollection("explore-vietnam");
-  const food = getCollection("vietnamese-food");
-  const motivation = getCollection("motivation");
-  const aoDai = getCollection("ao-dai");
-  const cards = getCollection("greeting-cards");
-  const flowers = getCollection("pressed-flower-cards");
-  const spiral = getCollection("spiral-cards");
-  const evProducts = products.filter((p) => p.collection === ev.id).slice(0, 4);
+  const { productTypes, collections } = useTaxonomy();
+  // A collection the admin has hidden is undefined here, and its tile or section is left out.
+  const find = (id: string) => collections.find((c) => c.id === id);
+  const ev = find("explore-vietnam");
+  const food = find("vietnamese-food");
+  const motivation = find("motivation");
+  const aoDai = find("ao-dai");
+  const cards = find("greeting-cards");
+  const flowers = find("pressed-flower-cards");
+  const spiral = find("spiral-cards");
+  const evProducts = products.filter((p) => p.collection === ev?.id).slice(0, 4);
   const heroSlides: Slide[] = [
     {
       src: heroImg,
       alt: "Sổ tay, postcard, bao thư và giấy viết thư BiBi Studio trên bàn gỗ",
       label: "Bàn giấy của BiBi",
     },
-    ...[motivation, cards, flowers, ev]
-      .filter((c) => c.image)
-      .map((c) => ({ src: c.image!, alt: tx(c.name), label: tx(c.name), slug: c.slug })),
+    ...[motivation, cards, flowers, ev].flatMap((c) =>
+      c?.image ? [{ src: c.image, alt: tx(c.name), label: tx(c.name), slug: c.slug }] : [],
+    ),
   ];
   const realLife = products.filter((p) => p.images.length > 1).slice(0, 8);
   const featured = products.filter((p) => p.featured && p.images.length).slice(0, 10);
@@ -150,28 +152,42 @@ export default function HomePage({ products }: HomePageProps) {
             Tất cả <ArrowRight className="size-3.5" />
           </Link>
         </Reveal>
-        <ScrollExpand>
-          <CollectionTile c={ev} ratio="16/9" big />
-        </ScrollExpand>
+        {ev && (
+          <ScrollExpand>
+            <CollectionTile c={ev} ratio="16/9" big />
+          </ScrollExpand>
+        )}
         <div className="mt-16 grid gap-x-8 gap-y-16 md:grid-cols-12">
-          <Reveal className="md:col-span-7">
-            <CollectionTile c={food} ratio="5/4" />
-          </Reveal>
-          <Reveal className="md:col-span-5 md:mt-24" delay={120}>
-            <CollectionTile c={aoDai} ratio="4/5" />
-          </Reveal>
-          <Reveal className="md:col-span-5">
-            <CollectionTile c={motivation} ratio="4/5" />
-          </Reveal>
-          <Reveal className="md:col-span-7 md:mt-16" delay={120}>
-            <CollectionTile c={flowers} ratio="5/4" />
-          </Reveal>
-          <Reveal className="md:col-span-6">
-            <CollectionTile c={cards} ratio="3/2" />
-          </Reveal>
-          <Reveal className="md:col-span-6" delay={120}>
-            <CollectionTile c={spiral} ratio="3/2" />
-          </Reveal>
+          {food && (
+            <Reveal className="md:col-span-7">
+              <CollectionTile c={food} ratio="5/4" />
+            </Reveal>
+          )}
+          {aoDai && (
+            <Reveal className="md:col-span-5 md:mt-24" delay={120}>
+              <CollectionTile c={aoDai} ratio="4/5" />
+            </Reveal>
+          )}
+          {motivation && (
+            <Reveal className="md:col-span-5">
+              <CollectionTile c={motivation} ratio="4/5" />
+            </Reveal>
+          )}
+          {flowers && (
+            <Reveal className="md:col-span-7 md:mt-16" delay={120}>
+              <CollectionTile c={flowers} ratio="5/4" />
+            </Reveal>
+          )}
+          {cards && (
+            <Reveal className="md:col-span-6">
+              <CollectionTile c={cards} ratio="3/2" />
+            </Reveal>
+          )}
+          {spiral && (
+            <Reveal className="md:col-span-6" delay={120}>
+              <CollectionTile c={spiral} ratio="3/2" />
+            </Reveal>
+          )}
         </div>
       </section>
 
@@ -238,83 +254,87 @@ export default function HomePage({ products }: HomePageProps) {
       </section>
 
       {/* Featured story */}
-      <section className="mx-auto max-w-[1280px] px-6 py-28 lg:px-12">
-        <Reveal className="grid gap-12 md:grid-cols-2 md:items-center">
-          <Parallax strength={60} className="aspect-[4/5] w-full">
-            <img
-              src={ev.image}
-              alt={tx(ev.name)}
-              loading="lazy"
-              className="h-full w-full object-cover"
-            />
-          </Parallax>
-          <div>
-            <p className="eyebrow">Câu chuyện nổi bật</p>
-            <h2 className="mt-5 font-display text-5xl leading-[1.02] md:text-6xl">
-              Việt Nam,
-              <br />
-              <em className="text-kraft">qua từng trang giấy.</em>
-            </h2>
-            <p className="mt-6 max-w-md text-[15px] leading-relaxed text-muted-foreground">
-              {tx(ev.intro)}
-            </p>
-            <div className="mt-10 grid grid-cols-2 gap-4">
-              {evProducts.map((p, i) => (
-                <CatalogueCard key={p.slug} product={p} index={i} />
-              ))}
+      {ev && (
+        <section className="mx-auto max-w-[1280px] px-6 py-28 lg:px-12">
+          <Reveal className="grid gap-12 md:grid-cols-2 md:items-center">
+            <Parallax strength={60} className="aspect-[4/5] w-full">
+              <img
+                src={ev.image}
+                alt={tx(ev.name)}
+                loading="lazy"
+                className="h-full w-full object-cover"
+              />
+            </Parallax>
+            <div>
+              <p className="eyebrow">Câu chuyện nổi bật</p>
+              <h2 className="mt-5 font-display text-5xl leading-[1.02] md:text-6xl">
+                Việt Nam,
+                <br />
+                <em className="text-kraft">qua từng trang giấy.</em>
+              </h2>
+              <p className="mt-6 max-w-md text-[15px] leading-relaxed text-muted-foreground">
+                {tx(ev.intro)}
+              </p>
+              <div className="mt-10 grid grid-cols-2 gap-4">
+                {evProducts.map((p, i) => (
+                  <CatalogueCard key={p.slug} product={p} index={i} />
+                ))}
+              </div>
+              <Link
+                to="/collections/$slug"
+                params={{ slug: ev.slug }}
+                className="mt-10 inline-flex items-center gap-2 text-[12px] font-medium uppercase tracking-[0.22em] underline underline-offset-8"
+              >
+                Khám phá Việt Nam <ArrowRight className="size-3.5" />
+              </Link>
             </div>
-            <Link
-              to="/collections/$slug"
-              params={{ slug: ev.slug }}
-              className="mt-10 inline-flex items-center gap-2 text-[12px] font-medium uppercase tracking-[0.22em] underline underline-offset-8"
-            >
-              Khám phá Việt Nam <ArrowRight className="size-3.5" />
-            </Link>
-          </div>
-        </Reveal>
-      </section>
+          </Reveal>
+        </section>
+      )}
 
       {/* Gifts by occasion */}
-      <section className="mx-auto max-w-[1280px] px-5 py-24 sm:px-6 lg:px-12">
-        <Reveal className="mb-10 grid gap-4 md:grid-cols-2 md:items-end">
-          <div>
-            <p className="eyebrow">Gợi ý quà</p>
-            <h2 className="mt-3 font-display text-4xl leading-none md:text-6xl">
-              Một tấm thiệp cho mỗi dịp
-            </h2>
+      {cards && (
+        <section className="mx-auto max-w-[1280px] px-5 py-24 sm:px-6 lg:px-12">
+          <Reveal className="mb-10 grid gap-4 md:grid-cols-2 md:items-end">
+            <div>
+              <p className="eyebrow">Gợi ý quà</p>
+              <h2 className="mt-3 font-display text-4xl leading-none md:text-6xl">
+                Một tấm thiệp cho mỗi dịp
+              </h2>
+            </div>
+            <p className="max-w-md text-[15px] text-muted-foreground md:justify-self-end">
+              Chọn dịp bạn đang chuẩn bị — BiBi gợi ý những mẫu thiệp hợp nhất.
+            </p>
+          </Reveal>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {selectOptions("occasion").map((o, i) => {
+              const n = products.filter((p) => p.occasion === o.value).length;
+              return (
+                <Reveal key={o.value} variant="paper" delay={(i % 4) * 80}>
+                  <Link
+                    to="/collections/$slug"
+                    params={{ slug: cards.slug }}
+                    hash={o.value}
+                    className={`group flex h-full min-h-32 flex-col justify-between border border-border p-4 transition duration-500 hover:-translate-y-1 hover:shadow-paper sm:p-5 ${n ? "bg-card" : "bg-transparent"}`}
+                  >
+                    <span className="font-display text-sm text-kraft">
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                    <span>
+                      <span className="block font-display text-2xl leading-tight">
+                        {text(o.label)}
+                      </span>
+                      <span className="mt-1 block text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+                        {n ? `${n} mẫu` : "Sắp ra mắt"}
+                      </span>
+                    </span>
+                  </Link>
+                </Reveal>
+              );
+            })}
           </div>
-          <p className="max-w-md text-[15px] text-muted-foreground md:justify-self-end">
-            Chọn dịp bạn đang chuẩn bị — BiBi gợi ý những mẫu thiệp hợp nhất.
-          </p>
-        </Reveal>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {selectOptions("occasion").map((o, i) => {
-            const n = products.filter((p) => p.occasion === o.value).length;
-            return (
-              <Reveal key={o.value} variant="paper" delay={(i % 4) * 80}>
-                <Link
-                  to="/collections/$slug"
-                  params={{ slug: cards.slug }}
-                  hash={o.value}
-                  className={`group flex h-full min-h-32 flex-col justify-between border border-border p-4 transition duration-500 hover:-translate-y-1 hover:shadow-paper sm:p-5 ${n ? "bg-card" : "bg-transparent"}`}
-                >
-                  <span className="font-display text-sm text-kraft">
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
-                  <span>
-                    <span className="block font-display text-2xl leading-tight">
-                      {text(o.label)}
-                    </span>
-                    <span className="mt-1 block text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-                      {n ? `${n} mẫu` : "Sắp ra mắt"}
-                    </span>
-                  </span>
-                </Link>
-              </Reveal>
-            );
-          })}
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Real life photos */}
       {realLife.length > 0 && (
