@@ -79,5 +79,8 @@ test("loadSiteConfig names a missing catalogue config", async (t) => {
   const dir = await mkdtemp(join(tmpdir(), "site-html-"));
   t.after(() => rm(dir, { recursive: true, force: true }));
   await writeFile(join(dir, "site.config.ts"), "export default {};\n");
-  await assert.rejects(loadSiteConfig(dir), /Site catalogue config not found: .*catalogue\.config\.ts/);
+  await assert.rejects(
+    loadSiteConfig(dir),
+    /Site catalogue config not found: .*catalogue\.config\.ts/,
+  );
 });

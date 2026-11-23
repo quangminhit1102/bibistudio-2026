@@ -46,8 +46,14 @@ describe("defineCatalogue", () => {
         groupBy: {},
       },
     ],
-    ['groupBy.seasonal must name a declared select attribute, got "size"', { ...valid, groupBy: { seasonal: "size" } }],
-    ['groupBy.seasonal must name a declared select attribute, got "missing"', { ...valid, groupBy: { seasonal: "missing" } }],
+    [
+      'groupBy.seasonal must name a declared select attribute, got "size"',
+      { ...valid, groupBy: { seasonal: "size" } },
+    ],
+    [
+      'groupBy.seasonal must name a declared select attribute, got "missing"',
+      { ...valid, groupBy: { seasonal: "missing" } },
+    ],
   ])("rejects a config and names the problem: %s", (message, config) => {
     expect(() => defineCatalogue(config)).toThrow(`Invalid catalogue config: ${message}`);
   });

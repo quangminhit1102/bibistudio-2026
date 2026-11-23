@@ -116,7 +116,8 @@ export function defineCatalogue(config: CatalogueConfig): CatalogueConfig {
     if (attribute.type !== "select") continue;
     if (attribute.options.length === 0) failCatalogue(field, "must list at least one option");
     const values = attribute.options.map((option) => option.value);
-    if (new Set(values).size !== values.length) failCatalogue(field, "has a duplicate option value");
+    if (new Set(values).size !== values.length)
+      failCatalogue(field, "has a duplicate option value");
   }
   for (const [collection, key] of Object.entries(config.groupBy)) {
     const attribute = config.attributes.find((a) => a.key === key);
