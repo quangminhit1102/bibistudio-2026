@@ -88,7 +88,7 @@ function CollectionPage() {
   const group = groupAttribute(c.slug);
   const groups = group?.options ?? [];
   const inGroup = (value: string) =>
-    group ? products.filter((p) => attributeValue(p, group.key) === value) : [];
+    group ? inCollection(c.id).filter((p) => attributeValue(p, group.key) === value) : [];
   const count = inCollection(c.id).length;
   const live = groups.filter((o) => inGroup(o.value).length > 0);
   const soon = groups.filter((o) => inGroup(o.value).length === 0);
