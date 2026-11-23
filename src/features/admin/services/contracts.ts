@@ -330,6 +330,8 @@ export interface AdminTransaction {
 export interface AdminStore extends Pick<AdminTransaction, "get" | "list"> {
   readonly generation: number;
   invalidateOperations(): void;
+  /** Makes these entities storable; a store that holds every entity from the start omits it. */
+  prepare?(entities: EntityKey[]): Promise<void>;
   transaction<T>(entities: EntityKey[], work: (tx: AdminTransaction) => Promise<T>): Promise<T>;
   transactionWithBlobs<T>(
     entities: EntityKey[],
