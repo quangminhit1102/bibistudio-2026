@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { ChevronLeft, ChevronRight, Expand, X } from "lucide-react";
 import { Magnifier } from "@/components/brand/motion";
+import { t } from "@/lib/messages";
 
 /** Product gallery: magnifier + thumbnails on desktop, swipe row + dots on phones, fullscreen viewer on both. */
 export function ProductGallery({ images, alt, transitionName }: { images: string[]; alt: string; transitionName: string }) {
@@ -25,7 +26,7 @@ export function ProductGallery({ images, alt, transitionName }: { images: string
         />
         <button
           onClick={() => setOpen(true)}
-          aria-label="Xem toàn màn hình"
+          aria-label={t("gallery.fullscreen")}
           className="absolute right-3 top-3 grid size-10 place-items-center bg-background/85 text-foreground backdrop-blur transition hover:bg-background"
         >
           <Expand className="size-4" />
@@ -36,7 +37,7 @@ export function ProductGallery({ images, alt, transitionName }: { images: string
       <div className="relative md:hidden">
         <div ref={row} onScroll={onRowScroll} className="no-scrollbar flex snap-x snap-mandatory overflow-x-auto">
           {images.map((src, i) => (
-            <button key={src} onClick={() => { setActive(i); setOpen(true); }} className="w-full shrink-0 snap-center" aria-label={`Xem ảnh ${i + 1} toàn màn hình`}>
+            <button key={src} onClick={() => { setActive(i); setOpen(true); }} className="w-full shrink-0 snap-center" aria-label={t("gallery.fullscreenImage", { number: i + 1 })}>
               <img
                 src={src}
                 alt={i === 0 ? alt : ""}
@@ -66,7 +67,7 @@ export function ProductGallery({ images, alt, transitionName }: { images: string
             <button
               key={src}
               onClick={() => setActive(i)}
-              aria-label={`Ảnh ${i + 1}`}
+              aria-label={t("gallery.image", { number: i + 1 })}
               aria-current={i === active}
               className={`relative overflow-hidden transition ${i === active ? "opacity-100" : "opacity-55 hover:opacity-100"}`}
             >
@@ -104,7 +105,7 @@ function Lightbox({ images, alt, start, onClose }: { images: string[]; alt: stri
     <div
       role="dialog"
       aria-modal="true"
-      aria-label="Xem ảnh sản phẩm"
+      aria-label={t("gallery.dialog")}
       className="fixed inset-0 z-[60] flex flex-col bg-background animate-in fade-in duration-300"
       onPointerDown={(e) => { startX.current = e.clientX; }}
       onPointerUp={(e) => {
@@ -116,7 +117,7 @@ function Lightbox({ images, alt, start, onClose }: { images: string[]; alt: stri
     >
       <div className="flex items-center justify-between px-4 py-3 sm:px-6">
         <span className="text-[12px] tabular-nums tracking-[0.2em] text-muted-foreground">{i + 1} / {n}</span>
-        <button onClick={() => onClose(i)} aria-label="Đóng" className="grid size-11 place-items-center"><X className="size-5" /></button>
+        <button onClick={() => onClose(i)} aria-label={t("close")} className="grid size-11 place-items-center"><X className="size-5" /></button>
       </div>
       <div className="relative min-h-0 flex-1 px-2 pb-4 sm:px-16">
         <Magnifier key={images[i]} src={images[i]} alt={alt} className="h-full w-full animate-in fade-in zoom-in-95 duration-500" />
@@ -130,7 +131,7 @@ function Lightbox({ images, alt, start, onClose }: { images: string[]; alt: stri
       {n > 1 && (
         <div className="no-scrollbar flex justify-center gap-2 overflow-x-auto px-4 pb-5">
           {images.map((src, k) => (
-            <button key={src} onClick={() => setI(k)} aria-label={`Ảnh ${k + 1}`} className={`size-14 shrink-0 overflow-hidden transition ${k === i ? "ring-1 ring-foreground" : "opacity-50"}`}>
+            <button key={src} onClick={() => setI(k)} aria-label={t("gallery.image", { number: k + 1 })} className={`size-14 shrink-0 overflow-hidden transition ${k === i ? "ring-1 ring-foreground" : "opacity-50"}`}>
               <img src={src} alt="" className="h-full w-full object-cover" />
             </button>
           ))}
@@ -144,7 +145,7 @@ function NavBtn({ side, onClick, children }: { side: "left" | "right"; onClick: 
   return (
     <button
       onClick={onClick}
-      aria-label={side === "left" ? "Ảnh trước" : "Ảnh sau"}
+      aria-label={side === "left" ? t("gallery.previousImage") : t("gallery.nextImage")}
       className={`absolute top-1/2 hidden size-12 -translate-y-1/2 place-items-center border border-border bg-background/90 transition hover:bg-secondary sm:grid ${side === "left" ? "left-3" : "right-3"}`}
     >
       {children}
@@ -161,8 +162,8 @@ export function Slider({ children, label }: { children: ReactNode; label: string
       <div className="mb-8 flex items-end justify-between gap-4 border-b border-border pb-6">
         <h2 className="eyebrow text-foreground">{label}</h2>
         <div className="flex gap-2 md:mr-14">
-          <button onClick={() => by(-1)} aria-label="Trước" className="grid size-10 place-items-center border border-border transition hover:bg-secondary"><ChevronLeft className="size-4" /></button>
-          <button onClick={() => by(1)} aria-label="Sau" className="grid size-10 place-items-center border border-border transition hover:bg-secondary"><ChevronRight className="size-4" /></button>
+          <button onClick={() => by(-1)} aria-label={t("gallery.previous")} className="grid size-10 place-items-center border border-border transition hover:bg-secondary"><ChevronLeft className="size-4" /></button>
+          <button onClick={() => by(1)} aria-label={t("gallery.next")} className="grid size-10 place-items-center border border-border transition hover:bg-secondary"><ChevronRight className="size-4" /></button>
         </div>
       </div>
       <div ref={ref} className="no-scrollbar -mx-5 flex snap-x snap-mandatory gap-5 overflow-x-auto px-5 pb-2 md:mx-0 md:gap-8 md:px-0">

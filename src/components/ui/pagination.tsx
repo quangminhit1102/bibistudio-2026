@@ -1,5 +1,6 @@
 // src/components/ui/pagination.tsx
 import { Link } from "@tanstack/react-router";
+import { t } from "@/lib/messages";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { ReactNode } from "react";
 
@@ -40,7 +41,7 @@ export function Pagination({ to, page, totalPages, search }: PaginationProps) {
       key={n}
       to={to}
       search={search(n)}
-      aria-label={`Trang ${n}`}
+      aria-label={t("pagination.page", { page: n })}
       className={`${itemClass} ${n === page ? activeClass : idleClass} ${extraClass}`}
       aria-current={n === page ? "page" : undefined}
     >
@@ -49,7 +50,10 @@ export function Pagination({ to, page, totalPages, search }: PaginationProps) {
   );
 
   return (
-    <nav aria-label="Phân trang" className="mt-10 flex items-center justify-center gap-1.5">
+    <nav
+      aria-label={t("pagination.label")}
+      className="mt-10 flex items-center justify-center gap-1.5"
+    >
       {page > 1 ? (
         link(page - 1, <ChevronLeft className="h-4 w-4" aria-hidden />)
       ) : (

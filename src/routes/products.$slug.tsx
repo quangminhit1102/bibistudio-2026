@@ -19,6 +19,7 @@ import { attributeRows } from "@/lib/catalogue-attributes";
 import { toPublicProduct } from "@/lib/content-adapter";
 import { resolveSeo } from "@/lib/content-seo";
 import { SITE_URL, buildBreadcrumbSchema } from "@/lib/seo";
+import { t } from "@/lib/messages";
 import { site } from "@/platform/site";
 
 function relatedFromList(product: Product, list: Product[], n = 8): Product[] {
@@ -69,22 +70,22 @@ export const Route = createFileRoute("/products/$slug")({
   head: ({ loaderData, params }) => {
     if (!loaderData)
       return {
-        meta: [{ title: `Không tìm thấy${site.seo.titleSuffix}` }, { name: "robots", content: "noindex" }],
+        meta: [{ title: t("notFound.metaTitle") }, { name: "robots", content: "noindex" }],
       };
     let title: string, description: string;
     let image: string | undefined;
     const scripts: { type: string; children: string }[] = [];
     if (loaderData.kind === "type") {
-      const t = getProductType(loaderData.typeId);
-      title = `${tx(t.plural)}${site.seo.titleSuffix}`;
-      description = tx(t.tagline);
+      const type = getProductType(loaderData.typeId);
+      title = `${tx(type.plural)}${site.seo.titleSuffix}`;
+      description = tx(type.tagline);
     } else {
       const p = loaderData.product;
-      const t = getProductType(p.productType);
+      const type = getProductType(p.productType);
       const seo = resolveSeo({
         seoTitle: loaderData.seo?.seo_title,
         seoDescription: loaderData.seo?.seo_description,
-        title: `${tx(p.name)} · ${tx(t.name)}${site.seo.titleSuffix}`,
+        title: `${tx(p.name)} · ${tx(type.name)}${site.seo.titleSuffix}`,
         shortDescription: tx(p.description),
       });
       title = seo.title;
@@ -95,9 +96,9 @@ export const Route = createFileRoute("/products/$slug")({
         type: "application/ld+json",
         children: JSON.stringify(
           buildBreadcrumbSchema([
-            { name: "Sản phẩm", url: `${SITE_URL}/products` },
-            ...(getProductTypeBySlug(t.slug)
-              ? [{ name: tx(t.plural), url: `${SITE_URL}/products/${t.slug}` }]
+            { name: t("products.heading"), url: `${SITE_URL}/products` },
+            ...(getProductTypeBySlug(type.slug)
+              ? [{ name: tx(type.plural), url: `${SITE_URL}/products/${type.slug}` }]
               : []),
             { name: tx(p.name), url: `${SITE_URL}/products/${params.slug}` },
           ]),
@@ -131,15 +132,15 @@ function ProductNotFound() {
     <PageShell>
       <PageIntro
         eyebrow="404"
-        title="Không tìm thấy sản phẩm"
-        lead="Sản phẩm này không tồn tại hoặc đã được chuyển."
+        title={t("product.notFoundTitle")}
+        lead={t("product.notFoundLead")}
       />
       <div className="mx-auto max-w-[1280px] px-6 pb-28 lg:px-12">
         <Link
           to="/products"
           className="text-[12px] uppercase tracking-[0.22em] underline underline-offset-8"
         >
-          Xem tất cả sản phẩm
+          {t("product.viewAll")}
         </Link>
       </div>
     </PageShell>
@@ -157,10 +158,10 @@ function ProductRoute() {
 
 function TypeListing({ typeId, products }: { typeId: string; products: Product[] }) {
   useTaxonomy();
-  const t = getProductType(typeId);
+  const type = getProductType(typeId);
   return (
     <PageShell>
-      <PageIntro eyebrow="Sản phẩm" title={tx(t.plural)} lead={tx(t.tagline)} />
+      <PageIntro eyebrow={t("products.heading")} title={tx(type.plural)} lead={tx(type.tagline)} />
       <section className="mx-auto max-w-[1280px] px-6 pb-28 lg:px-12">
         <CatalogueGrid items={products} />
       </section>
@@ -172,10 +173,10 @@ function TypeListing({ typeId, products }: { typeId: string; products: Product[]
 function ProductDetail({ product, related }: { product: Product; related: Product[] }) {
   const p = product;
   useTaxonomy();
-  const t = getProductType(p.productType);
+  const type = getProductType(p.productType);
   const c = getCollection(p.collection);
   // Only a known type or collection has a page of its own to link to.
-  const typeHasPage = getProductTypeBySlug(t.slug) !== undefined;
+  const typeHasPage = getProductTypeBySlug(type.slug) !== undefined;
   const collectionHasPage = getCollectionBySlug(c.slug) !== undefined;
   const details = attributeRows(p);
 
@@ -186,7 +187,7 @@ function ProductDetail({ product, related }: { product: Product; related: Produc
         className="mx-auto max-w-[1280px] px-6 pt-8 text-[12px] text-muted-foreground lg:px-12"
       >
         <Link to="/" className="hover:text-foreground">
-          Trang chủ
+          {t("nav.home")}
         </Link>{" "}
         /{" "}
         {collectionHasPage ? (
@@ -198,11 +199,11 @@ function ProductDetail({ product, related }: { product: Product; related: Produc
         )}{" "}
         /{" "}
         {typeHasPage ? (
-          <Link to="/products/$slug" params={{ slug: t.slug }} className="hover:text-foreground">
-            {tx(t.plural)}
+          <Link to="/products/$slug" params={{ slug: type.slug }} className="hover:text-foreground">
+            {tx(type.plural)}
           </Link>
         ) : (
-          tx(t.plural)
+          tx(type.plural)
         )}{" "}
         / <span className="text-foreground">{tx(p.name)}</span>
       </nav>
@@ -216,12 +217,12 @@ function ProductDetail({ product, related }: { product: Product; related: Produc
               transitionName={productTransitionName(p.slug)}
             />
           ) : (
-            <PaperPlaceholder label={tx(t.name)} size="1200 × 1500" />
+            <PaperPlaceholder label={tx(type.name)} size="1200 × 1500" />
           )}
         </div>
 
         <div className="lg:sticky lg:top-8 lg:self-start">
-          <p className="eyebrow">{tx(t.name)}</p>
+          <p className="eyebrow">{tx(type.name)}</p>
           <h1 className="mt-4 font-display text-5xl leading-[1.02] md:text-6xl">{tx(p.name)}</h1>
           {collectionHasPage ? (
             <Link
@@ -229,10 +230,12 @@ function ProductDetail({ product, related }: { product: Product; related: Produc
               params={{ slug: c.slug }}
               className="mt-3 inline-block text-[14px] text-kraft hover:underline"
             >
-              Bộ sưu tập {tx(c.name)}
+              {t("product.collection", { name: tx(c.name) })}
             </Link>
           ) : (
-            <p className="mt-3 text-[14px] text-kraft">Bộ sưu tập {tx(c.name)}</p>
+            <p className="mt-3 text-[14px] text-kraft">
+              {t("product.collection", { name: tx(c.name) })}
+            </p>
           )}
           <p className="mt-8 text-[15px] leading-relaxed text-muted-foreground">
             {tx(p.description)}
@@ -250,16 +253,14 @@ function ProductDetail({ product, related }: { product: Product; related: Produc
           )}
 
           <div className="paper-texture mt-10 p-7">
-            <p className="font-display text-2xl">Bạn quan tâm đến sản phẩm này?</p>
-            <p className="mt-2 text-[13px] text-muted-foreground">
-              Liên hệ {site.name} để được tư vấn chi tiết.
-            </p>
+            <p className="font-display text-2xl">{t("product.askTitle")}</p>
+            <p className="mt-2 text-[13px] text-muted-foreground">{t("product.askText")}</p>
             <ContactLinks className="mt-5" />
             <Link
               to="/contact"
               className="mt-6 block bg-foreground py-3.5 text-center text-[12px] font-medium uppercase tracking-[0.22em] text-background transition hover:bg-accent"
             >
-              Liên hệ {site.name}
+              {t("product.askAction")}
             </Link>
           </div>
         </div>
@@ -267,7 +268,7 @@ function ProductDetail({ product, related }: { product: Product; related: Produc
 
       {related.length > 0 && (
         <section className="mx-auto max-w-[1280px] px-5 py-20 sm:px-6 lg:px-12">
-          <Slider label={`Cùng bộ sưu tập ${tx(c.name)}`}>
+          <Slider label={t("product.related", { name: tx(c.name) })}>
             {related.map((r, i) => (
               <div
                 key={r.slug}

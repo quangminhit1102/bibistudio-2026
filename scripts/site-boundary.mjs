@@ -43,8 +43,6 @@ export const phaseOneBoundary = {
   ],
   // The stylesheet is the one place that pulls in the site's theme file.
   siteImportFiles: [SITE_ENTRY, "src/platform/pages/", "src/styles.css"],
-  // Still names collections for its page layout; moves to site content in phase 3.
-  taxonomyExclude: [/^src\/routes\/collections\.\$slug\.tsx$/],
 };
 
 const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");

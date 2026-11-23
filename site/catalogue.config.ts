@@ -80,4 +80,12 @@ export default defineCatalogue({
     },
   ],
   groupBy: { "greeting-cards": "occasion" },
+  collectionPages: {
+    "explore-vietnam": {
+      layout: "feature",
+      themes: ["Nơi chốn", "Phố phường", "Kiến trúc", "Ẩm thực", "Văn hoá", "Đời thường"],
+    },
+    motivation: { quote: "Mỗi ngày một trang, mỗi trang một bước nhỏ." },
+    "vietnamese-food": { themes: ["Phở", "Bánh mì", "Cà phê"] },
+  },
 });
