@@ -1,11 +1,9 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
-import { useQuery } from "@tanstack/react-query";
 import type { EntityKey } from "../../services/contracts";
-import { useAdmin } from "../../services/context";
 import { Button, Field, Skeleton } from "../ui/primitives";
 import { calendarDate } from "../lib/text";
-import { relationResource } from "./relation-resource";
+import { useRelationOptions, withStored } from "./relation-options";
 const RichEditor = lazy(() => import("../../content/components/rich-editor"));
 const MediaPicker = lazy(() => import("../../content/components/media-picker"));
 export interface FormField {
@@ -29,6 +27,10 @@ export interface FormField {
   options?: { value: string; label: string }[];
   entity?: EntityKey;
   filter?: Record<string, string>;
+  /** With `entity`: the record field stored as the value, instead of the id. */
+  valueKey?: string;
+  /** Set when the record is created; shown but not editable afterwards. */
+  createOnly?: boolean;
   full?: boolean;
   description?: string;
 }
@@ -42,24 +44,7 @@ function RelationField({
   value: unknown;
   onChange: (value: unknown) => void;
 }) {
-  const runtime = useAdmin();
-  const options = useQuery({
-    queryKey: ["bibi-admin", "options", field.entity, field.filter],
-    queryFn: async () => {
-      await runtime.ensure(field.entity!);
-      const result = await runtime
-        .service(field.entity!, relationResource(field))
-        .list({ page: 1, pageSize: 500 });
-      return result.items
-        .filter((r) =>
-          Object.entries(field.filter ?? {}).every(([k, v]) => {
-            const rowValue = (r as unknown as FormValues)[k];
-            return rowValue === undefined || String(rowValue) === v;
-          }),
-        )
-        .map((r) => ({ value: r.id, label: "name" in r ? String(r.name) : r.id }));
-    },
-  });
+  const options = useRelationOptions(field);
   if (options.isPending) return <Skeleton rows={1} />;
   if (options.error)
     return (
@@ -87,7 +72,7 @@ function RelationField({
       <option value="" disabled={field.required}>
         Chọn…
       </option>
-      {options.data?.map((o) => (
+      {withStored(options.data ?? [], value).map((o) => (
         <option key={o.value} value={o.value}>
           {o.label}
         </option>
@@ -261,6 +246,7 @@ export function RecordForm({
                 ) : (
                   <input
                     type={field.type}
+                    readOnly={field.createOnly && Boolean(initial.id)}
                     {...register(field.key, {
                       ...rule,
                       setValueAs: (v: unknown) =>

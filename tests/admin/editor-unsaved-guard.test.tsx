@@ -88,6 +88,8 @@ it("preserves drafts on refetch, treats gallery ordering as a change, and resets
     name: "Gốc",
     productCode: "0001",
     slug: "goc",
+    productType: "notebook",
+    collection: "explore-vietnam",
     imageIds: ["a", "b"],
   };
   const ui = (row: Record<string, unknown>) => (

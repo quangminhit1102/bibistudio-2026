@@ -33,6 +33,7 @@ export function toPublicProduct(api: PublicProductShape): Product {
     material: api.material.vi || api.material.en ? localized(api.material) : undefined,
     pages: api.pages ?? undefined,
     format: api.format.vi || api.format.en ? localized(api.format) : undefined,
+    attributes: api.attributes,
     images: legacy ? legacy.images : api.images,
     imageAlt: localized(api.image_alt, api.name.vi),
     featured: api.featured,

@@ -5,17 +5,15 @@ import { ProductGallery, Slider } from "@/components/product-gallery";
 import { ProductContactBar } from "@/components/product-contact-bar";
 import { ContactBand, ContactLinks } from "@/components/contact-cta";
 import { PaperPlaceholder } from "@/components/brand/paper-placeholder";
+import { getProduct, productsByType, relatedProducts, tx, type Product } from "@/data/catalogue";
 import {
   getCollection,
   getCollectionBySlug,
-  getProduct,
   getProductType,
   getProductTypeBySlug,
-  productsByType,
-  relatedProducts,
-  tx,
-  type Product,
-} from "@/data/catalogue";
+  loadTaxonomy,
+  useTaxonomy,
+} from "@/lib/catalogue-taxonomy";
 import { findPublicProduct, getPublicProducts, pickSource } from "@/lib/content-api";
 import { attributeRows } from "@/lib/catalogue-attributes";
 import { toPublicProduct } from "@/lib/content-adapter";
@@ -39,9 +37,20 @@ function relatedFromList(product: Product, list: Product[], n = 8): Product[] {
 // /products/<type-slug> → listing by product type; /products/<product-slug> → product detail.
 export const Route = createFileRoute("/products/$slug")({
   loader: async ({ params }) => {
+    // The type list decides what this URL is. A slug that is not a type in the list at hand
+    // is most likely a product, so its detail is requested alongside the lists.
+    const detail = getProductTypeBySlug(params.slug) ? undefined : findPublicProduct(params.slug);
+    const [list] = await Promise.all([getPublicProducts(), loadTaxonomy()]);
     const type = getProductTypeBySlug(params.slug);
-    if (type) return { kind: "type" as const, typeId: type.id };
-    const [api, list] = await Promise.all([findPublicProduct(params.slug), getPublicProducts()]);
+    if (type)
+      return {
+        kind: "type" as const,
+        typeId: type.id,
+        products: list
+          ? list.map(toPublicProduct).filter((p) => p.productType === type.id)
+          : productsByType(type.id),
+      };
+    const api = await (detail ?? findPublicProduct(params.slug));
     const source = pickSource(api, () => getProduct(params.slug));
     if (!source) throw notFound();
     if (source.from === "bundle")
@@ -140,19 +149,20 @@ function ProductNotFound() {
 function ProductRoute() {
   const data = Route.useLoaderData();
   return data.kind === "type" ? (
-    <TypeListing typeId={data.typeId} />
+    <TypeListing typeId={data.typeId} products={data.products} />
   ) : (
     <ProductDetail product={data.product} related={data.related} />
   );
 }
 
-function TypeListing({ typeId }: { typeId: Parameters<typeof getProductType>[0] }) {
+function TypeListing({ typeId, products }: { typeId: string; products: Product[] }) {
+  useTaxonomy();
   const t = getProductType(typeId);
   return (
     <PageShell>
       <PageIntro eyebrow="Sản phẩm" title={tx(t.plural)} lead={tx(t.tagline)} />
       <section className="mx-auto max-w-[1280px] px-6 pb-28 lg:px-12">
-        <CatalogueGrid items={productsByType(typeId)} />
+        <CatalogueGrid items={products} />
       </section>
       <ContactBand />
     </PageShell>
@@ -161,6 +171,7 @@ function TypeListing({ typeId }: { typeId: Parameters<typeof getProductType>[0] 
 
 function ProductDetail({ product, related }: { product: Product; related: Product[] }) {
   const p = product;
+  useTaxonomy();
   const t = getProductType(p.productType);
   const c = getCollection(p.collection);
   // Only a known type or collection has a page of its own to link to.

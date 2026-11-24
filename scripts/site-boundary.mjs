@@ -1,5 +1,7 @@
 // Keeps site-specific values in `site/`: core folders may not contain the
 // site's brand strings, and only `src/platform/site.ts` may import `@site/*`.
+// Product types and collections are records in the database, so core code may
+// not name one of the site's own either.
 import { readdir, readFile } from "node:fs/promises";
 import { join, relative, sep } from "node:path";
 
@@ -42,6 +44,8 @@ export const phaseOneBoundary = {
   ],
   // The stylesheet is the one place that pulls in the site's theme file.
   siteImportFiles: [SITE_ENTRY, "src/styles.css"],
+  // Still names collections for its page layout; moves to site content in phase 3.
+  taxonomyExclude: [/^src\/routes\/collections\.\$slug\.tsx$/],
 };
 
 const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -78,7 +82,13 @@ export async function findBoundaryViolations({
   exclude = [],
   allow = [],
   siteImportFiles = [SITE_ENTRY],
+  taxonomy = [],
+  taxonomyExclude = [],
 }) {
+  // The site's product type codes, type slugs and collection slugs, as quoted literals.
+  const named = taxonomy.length
+    ? new RegExp("([\"'`])(" + taxonomy.map(escapeRegExp).join("|") + ")\\1")
+    : undefined;
   const tokens = brandTokens(site).map((token) => ({
     token,
     pattern: new RegExp(escapeRegExp(token), "i"),
@@ -92,8 +102,16 @@ export async function findBoundaryViolations({
   const violations = [];
   for (const file of files) {
     const lines = (await readFile(join(root, file), "utf8")).split("\n");
+    const checksTaxonomy = named && !taxonomyExclude.some((rule) => rule.test(file));
     lines.forEach((text, index) => {
       const line = index + 1;
+      const type = checksTaxonomy && named.exec(text);
+      if (type)
+        violations.push({
+          file,
+          line,
+          reason: `names the site's product type or collection "${type[2]}"; read the lists from the API`,
+        });
       if (SITE_IMPORT.test(text) && !siteImportFiles.includes(file))
         violations.push({
           file,

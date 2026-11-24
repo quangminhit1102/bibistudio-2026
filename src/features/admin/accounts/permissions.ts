@@ -127,6 +127,7 @@ export const resourceForEntity = (entity: EntityKey): Resource =>
       authors: "bookstore",
       publishers: "bookstore",
       categories: "products",
+      productTypes: "products",
       roles: "accounts",
       users: "accounts",
       posts: "content",

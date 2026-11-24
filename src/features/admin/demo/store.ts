@@ -8,35 +8,50 @@ import {
   type EntityKey,
 } from "../services/contracts";
 import { storageError, ServiceError } from "../services/errors";
+const baseVersion = 2;
 export function createAdminStore(
   name = "bibi-admin-demo",
   options: { onBlocked?: () => void } = {},
 ): AdminStore {
   let generation = 0;
   let connection: Promise<IDBPDatabase> | undefined;
-  const db = () =>
-    (connection ??= (async () => {
+  const openAt = (version?: number) =>
+    openDB(name, version, {
+      upgrade(d) {
+        for (const entity of entityKeys)
+          if (!d.objectStoreNames.contains(entity)) d.createObjectStore(entity, { keyPath: "id" });
+        if (!d.objectStoreNames.contains("meta")) d.createObjectStore("meta");
+        if (!d.objectStoreNames.contains("blobs")) d.createObjectStore("blobs");
+      },
+      blocked() {
+        options.onBlocked?.();
+      },
+      blocking() {
+        void close();
+      },
+    });
+  const connect = (open: () => Promise<IDBPDatabase>) =>
+    (connection = (async () => {
       try {
-        return await openDB(name, 2, {
-          upgrade(d) {
-            for (const entity of entityKeys)
-              if (!d.objectStoreNames.contains(entity))
-                d.createObjectStore(entity, { keyPath: "id" });
-            if (!d.objectStoreNames.contains("meta")) d.createObjectStore("meta");
-            if (!d.objectStoreNames.contains("blobs")) d.createObjectStore("blobs");
-          },
-          blocked() {
-            options.onBlocked?.();
-          },
-          blocking() {
-            void close();
-          },
-        });
+        return await open();
       } catch (e) {
         connection = undefined;
         throw storageError(e);
       }
     })());
+  // Every release opens version 2. A browser's database only moves past it when `prepare`
+  // needs a store added since, so a release that knows fewer entities can still open it.
+  const db = () =>
+    connection ??
+    connect(async () => {
+      try {
+        return await openAt(baseVersion);
+      } catch (e) {
+        if ((e as { name?: string } | null)?.name !== "VersionError") throw e;
+        return openAt();
+      }
+    });
+  const has = (d: IDBPDatabase, entity: string) => d.objectStoreNames.contains(entity);
   async function close() {
     if (connection) {
       (await connection).close();
@@ -49,10 +64,11 @@ export function createAdminStore(
     blobs: boolean,
   ) {
     const operationGeneration = generation;
-    const tx = (await db()).transaction(
+    const d = await db();
+    const tx = d.transaction(
       [
         ...new Set([
-          ...entities,
+          ...entities.filter((entity) => has(d, entity)),
           ...(blobs || entities.includes("media") || entities.includes("users") ? ["blobs"] : []),
         ]),
       ],
@@ -66,8 +82,8 @@ export function createAdminStore(
       removeBlob: async (key) => {
         await tx.objectStore("blobs").delete(key);
       },
-      get: async (e, id) => await tx.objectStore(e).get(id),
-      list: async (e) => await tx.objectStore(e).getAll(),
+      get: async (e, id) => (has(d, e) ? await tx.objectStore(e).get(id) : undefined),
+      list: async (e) => (has(d, e) ? await tx.objectStore(e).getAll() : []),
       put: async (e, r) => {
         await tx.objectStore(e).put(r);
       },
@@ -109,17 +125,26 @@ export function createAdminStore(
     },
     async get<K extends EntityKey>(entity: K, id: string) {
       try {
-        return (await (await db()).get(entity, id)) as AdminModels[K] | undefined;
+        const d = await db();
+        return has(d, entity) ? ((await d.get(entity, id)) as AdminModels[K]) : undefined;
       } catch (e) {
         throw storageError(e);
       }
     },
     async list<K extends EntityKey>(entity: K) {
       try {
-        return (await (await db()).getAll(entity)) as AdminModels[K][];
+        const d = await db();
+        return has(d, entity) ? ((await d.getAll(entity)) as AdminModels[K][]) : [];
       } catch (e) {
         throw storageError(e);
       }
+    },
+    async prepare(entities) {
+      const d = await db();
+      if (entities.every((entity) => has(d, entity))) return;
+      const next = d.version + 1;
+      await close();
+      await connect(() => openAt(next));
     },
     transaction: (entities, work) => runTransaction(entities, work, false),
     transactionWithBlobs: (entities, work) => runTransaction(entities, work, true),

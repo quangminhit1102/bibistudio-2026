@@ -230,12 +230,50 @@ function buildProducts(catalogue) {
   });
 }
 
+// `{ vi: { name, tagline }, en: { name } }` from the localized fields of a catalogue entry.
+function translations(node, fields) {
+  const result = {};
+  for (const field of fields) {
+    const value = property(node, field);
+    if (!value) continue;
+    if (!ts.isObjectLiteralExpression(value)) throw new Error("Unsupported content seed object");
+    for (const item of value.properties) {
+      if (!ts.isPropertyAssignment(item) || !ts.isIdentifier(item.name))
+        throw new Error("Unsupported content seed object");
+      (result[item.name.text] ??= {})[field] = string(item.initializer);
+    }
+  }
+  return result;
+}
+
+// An image computed at build time has no stable public path; the page keeps its bundled one.
+function literalImage(node) {
+  const value = property(node, "image");
+  return value && (ts.isStringLiteral(value) || ts.isNoSubstitutionTemplateLiteral(value))
+    ? value.text
+    : null;
+}
+
 function buildProductCategories(catalogue) {
   return array(catalogue, "collections").map((node, index) => ({
     slug: slug(required(node, "slug")),
     name: string(required(required(node, "name"), "vi")),
     description: string(required(required(node, "intro"), "vi")),
     position: index,
+    translations: translations(node, ["name", "tagline", "intro"]),
+    image: literalImage(node),
+  }));
+}
+
+function buildProductTypes(catalogue) {
+  return array(catalogue, "productTypes").map((node, index) => ({
+    code: slug(required(node, "id")),
+    slug: slug(required(node, "slug")),
+    name: string(required(required(node, "name"), "vi")),
+    description: string(required(required(node, "tagline"), "vi")),
+    position: index,
+    translations: translations(node, ["name", "plural", "tagline"]),
+    image: literalImage(node),
   }));
 }
 
@@ -256,6 +294,7 @@ export function buildContentSeed(catalogue, blog) {
   const posts = buildPosts(blog);
   const products = buildProducts(catalogue);
   const productCategories = buildProductCategories(catalogue);
+  const productTypes = buildProductTypes(catalogue);
   const contentCategories = buildContentCategories(blog);
   const postSlugs = new Set(posts.map((p) => p.slug));
   if (postSlugs.size !== posts.length) throw new Error("Duplicate blog post slug");
@@ -263,7 +302,9 @@ export function buildContentSeed(catalogue, blog) {
   if (productSlugs.size !== products.length) throw new Error("Duplicate product slug");
   const productCodes = new Set(products.map((p) => p.productCode));
   if (productCodes.size !== products.length) throw new Error("Duplicate product code");
-  return { posts, products, productCategories, contentCategories };
+  const typeCodes = new Set(productTypes.map((t) => t.code));
+  if (typeCodes.size !== productTypes.length) throw new Error("Duplicate product type");
+  return { posts, products, productCategories, productTypes, contentCategories };
 }
 
 export async function writeContentSeed(directory = root) {

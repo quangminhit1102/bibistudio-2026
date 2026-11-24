@@ -6,7 +6,8 @@ import { useAdmin } from "../../services/context";
 import { Button, Modal } from "../ui/primitives";
 import { MediaImage } from "../../content/components/media-image";
 import RichContentView from "../../content/components/rich-content-view";
-import { productTypes, collectionOptions } from "../../products/config";
+import { collectionRelation, productTypeRelation } from "../../products/config";
+import { RelationLabel } from "./relation-label";
 import { date } from "../lib/text";
 import type { FormValues } from "./record-form";
 export type EditorSnapshot = { kind: "post" | "product"; record: FormValues };
@@ -117,12 +118,15 @@ export default function EditorPreview({
                 </div>
                 <div className="a-preview-product-info">
                   <div className="a-preview-eyebrow">
-                    {productTypes.find((o) => o.value === record.productType)?.label ?? "Sản phẩm"}
+                    {record.productType ? (
+                      <RelationLabel spec={productTypeRelation} value={record.productType} />
+                    ) : (
+                      "Sản phẩm"
+                    )}
                   </div>
                   <h1>{String(record.name || "Tên sản phẩm")}</h1>
                   <p className="a-preview-collection">
-                    Bộ sưu tập{" "}
-                    {collectionOptions.find((o) => o.value === record.collection)?.label ?? ""}
+                    Bộ sưu tập <RelationLabel spec={collectionRelation} value={record.collection} />
                   </p>
                   <p>{String(record.shortDescription ?? "")}</p>
                   <div className="a-preview-contact">

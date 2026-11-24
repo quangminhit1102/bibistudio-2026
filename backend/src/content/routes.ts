@@ -19,28 +19,65 @@ const listQuery = z
   .catchall(z.string());
 const id = (value: unknown) => validate(z.string().min(1).max(200), value);
 
-const categoryCreate = z
+const changesSomething = (value: object) => Object.keys(value).length > 1;
+const categoryFields = {
+  name: z.string().trim().min(1).max(191),
+  slug: z.string().trim().min(1).max(191),
+  description: z.string().nullable().optional(),
+  parentId: uuid.nullable().optional(),
+  position: z.number().int().min(0).optional(),
+  active: z.boolean().optional(),
+};
+// Per locale, the texts a public page shows: name, plural, tagline, intro.
+const localizedFields = {
+  translations: z
+    .record(z.string().max(16), z.record(z.string().max(32), z.string().max(2000)))
+    .nullable()
+    .optional(),
+  image: z.string().trim().max(500).nullable().optional(),
+};
+const optional = <T extends z.ZodRawShape>(shape: T) => z.object(shape).partial().shape;
+
+const categoryCreate = z.object(categoryFields).strict();
+const categoryUpdate = z
+  .object({ revision, ...optional(categoryFields) })
+  .strict()
+  .refine(changesSomething);
+const productCategoryCreate = z.object({ ...categoryFields, ...localizedFields }).strict();
+const productCategoryUpdate = z
+  .object({ revision, ...optional(categoryFields), ...localizedFields })
+  .strict()
+  .refine(changesSomething);
+
+const { parentId: _noParent, ...productTypeFields } = categoryFields;
+const productTypeCreate = z
   .object({
-    name: z.string().trim().min(1).max(191),
-    slug: z.string().trim().min(1).max(191),
-    description: z.string().nullable().optional(),
-    parentId: uuid.nullable().optional(),
-    position: z.number().int().min(0).optional(),
-    active: z.boolean().optional(),
+    // Stored on every product of the type, so it is set once and never renamed.
+    code: z
+      .string()
+      .trim()
+      .min(1)
+      .max(50)
+      .regex(/^[a-z0-9]+(-[a-z0-9]+)*$/),
+    ...productTypeFields,
+    ...localizedFields,
   })
   .strict();
-const categoryUpdate = z
-  .object({
-    revision,
-    name: z.string().trim().min(1).max(191).optional(),
-    slug: z.string().trim().min(1).max(191).optional(),
-    description: z.string().nullable().optional(),
-    parentId: uuid.nullable().optional(),
-    position: z.number().int().min(0).optional(),
-    active: z.boolean().optional(),
-  })
+const productTypeUpdate = z
+  .object({ revision, ...optional(productTypeFields), ...localizedFields })
   .strict()
-  .refine((value) => Object.keys(value).length > 1);
+  .refine(changesSomething);
+
+const attributes = z
+  .record(
+    z.string().min(1).max(64),
+    z.union([
+      z.string().max(2000),
+      z.object({ vi: z.string().max(2000), en: z.string().max(2000) }).strict(),
+    ]),
+  )
+  .refine((value) => Object.keys(value).length <= 50)
+  .optional();
 
 const customerCreate = z
   .object({
@@ -144,6 +181,7 @@ const productCreate = z
     sortOrder: z.number().int().optional(),
     imageAltVi: z.string().max(255).nullable().optional(),
     imageAltEn: z.string().max(255).nullable().optional(),
+    attributes,
   })
   .strict();
 const productUpdate = z
@@ -186,6 +224,7 @@ const productUpdate = z
     sortOrder: z.number().int().optional(),
     imageAltVi: z.string().max(255).nullable().optional(),
     imageAltEn: z.string().max(255).nullable().optional(),
+    attributes,
   })
   .strict()
   .refine((value) => Object.keys(value).length > 1);
@@ -329,8 +368,25 @@ export function contentRoutes(
         remove: service.deleteProductCategory,
       },
       "product",
-      categoryCreate,
-      categoryUpdate,
+      productCategoryCreate,
+      productCategoryUpdate,
+      auth,
+      write,
+    ),
+  );
+  r.use(
+    "/product-types",
+    entity(
+      {
+        list: service.listProductTypes,
+        get: service.getProductType,
+        create: service.createProductType,
+        update: service.updateProductType,
+        remove: service.deleteProductType,
+      },
+      "product",
+      productTypeCreate,
+      productTypeUpdate,
       auth,
       write,
     ),

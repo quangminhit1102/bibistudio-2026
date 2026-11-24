@@ -47,6 +47,7 @@ test("content admin API requires auth, serves authorized lists and 404s unknown 
     "/posts",
     "/products",
     "/product-categories",
+    "/product-types",
     "/content-categories",
   ])
     assert.equal((await fetch(base + "/api" + path)).status, 401, `${path} unauthenticated`);
@@ -58,6 +59,7 @@ test("content admin API requires auth, serves authorized lists and 404s unknown 
     "/posts",
     "/products",
     "/product-categories",
+    "/product-types",
     "/content-categories",
   ]) {
     const response = await list(
@@ -70,6 +72,91 @@ test("content admin API requires auth, serves authorized lists and 404s unknown 
   }
 
   assert.equal((await list("/customers/00000000-0000-4000-8000-000000000000")).status, 404);
+
+  // Product types and collections first: a product may only name existing ones.
+  const type = await write("/product-types", "POST", {
+    code: "book",
+    name: "Sách",
+    slug: "books",
+    translations: { vi: { name: "Sách", plural: "Sách" }, en: { name: "Book" } },
+    image: "/catalogue/book.webp",
+  });
+  assert.equal(type.status, 201);
+  const typeBody = await type.json();
+  assert.equal(typeBody.code, "book");
+  assert.deepEqual(typeBody.translations.en, { name: "Book" });
+  assert.equal(
+    (await write("/product-types", "POST", { code: "Book 2", name: "X", slug: "x" })).status,
+    400,
+    "a code is a lowercase slug",
+  );
+  assert.equal(
+    (
+      await write(`/product-types/${typeBody.id}`, "PUT", {
+        revision: typeBody.revision,
+        code: "novel",
+      })
+    ).status,
+    400,
+    "a code cannot be changed",
+  );
+  const typeUpdate = await write(`/product-types/${typeBody.id}`, "PUT", {
+    revision: typeBody.revision,
+    slug: "sach",
+    position: 2,
+  });
+  assert.equal(typeUpdate.status, 200);
+  assert.equal((await typeUpdate.json()).slug, "sach");
+  assert.equal(
+    (await write("/product-types", "POST", { code: "notebook", name: "Sổ", slug: "notebooks" }))
+      .status,
+    201,
+  );
+  for (const [slug, name] of [
+    ["featured", "Nổi bật"],
+    ["motivation", "Động lực"],
+  ]) {
+    const category = await write("/product-categories", "POST", {
+      name,
+      slug,
+      translations: { en: { name: slug, intro: "Intro" } },
+      image: `/catalogue/${slug}.webp`,
+    });
+    assert.equal(category.status, 201);
+    assert.equal((await category.json()).image, `/catalogue/${slug}.webp`);
+  }
+  assert.equal(
+    (
+      await write("/content-categories", "POST", {
+        name: "Tin",
+        slug: "tin",
+        image: "/x.webp",
+      })
+    ).status,
+    400,
+    "content categories have no image",
+  );
+  assert.equal(
+    (await write("/product-categories", "POST", { name: "Dài", slug: "a".repeat(51) })).status,
+    400,
+    "a collection slug must fit the column a product stores it in",
+  );
+  assert.equal(
+    (await write("/content-categories", "POST", { name: "Dài", slug: "a".repeat(51) })).status,
+    201,
+  );
+  const unknownType = await write("/products", "POST", {
+    productCode: "1000",
+    name: "Sản phẩm",
+    slug: "san-pham-0",
+    description: "<p>Mô tả</p>",
+    productType: "books",
+    collection: "featured",
+  });
+  assert.equal(unknownType.status, 400);
+  assert.deepEqual((await unknownType.json()).error.details, [
+    { field: "productType", message: "Giá trị không tồn tại" },
+  ]);
 
   // A non-digit productCode must be rejected with 400 (spec §2).
   const badProduct = await write("/products", "POST", {
@@ -135,6 +222,31 @@ test("content admin API requires auth, serves authorized lists and 404s unknown 
   assert.equal(productV9Body.materialEn, "Fine paper");
   assert.equal(productV9Body.featured, true);
   assert.equal(productV9Body.sortOrder, 7);
+  assert.deepEqual(productV9Body.attributes, {
+    dimensions: "15 x 21 cm",
+    material: { vi: "Giấy mỹ thuật", en: "Fine paper" },
+    format: { vi: "Bìa cứng", en: "Hardcover" },
+    occasion: "tet",
+  });
+  const withAttributes = await write(`/products/${productV9Body.id}`, "PUT", {
+    revision: productV9Body.revision,
+    attributes: { pages: "120", binding: "Khâu chỉ" },
+  });
+  assert.equal(withAttributes.status, 200);
+  const withAttributesBody = await withAttributes.json();
+  assert.deepEqual(withAttributesBody.attributes, { pages: "120", binding: "Khâu chỉ" });
+  assert.equal(withAttributesBody.pages, "120");
+  assert.equal(withAttributesBody.occasion, null);
+  assert.equal(
+    (
+      await write(`/products/${productV9Body.id}`, "PUT", {
+        revision: withAttributesBody.revision,
+        attributes: { pages: 120 },
+      })
+    ).status,
+    400,
+    "an attribute is text or a vi/en pair",
+  );
 
   const postV9 = await write("/posts", "POST", {
     slug: "bai-v9",

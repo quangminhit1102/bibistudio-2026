@@ -63,7 +63,15 @@ it("accepts multiple product tags typed with commas without merging them", async
   const save = vi.fn();
   const user = mount(
     <ProductForm
-      initial={{ ...productConfig.defaults, id: "p", name: "Sổ", productCode: "0001", slug: "so" }}
+      initial={{
+        ...productConfig.defaults,
+        id: "p",
+        name: "Sổ",
+        productCode: "0001",
+        slug: "so",
+        productType: "notebook",
+        collection: "explore-vietnam",
+      }}
       onSave={save}
       onCancel={() => {}}
     />,
@@ -118,6 +126,8 @@ it("previews an unsaved product without invoking save and keeps internal amounts
         name: "Sổ tay",
         productCode: "0001",
         slug: "so-tay",
+        productType: "notebook",
+        collection: "explore-vietnam",
         price: 123456,
         stock: 7,
         reserved: 2,

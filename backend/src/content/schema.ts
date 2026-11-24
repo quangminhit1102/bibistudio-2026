@@ -14,12 +14,14 @@ const allTables = [
   "products",
   "customers",
   "media",
+  "product_types",
 ] as const;
 
 /** Expected completed_steps per migration version; must match the parsed SQL assets. */
 const versionStepCounts = new Map<number, number>([
   [1, 5],
   [2, 3],
+  [3, 3],
 ]);
 
 export interface ContentSchemaStatus {
@@ -39,18 +41,18 @@ interface MigrationAsset {
   name: string;
   checksum: string;
   steps: MigrationStep[];
-  /** Tables this version finalizes; `products` is owned by version 2 after its ALTER. */
+  /** Tables this version finalizes: the newest version that alters a table owns its hash. */
   verifyTargets: string[];
 }
 
 async function assets(directory: string): Promise<MigrationAsset[]> {
   const names = (await readdir(directory)).filter((n) => n.endsWith(".sql")).sort();
-  if (names.join() !== "001_content.sql,002_content_v9.sql")
+  if (names.join() !== "001_content.sql,002_content_v9.sql,003_content_catalogue.sql")
     throw new Error("Unknown content migration assets");
   const files = await Promise.all(
     names.map(async (name) => ({ name, sql: await readFile(join(directory, name), "utf8") })),
   );
-  const [first, second] = files;
+  const [first, second, third] = files;
 
   const firstStatements = first.sql
     .split(";")
@@ -75,13 +77,25 @@ async function assets(directory: string): Promise<MigrationAsset[]> {
   if (!/^CREATE TABLE media /.test(secondStatements[2]))
     throw new Error("Invalid content DDL assets");
 
+  const thirdStatements = third.sql
+    .split(";")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  if (thirdStatements.length !== 3) throw new Error("Invalid content DDL assets");
+  if (!/^CREATE TABLE product_types /.test(thirdStatements[0]))
+    throw new Error("Invalid content DDL assets");
+  if (!/^ALTER TABLE product_categories\s+ADD COLUMN /.test(thirdStatements[1]))
+    throw new Error("Invalid content DDL assets");
+  if (!/^ALTER TABLE products\s+ADD COLUMN /.test(thirdStatements[2]))
+    throw new Error("Invalid content DDL assets");
+
   return [
     {
       version: 1,
       name: first.name,
       checksum: digest(first.sql),
       steps: tables.map((t, i) => ({ sql: firstStatements[i], target: t, create: true })),
-      verifyTargets: ["product_categories", "content_categories", "customers"],
+      verifyTargets: ["content_categories", "customers"],
     },
     {
       version: 2,
@@ -92,7 +106,18 @@ async function assets(directory: string): Promise<MigrationAsset[]> {
         { sql: secondStatements[1], target: "posts", create: false },
         { sql: secondStatements[2], target: "media", create: true },
       ],
-      verifyTargets: ["products", "posts", "media"],
+      verifyTargets: ["posts", "media"],
+    },
+    {
+      version: 3,
+      name: third.name,
+      checksum: digest(third.sql),
+      steps: [
+        { sql: thirdStatements[0], target: "product_types", create: true },
+        { sql: thirdStatements[1], target: "product_categories", create: false },
+        { sql: thirdStatements[2], target: "products", create: false },
+      ],
+      verifyTargets: ["product_types", "product_categories", "products"],
     },
   ];
 }

@@ -105,7 +105,37 @@ const seed = {
     },
   ],
   productCategories: [
-    { slug: "motivation", name: "Tạo động lực", description: "Mô tả", position: 0 },
+    {
+      slug: "motivation",
+      name: "Tạo động lực",
+      description: "Mô tả",
+      position: 0,
+      translations: {
+        vi: { name: "Tạo động lực", tagline: "Lời nhắc", intro: "Mô tả" },
+        en: { name: "Motivation", tagline: "Reminders", intro: "Intro" },
+      },
+      image: "/catalogue/motivation.webp",
+    },
+  ],
+  productTypes: [
+    {
+      code: "greeting-card",
+      slug: "greeting-cards",
+      name: "Thiệp",
+      description: "Gửi lời",
+      position: 1,
+      translations: { vi: { name: "Thiệp", plural: "Thiệp" }, en: { name: "Greeting Card" } },
+      image: null,
+    },
+    {
+      code: "notebook",
+      slug: "notebooks",
+      name: "Sổ tay",
+      description: null,
+      position: 0,
+      translations: null,
+      image: "media-id-1",
+    },
   ],
   contentCategories: [
     { slug: "cam-hung", name: "Cảm hứng", position: 0 },
@@ -221,6 +251,14 @@ test("public products endpoints serve only published products with full shape", 
   assert.equal(product.sort_order, 3);
   assert.equal(product.seo_title, "SEO A");
   assert.equal(product.seo_description, "Mô tả A");
+  assert.deepEqual(product.attributes, {
+    dimensions: "A5",
+    pages: "80",
+    material: { vi: "Giấy", en: "Paper" },
+    format: { vi: "Khổ A5", en: "A5 format" },
+    occasion: "birthday",
+  });
+  assert.deepEqual(products[0].attributes, product.attributes);
 
   assert.equal((await fetch(base + "/api/public/products/san-pham-b")).status, 404);
   assert.equal((await fetch(base + "/api/public/products/missing-slug")).status, 404);
@@ -248,11 +286,55 @@ test("public categories endpoints list categories by scope", async (t) => {
   );
 });
 
-test("public collections endpoint returns name/slug/tagline", async (t) => {
-  const { base } = await buildApp(t);
+test("public collections carry their translations and image; inactive ones are left out", async (t) => {
+  const { f, base } = await buildApp(t);
+  await f.pool.query(
+    "INSERT INTO product_categories (id,name,slug,position,active,created_at,updated_at) VALUES ('c2','Ẩn','hidden',1,0,NOW(3),NOW(3)),('c3','Cũ','plain',2,1,NOW(3),NOW(3))",
+  );
 
   const collections = await (await fetch(base + "/api/public/collections")).json();
-  assert.deepEqual(collections, [{ slug: "motivation", name: "Tạo động lực", tagline: "Mô tả" }]);
+  assert.deepEqual(collections, [
+    {
+      slug: "motivation",
+      name: "Tạo động lực",
+      tagline: "Mô tả",
+      translations: {
+        vi: { name: "Tạo động lực", tagline: "Lời nhắc", intro: "Mô tả" },
+        en: { name: "Motivation", tagline: "Reminders", intro: "Intro" },
+      },
+      image: "/catalogue/motivation.webp",
+    },
+    { slug: "plain", name: "Cũ", tagline: "", translations: {}, image: null },
+  ]);
+});
+
+test("public product types are listed in position order with code and URL slug", async (t) => {
+  const { f, base } = await buildApp(t);
+  await f.pool.query(
+    "INSERT INTO product_types (id,code,name,slug,position,active,created_at,updated_at) VALUES ('t3','magnet','Magnet','magnets',2,0,NOW(3),NOW(3))",
+  );
+
+  const response = await fetch(base + "/api/public/product-types");
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get("cache-control"), "public, max-age=60");
+  assert.deepEqual(await response.json(), [
+    {
+      code: "notebook",
+      slug: "notebooks",
+      name: "Sổ tay",
+      tagline: "",
+      translations: {},
+      image: "/api/media/media-id-1",
+    },
+    {
+      code: "greeting-card",
+      slug: "greeting-cards",
+      name: "Thiệp",
+      tagline: "Gửi lời",
+      translations: { vi: { name: "Thiệp", plural: "Thiệp" }, en: { name: "Greeting Card" } },
+      image: null,
+    },
+  ]);
 });
 
 test("successful public reads are cacheable for a minute, misses are not", async (t) => {

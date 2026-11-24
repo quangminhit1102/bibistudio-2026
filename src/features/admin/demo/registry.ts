@@ -42,6 +42,7 @@ export const groupForEntity: Record<EntityKey, Group> = {
   roles: "accounts",
   users: "accounts",
   categories: "taxonomy",
+  productTypes: "taxonomy",
   products: "products",
   books: "bookstore",
   authors: "bookstore",
@@ -81,6 +82,9 @@ export function ensureDataset(store: AdminStore, entity: EntityKey): Promise<voi
 }
 async function ensureEntityDataset(store: AdminStore, entity: EntityKey) {
   const group = groupForEntity[entity];
+  await store.prepare?.(
+    (Object.keys(groupForEntity) as EntityKey[]).filter((key) => groupForEntity[key] === group),
+  );
   let jobs = pending.get(store);
   if (!jobs) {
     jobs = new Map();

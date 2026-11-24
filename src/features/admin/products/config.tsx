@@ -1,31 +1,25 @@
 import { Link } from "@tanstack/react-router";
 import type { EntityConfig } from "../shared/entity-manager";
+import type { FormField } from "../shared/forms/record-form";
 import { Badge } from "../shared/ui/primitives";
 import { MediaImage } from "../content/components/media-image";
 import { money } from "../shared/lib/text";
+import { RelationLabel } from "../shared/forms/relation-label";
+import type { RelationSpec } from "../shared/forms/relation-options";
 import { selectOptions, text } from "@/lib/catalogue-attributes";
 export const statuses = [
   { value: "draft", label: "Nháp" },
   { value: "published", label: "Đang hiển thị" },
   { value: "hidden", label: "Đã ẩn" },
 ];
-export const productTypes = [
-  { value: "notebook", label: "Sổ tay" },
-  { value: "greeting-card", label: "Thiệp" },
-  { value: "postcard", label: "Postcard" },
-  { value: "envelope", label: "Bao thư" },
-  { value: "letter-paper", label: "Giấy viết thư" },
-  { value: "magnet", label: "Magnet" },
-];
-export const collectionOptions = [
-  { value: "explore-vietnam", label: "Khám phá Việt Nam" },
-  { value: "vietnamese-food", label: "Món ăn Việt Nam" },
-  { value: "motivation", label: "Tạo động lực" },
-  { value: "ao-dai", label: "Áo dài" },
-  { value: "greeting-cards", label: "Thiệp chúc mừng" },
-  { value: "pressed-flower-cards", label: "Thiệp ép hoa khô" },
-  { value: "spiral-cards", label: "Thiệp xoắn" },
-];
+// A product stores its type's code and its collection's slug; both lists are managed
+// in the admin, so the choices are read from there.
+export const productTypeRelation: RelationSpec = { entity: "productTypes", valueKey: "code" };
+export const collectionRelation: RelationSpec = {
+  entity: "categories",
+  filter: { kind: "product" },
+  valueKey: "slug",
+};
 export const occasionOptions = selectOptions("occasion").map((o) => ({
   value: o.value,
   label: text(o.label) || o.value,
@@ -47,8 +41,8 @@ export const productConfig: EntityConfig<"products"> = {
     descriptionEn: "",
     shortDescription: "",
     shortDescriptionEn: "",
-    productType: "notebook",
-    collection: "explore-vietnam",
+    productType: "",
+    collection: "",
     categoryId: null,
     price: 0,
     compareAt: 0,
@@ -77,8 +71,20 @@ export const productConfig: EntityConfig<"products"> = {
     { key: "productCode", label: "Mã sản phẩm", type: "text", required: true },
     { key: "slug", label: "Đường dẫn", type: "text", required: true },
     { key: "status", label: "Trạng thái", type: "select", options: statuses },
-    { key: "productType", label: "Loại sản phẩm", type: "select", options: productTypes },
-    { key: "collection", label: "Bộ sưu tập", type: "select", options: collectionOptions },
+    {
+      key: "productType",
+      label: "Loại sản phẩm",
+      type: "select",
+      required: true,
+      ...productTypeRelation,
+    },
+    {
+      key: "collection",
+      label: "Bộ sưu tập",
+      type: "select",
+      required: true,
+      ...collectionRelation,
+    },
     {
       key: "categoryId",
       label: "Danh mục",
@@ -120,8 +126,8 @@ export const productConfig: EntityConfig<"products"> = {
   ],
   filters: [
     { field: "status", label: "Trạng thái", options: statuses },
-    { field: "productType", label: "Loại", options: productTypes },
-    { field: "collection", label: "Bộ sưu tập", options: collectionOptions },
+    { field: "productType", label: "Loại", ...productTypeRelation },
+    { field: "collection", label: "Bộ sưu tập", ...collectionRelation },
   ],
   columns: [
     {
@@ -145,8 +151,7 @@ export const productConfig: EntityConfig<"products"> = {
     {
       accessorKey: "collection",
       header: "Bộ sưu tập",
-      cell: ({ getValue }) =>
-        collectionOptions.find((o) => o.value === getValue())?.label ?? String(getValue()),
+      cell: ({ getValue }) => <RelationLabel spec={collectionRelation} value={getValue()} />,
     },
     { accessorKey: "price", header: "Giá", cell: ({ getValue }) => money(Number(getValue())) },
     { accessorKey: "stock", header: "Tồn kho" },
@@ -192,5 +197,61 @@ export const categoryConfig = (
     { key: "position", label: "Thứ tự", type: "number", min: 0 },
     { key: "active", label: "Hoạt động", type: "checkbox" },
     { key: "description", label: "Mô tả", type: "textarea", full: true },
+    ...(kind === "product" ? collectionTextFields : []),
   ],
 });
+const imageField: FormField = {
+  key: "image",
+  label: "Ảnh",
+  type: "text",
+  full: true,
+  description:
+    "Đường dẫn ảnh (bắt đầu bằng /) hoặc mã ảnh trong thư viện. Để trống sẽ dùng ảnh mặc định của site.",
+};
+// What the public collection page shows besides the name and description.
+const collectionTextFields: FormField[] = [
+  { key: "nameEn", label: "Tên (English)", type: "text" },
+  { key: "tagline", label: "Câu giới thiệu ngắn", type: "text", full: true },
+  { key: "taglineEn", label: "Câu giới thiệu ngắn (English)", type: "text", full: true },
+  { key: "introEn", label: "Mô tả (English)", type: "textarea", full: true },
+  imageField,
+];
+export const productTypeConfig: EntityConfig<"productTypes"> = {
+  entity: "productTypes",
+  title: "Loại sản phẩm",
+  description:
+    "Mỗi sản phẩm thuộc một loại. Mã được lưu trên sản phẩm nên không đổi được sau khi tạo; đường dẫn là địa chỉ trang của loại.",
+  defaults: {
+    name: "",
+    nameEn: "",
+    plural: "",
+    pluralEn: "",
+    code: "",
+    slug: "",
+    description: "",
+    taglineEn: "",
+    image: "",
+    position: 0,
+    active: true,
+  },
+  fields: [
+    { key: "name", label: "Tên", type: "text", required: true },
+    { key: "nameEn", label: "Tên (English)", type: "text" },
+    {
+      key: "code",
+      label: "Mã",
+      type: "text",
+      required: true,
+      createOnly: true,
+      description: "Chữ thường, số và dấu gạch nối, ví dụ: loai-moi.",
+    },
+    { key: "slug", label: "Đường dẫn", type: "text", required: true },
+    { key: "plural", label: "Tên trên trang danh sách", type: "text" },
+    { key: "pluralEn", label: "Tên trên trang danh sách (English)", type: "text" },
+    { key: "position", label: "Thứ tự", type: "number", min: 0 },
+    { key: "active", label: "Hoạt động", type: "checkbox" },
+    { key: "description", label: "Câu giới thiệu ngắn", type: "textarea", full: true },
+    { key: "taglineEn", label: "Câu giới thiệu ngắn (English)", type: "textarea", full: true },
+    imageField,
+  ],
+};

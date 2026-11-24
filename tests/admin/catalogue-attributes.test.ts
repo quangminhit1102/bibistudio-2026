@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { getCollection, getProductType, tx, type Product } from "@/data/catalogue";
+import { tx, type Product } from "@/data/catalogue";
+import { getCollection, getProductType } from "@/lib/catalogue-taxonomy";
 import {
   attributeRows,
   attributeValue,

@@ -23,7 +23,11 @@ const blogPosts=[{
   relatedHandles:[]
 }];`;
 
-const catalogue = `const collections=[{slug:'motivation',name:{vi:'Động lực'},intro:{vi:'Giới thiệu'}}];
+const catalogue = `const productTypes=[
+  {id:'notebook',slug:'notebooks',name:{vi:'Sổ tay',en:'Notebook'},plural:{vi:'Sổ tay',en:'Notebooks'},tagline:{vi:'Giấy nhỏ',en:'Small paper'},image:'/catalogue/n.webp'},
+  {id:'envelope',slug:'envelopes',name:{vi:'Bao thư',en:'Envelope'},plural:{vi:'Bao thư',en:'Envelopes'},tagline:{vi:'Giữ lời nhắn',en:'Keeps a message'}}
+];
+const collections=[{slug:'motivation',name:{vi:'Động lực',en:'Motivation'},tagline:{vi:'Lời nhắc'},intro:{vi:'Giới thiệu'},image:assetUrl(main.url)}];
 const products=[p('test-notebook','Sổ','Notebook','notebook','motivation','Mô tả','Desc',['/a.webp','/b.webp'],true,'womens-day-83')];`;
 
 test("buildContentSeed converts ContentBlock[] to HTML and maps categories/products without executing source", () => {
@@ -61,7 +65,44 @@ test("buildContentSeed converts ContentBlock[] to HTML and maps categories/produ
   assert.equal(result.products[0].materialVi, null);
   assert.equal(result.products[0].materialEn, null);
   assert.deepEqual(result.productCategories, [
-    { slug: "motivation", name: "Động lực", description: "Giới thiệu", position: 0 },
+    {
+      slug: "motivation",
+      name: "Động lực",
+      description: "Giới thiệu",
+      position: 0,
+      translations: {
+        vi: { name: "Động lực", tagline: "Lời nhắc", intro: "Giới thiệu" },
+        en: { name: "Motivation" },
+      },
+      // Not a string literal: the public page keeps its bundled image.
+      image: null,
+    },
+  ]);
+  assert.deepEqual(result.productTypes, [
+    {
+      code: "notebook",
+      slug: "notebooks",
+      name: "Sổ tay",
+      description: "Giấy nhỏ",
+      position: 0,
+      translations: {
+        vi: { name: "Sổ tay", plural: "Sổ tay", tagline: "Giấy nhỏ" },
+        en: { name: "Notebook", plural: "Notebooks", tagline: "Small paper" },
+      },
+      image: "/catalogue/n.webp",
+    },
+    {
+      code: "envelope",
+      slug: "envelopes",
+      name: "Bao thư",
+      description: "Giữ lời nhắn",
+      position: 1,
+      translations: {
+        vi: { name: "Bao thư", plural: "Bao thư", tagline: "Giữ lời nhắn" },
+        en: { name: "Envelope", plural: "Envelopes", tagline: "Keeps a message" },
+      },
+      image: null,
+    },
   ]);
   assert.deepEqual(result.contentCategories, [{ slug: "cam-hung", name: "Cảm hứng", position: 0 }]);
   assert.ok(!JSON.stringify(result).includes("must not execute"));
@@ -89,6 +130,22 @@ test("current static content generates 10 posts and the full product catalogue",
   assert.ok(result.products.some((product) => product.slug === "bun-bo-hue-notebook"));
   assert.ok(result.products.some((product) => product.slug === "ao-dai-saigon-card"));
   assert.equal(result.productCategories.length, 7);
+  assert.deepEqual(
+    result.productTypes.map((type) => [type.code, type.slug]),
+    [
+      ["notebook", "notebooks"],
+      ["greeting-card", "greeting-cards"],
+      ["postcard", "postcards"],
+      ["envelope", "envelopes"],
+      ["letter-paper", "letter-paper"],
+      ["magnet", "magnets"],
+    ],
+  );
+  // Every product points at a seeded type and collection, so backend validation accepts it.
+  const typeCodes = new Set(result.productTypes.map((type) => type.code));
+  const collectionSlugs = new Set(result.productCategories.map((c) => c.slug));
+  assert.ok(result.products.every((product) => typeCodes.has(product.productType)));
+  assert.ok(result.products.every((product) => collectionSlugs.has(product.collection)));
   assert.equal(result.contentCategories.length, 3);
   const codes = new Set(result.products.map((product) => product.productCode));
   assert.equal(codes.size, result.products.length);

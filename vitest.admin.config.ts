@@ -11,7 +11,11 @@ export default defineConfig({
   },
   test: {
     environment: "jsdom",
-    include: ["tests/admin/**/*.test.{ts,tsx}", "src/lib/content-*.test.ts"],
+    include: [
+      "tests/admin/**/*.test.{ts,tsx}",
+      "src/lib/content-*.test.ts",
+      "src/lib/catalogue-*.test.ts",
+    ],
     setupFiles: ["tests/admin/setup.ts"],
     pool: "threads",
     maxWorkers: 2,
