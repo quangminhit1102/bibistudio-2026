@@ -326,13 +326,22 @@ test(
       await shot("managed-account-desktop");
       await logout();
       await login("admin", f.secrets.masterPassword);
-      await page.getByText("Tài khoản quản trị gốc được bảo vệ", { exact: true }).waitFor();
-      assert.equal(
-        await page.getByRole("button", { name: "Lưu thông tin", exact: true }).count(),
-        0,
+      // The master account edits its own profile like any user.
+      await page.getByLabel("Tên hiển thị", { exact: true }).fill("Quản trị mới");
+      const ownSave = page.waitForResponse(
+        (r) => r.request().method() === "PATCH" && r.url().endsWith("/api/profile"),
       );
-      assert.equal(await page.getByLabel("Chọn ảnh đại diện", { exact: true }).count(), 0);
-      await shot("master-readonly");
+      await page.getByRole("button", { name: "Lưu thông tin", exact: true }).click();
+      assert.equal((await ownSave).status(), 200);
+      await page.getByText("Đã lưu hồ sơ", { exact: true }).waitFor();
+      assert.equal(await page.getByText("Tài khoản quản trị gốc được bảo vệ").count(), 0);
+      assert.equal(await page.getByLabel("Chọn ảnh đại diện", { exact: true }).count(), 1);
+      await page.getByRole("button", { name: "Chọn ảnh", exact: true }).waitFor();
+      const [[masterRow]] = await f.pool.query(
+        "SELECT display_name FROM users WHERE username='admin'",
+      );
+      assert.equal(masterRow.display_name, "Quản trị mới");
+      await shot("master-own-profile");
       assert.deepEqual(errors, []);
     } finally {
       await browser?.close();

@@ -42,6 +42,7 @@ export function ServerProfile() {
           key={id}
           user={user}
           api={api}
+          self
           metadataDirty={dirty || busy}
           onDirtyChange={setAvatarDirty}
           onBusyChange={setAvatarBusy}

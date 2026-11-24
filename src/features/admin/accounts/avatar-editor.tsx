@@ -11,6 +11,7 @@ export function AvatarEditor({
   onDirtyChange,
   onBusyChange,
   readOnly = false,
+  self = false,
 }: {
   user: ProfileDto;
   api: Pick<ReturnType<typeof createProfileApi>, "upload" | "remove">;
@@ -19,6 +20,8 @@ export function AvatarEditor({
   onDirtyChange?: (dirty: boolean) => void;
   onBusyChange?: (busy: boolean) => void;
   readOnly?: boolean;
+  /** The signed-in user's own avatar: the master account may change it only here. */
+  self?: boolean;
 }) {
   const [file, setFile] = useState<File>(),
     [preview, setPreview] = useState<string>(),
@@ -49,7 +52,7 @@ export function AvatarEditor({
   useEffect(() => {
     onBusyChange?.(busy);
   }, [busy, onBusyChange]);
-  const locked = user.isMaster || readOnly,
+  const locked = readOnly || (user.isMaster && !self),
     disabled = locked || metadataDirty || busy;
   const clear = () => {
     setFile(undefined);

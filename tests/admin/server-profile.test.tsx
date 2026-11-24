@@ -9,7 +9,7 @@ import Profile from "../../src/features/admin/settings/pages/profile";
 import { profile, grant, json, immediateLock } from "./helpers/http-client";
 vi.mock("@tanstack/react-router", () => ({ useBlocker: () => ({ status: "idle" }) }));
 
-test("master profile reads server account data with no edit, password or local-avatar controls", async () => {
+test("the master account's own profile has the edit and avatar controls of any user", async () => {
   localStorage.clear();
   const principal = {
     ...profile,
@@ -46,11 +46,11 @@ test("master profile reads server account data with no edit, password or local-a
       </AdminProvider>
     </QueryClientProvider>,
   );
-  expect(await screen.findByDisplayValue("Quản trị chính")).toHaveAttribute("readonly");
-  expect(screen.getByText("Tài khoản quản trị gốc được bảo vệ")).toBeInTheDocument();
-  expect(screen.queryByRole("button", { name: "Lưu thông tin" })).not.toBeInTheDocument();
-  expect(screen.queryByLabelText("Mật khẩu mới")).not.toBeInTheDocument();
-  expect(screen.queryByText("Đổi ảnh đại diện")).not.toBeInTheDocument();
+  expect(await screen.findByDisplayValue("Quản trị chính")).not.toHaveAttribute("readonly");
+  expect(screen.queryByText("Tài khoản quản trị gốc được bảo vệ")).not.toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Lưu thông tin" })).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Chọn ảnh" })).toBeEnabled();
+  expect(screen.getByLabelText("Chọn ảnh đại diện")).toBeInTheDocument();
   view.unmount();
   query.clear();
 });
