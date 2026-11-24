@@ -95,3 +95,11 @@ it("resolves server media via requestBlob when the id is not in the local store"
   create.mockRestore();
   revoke.mockRestore();
 });
+
+it("shows an image stored as a public path without asking the media library", async () => {
+  const s = await setup();
+  const lease = await resolveMedia(s, "/catalogue/a.webp");
+  expect(lease.url).toBe("/catalogue/a.webp");
+  await expect(resolveMedia(s, "//evil.test/a.webp")).rejects.toThrow();
+  await expect(resolveMedia(s, "/a b.webp")).rejects.toThrow();
+});

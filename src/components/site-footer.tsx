@@ -4,6 +4,7 @@ import { ArrowUpRight, MapPin } from "lucide-react";
 import { Reveal } from "./brand/reveal";
 import { tx } from "@/data/catalogue";
 import { useTaxonomy } from "@/lib/catalogue-taxonomy";
+import { t } from "@/lib/messages";
 import { mailHref, siteLocation, telHref } from "@/lib/site-contact";
 import { BrandLogo, site } from "@/platform/site";
 
@@ -33,26 +34,26 @@ export function SiteFooter() {
           <Reveal className="min-w-0 sm:col-span-2 lg:col-span-1">
             <BrandLogo />
             <p className="mt-8 max-w-xs font-display text-[1.7rem] italic leading-[1.15] text-foreground">
-              Little things, <span className="text-kraft">made to touch</span> your heart.
+              {t("footer.sloganStart")} <span className="text-kraft">{t("footer.sloganAccent")}</span> {t("footer.sloganEnd")}
             </p>
             <p className="mt-5 max-w-xs text-[14px] leading-relaxed text-muted-foreground">
-              Một studio nhỏ làm đồ giấy lấy cảm hứng từ Việt Nam — mỗi sản phẩm bắt đầu từ một câu chuyện.
+              {t("footer.about")}
             </p>
             <Link to="/about" className="mt-6 inline-flex items-center gap-1.5 text-[12px] font-medium uppercase tracking-[0.2em] underline underline-offset-8 hover:text-accent">
-              Câu chuyện {site.shortName} <ArrowUpRight className="size-3.5" />
+              {t("footer.story")} <ArrowUpRight className="size-3.5" />
             </Link>
           </Reveal>
 
-          <Col title="Sản phẩm" delay={80}>
+          <Col title={t("nav.products")} delay={80}>
             <ul className="space-y-3">
               {productTypes.map((t) => (
                 <li key={t.id}><Link to="/products/$slug" params={{ slug: t.slug }} className={linkCls}>{tx(t.plural)}</Link></li>
               ))}
-              <li><Link to="/blog" className={linkCls}>Nhật ký</Link></li>
+              <li><Link to="/blog" className={linkCls}>{t("nav.journal")}</Link></li>
             </ul>
           </Col>
 
-          <Col title="Bộ sưu tập" delay={160}>
+          <Col title={t("nav.collections")} delay={160}>
             <ul className="space-y-3">
               {collections.map((c) => (
                 <li key={c.id}><Link to="/collections/$slug" params={{ slug: c.slug }} className={linkCls}>{tx(c.name)}</Link></li>
@@ -60,7 +61,7 @@ export function SiteFooter() {
             </ul>
           </Col>
 
-          <Col title="Liên hệ" delay={240}>
+          <Col title={t("nav.contact")} delay={240}>
             <a href={telHref(site)} className="block font-display text-3xl leading-none transition hover:text-accent">
               {contact.phoneDisplay}
             </a>
@@ -78,7 +79,7 @@ export function SiteFooter() {
             <a href={studioLocation.maps} target="_blank" rel="noopener noreferrer" className="group mt-6 block overflow-hidden border border-border">
               <div className="relative h-28 overflow-hidden bg-secondary">
                 <iframe
-                  title={`Bản đồ ${site.name}`}
+                  title={t("footer.map")}
                   src={studioLocation.embed}
                   loading="lazy"
                   tabIndex={-1}
@@ -100,9 +101,9 @@ export function SiteFooter() {
           <p>© {new Date().getFullYear()} {site.name}{site.tagline ? ` · ${site.tagline}` : ""}</p>
           <AnalyticsPrivacyControl />
           <p className="flex gap-5">
-            <Link to="/about" className="hover:text-foreground">Về {site.shortName}</Link>
-            <Link to="/contact" className="hover:text-foreground">Liên hệ</Link>
-            <Link to="/api-test" className="hover:text-foreground">Kiểm tra API</Link>
+            <Link to="/about" className="hover:text-foreground">{t("nav.about")}</Link>
+            <Link to="/contact" className="hover:text-foreground">{t("nav.contact")}</Link>
+            <Link to="/api-test" className="hover:text-foreground">{t("footer.apiTest")}</Link>
           </p>
         </div>
       </div>

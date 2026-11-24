@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { mailHref, mapLinks, socialLink, telHref } from "@/lib/site-contact";
 import { defineSite } from "@/platform/site-contract";
-import { site } from "@/platform/site";
 
 const bare = defineSite({
   name: "Example",
@@ -20,26 +19,33 @@ const bare = defineSite({
   admin: { title: "Admin", modules: [] },
 });
 
+const full = defineSite({
+  ...bare,
+  contact: {
+    ...bare.contact,
+    social: [{ id: "zalo", label: "Zalo", href: "https://zalo.me/0900000000" }],
+    location: { name: "Shop", address: "1 Main St", lat: 1, lng: 2, query: "Shop, 1 Main St" },
+  },
+});
+
 describe("site contact helpers", () => {
   it("builds tel and mailto links from the site contact", () => {
-    expect(telHref(site)).toBe("tel:0392969000");
-    expect(mailHref(site)).toBe("mailto:bibistudio@gmail.com");
+    expect(telHref(full)).toBe("tel:0900000000");
+    expect(mailHref(full)).toBe("mailto:a@example.com");
   });
 
   it("finds a social link by id", () => {
-    expect(socialLink(site, "zalo")?.href).toBe("https://zalo.me/0392969000");
-    expect(socialLink(site, "facebook")?.href).toBe("https://www.facebook.com/bidiary");
-    expect(socialLink(site, "messenger")?.href).toBe("https://m.me/bidiary");
+    expect(socialLink(full, "zalo")?.href).toBe("https://zalo.me/0900000000");
   });
 
   it("returns undefined for a channel the site does not have", () => {
     expect(socialLink(bare, "zalo")).toBeUndefined();
-    expect(socialLink(site, "tiktok")).toBeUndefined();
+    expect(socialLink(full, "tiktok")).toBeUndefined();
   });
 
-  it("keeps the map URLs the site used before the move", () => {
-    const q = encodeURIComponent("Đường sách Nguyễn Văn Bình, Quận 1, TP. Hồ Chí Minh");
-    expect(mapLinks(site.contact.location!)).toEqual({
+  it("builds the map URLs from the location's place query", () => {
+    const q = encodeURIComponent("Shop, 1 Main St");
+    expect(mapLinks(full.contact.location!)).toEqual({
       embed: `https://www.google.com/maps?q=${q}&z=16&output=embed`,
       maps: `https://www.google.com/maps/search/?api=1&query=${q}`,
       directions: `https://www.google.com/maps/dir/?api=1&destination=${q}`,

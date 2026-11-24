@@ -8,18 +8,10 @@ import { SplitWords } from "@/components/brand/motion";
 import { SITE_URL } from "@/lib/seo";
 import { getAllProducts, tx, type Product } from "@/data/catalogue";
 import { getCollectionBySlug, loadTaxonomy, useTaxonomy } from "@/lib/catalogue-taxonomy";
-import { attributeValue, groupAttribute, text } from "@/lib/catalogue-attributes";
+import { attributeValue, collectionPage, groupAttribute, text } from "@/lib/catalogue-attributes";
 import { getPublicProducts } from "@/lib/content-api";
 import { toPublicProduct } from "@/lib/content-adapter";
-import { site } from "@/platform/site";
-
-const chapters: Record<string, { quote?: string; themes?: string[] }> = {
-  "explore-vietnam": {
-    themes: ["Nơi chốn", "Phố phường", "Kiến trúc", "Ẩm thực", "Văn hoá", "Đời thường"],
-  },
-  motivation: { quote: "Mỗi ngày một trang, mỗi trang một bước nhỏ." },
-  "vietnamese-food": { themes: ["Phở", "Bánh mì", "Cà phê"] },
-};
+import { t } from "@/lib/messages";
 
 export const Route = createFileRoute("/collections/$slug")({
   loader: async ({ params }) => {
@@ -32,9 +24,9 @@ export const Route = createFileRoute("/collections/$slug")({
     const c = loaderData && getCollectionBySlug(loaderData.id);
     if (!c)
       return {
-        meta: [{ title: `Không tìm thấy${site.seo.titleSuffix}` }, { name: "robots", content: "noindex" }],
+        meta: [{ title: t("notFound.metaTitle") }, { name: "robots", content: "noindex" }],
       };
-    const title = `${tx(c.name)} — Bộ sưu tập ${site.name}`;
+    const title = t("collection.metaTitle", { name: tx(c.name) });
     const image = c.image
       ? c.image.startsWith("http")
         ? c.image
@@ -60,9 +52,9 @@ export const Route = createFileRoute("/collections/$slug")({
   notFoundComponent: () => (
     <PageShell>
       <div className="mx-auto max-w-[1280px] px-6 py-28 lg:px-12">
-        <h1 className="font-display text-5xl">Không tìm thấy bộ sưu tập</h1>
+        <h1 className="font-display text-5xl">{t("collection.notFoundTitle")}</h1>
         <Link to="/collections" className="mt-8 inline-block underline underline-offset-8">
-          Xem tất cả bộ sưu tập
+          {t("collection.viewAll")}
         </Link>
       </div>
     </PageShell>
@@ -75,8 +67,8 @@ function CollectionPage() {
   const { collections } = useTaxonomy();
   // The loader found it; a list reloaded without it falls back to the first collection.
   const c = collections.find((x) => x.id === id) ?? collections[0];
-  const ch = chapters[c.slug] ?? {};
-  const signature = c.id === "explore-vietnam";
+  const ch = collectionPage(c.slug);
+  const signature = ch.layout === "feature";
   const idx = collections.indexOf(c);
   const next = collections[(idx + 1) % collections.length];
   const inCollection = (collectionId: string) =>
@@ -109,7 +101,7 @@ function CollectionPage() {
               signature ? "flex flex-col justify-center px-5 py-14 sm:px-6 sm:py-16 lg:px-12" : ""
             }
           >
-            <p className="eyebrow animate-rise">Bộ sưu tập · {c.name.en}</p>
+            <p className="eyebrow animate-rise">{t("collection.eyebrow", { name: c.name.en })}</p>
             <h1 className="mt-5 font-display text-[3.25rem] leading-[0.98] sm:text-6xl md:text-7xl">
               <SplitWords text={tx(c.name)} delay={150} />
             </h1>
@@ -120,7 +112,7 @@ function CollectionPage() {
               {tx(c.intro)}
             </p>
             <p className="eyebrow mt-8 animate-rise text-foreground">
-              {count ? `${count} mẫu trong bộ sưu tập` : "Sắp ra mắt"}
+              {count ? t("collection.count", { count }) : t("collection.comingSoon")}
             </p>
           </div>
           <div className="overflow-hidden">
@@ -140,10 +132,10 @@ function CollectionPage() {
       {ch.themes && (
         <section className="mx-auto max-w-[1280px] px-6 py-20 lg:px-12">
           <Reveal className="flex flex-wrap gap-x-10 gap-y-4 border-y border-border py-8">
-            {ch.themes.map((t, i) => (
-              <span key={t} className="font-display text-2xl md:text-3xl">
+            {ch.themes.map((theme, i) => (
+              <span key={theme} className="font-display text-2xl md:text-3xl">
                 <span className="mr-2 text-sm text-kraft">{String(i + 1).padStart(2, "0")}</span>
-                {t}
+                {theme}
               </span>
             ))}
           </Reveal>
@@ -161,7 +153,7 @@ function CollectionPage() {
       {group ? (
         <section className="mx-auto max-w-[1280px] px-5 py-16 sm:px-6 lg:px-12">
           <nav
-            aria-label={`Chọn ${text(group?.label).toLowerCase()}`}
+            aria-label={t("collection.groupNav", { label: text(group?.label).toLowerCase() })}
             className="sticky top-0 z-30 -mx-5 mb-12 border-y border-border bg-background/95 px-5 backdrop-blur sm:-mx-6 sm:px-6 lg:mx-0 lg:px-0"
           >
             <ul className="no-scrollbar flex gap-6 overflow-x-auto py-4">
@@ -189,7 +181,9 @@ function CollectionPage() {
                   <Reveal>
                     <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
                       <h2 className="font-display text-4xl md:text-5xl">{text(o.label)}</h2>
-                      <span className="eyebrow">{items.length} mẫu</span>
+                      <span className="eyebrow">
+                        {t("collection.groupCount", { count: items.length })}
+                      </span>
                     </div>
                     <p className="mt-2 max-w-lg text-[15px] leading-relaxed text-muted-foreground">
                       {text(o.note)}
@@ -204,7 +198,7 @@ function CollectionPage() {
           </div>
           {soon.length > 0 && (
             <Reveal className="mt-20 border-t border-border pt-10">
-              <p className="eyebrow">Sắp ra mắt</p>
+              <p className="eyebrow">{t("collection.comingSoon")}</p>
               <ul className="mt-5 flex flex-wrap gap-x-8 gap-y-4">
                 {soon.map((o) => (
                   <li key={o.value} id={o.value} className="scroll-mt-24">
@@ -222,7 +216,7 @@ function CollectionPage() {
           {ungrouped.length > 0 && (
             <div className="mt-20">
               <h2 className="eyebrow mb-10 border-b border-border pb-6 text-foreground">
-                Sản phẩm trong bộ sưu tập
+                {t("collection.products")}
               </h2>
               <CatalogueGrid items={ungrouped} />
             </div>
@@ -231,7 +225,7 @@ function CollectionPage() {
       ) : (
         <section className="mx-auto max-w-[1280px] px-6 py-20 lg:px-12">
           <h2 className="eyebrow mb-10 border-b border-border pb-6 text-foreground">
-            Sản phẩm trong bộ sưu tập
+            {t("collection.products")}
           </h2>
           <CatalogueGrid items={inCollection(c.id)} />
         </section>
@@ -244,7 +238,7 @@ function CollectionPage() {
           className="group grid items-center gap-6 border-t border-border pt-10 md:grid-cols-[1fr_1.2fr] md:gap-12"
         >
           <div>
-            <span className="eyebrow">Chương tiếp theo</span>
+            <span className="eyebrow">{t("collection.next")}</span>
             <span className="mt-4 block font-display text-4xl leading-tight transition group-hover:translate-x-2 md:text-6xl">
               {tx(next.name)} →
             </span>

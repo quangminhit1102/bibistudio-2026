@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import { defineCatalogue, type CatalogueConfig } from "@/platform/site-contract";
-import { catalogue } from "@/platform/site";
 
 const label = { vi: "Nhãn" };
 const valid: CatalogueConfig = {
@@ -56,23 +55,5 @@ describe("defineCatalogue", () => {
     ],
   ])("rejects a config and names the problem: %s", (message, config) => {
     expect(() => defineCatalogue(config)).toThrow(`Invalid catalogue config: ${message}`);
-  });
-});
-
-describe("the active site's catalogue", () => {
-  it("declares the product attributes in display order", () => {
-    expect(catalogue.attributes.map((a) => a.key)).toEqual([
-      "dimensions",
-      "material",
-      "pages",
-      "format",
-      "occasion",
-    ]);
-  });
-
-  it("groups greeting cards by the eight occasions", () => {
-    const occasion = catalogue.attributes.find((a) => a.key === "occasion");
-    expect(occasion?.type === "select" && occasion.options).toHaveLength(8);
-    expect(catalogue.groupBy).toEqual({ "greeting-cards": "occasion" });
   });
 });

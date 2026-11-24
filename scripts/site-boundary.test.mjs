@@ -3,7 +3,7 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { test } from "node:test";
-import { buildContentSeed } from "./generate-content-seed.mjs";
+import { buildContentSeed, readCatalogueAssets } from "./generate-content-seed.mjs";
 import { root } from "./runtime.mjs";
 import { findBoundaryViolations, phaseOneBoundary } from "./site-boundary.mjs";
 import { loadSiteConfig } from "./site-html.mjs";
@@ -75,6 +75,20 @@ test("allows @site imports only in the platform entry point", async () => {
   assert.match(found[0].reason, /@site/);
 });
 
+test("allows @site imports in every file of a folder listed with a trailing slash", async () => {
+  const found = await violations(
+    {
+      "src/platform/pages/home.ts": 'export { default } from "@site/pages/home";\n',
+      "src/platform/pages-extra.ts": 'export { default } from "@site/pages/home";\n',
+    },
+    { siteImportFiles: ["src/platform/pages/"] },
+  );
+  assert.deepEqual(
+    found.map((v) => v.file),
+    ["src/platform/pages-extra.ts"],
+  );
+});
+
 test("reports a relative path into the site folder", async () => {
   const found = await violations({
     "src/lib/x.css": '@source "../../site";\n',
@@ -137,7 +151,7 @@ async function siteTaxonomy() {
   const [catalogue, blog] = await Promise.all(
     ["src/data/catalogue.ts", "src/data/blog.ts"].map((file) => readFile(join(root, file), "utf8")),
   );
-  const seed = buildContentSeed(catalogue, blog);
+  const seed = buildContentSeed(catalogue, blog, await readCatalogueAssets(catalogue));
   return [
     ...new Set([
       ...seed.productTypes.flatMap((type) => [type.code, type.slug]),

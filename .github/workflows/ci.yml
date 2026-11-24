@@ -45,6 +45,23 @@ jobs:
             ops/package-lock.json
       - run: npm ci
       - run: node scripts/check.mjs admin
+  blank-site: # the core must build and pass the admin tests with a site that is not the default one
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            backend/package-lock.json
+            ops/package-lock.json
+      - run: npm ci
+      - run: node scripts/check.mjs blank-site
   backend:
     runs-on: ubuntu-latest
     timeout-minutes: 15

@@ -1,7 +1,12 @@
 // Product attributes and collection grouping, as declared by the active site's catalogue config.
 import { tx, type Product } from "@/data/catalogue";
 import { catalogue, site } from "@/platform/site";
-import type { AttributeOption, Localized, SelectAttribute } from "@/platform/site-contract";
+import type {
+  AttributeOption,
+  CollectionPageConfig,
+  Localized,
+  SelectAttribute,
+} from "@/platform/site-contract";
 
 /** Site-declared text in the site's default language. */
 export const text = (value: Localized | undefined): string => value?.[site.defaultLocale] ?? "";
@@ -15,6 +20,12 @@ export const selectOptions = (key: string): readonly AttributeOption[] =>
   select(key)?.options ?? [];
 
 /** The select attribute a collection's products are grouped by, if the site declares one. */
+/** What the site adds to one collection's page; nothing for a collection it does not name. */
+export const collectionPage = (collectionSlug: string): CollectionPageConfig =>
+  catalogue.collectionPages && Object.hasOwn(catalogue.collectionPages, collectionSlug)
+    ? catalogue.collectionPages[collectionSlug]
+    : {};
+
 export const groupAttribute = (collectionSlug: string): SelectAttribute | undefined =>
   Object.hasOwn(catalogue.groupBy, collectionSlug)
     ? select(catalogue.groupBy[collectionSlug])

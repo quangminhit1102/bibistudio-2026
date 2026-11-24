@@ -3,6 +3,7 @@ import { Search, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { getAllProducts, tx } from "@/data/catalogue";
 import { getProductType, useTaxonomy } from "@/lib/catalogue-taxonomy";
+import { t } from "@/lib/messages";
 
 const norm = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").toLowerCase();
 
@@ -34,11 +35,11 @@ export function QuickSearch({ className = "" }: { className?: string }) {
 
   return (
     <>
-      <button onClick={() => setOpen(true)} aria-label="Tìm sản phẩm" className={`grid size-11 place-items-center transition hover:text-accent ${className}`}>
+      <button onClick={() => setOpen(true)} aria-label={t("search.open")} className={`grid size-11 place-items-center transition hover:text-accent ${className}`}>
         <Search className="size-[18px]" />
       </button>
       {open && (
-        <div role="dialog" aria-modal="true" aria-label="Tìm sản phẩm" className="fixed inset-0 z-[70] overflow-y-auto bg-background animate-in fade-in duration-300">
+        <div role="dialog" aria-modal="true" aria-label={t("search.open")} className="fixed inset-0 z-[70] overflow-y-auto bg-background animate-in fade-in duration-300">
           <div className="mx-auto max-w-[1080px] px-5 py-6 sm:px-6 md:py-12">
             <div className="flex items-center gap-4 border-b border-foreground pb-3">
               <Search className="size-5 shrink-0 text-muted-foreground" />
@@ -46,14 +47,14 @@ export function QuickSearch({ className = "" }: { className?: string }) {
                 ref={input}
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
-                placeholder="Tìm sổ tay, thiệp, magnet…"
+                placeholder={t("search.placeholder")}
                 className="min-w-0 flex-1 bg-transparent font-display text-3xl outline-none placeholder:text-muted-foreground/60 md:text-5xl"
-                aria-label="Từ khóa"
+                aria-label={t("search.keyword")}
               />
-              <button onClick={close} aria-label="Đóng tìm kiếm" className="grid size-11 shrink-0 place-items-center"><X className="size-5" /></button>
+              <button onClick={close} aria-label={t("search.close")} className="grid size-11 shrink-0 place-items-center"><X className="size-5" /></button>
             </div>
             {q.trim() && (
-              <p className="eyebrow mt-6">{results.length ? `${results.length} kết quả` : "Không tìm thấy mẫu nào — thử từ khóa khác nhé."}</p>
+              <p className="eyebrow mt-6">{results.length ? t("search.results", { count: results.length }) : t("search.empty")}</p>
             )}
             <ul className="mt-6 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:grid-cols-4">
               {results.map((p, i) => (

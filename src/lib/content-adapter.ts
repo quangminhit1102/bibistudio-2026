@@ -3,6 +3,7 @@ import { getBlogPost, type ContentBlock } from "@/data/blog";
 import { getProduct } from "@/data/catalogue";
 import type { Product } from "@/data/catalogue";
 import { selectOptions } from "./catalogue-attributes";
+import { t } from "./messages";
 import { site } from "@/platform/site";
 
 // Map the public API content shapes to the shapes the existing public components
@@ -66,7 +67,7 @@ export function toPublicPost(api: PublicPostSummary & { content?: string }): Pos
     slug: api.slug,
     title: api.title,
     excerpt: api.excerpt ?? "",
-    category: api.category_name ?? "Nhật ký",
+    category: api.category_name ?? t("nav.journal"),
     author: api.author_name ?? site.name,
     date: api.publish_at ?? "",
     readTime: api.read_time ?? "",

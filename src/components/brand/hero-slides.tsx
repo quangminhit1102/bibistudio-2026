@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { t } from "@/lib/messages";
 import { Parallax, prefersReducedMotion } from "./motion";
 export type HeroSlide = { src: string; alt: string; label?: string; slug?: string };
 export function HeroSlides({ slides }: { slides: HeroSlide[] }) {
@@ -28,14 +29,14 @@ export function HeroSlides({ slides }: { slides: HeroSlide[] }) {
       </div>
       <div
         role="group"
-        aria-label="Chọn ảnh"
+        aria-label={t("heroSlides.choose")}
         className="absolute inset-x-0 bottom-5 z-10 flex justify-center gap-1 sm:bottom-6"
       >
         {slides.map((slide, k) => (
           <button
             key={slide.src}
             type="button"
-            aria-label={`Ảnh ${k + 1}`}
+            aria-label={t("gallery.image", { number: k + 1 })}
             aria-current={index === k ? "true" : undefined}
             onClick={() => setIndex(k)}
             className="group grid size-11 place-items-center rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"

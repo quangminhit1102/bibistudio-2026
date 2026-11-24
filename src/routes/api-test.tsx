@@ -2,14 +2,11 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { PageShell, PageIntro } from "@/components/page-shell";
 import { loadApiDemo } from "@/lib/api-demo";
-import { site } from "@/platform/site";
+import { t } from "@/lib/messages";
 
 export const Route = createFileRoute("/api-test")({
   head: () => ({
-    meta: [
-      { title: `Kiểm tra API${site.seo.titleSuffix}` },
-      { name: "robots", content: "noindex, nofollow" },
-    ],
+    meta: [{ title: t("apiTest.metaTitle") }, { name: "robots", content: "noindex, nofollow" }],
   }),
   component: ApiTestPage,
 });
@@ -35,7 +32,7 @@ function ApiTestPage() {
           !controller.signal.aborted ||
           controller.signal.reason?.message === "API request timed out"
         )
-          setState({ loading: false, error: error.message || "Không kết nối được API" });
+          setState({ loading: false, error: error.message || t("apiTest.unreachable") });
       })
       .finally(() => clearTimeout(timeout));
     return () => {
@@ -46,29 +43,37 @@ function ApiTestPage() {
   const matched =
     state.data?.backend.releaseId === frontend.releaseId &&
     state.data?.backend.sourceSha === frontend.sourceSha;
+  const status = state.loading
+    ? "loading"
+    : state.error
+      ? "error"
+      : matched
+        ? "matched"
+        : "mismatched";
   return (
     <PageShell>
       <PageIntro
-        eyebrow="KIỂM TRA KỸ THUẬT"
-        title="Kết nối React và API"
-        lead={`Trang thử nghiệm công khai dành cho việc kiểm tra và phát hành ${site.name}.`}
+        eyebrow={t("apiTest.eyebrow")}
+        title={t("apiTest.heading")}
+        lead={t("apiTest.lead")}
       />
       <section className="mx-auto max-w-[1280px] px-5 pb-24 sm:px-6 lg:px-12">
-        <div role="status" className="mb-6 rounded border border-border p-5">
+        {/* The deploy's browser check waits for `data-state="matched"`, whatever the site's wording. */}
+        <div role="status" data-state={status} className="mb-6 rounded border border-border p-5">
           {state.loading
-            ? "Đang kết nối API…"
+            ? t("apiTest.loading")
             : state.error
-              ? `Lỗi kết nối: ${state.error}`
+              ? t("apiTest.error", { error: state.error })
               : matched
-                ? "Kết nối thành công — phiên bản FE và BE khớp nhau."
-                : "Đã kết nối nhưng phiên bản FE và BE chưa khớp."}
+                ? t("apiTest.matched")
+                : t("apiTest.mismatched")}
         </div>
         <button
           className="mb-8 border border-border px-5 py-3 disabled:opacity-50"
           disabled={state.loading}
           onClick={() => setAttempt((n) => n + 1)}
         >
-          Thử lại
+          {t("apiTest.retry")}
         </button>
         <div className="grid gap-6 md:grid-cols-2">
           {[

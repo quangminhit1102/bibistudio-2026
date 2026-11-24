@@ -6,6 +6,7 @@ import { spawnSync } from "node:child_process";
 export const artifactEntries = [
   "assets",
   "catalogue",
+  "journal",
   ".htaccess",
   "bibi-logo.svg",
   "bibi-mark.svg",
@@ -46,7 +47,7 @@ export function renderCpanelYml(deployPath) {
     "deployment:",
     "  tasks:",
     `    - export DEPLOYPATH=${deployPath}`,
-    '    - /bin/cp -R assets catalogue "$DEPLOYPATH"',
+    '    - /bin/cp -R assets catalogue journal "$DEPLOYPATH"',
     '    - /bin/cp .htaccess index.html favicon.svg robots.txt zalo.png bibi-logo.svg bibi-mark.svg "$DEPLOYPATH"',
     "",
   ].join("\n");

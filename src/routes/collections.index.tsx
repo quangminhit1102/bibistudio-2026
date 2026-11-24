@@ -8,11 +8,10 @@ import { getAllProducts, tx, type Product } from "@/data/catalogue";
 import { loadTaxonomy, useTaxonomy } from "@/lib/catalogue-taxonomy";
 import { getPublicProducts } from "@/lib/content-api";
 import { toPublicProduct } from "@/lib/content-adapter";
-import { site } from "@/platform/site";
+import { t } from "@/lib/messages";
 
-const title = `Bộ sưu tập${site.seo.titleSuffix}`;
-const description =
-  `Bảy câu chuyện của ${site.name}: Khám phá Việt Nam, Món ăn Việt Nam, Áo dài, Thiệp chúc mừng và hơn thế nữa.`;
+const title = t("collections.metaTitle");
+const description = t("collections.metaDescription");
 
 export const Route = createFileRoute("/collections/")({
   loader: async () => {
@@ -39,9 +38,9 @@ function CollectionsPage() {
   return (
     <PageShell>
       <PageIntro
-        eyebrow="Collections"
-        title="Mỗi bộ sưu tập là một chương."
-        lead="Những câu chuyện về nơi chốn, hương vị và khoảnh khắc — kể lại bằng giấy."
+        eyebrow={t("collections.eyebrow")}
+        title={t("collections.heading")}
+        lead={t("collections.lead")}
       />
       <section className="mx-auto max-w-[1280px] space-y-24 px-6 pb-28 lg:px-12">
         {collections.map((c, i) => (
@@ -79,7 +78,8 @@ function CollectionsPage() {
                   {tx(c.tagline)}
                 </p>
                 <p className="eyebrow mt-8 flex items-center gap-2 text-foreground transition group-hover:gap-3">
-                  {countByCollection(c.id)} sản phẩm · Khám phá <ArrowRight className="size-3.5" />
+                  {t("collections.count", { count: countByCollection(c.id) })}{" "}
+                  <ArrowRight className="size-3.5" />
                 </p>
               </div>
             </Link>

@@ -8,10 +8,10 @@ import { getAllProducts, tx, type Product } from "@/data/catalogue";
 import { loadTaxonomy, useTaxonomy } from "@/lib/catalogue-taxonomy";
 import { getPublicProducts } from "@/lib/content-api";
 import { toPublicProduct } from "@/lib/content-adapter";
-import { site } from "@/platform/site";
+import { t } from "@/lib/messages";
 
-const title = `Sản phẩm${site.seo.titleSuffix}`;
-const description = `Danh mục sản phẩm ${site.name}: sổ tay, thiệp, postcard, bao thư, giấy viết thư và magnet.`;
+const title = t("products.metaTitle");
+const description = t("products.metaDescription");
 const PAGE = 12;
 
 export const Route = createFileRoute("/products/")({
@@ -34,9 +34,9 @@ export const Route = createFileRoute("/products/")({
 
 type Sort = "newest" | "collection" | "name";
 const sorts: { id: Sort; label: string }[] = [
-  { id: "newest", label: "Mới nhất" },
-  { id: "collection", label: "Theo bộ sưu tập" },
-  { id: "name", label: "Tên A–Z" },
+  { id: "newest", label: t("products.sortNewest") },
+  { id: "collection", label: t("products.sortCollection") },
+  { id: "name", label: t("products.sortName") },
 ];
 
 function Pill({
@@ -130,20 +130,24 @@ function ProductsPage() {
   const filters = (
     <div className="space-y-5">
       <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
-        <span className="eyebrow w-full pb-1 sm:w-28">Loại</span>
+        <span className="eyebrow w-full pb-1 sm:w-28">{t("products.filterType")}</span>
         <Pill active={type === ALL} onClick={() => setType(ALL)}>
-          Tất cả
+          {t("products.filterAll")}
         </Pill>
-        {productTypes.map((t) => (
-          <Pill key={t.id} active={type === t.id} onClick={() => setType(t.id)}>
-            {tx(t.name)}
+        {productTypes.map((productType) => (
+          <Pill
+            key={productType.id}
+            active={type === productType.id}
+            onClick={() => setType(productType.id)}
+          >
+            {tx(productType.name)}
           </Pill>
         ))}
       </div>
       <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
-        <span className="eyebrow w-full pb-1 sm:w-28">Bộ sưu tập</span>
+        <span className="eyebrow w-full pb-1 sm:w-28">{t("products.filterCollection")}</span>
         <Pill active={col === ALL} onClick={() => setCol(ALL)}>
-          Tất cả
+          {t("products.filterAll")}
         </Pill>
         {collections.map((c) => (
           <Pill key={c.id} active={col === c.id} onClick={() => setCol(c.id)}>
@@ -152,7 +156,7 @@ function ProductsPage() {
         ))}
       </div>
       <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
-        <span className="eyebrow w-full pb-1 sm:w-28">Sắp xếp</span>
+        <span className="eyebrow w-full pb-1 sm:w-28">{t("products.sort")}</span>
         {sorts.map((s) => (
           <Pill key={s.id} active={sort === s.id} onClick={() => setSort(s.id)}>
             {s.label}
@@ -165,9 +169,9 @@ function ProductsPage() {
   return (
     <PageShell>
       <PageIntro
-        eyebrow="Catalogue"
-        title="Sản phẩm"
-        lead={`Khám phá các sản phẩm giấy của ${site.name} theo loại sản phẩm hoặc theo bộ sưu tập.`}
+        eyebrow={t("products.eyebrow")}
+        title={t("products.heading")}
+        lead={t("products.lead")}
       />
       <section className="mx-auto max-w-[1280px] px-5 sm:px-6 lg:px-12">
         <div className="border-y border-border py-6">
@@ -177,29 +181,32 @@ function ProductsPage() {
               type="search"
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Tìm theo tên sản phẩm…"
-              aria-label="Tìm sản phẩm"
+              placeholder={t("products.searchPlaceholder")}
+              aria-label={t("products.searchLabel")}
               className="min-w-0 flex-1 border-b border-border bg-transparent py-2 text-sm outline-none placeholder:text-muted-foreground focus:border-foreground md:mt-5 md:max-w-sm md:flex-none md:w-full"
             />
             <button
               onClick={() => setSheet(true)}
               className="flex min-h-10 shrink-0 items-center gap-2 border border-border px-4 text-[12px] font-medium uppercase tracking-[0.16em] md:hidden"
             >
-              <SlidersHorizontal className="size-4" /> Lọc{activeCount ? ` (${activeCount})` : ""}
+              <SlidersHorizontal className="size-4" />{" "}
+              {activeCount
+                ? t("products.filterOpenCount", { count: activeCount })
+                : t("products.filterOpen")}
             </button>
           </div>
         </div>
 
         <div className="flex items-center justify-between gap-4 py-8">
           <p className="eyebrow">
-            Đang xem {Math.min(limit, items.length)} / {items.length} sản phẩm
+            {t("products.showing", { shown: Math.min(limit, items.length), total: items.length })}
           </p>
           {activeCount > 0 && (
             <button
               onClick={clear}
               className="flex items-center gap-1.5 text-[12px] text-muted-foreground underline underline-offset-4 hover:text-foreground"
             >
-              <X className="size-3.5" /> Xóa lọc
+              <X className="size-3.5" /> {t("products.filterClear")}
             </button>
           )}
         </div>
@@ -214,20 +221,20 @@ function ProductsPage() {
           className="fixed inset-0 z-[60] md:hidden"
           role="dialog"
           aria-modal="true"
-          aria-label="Bộ lọc"
+          aria-label={t("products.filterTitle")}
         >
           <button
             className="absolute inset-0 bg-foreground/30 animate-in fade-in"
-            aria-label="Đóng bộ lọc"
+            aria-label={t("products.filterClose")}
             onClick={() => setSheet(false)}
           />
           <div className="absolute inset-x-0 bottom-0 max-h-[85svh] overflow-y-auto bg-background px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-4 animate-in slide-in-from-bottom duration-300">
             <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-border" />
             <div className="mb-6 flex items-center justify-between">
-              <p className="font-display text-2xl">Bộ lọc</p>
+              <p className="font-display text-2xl">{t("products.filterTitle")}</p>
               <button
                 onClick={() => setSheet(false)}
-                aria-label="Đóng"
+                aria-label={t("close")}
                 className="grid size-10 place-items-center"
               >
                 <X className="size-5" />
@@ -239,13 +246,13 @@ function ProductsPage() {
                 onClick={clear}
                 className="min-h-12 flex-1 border border-border text-[12px] uppercase tracking-[0.16em]"
               >
-                Xóa lọc
+                {t("products.filterClear")}
               </button>
               <button
                 onClick={() => setSheet(false)}
                 className="min-h-12 flex-[2] bg-foreground text-[12px] uppercase tracking-[0.16em] text-background"
               >
-                Xem {items.length} sản phẩm
+                {t("products.filterApply", { count: items.length })}
               </button>
             </div>
           </div>

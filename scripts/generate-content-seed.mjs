@@ -119,11 +119,9 @@ function boolean(node) {
   return node.kind === ts.SyntaxKind.TrueKeyword;
 }
 
-// Blog cover images are Vite asset imports (e.g. `import cover from "@/assets/blog/foo.jpg"`),
-// so `coverImage` is an identifier in the AST. Resolve it back to its import specifier and
-// normalise to the static URL the public site serves ("old images keep static URL").
+// Default imports by local name, e.g. `import main from "@/assets/catalogue/main.jpg.asset.json"`.
 function collectImports(source) {
-  const file = ts.createSourceFile("blog.ts", source, ts.ScriptTarget.Latest, true);
+  const file = ts.createSourceFile("source.ts", source, ts.ScriptTarget.Latest, true);
   const imports = new Map();
   function visit(node) {
     if (
@@ -140,24 +138,60 @@ function collectImports(source) {
   return imports;
 }
 
-function staticAssetUrl(specifier) {
-  return specifier.startsWith("@/") ? "/" + specifier.slice(2) : specifier;
+// Journal images are public files named through `journalImage("<file>")`, either inline or
+// as a constant. The seed stores the public path, which the public API returns as it is.
+function journalImages(source) {
+  const file = ts.createSourceFile("blog.ts", source, ts.ScriptTarget.Latest, true);
+  const constants = new Map();
+  function visit(node) {
+    if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.initializer)
+      constants.set(node.name.text, node.initializer);
+    ts.forEachChild(node, visit);
+  }
+  visit(file);
+  return constants;
 }
 
-function coverImageUrl(node, imports) {
-  const value = property(node, "coverImage");
+// `posts.image_id` is VARCHAR(64).
+function storedCover(path) {
+  if (path.length > 64) throw new Error(`Cover image path is longer than 64 characters: ${path}`);
+  return path;
+}
+
+function coverImageUrl(node, constants) {
+  let value = property(node, "coverImage");
   if (!value) return null;
-  if (ts.isStringLiteral(value) || ts.isNoSubstitutionTemplateLiteral(value)) return value.text;
-  if (ts.isIdentifier(value)) {
-    const specifier = imports.get(value.text);
-    if (specifier) return staticAssetUrl(specifier);
-    throw new Error("Unresolved cover image import");
-  }
+  if (ts.isIdentifier(value)) value = constants.get(value.text);
+  if (value && (ts.isStringLiteral(value) || ts.isNoSubstitutionTemplateLiteral(value)))
+    return storedCover(value.text);
+  if (
+    value &&
+    ts.isCallExpression(value) &&
+    ts.isIdentifier(value.expression) &&
+    value.expression.text === "journalImage"
+  )
+    return storedCover("/journal/" + string(value.arguments[0]));
   throw new Error("Unsupported cover image source");
 }
 
+// A product image is a public path, written out or read from an imported `.asset.json`
+// (`asset.url`, optionally wrapped in a helper that adds the base path).
+function productImageUrl(node, imports, assets) {
+  if (ts.isCallExpression(node) && node.arguments.length === 1) node = node.arguments[0];
+  if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) return node.text;
+  if (
+    ts.isPropertyAccessExpression(node) &&
+    node.name.text === "url" &&
+    ts.isIdentifier(node.expression)
+  ) {
+    const url = assets[imports.get(node.expression.text)];
+    if (typeof url === "string") return url;
+  }
+  throw new Error("Unsupported product image source");
+}
+
 function buildPosts(blog) {
-  const imports = collectImports(blog);
+  const constants = journalImages(blog);
   return array(blog, "blogPosts").map((node) => {
     const postSlug = slug(required(node, "slug"));
     const content = required(node, "content");
@@ -171,16 +205,19 @@ function buildPosts(blog) {
       categorySlug: categorySlug(string(required(node, "category"))),
       status: "published",
       publishAt: string(required(node, "date")),
-      imageId: "journal-cover-" + postSlug,
+      // The admin's cover picker edits `image_id`, so the cover goes there: a path kept in
+      // `cover_image_id` would win over every later replacement.
+      imageId: coverImageUrl(node, constants),
       readTime: optionalString(property(node, "readTime")),
-      coverImageId: coverImageUrl(node, imports),
+      coverImageId: null,
       seoTitle: "",
       seoDescription: "",
     };
   });
 }
 
-function buildProducts(catalogue) {
+function buildProducts(catalogue, assets) {
+  const imports = collectImports(catalogue);
   return array(catalogue, "products").map((node, index) => {
     if (
       !ts.isCallExpression(node) ||
@@ -193,7 +230,7 @@ function buildProducts(catalogue) {
     const images = args[7];
     if (!ts.isArrayLiteralExpression(images))
       throw new Error("Product images must be a literal array");
-    const imageIds = images.elements.map((_, k) => `catalogue-image-${productSlug}-${k}`);
+    const imageIds = images.elements.map((image) => productImageUrl(image, imports, assets));
     const nameVi = string(args[1]);
     const nameEn = string(args[2]);
     const descriptionVi = string(args[5]);
@@ -290,9 +327,10 @@ function buildContentCategories(blog) {
   }));
 }
 
-export function buildContentSeed(catalogue, blog) {
+/** `assets` maps the import specifier of each `.asset.json` the catalogue imports to its `url`. */
+export function buildContentSeed(catalogue, blog, assets = {}) {
   const posts = buildPosts(blog);
-  const products = buildProducts(catalogue);
+  const products = buildProducts(catalogue, assets);
   const productCategories = buildProductCategories(catalogue);
   const productTypes = buildProductTypes(catalogue);
   const contentCategories = buildContentCategories(blog);
@@ -307,12 +345,23 @@ export function buildContentSeed(catalogue, blog) {
   return { posts, products, productCategories, productTypes, contentCategories };
 }
 
+/** The public path of every `.asset.json` the catalogue imports, by import specifier. */
+export async function readCatalogueAssets(catalogue, directory = root) {
+  const assets = {};
+  for (const specifier of collectImports(catalogue).values()) {
+    if (!specifier.startsWith("@/") || !specifier.endsWith(".asset.json")) continue;
+    const file = join(directory, "src", specifier.slice(2));
+    assets[specifier] = JSON.parse(await readFile(file, "utf8")).url;
+  }
+  return assets;
+}
+
 export async function writeContentSeed(directory = root) {
   const [catalogue, blog] = await Promise.all([
     readFile(join(directory, "src/data/catalogue.ts"), "utf8"),
     readFile(join(directory, "src/data/blog.ts"), "utf8"),
   ]);
-  const seed = buildContentSeed(catalogue, blog);
+  const seed = buildContentSeed(catalogue, blog, await readCatalogueAssets(catalogue, directory));
   const json = JSON.stringify(seed, null, 2) + "\n";
   await Promise.all([
     writeFile(join(directory, "src/data/content-seed.generated.json"), json),

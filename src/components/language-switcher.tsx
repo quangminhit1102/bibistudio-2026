@@ -2,6 +2,7 @@
 // Simple language selector dropdown with flag icons. Vietnamese is active; English is shown as "coming soon".
 import { useState, useRef, useEffect } from "react";
 import { ChevronDown, Check } from "lucide-react";
+import { t } from "@/lib/messages";
 
 export type Language = "vi" | "en";
 
@@ -73,7 +74,7 @@ export function LanguageSwitcher({ variant = "header" }: LanguageSwitcherProps) 
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between text-muted-foreground px-2">
           <span className="text-xs font-bold uppercase tracking-[0.2em]">
-            Ngôn ngữ / Language
+            {t("language.heading")}
           </span>
           <div className="ml-4 h-px flex-1 bg-border" />
         </div>
@@ -96,7 +97,7 @@ export function LanguageSwitcher({ variant = "header" }: LanguageSwitcherProps) 
                 </div>
                 {l.soon && (
                   <span className="rounded-md bg-secondary px-2 py-0.5 text-[10px] font-bold uppercase text-muted-foreground">
-                    Sắp ra mắt
+                    {t("language.soon")}
                   </span>
                 )}
               </div>
