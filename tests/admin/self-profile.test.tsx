@@ -28,11 +28,21 @@ it("self form edits only name/email/phone, preserves draft on refetch and save f
   await waitFor(() => expect(screen.getByRole("button", { name: "Lưu thông tin" })).toBeDisabled());
   expect(onSave.mock.calls[0][0]).toEqual({ displayName: "Tên mới", email: null, phone: null });
 });
-it("Master has no mutable controls or save action", () => {
-  render(<SelfProfileForm initial={{ ...initial, isMaster: true }} onSave={vi.fn()} />);
-  expect(screen.getByLabelText("Tên hiển thị")).toHaveAttribute("readonly");
-  expect(screen.queryByRole("button", { name: "Lưu thông tin" })).not.toBeInTheDocument();
-  expect(screen.getByText("Tài khoản quản trị gốc được bảo vệ")).toBeInTheDocument();
+it("the master account edits its own name, email and phone like any user", async () => {
+  const onSave = vi.fn(async (d, r) => ({ ...initial, isMaster: true, ...d, revision: r + 1 }));
+  render(<SelfProfileForm initial={{ ...initial, isMaster: true }} onSave={onSave} />);
+  expect(screen.getByLabelText("Tên tài khoản")).toHaveAttribute("readonly");
+  for (const label of ["Tên hiển thị", "Email", "Số điện thoại"])
+    expect(screen.getByLabelText(label)).not.toHaveAttribute("readonly");
+  expect(screen.queryByText("Tài khoản quản trị gốc được bảo vệ")).not.toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Lưu thông tin" })).toBeDisabled();
+  fireEvent.change(screen.getByLabelText("Tên hiển thị"), { target: { value: "Quản trị mới" } });
+  fireEvent.click(screen.getByRole("button", { name: "Lưu thông tin" }));
+  await waitFor(() => expect(onSave).toHaveBeenCalledTimes(1));
+  expect(onSave.mock.calls[0]).toEqual([
+    { displayName: "Quản trị mới", email: null, phone: null },
+    initial.revision,
+  ]);
 });
 it("phone validates locally and reverting metadata resets the dirty state", async () => {
   const save = vi.fn(),
@@ -45,4 +55,14 @@ it("phone validates locally and reverting metadata resets the dirty state", asyn
   expect(save).not.toHaveBeenCalled();
   fireEvent.change(input, { target: { value: "" } });
   await waitFor(() => expect(dirty).toHaveBeenLastCalledWith(false));
+});
+it("a newer revision with the same saved values is adopted without touching the draft", async () => {
+  const onSave = vi.fn(async (d, r) => ({ ...initial, ...d, revision: r + 1 }));
+  const view = render(<SelfProfileForm initial={initial} onSave={onSave} />);
+  fireEvent.change(screen.getByLabelText("Tên hiển thị"), { target: { value: "Tên mới" } });
+  view.rerender(<SelfProfileForm initial={{ ...initial, revision: 2 }} onSave={onSave} />);
+  expect(screen.getByLabelText("Tên hiển thị")).toHaveValue("Tên mới");
+  fireEvent.click(screen.getByRole("button", { name: "Lưu thông tin" }));
+  await waitFor(() => expect(onSave).toHaveBeenCalledTimes(1));
+  expect(onSave.mock.calls[0][1]).toBe(2);
 });

@@ -231,7 +231,13 @@ export function createApp(release: ReleaseInfo, options: AppOptions = {}): Expre
         clock: options.clock ?? systemClock,
       }),
     );
-    app.use("/api/profile", profileRoutes(service, auth, authConfig));
+    app.use(
+      "/api/profile",
+      profileRoutes(service, auth, authConfig, {
+        pool: options.db,
+        clock: options.clock ?? systemClock,
+      }),
+    );
   } else
     app.use("/api/profile", () => {
       throw new ApiError(503, "PROFILE_NOT_READY", "Dịch vụ hồ sơ chưa sẵn sàng");

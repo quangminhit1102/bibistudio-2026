@@ -110,7 +110,7 @@ test("User-only and no-role users edit only their own metadata with stable autho
   assert.equal(self.status, 200);
   assert.deepEqual(self.body.permissions, []);
 });
-test("self API rejects escalation, wrong origin, Master, management and stale simultaneous revisions", async (t) => {
+test("self API rejects escalation, wrong origin, management and stale simultaneous revisions", async (t) => {
   const f = await fixture(t),
     user = await f.auth.login({ username: "user01", password: f.secrets.userPassword });
   const self = (await f.request("/api/profile", "GET", undefined, user.accessToken)).body;
@@ -139,15 +139,6 @@ test("self API rejects escalation, wrong origin, Master, management and stale si
       key,
     );
   }
-  assert.equal(
-    (
-      await f.request("/api/profile", "PATCH", {
-        revision: f.master.profile.revision,
-        displayName: "Forbidden",
-      })
-    ).status,
-    403,
-  );
   assert.equal(
     (
       await f.request(
@@ -234,4 +225,43 @@ test("manifest4 readiness refuses missing profile configuration", async (t) => {
     ),
   );
   assert.equal((await fetch(base + "/api/ready")).status, 503);
+});
+test("the master account edits its own display name, email and phone", async (t) => {
+  const f = await fixture(t),
+    before = (await f.request()).body;
+  assert.equal(before.isMaster, true);
+  const changed = await f.request("/api/profile", "PATCH", {
+    revision: before.revision,
+    displayName: "Quản trị mới",
+    email: "root@example.test",
+    phone: "0900000001",
+  });
+  assert.equal(changed.status, 200);
+  assert.equal(changed.body.displayName, "Quản trị mới");
+  assert.equal(changed.body.email, "root@example.test");
+  assert.equal(changed.body.phone, "0900000001");
+  assert.equal(changed.body.revision, before.revision + 1);
+  assert.equal(changed.body.isMaster, true);
+  assert.equal(changed.body.username, before.username);
+  assert.deepEqual(changed.body.roles, before.roles);
+  const [audit] = await f.pool.query(
+    "SELECT actor_id,target_id,metadata FROM audit_logs WHERE action='profile.update'",
+  );
+  assert.equal(audit.length, 1);
+  assert.equal(audit[0].actor_id, before.id);
+  assert.equal(audit[0].target_id, before.id);
+  const metadata =
+    typeof audit[0].metadata === "string" ? JSON.parse(audit[0].metadata) : audit[0].metadata;
+  assert.deepEqual(metadata.changedFields, ["displayName", "email", "phone"]);
+  for (const [key, value] of Object.entries({ username: "root2", roles: [], active: false }))
+    assert.equal(
+      (
+        await f.request("/api/profile", "PATCH", {
+          revision: changed.body.revision,
+          [key]: value,
+        })
+      ).status,
+      400,
+      key,
+    );
 });

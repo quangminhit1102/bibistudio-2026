@@ -29,3 +29,22 @@ it("choosing an image only previews; explicit save uploads, metadata dirty block
   expect(screen.getByLabelText("Chọn ảnh đại diện")).toBeDisabled();
   expect(screen.getByText(/Lưu hoặc hoàn tác thông tin/)).toBeInTheDocument();
 });
+it("the master account's avatar is locked on the accounts page and editable on its own profile", () => {
+  const api = { upload: vi.fn(), remove: vi.fn() },
+    master = { ...profile, phone: null, avatarId: "current", isMaster: true };
+  const view = render(
+    <AvatarEditor user={master} api={api} onSaved={vi.fn()} metadataDirty={false} />,
+  );
+  expect(screen.getByText("Ảnh đại diện ở chế độ chỉ xem.")).toBeInTheDocument();
+  expect(screen.queryByLabelText("Chọn ảnh đại diện")).not.toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Xóa ảnh" })).not.toBeInTheDocument();
+  view.rerender(
+    <AvatarEditor user={master} api={api} onSaved={vi.fn()} metadataDirty={false} self />,
+  );
+  expect(screen.getByRole("button", { name: "Chọn ảnh" })).toBeEnabled();
+  expect(screen.getByRole("button", { name: "Xóa ảnh" })).toBeEnabled();
+  view.rerender(
+    <AvatarEditor user={master} api={api} onSaved={vi.fn()} metadataDirty={false} self readOnly />,
+  );
+  expect(screen.queryByLabelText("Chọn ảnh đại diện")).not.toBeInTheDocument();
+});

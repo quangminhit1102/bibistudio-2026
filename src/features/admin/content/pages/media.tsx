@@ -4,6 +4,7 @@ import { useAdmin, useEntity, useRole } from "../../services/context";
 import { can } from "../../accounts/permissions";
 import { createMediaService } from "../media/service";
 import { MediaImage } from "../components/media-image";
+import { useMediaFacts } from "../media/facts";
 import {
   PageTitle,
   Button,
@@ -23,6 +24,12 @@ function formatBytes(size: number): string {
 }
 function formatDimensions(width: number, height: number): string {
   return width > 0 && height > 0 ? `${width}×${height}` : "—";
+}
+export function MediaFactsLine({ asset, withMime }: { asset: MediaAsset; withMime?: boolean }) {
+  const { facts, pending } = useMediaFacts(asset);
+  if (pending) return <>…</>;
+  const figures = `${formatDimensions(facts?.width ?? 0, facts?.height ?? 0)} · ${formatBytes(facts?.size ?? 0)}`;
+  return <>{withMime ? `${facts?.mime || asset.mime} · ${figures}` : figures}</>;
 }
 export default function Media() {
   const runtime = useAdmin();
@@ -151,7 +158,7 @@ export default function Media() {
                   <strong>{asset.name}</strong>
                 </label>
                 <small>
-                  {formatDimensions(asset.width, asset.height)} · {formatBytes(asset.size)}
+                  <MediaFactsLine asset={asset} />
                 </small>
               </div>
             </div>
@@ -171,8 +178,7 @@ export default function Media() {
             <>
               <MediaImage id={preview.id} alt={preview.name} className="a-media-preview" />
               <p style={{ marginTop: 12 }}>
-                {preview.mime} · {formatDimensions(preview.width, preview.height)} ·{" "}
-                {formatBytes(preview.size)}
+                <MediaFactsLine asset={preview} withMime />
               </p>
             </>
           )}

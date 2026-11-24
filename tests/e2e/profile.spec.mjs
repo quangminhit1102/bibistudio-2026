@@ -129,7 +129,7 @@ test(
         await page.getByLabel("Tên tài khoản", { exact: true }).getAttribute("readonly"),
         "",
       );
-      assert.equal(await page.getByLabel("Mật khẩu mới").count(), 0);
+      assert.equal(await page.getByLabel("Mật khẩu mới", { exact: true }).count(), 1);
       await page.getByLabel("Tên hiển thị", { exact: true }).fill("Khách đã cập nhật");
       await page.getByLabel("Email", { exact: true }).fill("profile@example.test");
       await page.getByLabel("Số điện thoại", { exact: true }).fill("0392 969 000");
@@ -326,13 +326,69 @@ test(
       await shot("managed-account-desktop");
       await logout();
       await login("admin", f.secrets.masterPassword);
-      await page.getByText("Tài khoản quản trị gốc được bảo vệ", { exact: true }).waitFor();
-      assert.equal(
-        await page.getByRole("button", { name: "Lưu thông tin", exact: true }).count(),
-        0,
+      // The master account edits its own profile like any user.
+      await page.getByLabel("Tên hiển thị", { exact: true }).fill("Quản trị mới");
+      const ownSave = page.waitForResponse(
+        (r) => r.request().method() === "PATCH" && r.url().endsWith("/api/profile"),
       );
-      assert.equal(await page.getByLabel("Chọn ảnh đại diện", { exact: true }).count(), 0);
-      await shot("master-readonly");
+      await page.getByRole("button", { name: "Lưu thông tin", exact: true }).click();
+      assert.equal((await ownSave).status(), 200);
+      await page.getByText("Đã lưu hồ sơ", { exact: true }).waitFor();
+      assert.equal(await page.getByText("Tài khoản quản trị gốc được bảo vệ").count(), 0);
+      assert.equal(await page.getByLabel("Chọn ảnh đại diện", { exact: true }).count(), 1);
+      await page.getByRole("button", { name: "Chọn ảnh", exact: true }).waitFor();
+      const [[masterRow]] = await f.pool.query(
+        "SELECT display_name FROM users WHERE username='admin'",
+      );
+      assert.equal(masterRow.display_name, "Quản trị mới");
+      await shot("master-own-profile");
+      // Changing the password signs the account out on other devices and keeps this one.
+      const elsewhere = await browser.newContext({ viewport: { width: 1440, height: 1000 } }),
+        second = await elsewhere.newPage();
+      second.setDefaultTimeout(20000);
+      await second.route(/^https:\/\/fonts\.googleapis\.com\//, (route) =>
+        route.fulfill({ contentType: "text/css", body: "/* offline fallback */" }),
+      );
+      const signIn = async (secret) => {
+        await second.getByLabel("Tên tài khoản", { exact: true }).fill("admin");
+        await second.getByLabel("Mật khẩu", { exact: true }).fill(secret);
+        await second.getByRole("button", { name: "Đăng nhập", exact: true }).click();
+      };
+      await second.goto(base + "/admin/settings/profile");
+      await signIn(f.secrets.masterPassword);
+      await second.getByRole("heading", { name: "Hồ sơ", exact: true }).waitFor();
+      const newPassword = "Mật khẩu mới 2026";
+      await page.getByLabel("Tên hiển thị", { exact: true }).fill("Nháp qua đổi mật khẩu");
+      await page.getByLabel("Mật khẩu hiện tại", { exact: true }).fill(f.secrets.masterPassword);
+      await page.getByLabel("Mật khẩu mới", { exact: true }).fill(newPassword);
+      await page.getByLabel("Nhập lại mật khẩu mới", { exact: true }).fill(newPassword);
+      const passwordChanged = page.waitForResponse(
+        (r) => r.request().method() === "POST" && r.url().endsWith("/api/profile/password"),
+      );
+      await page.getByRole("button", { name: "Đổi mật khẩu", exact: true }).click();
+      assert.equal((await passwordChanged).status(), 200);
+      await page
+        .getByText("Đã đổi mật khẩu. Các thiết bị khác đã được đăng xuất.", { exact: true })
+        .waitFor();
+      assert.equal(await page.getByLabel("Mật khẩu hiện tại", { exact: true }).inputValue(), "");
+      // An edit not yet saved survives the password change and still saves.
+      assert.equal(
+        await page.getByLabel("Tên hiển thị", { exact: true }).inputValue(),
+        "Nháp qua đổi mật khẩu",
+      );
+      await shot("password-changed");
+      await page.getByRole("button", { name: "Lưu thông tin", exact: true }).click();
+      await page.getByText("Đã lưu hồ sơ", { exact: true }).waitFor();
+      await page.reload();
+      await page.getByRole("heading", { name: "Hồ sơ", exact: true }).waitFor();
+      await second.reload();
+      await second.getByRole("button", { name: "Đăng nhập", exact: true }).waitFor();
+      await signIn(f.secrets.masterPassword);
+      await second.getByRole("alert").first().waitFor();
+      assert.equal(await second.getByRole("heading", { name: "Hồ sơ", exact: true }).count(), 0);
+      await signIn(newPassword);
+      await second.getByRole("heading", { name: "Hồ sơ", exact: true }).waitFor();
+      await elsewhere.close();
       assert.deepEqual(errors, []);
     } finally {
       await browser?.close();

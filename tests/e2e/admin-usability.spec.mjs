@@ -206,8 +206,9 @@ test(
       assert.equal(await page.getByRole("dialog").count(), 0);
 
       await go("/admin/settings/profile");
-      await page.getByText("Tài khoản quản trị gốc được bảo vệ", { exact: true }).waitFor();
-      const readOnly = page.locator("input[readonly]").first();
+      // The sign-in name is the one field of a user's own profile that never changes.
+      const readOnly = page.getByLabel("Tên tài khoản", { exact: true });
+      await readOnly.waitFor();
       await readOnly.focus();
       const initial = await readOnly.inputValue();
       await page.keyboard.type("Không được sửa");

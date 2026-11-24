@@ -18,7 +18,7 @@ erDiagram
   visitor_sessions ||--o{ visitor_viewed_products : interests
 ```
 
-`users.is_master` xác định tài khoản quản trị chính duy nhất. Backend từ chối thay đổi thông tin, mật khẩu, trạng thái, xóa hoặc đổi vai trò của tài khoản này, kể cả chính nó. Master vẫn có thể đăng xuất/thu hồi phiên của mình. Mật khẩu bootstrap đọc từ biến môi trường và hash bcrypt cost12; không có mật khẩu mặc định trong mã runtime.
+`users.is_master` xác định tài khoản quản trị chính duy nhất. Các route quản lý tài khoản (`/api/accounts/...`) từ chối thay đổi thông tin, mật khẩu, trạng thái, ảnh đại diện, xóa hoặc đổi vai trò của tài khoản này, kể cả khi chính nó gọi. Từ 24/11, tài khoản này tự sửa tên hiển thị, email, số điện thoại, ảnh đại diện và mật khẩu của mình qua `/api/profile`; username, vai trò và trạng thái vẫn không đổi được. Master vẫn có thể đăng xuất/thu hồi phiên của mình. Mật khẩu bootstrap đọc từ biến môi trường và hash bcrypt cost12; không có mật khẩu mặc định trong mã runtime.
 
 Một user có nhiều role; quyền là hợp của các `resource.action`. Built-in Admin có `full_access`, gồm chức năng bổ sung sau này. User khởi tạo có `customer_access.view`. Không suy ra quyền từ tên role hoặc một `roleId` giả trên frontend. Không cho người có quyền hạn chế cấp quyền vượt quyền của mình hoặc chỉnh role đang cấp quyền cho chính mình. Role Admin không thể đổi/xóa; role User không thể xóa. Đổi quyền role làm mất hiệu lực phiên của mọi account bị ảnh hưởng.
 
@@ -96,16 +96,19 @@ Identity schema vẫn4. Feature migration tại `backend/profile-migrations/001_
 | Endpoint | Quyền và dữ liệu |
 | --- | --- |
 | `GET /api/profile` | Mọi active session, chỉ chính mình; PrincipalDto + `phone`, `avatarId` nullable |
-| `PATCH /api/profile` | Mọi active non-Master, strict body `{revision, displayName?, email?, phone?}`; không username/password/role/active/targetId |
+| `PATCH /api/profile` | Mọi active session, kể cả Master, chỉ chính mình; strict body `{revision, displayName?, email?, phone?}`; không username/password/role/active/targetId |
 | `PUT /api/profile/avatar` | JSON `{mimeType, data}` (base64 chuẩn) cho JPEG/PNG; binary cũ vẫn nhận nếu hosting cho phép; Bearer + Origin + X-Bibi-Request; `If-Match: "<revision>"` bắt buộc |
 | `DELETE /api/profile/avatar` | Gỡ ảnh chính mình, cùng header/revision; ảnh cũ được retire, không xóa file ngay |
+| `POST /api/profile/password` | Mọi active session, kể cả Master, chỉ chính mình; strict body `{currentPassword, newPassword}`; Bearer + Origin + X-Bibi-Request; trả PrincipalDto với `revision` mới |
 | `GET /api/profile/avatar/:assetId` | Bearer; chỉ ảnh hiện tại; `private, no-store` |
 | `PUT/DELETE /api/accounts/:id/avatar` | `account.update`, non-Master target, cùng revision/Origin |
 | `GET /api/accounts/:id/avatar/:assetId` | `account.view`; không trả path nội bộ |
 
 Account create/update thêm `phone?: string|null`. Nếu client không gửi phone, các trường cũ giữ hợp đồng tương thích. Session/profile refresh phản ánh phone/avatar metadata; avatar bytes không nằm trong JWT/DB/localStorage. Access token vẫn chỉ trong memory; private image dùng fetch Blob và ObjectURL được thu hồi khi đổi ảnh/logout/unmount. Upload và JSON dùng chung refresh-singleflight/epoch guard; không replay mutation từ phiên cũ sang user khác.
 
-Lỗi chính:400 input,401 phiên,403 permission/Master/Origin,404 ảnh không còn hiện tại,409 revision,413>2MiB,415 định dạng,428 thiếu If-Match,429 worker/rate/quota,503 schema/storage/commit không rõ kết quả. Khi mất phản hồi commit, tải lại hồ sơ để biết trạng thái trước khi thử lại; không tự xóa file có thể đã được DB tham chiếu. Audit chỉ ghi changedFields/assetIds, không email/phone/bytes/token.
+Đổi mật khẩu: mật khẩu mới ít nhất8 ký tự, tối đa72 byte UTF-8, giữ nguyên khoảng trắng đầu/cuối, phải khác mật khẩu hiện tại; hash bcrypt cost12. Thành công thì tăng `revision`, thu hồi mọi phiên khác của tài khoản (`revoke_reason='password_changed'`), giữ phiên đang gọi và không tăng `auth_version`. Mọi lần gọi đều tính vào giới hạn5 lần/15 phút mỗi tài khoản và30 lần/15 phút mỗi dải mạng;429 kèm `Retry-After`. Lỗi:400 `INVALID_INPUT`,400 `INVALID_CURRENT_PASSWORD`,400 `PASSWORD_UNCHANGED`,409 `REVISION_CONFLICT` khi hai lần đổi chạy cùng lúc. Audit `profile.password_change` chỉ ghi `sessionCount` (số phiên bị thu hồi), không ghi mật khẩu hay hash. Sau khi Master đổi mật khẩu, mật khẩu bootstrap trong biến môi trường không còn dùng được; quên mật khẩu mới thì chỉ khôi phục bằng thao tác trên DB.
+
+Lỗi chính:400 input,401 phiên,403 permission/Master (route quản lý)/Origin,404 ảnh không còn hiện tại,409 revision,413>2MiB,415 định dạng,428 thiếu If-Match,429 worker/rate/quota,503 schema/storage/commit không rõ kết quả. Khi mất phản hồi commit, tải lại hồ sơ để biết trạng thái trước khi thử lại; không tự xóa file có thể đã được DB tham chiếu. Audit chỉ ghi changedFields/assetIds, không email/phone/bytes/token.
 
 Mỗi actor10upload/15phút (DB), một worker/process5giây; mỗi user tối đa128asset metadata/64MiB giữ lại. Xem [vận hành và giới hạn hosting](admin-profile-operations.md).
 
