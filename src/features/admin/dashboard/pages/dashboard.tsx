@@ -12,6 +12,12 @@ import type { Resource } from "../../services/contracts";
 import type { ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { loadServerDashboard } from "../service";
+import { moduleEnabled } from "../../modules";
+import type { AdminModuleId } from "@/platform/site-contract";
+/** A block about a module the site has switched off is left out, whatever the role. */
+function Module({ id, children }: { id: AdminModuleId; children: ReactNode }) {
+  return moduleEnabled(id) ? children : null;
+}
 function Access({ resource, children }: { resource: Resource; children: ReactNode }) {
   const runtime = useAdmin();
   const role = useRole();
@@ -34,16 +40,19 @@ export default function Dashboard() {
   return (
     <>
       <PageTitle title="Bảng điều khiển" description="Một góc nhìn rõ ràng về hoạt động studio." />
-      <DateFilter
-        value={range}
-        onChange={setRange}
-        resolvePreset={(p) => businessRange(p, anchor)}
-        caption={
-          server
-            ? "Bộ lọc áp dụng cho phiếu mua hàng. Khách truy cập tổng hợp trong 90 ngày."
-            : "Ngày theo giờ Việt Nam"
-        }
-      />
+      {/* With a signed-in server session the range only filters purchase slips. */}
+      {(!server || moduleEnabled("sales")) && (
+        <DateFilter
+          value={range}
+          onChange={setRange}
+          resolvePreset={(p) => businessRange(p, anchor)}
+          caption={
+            server
+              ? "Bộ lọc áp dụng cho phiếu mua hàng. Khách truy cập tổng hợp trong 90 ngày."
+              : "Ngày theo giờ Việt Nam"
+          }
+        />
+      )}
       {server && live.error && (
         <ErrorState error={live.error} onRetry={() => void live.refetch()} />
       )}
@@ -62,55 +71,71 @@ export default function Dashboard() {
           return (
             <>
               <div className="a-kpis">
-                <Kpi
-                  title="Doanh thu ghi nhận"
-                  value={money(b.total)}
-                  raw={b.total}
-                  previous={prev.total}
-                  description="Tổng phiếu đã lưu, chưa hủy trong kỳ. Không phải tiền đã thu; không tự tính thuế."
-                />
-                <Kpi
-                  title="Phiếu mua hàng"
-                  value={b.count}
-                  raw={b.count}
-                  previous={prev.count}
-                  description="Phiếu đã lưu và chưa hủy trong khoảng ngày được chọn."
-                />
-                <Kpi
-                  title="Sản phẩm"
-                  value={r.productCount}
-                  description="Số bản ghi sản phẩm đang có, không bao gồm sách."
-                />
-                <Kpi
-                  title="Khách truy cập"
-                  value={
-                    server ? (live.data?.visitors?.totalVisitors ?? "—") : r.current.uniqueVisitors
-                  }
-                  raw={server ? undefined : r.current.uniqueVisitors}
-                  previous={server ? undefined : r.previous.uniqueVisitors}
-                  description={
-                    server
-                      ? "Trình duyệt ẩn danh được ghi nhận trong 90 ngày gần nhất."
-                      : "Số anonymous visitor khác nhau có phiên bắt đầu trong kỳ."
-                  }
-                />
-                <Kpi
-                  title={server ? "Tài khoản" : "Người dùng hoạt động"}
-                  value={server ? (live.data?.accounts ?? "—") : active}
-                  description={
-                    server
-                      ? "Tổng tài khoản trên máy chủ, gồm hoạt động và ngừng hoạt động."
-                      : "Tài khoản quản trị hoạt động và có lastLogin trong kỳ."
-                  }
-                />
-                <Kpi
-                  title="Tỷ lệ chuyển đổi"
-                  value="—"
-                  description="Chưa có dữ liệu liên kết giữa khách truy cập và phiếu mua hàng."
-                />
+                <Module id="sales">
+                  <Kpi
+                    title="Doanh thu ghi nhận"
+                    value={money(b.total)}
+                    raw={b.total}
+                    previous={prev.total}
+                    description="Tổng phiếu đã lưu, chưa hủy trong kỳ. Không phải tiền đã thu; không tự tính thuế."
+                  />
+                </Module>
+                <Module id="sales">
+                  <Kpi
+                    title="Phiếu mua hàng"
+                    value={b.count}
+                    raw={b.count}
+                    previous={prev.count}
+                    description="Phiếu đã lưu và chưa hủy trong khoảng ngày được chọn."
+                  />
+                </Module>
+                <Module id="products">
+                  <Kpi
+                    title="Sản phẩm"
+                    value={r.productCount}
+                    description="Số bản ghi sản phẩm đang có, không bao gồm sách."
+                  />
+                </Module>
+                <Module id="analytics">
+                  <Kpi
+                    title="Khách truy cập"
+                    value={
+                      server
+                        ? (live.data?.visitors?.totalVisitors ?? "—")
+                        : r.current.uniqueVisitors
+                    }
+                    raw={server ? undefined : r.current.uniqueVisitors}
+                    previous={server ? undefined : r.previous.uniqueVisitors}
+                    description={
+                      server
+                        ? "Trình duyệt ẩn danh được ghi nhận trong 90 ngày gần nhất."
+                        : "Số anonymous visitor khác nhau có phiên bắt đầu trong kỳ."
+                    }
+                  />
+                </Module>
+                <Module id="accounts">
+                  <Kpi
+                    title={server ? "Tài khoản" : "Người dùng hoạt động"}
+                    value={server ? (live.data?.accounts ?? "—") : active}
+                    description={
+                      server
+                        ? "Tổng tài khoản trên máy chủ, gồm hoạt động và ngừng hoạt động."
+                        : "Tài khoản quản trị hoạt động và có lastLogin trong kỳ."
+                    }
+                  />
+                </Module>
+                <Module id="sales">
+                  <Kpi
+                    title="Tỷ lệ chuyển đổi"
+                    value="—"
+                    description="Chưa có dữ liệu liên kết giữa khách truy cập và phiếu mua hàng."
+                  />
+                </Module>
               </div>
               <div className="a-dashboard-grid">
-                <ChartCard title="Doanh thu ghi nhận theo ngày" data={b.trend} />
+                <Module id="sales">
+                  <ChartCard title="Doanh thu ghi nhận theo ngày" data={b.trend} />
+                </Module>
                 <Access resource="sales">
                   <Card>
                     <div className="a-card-head">
@@ -157,74 +182,92 @@ export default function Dashboard() {
                 </Access>
               </div>
               <div className="a-grid-2">
-                <ChartCard title="Phiếu mua hàng theo thời gian" data={b.countTrend} kind="bar" />
-                {server ? (
-                  <Card>
-                    <h2>Sản phẩm được quan tâm</h2>
-                    {live.isPending ? (
-                      <Skeleton rows={2} />
-                    ) : live.data?.visitors ? (
-                      <>
-                        <p>{live.data.visitors.totalSessions} phiên trong 90 ngày</p>
-                        <ul>
-                          {live.data.visitors.products.slice(0, 10).map((product) => (
-                            <li key={product.slug}>
-                              {product.name} · {product.interestedVisitors} khách
-                            </li>
-                          ))}
-                        </ul>
-                        {!live.data.visitors.products.length && (
-                          <p>Chưa ghi nhận sản phẩm được quan tâm.</p>
-                        )}
-                      </>
-                    ) : (
-                      <p>Không có dữ liệu được phép xem.</p>
-                    )}
-                  </Card>
-                ) : (
-                  <ChartCard title="Khách truy cập theo ngày" data={r.current.trend} kind="line" />
-                )}
-                <ChartCard
-                  title="Giá trị sản phẩm ghi nhận theo nhóm"
-                  data={categories}
-                  kind="donut"
-                />
-                {!server && (
-                  <ChartCard title="Nguồn truy cập" data={r.current.sources} kind="donut" />
-                )}
-                <ChartCard
-                  title="Sản phẩm bán nhiều"
-                  data={b.byProduct
-                    .slice()
-                    .sort((a, c) => c.quantity - a.quantity)
-                    .slice(0, 8)
-                    .map((p) => ({ name: p.name, value: p.quantity }))}
-                  kind="bar"
-                />
-                <Access resource="products">
-                  <Card>
-                    <h2>Sản phẩm sắp hết hàng</h2>
-                    <div className="a-table-wrap" style={{ marginTop: 18 }}>
-                      <table className="a-table" style={{ minWidth: 300 }}>
-                        <tbody>
-                          {r.products
-                            .filter((p) => p.stock - p.reserved < 35)
-                            .slice(0, 6)
-                            .map((p) => (
-                              <tr key={p.id}>
-                                <td>
-                                  <Link to={("/admin/products/" + p.id) as "/admin"}>{p.name}</Link>
-                                </td>
-                                <td>
-                                  <Badge tone="warning">{p.stock - p.reserved} khả dụng</Badge>
-                                </td>
-                              </tr>
+                <Module id="sales">
+                  <ChartCard title="Phiếu mua hàng theo thời gian" data={b.countTrend} kind="bar" />
+                </Module>
+                <Module id="analytics">
+                  {server ? (
+                    <Card>
+                      <h2>Sản phẩm được quan tâm</h2>
+                      {live.isPending ? (
+                        <Skeleton rows={2} />
+                      ) : live.data?.visitors ? (
+                        <>
+                          <p>{live.data.visitors.totalSessions} phiên trong 90 ngày</p>
+                          <ul>
+                            {live.data.visitors.products.slice(0, 10).map((product) => (
+                              <li key={product.slug}>
+                                {product.name} · {product.interestedVisitors} khách
+                              </li>
                             ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </Card>
-                </Access>
+                          </ul>
+                          {!live.data.visitors.products.length && (
+                            <p>Chưa ghi nhận sản phẩm được quan tâm.</p>
+                          )}
+                        </>
+                      ) : (
+                        <p>Không có dữ liệu được phép xem.</p>
+                      )}
+                    </Card>
+                  ) : (
+                    <ChartCard
+                      title="Khách truy cập theo ngày"
+                      data={r.current.trend}
+                      kind="line"
+                    />
+                  )}
+                </Module>
+                <Module id="sales">
+                  <ChartCard
+                    title="Giá trị sản phẩm ghi nhận theo nhóm"
+                    data={categories}
+                    kind="donut"
+                  />
+                </Module>
+                {!server && (
+                  <Module id="analytics">
+                    <ChartCard title="Nguồn truy cập" data={r.current.sources} kind="donut" />
+                  </Module>
+                )}
+                <Module id="sales">
+                  <ChartCard
+                    title="Sản phẩm bán nhiều"
+                    data={b.byProduct
+                      .slice()
+                      .sort((a, c) => c.quantity - a.quantity)
+                      .slice(0, 8)
+                      .map((p) => ({ name: p.name, value: p.quantity }))}
+                    kind="bar"
+                  />
+                </Module>
+                <Module id="inventory">
+                  <Access resource="products">
+                    <Card>
+                      <h2>Sản phẩm sắp hết hàng</h2>
+                      <div className="a-table-wrap" style={{ marginTop: 18 }}>
+                        <table className="a-table" style={{ minWidth: 300 }}>
+                          <tbody>
+                            {r.products
+                              .filter((p) => p.stock - p.reserved < 35)
+                              .slice(0, 6)
+                              .map((p) => (
+                                <tr key={p.id}>
+                                  <td>
+                                    <Link to={("/admin/products/" + p.id) as "/admin"}>
+                                      {p.name}
+                                    </Link>
+                                  </td>
+                                  <td>
+                                    <Badge tone="warning">{p.stock - p.reserved} khả dụng</Badge>
+                                  </td>
+                                </tr>
+                              ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </Card>
+                  </Access>
+                </Module>
                 {!server && (
                   <Access resource="audit">
                     <Card>

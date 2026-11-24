@@ -1,6 +1,7 @@
 import type { Action, DemoSession, Resource, Role, EntityKey } from "../services/contracts";
 import { ServiceError } from "../services/errors";
 import type { AdminStore } from "../services/contracts";
+import { resourceEnabled } from "../modules";
 export async function authorizeOperation(
   store: AdminStore,
   session: DemoSession | null,
@@ -101,6 +102,8 @@ export function defaultPermissions(id: string): Role["permissions"] {
   return {};
 }
 export function can(session: DemoSession | null, resource: Resource, action: Action, role?: Role) {
+  // A module the site has switched off is refused to every role.
+  if (!resourceEnabled(resource)) return false;
   if (session?.kind === "http") return canCode(session, `${serverResource[resource]}.${action}`);
   return (
     !!session &&

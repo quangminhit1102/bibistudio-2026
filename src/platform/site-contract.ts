@@ -18,6 +18,22 @@ export type SiteLocation = {
   query: string;
 };
 
+/**
+ * Admin features a site switches on. The dashboard and a user's own profile and appearance
+ * pages belong to no module and are always on.
+ */
+export type AdminModuleId =
+  | "content"
+  | "products"
+  | "inventory"
+  | "customers"
+  | "sales"
+  | "analytics"
+  | "accounts"
+  | "audit"
+  | "notifications"
+  | "settings"
+  | "components";
 export type SiteConfig = {
   name: string;
   shortName: string;
@@ -46,7 +62,7 @@ export type SiteConfig = {
   };
   fonts: { href: string }[];
   preconnect?: { href: string; crossOrigin?: boolean }[];
-  admin: { title: string; modules: string[] };
+  admin: { title: string; modules: AdminModuleId[] };
 };
 
 function fail(field: string, reason: string): never {
