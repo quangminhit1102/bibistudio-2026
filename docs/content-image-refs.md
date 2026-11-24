@@ -41,6 +41,11 @@ dẫn ảnh bìa dài hơn 64 ký tự.
 `cover_image_id` được để trống, vì API ưu tiên `cover_image_id`: nếu ghi vào đó, ảnh bìa
 chọn lại trong admin sau này sẽ không hiện ra.
 
+Bài viết mà biên tập viên đã gỡ ảnh bìa trong admin (`image_id` trống) được giữ nguyên, không
+gán lại ảnh bìa; `1-preview.sql` ghi `(removed)` ở cột `editor_cover` cho các bài đó. Mọi dòng
+được sửa (cả khi hoàn tác) đều tăng `revision`, nên một trang sửa đang mở trong admin từ trước
+sẽ báo xung đột khi lưu thay vì ghi đè giá trị cũ trở lại.
+
 `verify` chỉ gọi địa chỉ của chính site và không đi theo chuyển hướng; ảnh ở site khác được
 liệt kê là chưa kiểm. Sản phẩm hoặc bài viết của seed mà API không còn ảnh nào bị báo lỗi;
 bài viết thêm từ admin không có ảnh bìa thì không.

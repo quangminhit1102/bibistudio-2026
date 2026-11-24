@@ -84,12 +84,12 @@ test("the SQL changes only rows that still hold the seeded value, and undoes onl
   assert.match(apply, /CREATE TABLE IF NOT EXISTS content_image_refs_backup/);
   assert.ok(
     apply.includes(
-      `UPDATE products SET image_ids = '["/catalogue/a.webp","/catalogue/a-detail.webp"]' WHERE slug = 'a-notebook' AND JSON_LENGTH(image_ids) = 2 AND JSON_UNQUOTE(JSON_EXTRACT(image_ids, '$[0]')) = 'catalogue-image-a-notebook-0' AND JSON_UNQUOTE(JSON_EXTRACT(image_ids, '$[1]')) = 'catalogue-image-a-notebook-1';`,
+      `UPDATE products SET image_ids = '["/catalogue/a.webp","/catalogue/a-detail.webp"]', revision = revision + 1 WHERE slug = 'a-notebook' AND JSON_LENGTH(image_ids) = 2 AND JSON_UNQUOTE(JSON_EXTRACT(image_ids, '$[0]')) = 'catalogue-image-a-notebook-0' AND JSON_UNQUOTE(JSON_EXTRACT(image_ids, '$[1]')) = 'catalogue-image-a-notebook-1';`,
     ),
   );
   assert.ok(
     apply.includes(
-      `UPDATE posts SET image_id = '/journal/first.jpg', cover_image_id = NULL WHERE slug = 'first-post' AND COALESCE(cover_image_id, image_id) = 'journal-cover-first-post' AND (image_id IS NULL OR image_id IN ('journal-cover-first-post', 'journal-cover-first-post'));`,
+      `UPDATE posts SET image_id = '/journal/first.jpg', cover_image_id = NULL, revision = revision + 1 WHERE slug = 'first-post' AND COALESCE(cover_image_id, image_id) = 'journal-cover-first-post' AND image_id IN ('journal-cover-first-post', 'journal-cover-first-post');`,
     ),
   );
   assert.ok(
@@ -100,24 +100,29 @@ test("the SQL changes only rows that still hold the seeded value, and undoes onl
   const rollback = rollbackSql(plan);
   assert.ok(
     rollback.includes(
-      `UPDATE products SET image_ids = '["catalogue-image-a-notebook-0","catalogue-image-a-notebook-1"]' WHERE slug = 'a-notebook' AND JSON_LENGTH(image_ids) = 2 AND JSON_UNQUOTE(JSON_EXTRACT(image_ids, '$[0]')) = '/catalogue/a.webp' AND JSON_UNQUOTE(JSON_EXTRACT(image_ids, '$[1]')) = '/catalogue/a-detail.webp';`,
+      `UPDATE products SET image_ids = '["catalogue-image-a-notebook-0","catalogue-image-a-notebook-1"]', revision = revision + 1 WHERE slug = 'a-notebook' AND JSON_LENGTH(image_ids) = 2 AND JSON_UNQUOTE(JSON_EXTRACT(image_ids, '$[0]')) = '/catalogue/a.webp' AND JSON_UNQUOTE(JSON_EXTRACT(image_ids, '$[1]')) = '/catalogue/a-detail.webp';`,
     ),
   );
   assert.match(rollback, /UPDATE posts p JOIN content_image_refs_backup b/);
   assert.ok(
     rollback.includes(
-      `SET p.image_id = b.old_value, p.cover_image_id = b.old_cover WHERE p.slug = 'first-post' AND p.image_id = '/journal/first.jpg' AND p.cover_image_id IS NULL;`,
+      `SET p.image_id = b.old_value, p.cover_image_id = b.old_cover, p.revision = p.revision + 1 WHERE p.slug = 'first-post' AND p.image_id = '/journal/first.jpg' AND p.cover_image_id IS NULL;`,
     ),
   );
 
   const preview = previewSql(plan);
   assert.doesNotMatch(preview, /\b(UPDATE|INSERT|DELETE|CREATE|DROP|ALTER)\b/);
   assert.match(preview, /SELECT/);
-  // A post apply would leave alone is told apart: the cover an editor picked is shown.
-  assert.match(
-    preview,
-    /IF\(cover_image_id IS NOT NULL AND image_id NOT IN \(CONCAT\('journal-cover-', slug\), cover_image_id\), image_id, NULL\)/,
+  // A post apply would leave alone is told apart: the cover an editor picked or removed is shown.
+  assert.ok(
+    preview.includes(
+      "IF(cover_image_id IS NULL, NULL, IF(image_id IS NULL, '(removed)', IF(image_id NOT IN (CONCAT('journal-cover-', slug), cover_image_id), image_id, NULL)))",
+    ),
   );
+  // Every change raises the row's revision, so an editor opened before it cannot save over it.
+  for (const sql of [apply, rollback])
+    for (const line of sql.split("\n").filter((line) => line.startsWith("UPDATE")))
+      assert.match(line, /revision = (p\.)?revision \+ 1/);
 });
 
 test("SQL values are escaped", () => {
@@ -171,11 +176,11 @@ test("a cover stored by the earlier seed as the build's own path is planned too"
     { slug: "first-post", from: "/assets/blog/first.jpg", to: "/journal/first.jpg" },
   ]);
   assert.deepEqual(plan.skipped, []);
-  // The API shows the earlier seed's path even after an editor picked a cover, so the SQL
-  // also asks that image_id is still a seeded value.
+  // The API shows the earlier seed's path even after an editor picked or removed a cover, so
+  // the SQL also asks that image_id is still a seeded value; an empty image_id is not one.
   assert.ok(
     applySql(plan).includes(
-      `AND COALESCE(cover_image_id, image_id) = '/assets/blog/first.jpg' AND (image_id IS NULL OR image_id IN ('journal-cover-first-post', '/assets/blog/first.jpg'));`,
+      `AND COALESCE(cover_image_id, image_id) = '/assets/blog/first.jpg' AND image_id IN ('journal-cover-first-post', '/assets/blog/first.jpg');`,
     ),
   );
 });
