@@ -358,6 +358,7 @@ test(
       await signIn(f.secrets.masterPassword);
       await second.getByRole("heading", { name: "Hồ sơ", exact: true }).waitFor();
       const newPassword = "Mật khẩu mới 2026";
+      await page.getByLabel("Tên hiển thị", { exact: true }).fill("Nháp qua đổi mật khẩu");
       await page.getByLabel("Mật khẩu hiện tại", { exact: true }).fill(f.secrets.masterPassword);
       await page.getByLabel("Mật khẩu mới", { exact: true }).fill(newPassword);
       await page.getByLabel("Nhập lại mật khẩu mới", { exact: true }).fill(newPassword);
@@ -370,7 +371,14 @@ test(
         .getByText("Đã đổi mật khẩu. Các thiết bị khác đã được đăng xuất.", { exact: true })
         .waitFor();
       assert.equal(await page.getByLabel("Mật khẩu hiện tại", { exact: true }).inputValue(), "");
+      // An edit not yet saved survives the password change and still saves.
+      assert.equal(
+        await page.getByLabel("Tên hiển thị", { exact: true }).inputValue(),
+        "Nháp qua đổi mật khẩu",
+      );
       await shot("password-changed");
+      await page.getByRole("button", { name: "Lưu thông tin", exact: true }).click();
+      await page.getByText("Đã lưu hồ sơ", { exact: true }).waitFor();
       await page.reload();
       await page.getByRole("heading", { name: "Hồ sơ", exact: true }).waitFor();
       await second.reload();

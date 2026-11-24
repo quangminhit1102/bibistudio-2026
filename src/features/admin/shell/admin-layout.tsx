@@ -30,6 +30,9 @@ export function AdminLayout() {
       runtime.session?.kind === "http" ? runtime.session.principal.revision : undefined,
     ],
     enabled: !!runtime.session,
+    // A new revision of the same user keeps the open page mounted, so nothing typed there is lost.
+    placeholderData: (previous, last) =>
+      last?.queryKey[2] === runtime.session?.userId ? previous : undefined,
     queryFn: async () => {
       if (runtime.session?.kind === "http") return runtime.session.principal;
       await runtime.ensure("users");
