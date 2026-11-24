@@ -4,6 +4,7 @@ import { getCollection, getProductType } from "@/lib/catalogue-taxonomy";
 import {
   attributeRows,
   attributeValue,
+  collectionPage,
   groupAttribute,
   selectOptions,
 } from "@/lib/catalogue-attributes";
@@ -48,6 +49,13 @@ describe("site catalogue attributes", () => {
     expect(groupAttribute("greeting-cards")?.key).toBe("occasion");
     expect(groupAttribute("motivation")).toBeUndefined();
     expect(groupAttribute("toString")).toBeUndefined();
+  });
+
+  it("gives a collection's page what the site declares for it, and nothing otherwise", () => {
+    expect(collectionPage("explore-vietnam").layout).toBe("feature");
+    expect(collectionPage("motivation").quote).toBeTruthy();
+    expect(collectionPage("ao-dai")).toEqual({});
+    expect(collectionPage("toString")).toEqual({});
   });
 
   it("lists options of select attributes only", () => {

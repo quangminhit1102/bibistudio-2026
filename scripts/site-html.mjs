@@ -1,6 +1,7 @@
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
+import { defineMessages } from "../src/platform/site-contract.ts";
 
 const escapeHtml = (value) =>
   String(value)
@@ -34,12 +35,22 @@ export function renderSiteHtml(html, site) {
   });
 }
 
+/** Files the core imports from every site, besides its two configs. */
+const siteFiles = ["messages/vi.ts", "pages/home.tsx", "pages/about.tsx", "pages/contact.tsx"];
+
 export async function loadSiteConfig(siteDir = process.env.SITE_DIR ?? "site") {
   const file = resolve(siteDir, "site.config.ts");
   if (!existsSync(file)) throw new Error(`Site config not found: ${file}`);
   const catalogue = resolve(siteDir, "catalogue.config.ts");
   if (!existsSync(catalogue)) throw new Error(`Site catalogue config not found: ${catalogue}`);
-  return (await import(pathToFileURL(file).href)).default;
+  for (const name of siteFiles) {
+    const path = resolve(siteDir, name);
+    if (!existsSync(path)) throw new Error(`Site file not found: ${path}`);
+  }
+  const load = async (path) => (await import(pathToFileURL(path).href)).default;
+  // The cPanel build does not type-check the site, so its texts are checked here.
+  defineMessages(await load(resolve(siteDir, "messages/vi.ts")));
+  return load(file);
 }
 
 /** Vite plugin: renders the HTML entry with the active site's values. */

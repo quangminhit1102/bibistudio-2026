@@ -8,15 +8,16 @@ import { telHref } from "@/lib/site-contact";
 import { BrandLogo, site } from "@/platform/site";
 import { tx } from "@/data/catalogue";
 import { useTaxonomy } from "@/lib/catalogue-taxonomy";
+import { t } from "@/lib/messages";
 
 type Mega = "products" | "collections";
 const nav: { to: string; label: string; mega?: Mega }[] = [
-  { to: "/", label: "Trang chủ" },
-  { to: "/products", label: "Sản phẩm", mega: "products" },
-  { to: "/collections", label: "Bộ sưu tập", mega: "collections" },
-  { to: "/blog", label: "Nhật ký" },
-  { to: "/about", label: `Về ${site.shortName}` },
-  { to: "/contact", label: "Liên hệ" },
+  { to: "/", label: t("nav.home") },
+  { to: "/products", label: t("nav.products"), mega: "products" },
+  { to: "/collections", label: t("nav.collections"), mega: "collections" },
+  { to: "/blog", label: t("nav.journal") },
+  { to: "/about", label: t("nav.about") },
+  { to: "/contact", label: t("nav.contact") },
 ];
 
 function MegaPanel({ kind, onDone }: { kind: Mega; onDone: () => void }) {
@@ -29,9 +30,9 @@ function MegaPanel({ kind, onDone }: { kind: Mega; onDone: () => void }) {
     <div className="absolute inset-x-0 top-full z-50 border-y border-border bg-background shadow-paper animate-in fade-in slide-in-from-top-1 duration-300">
       <div className="mx-auto grid max-w-[1280px] grid-cols-[14rem_1fr] gap-10 px-12 py-10">
         <div>
-          <p className="eyebrow">{kind === "products" ? "Loại sản phẩm" : "Bộ sưu tập"}</p>
+          <p className="eyebrow">{t(kind === "products" ? "header.productTypes" : "nav.collections")}</p>
           <Link to={kind === "products" ? "/products" : "/collections"} onClick={onDone} className="mt-4 flex items-center gap-2 font-display text-2xl hover:text-accent">
-            Xem tất cả <ArrowRight className="size-4" />
+            {t("header.viewAll")} <ArrowRight className="size-4" />
           </Link>
         </div>
         <ul className="grid grid-cols-4 gap-6">
@@ -63,17 +64,17 @@ export function SiteHeader() {
         <button
           className="grid size-11 place-items-center lg:hidden"
           onClick={() => setOpen((v) => !v)}
-          aria-label={open ? "Đóng menu" : "Mở menu"}
+          aria-label={t(open ? "header.closeMenu" : "header.openMenu")}
           aria-expanded={open}
         >
           {open ? <X className="size-5" /> : <Menu className="size-5" />}
         </button>
 
-        <Link to="/" aria-label={`${site.name} — Trang chủ`} className="min-w-0 justify-self-center">
+        <Link to="/" aria-label={t("header.home")} className="min-w-0 justify-self-center">
           <BrandLogo />
         </Link>
 
-        <nav aria-label="Điều hướng chính" className="hidden lg:block">
+        <nav aria-label={t("header.mainNav")} className="hidden lg:block">
           <ul className="flex items-center gap-3 xl:gap-8">
             {nav.map((n) => (
               <li key={n.to} onMouseEnter={() => setMega(n.mega ?? null)} onFocus={() => setMega(n.mega ?? null)}>
@@ -97,7 +98,7 @@ export function SiteHeader() {
 
         <div className="flex items-center justify-self-end lg:hidden">
           <QuickSearch />
-          <a href={telHref(site)} className="grid size-11 place-items-center" aria-label={`Gọi ${site.name}`}>
+          <a href={telHref(site)} className="grid size-11 place-items-center" aria-label={t("header.call")}>
             <Phone className="size-5" />
           </a>
         </div>
@@ -106,7 +107,7 @@ export function SiteHeader() {
       {mega && <div className="hidden lg:block"><MegaPanel kind={mega} onDone={() => setMega(null)} /></div>}
 
       {open && (
-        <nav aria-label="Menu di động" className="border-t border-border px-4 pb-8 sm:px-6 lg:hidden">
+        <nav aria-label={t("header.mobileNav")} className="border-t border-border px-4 pb-8 sm:px-6 lg:hidden">
           <ul>
             {nav.map((n) => (
               <li key={n.to}>

@@ -5,6 +5,7 @@ import { getCollection, getProductType, useTaxonomy } from "@/lib/catalogue-taxo
 import { PaperPlaceholder } from "@/components/brand/paper-placeholder";
 import { Reveal } from "@/components/brand/reveal";
 import { Tilt } from "@/components/brand/motion";
+import { t } from "@/lib/messages";
 
 export const productTransitionName = (slug: string) => `product-${slug}`;
 
@@ -48,7 +49,7 @@ export function CatalogueCard({ product, index = 0 }: { product: Product; index?
             )}
             {product.featured && (
               <span className="absolute left-2.5 top-2.5 bg-background/90 px-2 py-1 text-[9px] font-medium uppercase tracking-[0.2em] text-foreground backdrop-blur sm:left-3 sm:top-3">
-                Nổi bật
+                {t("card.featured")}
               </span>
             )}
             <span aria-hidden className="tilt-glare pointer-events-none absolute inset-0" />
@@ -73,7 +74,7 @@ export function CatalogueGrid({ items }: { items: Product[] }) {
   if (items.length === 0)
     return (
       <p className="py-24 text-center font-display text-2xl italic text-muted-foreground">
-        Chưa có sản phẩm nào ở đây — sắp ra mắt.
+        {t("card.empty")}
       </p>
     );
   return (

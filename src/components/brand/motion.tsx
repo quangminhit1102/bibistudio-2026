@@ -2,6 +2,7 @@
 // switch off for users who prefer reduced motion.
 import { useEffect, useRef, useState, type ReactNode, type CSSProperties } from "react";
 import { lensGeometry, type LensGeometry } from "@/lib/magnifier-geometry";
+import { t } from "@/lib/messages";
 
 export function prefersReducedMotion() {
   return typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -218,8 +219,8 @@ export function Magnifier({ src, alt, className = "", style }: { src: string; al
         />
       )}
       <span className="pointer-events-none absolute bottom-3 right-3 bg-background/80 px-2.5 py-1 text-[10px] uppercase tracking-[0.2em] text-muted-foreground backdrop-blur">
-        <span className="hidden md:inline">Rê chuột để xem cận</span>
-        <span className="md:hidden">{zoomed ? "Chạm 2 lần để thu nhỏ" : "Chạm 2 lần để phóng to"}</span>
+        <span className="hidden md:inline">{t("magnifier.hover")}</span>
+        <span className="md:hidden">{zoomed ? t("magnifier.zoomOut") : t("magnifier.zoomIn")}</span>
       </span>
     </div>
   );
