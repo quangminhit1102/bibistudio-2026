@@ -41,14 +41,19 @@ dẫn ảnh bìa dài hơn 64 ký tự.
 `cover_image_id` được để trống, vì API ưu tiên `cover_image_id`: nếu ghi vào đó, ảnh bìa
 chọn lại trong admin sau này sẽ không hiện ra.
 
-Bài viết mà biên tập viên đã gỡ ảnh bìa trong admin (`image_id` trống) được giữ nguyên, không
-gán lại ảnh bìa; `1-preview.sql` ghi `(removed)` ở cột `editor_cover` cho các bài đó. Mọi dòng
+Bài viết mà biên tập viên đã gỡ ảnh bìa trong admin (`image_id` trống) không được gán lại ảnh
+bìa; `1-preview.sql` ghi `(removed)` ở cột `editor_cover` cho các bài đó. Nếu `cover_image_id`
+của bài còn giữ đường dẫn `/assets/blog/<file>` của bản seed trước thì `2-apply.sql` xóa giá
+trị đó, nên sau khi chạy bài không có ảnh bìa trên trang công khai, đúng như biên tập viên đã
+gỡ (trước đó API vẫn trả đường dẫn cũ, là file mà bản mới không còn). Mọi dòng
 được sửa (cả khi hoàn tác) đều tăng `revision`, nên một trang sửa đang mở trong admin từ trước
 sẽ báo xung đột khi lưu thay vì ghi đè giá trị cũ trở lại.
 
 `verify` chỉ gọi địa chỉ của chính site và không đi theo chuyển hướng; ảnh ở site khác được
-liệt kê là chưa kiểm. Sản phẩm hoặc bài viết của seed mà API không còn ảnh nào bị báo lỗi;
-bài viết thêm từ admin không có ảnh bìa thì không.
+liệt kê là chưa kiểm. Sản phẩm của seed mà API không còn ảnh nào bị báo lỗi. Bài viết của
+seed mà API không còn ảnh bìa được liệt kê (`no cover`) nhưng không làm `verify` thất bại: đó
+là bài đã gỡ ảnh bìa trong admin; so danh sách này với các dòng `(removed)` của
+`1-preview.sql`. Bài viết thêm từ admin không có ảnh bìa thì không được nhắc tới.
 
 ## Thứ tự thực hiện
 
@@ -59,8 +64,9 @@ bài viết thêm từ admin không có ảnh bìa thì không.
 3. Chủ site đọc `report.md` và đồng ý.
 4. Sao lưu DB (cPanel > Backup, hoặc phpMyAdmin > Export hai bảng `products`, `posts`).
 5. Trong phpMyAdmin, chọn DB của site, chạy `1-preview.sql`. Lệnh chỉ đọc; so số dòng và
-   giá trị với `report.md`. Cột `editor_cover` khác rỗng nghĩa là bài viết đó đã có ảnh bìa
-   chọn trong admin mà API chưa hiện; `2-apply.sql` sẽ không đổi bài đó.
+   giá trị với `report.md`. Cột `editor_cover` là mã ảnh nghĩa là bài viết đó đã có ảnh bìa
+   chọn trong admin mà API chưa hiện; `2-apply.sql` sẽ không đổi bài đó. `(removed)` nghĩa
+   là ảnh bìa đã bị gỡ trong admin; `2-apply.sql` để bài đó không có ảnh bìa.
 6. Chạy `2-apply.sql`. File chạy trong một transaction, lưu giá trị cũ vào bảng
    `content_image_refs_backup` rồi mới sửa. Mỗi lệnh sửa chỉ khớp dòng còn giữ mã giả, nên
    chạy lại lần hai không đổi gì.
@@ -88,6 +94,11 @@ công khai hiện cùng một ảnh, nên hoàn tác không làm mất ảnh tr�
   không đổi gì; sản phẩm của admin và 6 sản phẩm không ảnh giữ nguyên; rollback trả đúng
   trạng thái đầu, trừ một sản phẩm và một bài viết cố ý sửa sau apply; rollback lần hai
   không đổi gì.
+- MariaDB thử nghiệm với bốn bài viết của bản seed trước (`cover_image_id` là
+  `/assets/blog/<file>`): còn nguyên seed, đã gỡ ảnh bìa, đã chọn ảnh khác, và một bài chỉ có
+  mã giả. Apply đổi bài còn nguyên seed và bài mã giả, xóa `cover_image_id` của bài đã gỡ ảnh
+  bìa, giữ nguyên bài đã chọn ảnh khác; apply lần hai không đổi gì; rollback trả đúng bốn bài
+  về giá trị đầu; rollback lần hai không đổi gì.
 
 ## Chưa kiểm
 

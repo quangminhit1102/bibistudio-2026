@@ -162,8 +162,9 @@ test("checkContent names every seed entry the API lacks and every image that doe
       url: "/api/media/catalogue-image-a-notebook-1",
       status: 400,
     },
-    { kind: "post", slug: "first-post", url: null, status: null },
   ]);
+  // A seeded post without a cover is one an editor removed it from: listed, not a failure.
+  assert.deepEqual(result.coverless, [{ kind: "post", slug: "first-post" }]);
   assert.equal(result.checked, 2);
 });
 
@@ -181,6 +182,25 @@ test("a cover stored by the earlier seed as the build's own path is planned too"
   assert.ok(
     applySql(plan).includes(
       `AND COALESCE(cover_image_id, image_id) = '/assets/blog/first.jpg' AND image_id IN ('journal-cover-first-post', '/assets/blog/first.jpg');`,
+    ),
+  );
+});
+
+test("a post whose cover an editor removed loses the earlier seed's path too, and gets it back on undo", () => {
+  const plan = planImageRefs(seed, {
+    ...api,
+    posts: [{ slug: "first-post", cover_url: "/assets/blog/first.jpg" }],
+  });
+  // The earlier seed's path is still in cover_image_id, which the API prefers: left there, the
+  // post would name a file the release no longer has.
+  assert.ok(
+    applySql(plan).includes(
+      `UPDATE posts SET cover_image_id = NULL, revision = revision + 1 WHERE slug = 'first-post' AND image_id IS NULL AND cover_image_id = '/assets/blog/first.jpg';`,
+    ),
+  );
+  assert.ok(
+    rollbackSql(plan).includes(
+      `SET p.cover_image_id = b.old_cover, p.revision = p.revision + 1 WHERE p.slug = 'first-post' AND p.image_id IS NULL AND p.cover_image_id IS NULL AND b.old_value IS NULL AND b.old_cover = '/assets/blog/first.jpg';`,
     ),
   );
 });
@@ -220,5 +240,6 @@ test("checkContent asks for an image only where the seed had one, and only on th
   assert.deepEqual(result.external, [
     { kind: "product", slug: "from-admin", url: "https://elsewhere.test/x.webp" },
   ]);
+  assert.deepEqual(result.coverless, []);
   assert.deepEqual(asked, ["https://example.test/journal/first.jpg"]);
 });

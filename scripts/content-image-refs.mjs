@@ -75,7 +75,7 @@ const header = (plan, title) =>
 export function previewSql(plan) {
   return [
     header(plan, "Read only: the rows the change would touch, with their current values."),
-    "-- editor_cover: a cover an editor picked, or '(removed)' where an editor removed it, that the public API does not show yet; such a post is left alone.",
+    "-- editor_cover: a cover an editor picked, which the public API does not show yet (the post is left alone), or '(removed)' where an editor removed it (the post ends without a cover).",
     `SELECT 'product' AS kind, slug, image_ids AS current_value, NULL AS editor_cover FROM products WHERE slug IN (${list(plan.products)})`,
     `UNION ALL SELECT 'post', slug, COALESCE(cover_image_id, image_id), IF(cover_image_id IS NULL, NULL, IF(image_id IS NULL, '(removed)', IF(image_id NOT IN (CONCAT('journal-cover-', slug), cover_image_id), image_id, NULL))) FROM posts WHERE slug IN (${list(plan.posts)});`,
     "",
@@ -98,11 +98,11 @@ export function applySql(plan) {
     // is emptied because the public API prefers it over image_id. A cover an editor has
     // picked sits in image_id even while the API still shows cover_image_id, so image_id
     // must hold a seeded value too. Every seed wrote image_id, so an empty one is a cover an
-    // editor removed and stays removed.
-    ...plan.posts.map(
-      (p) =>
-        `UPDATE posts SET image_id = ${q(p.to)}, cover_image_id = NULL, revision = revision + 1 WHERE slug = ${q(p.slug)} AND COALESCE(cover_image_id, image_id) = ${q(p.from)} AND image_id IN (${q(`journal-cover-${p.slug}`)}, ${q(p.from)});`,
-    ),
+    // editor removed: it stays removed, and the seeded value the API still shows goes too.
+    ...plan.posts.flatMap((p) => [
+      `UPDATE posts SET image_id = ${q(p.to)}, cover_image_id = NULL, revision = revision + 1 WHERE slug = ${q(p.slug)} AND COALESCE(cover_image_id, image_id) = ${q(p.from)} AND image_id IN (${q(`journal-cover-${p.slug}`)}, ${q(p.from)});`,
+      `UPDATE posts SET cover_image_id = NULL, revision = revision + 1 WHERE slug = ${q(p.slug)} AND image_id IS NULL AND cover_image_id = ${q(p.from)};`,
+    ]),
     "COMMIT;",
     "",
   ].join("\n");
@@ -113,10 +113,13 @@ export function rollbackSql(plan) {
     header(plan, "Undoes 2-apply.sql. A row edited in the admin since then is left as it is."),
     "START TRANSACTION;",
     ...plan.products.map((p) => setImages(p.slug, p.from, p.to)),
-    ...plan.posts.map(
-      (p) =>
-        `UPDATE posts p JOIN ${BACKUP} b ON b.kind = 'post' AND b.slug = p.slug SET p.image_id = b.old_value, p.cover_image_id = b.old_cover, p.revision = p.revision + 1 WHERE p.slug = ${q(p.slug)} AND p.image_id = ${q(p.to)} AND p.cover_image_id IS NULL;`,
-    ),
+    ...plan.posts.flatMap((p) => {
+      const saved = `UPDATE posts p JOIN ${BACKUP} b ON b.kind = 'post' AND b.slug = p.slug SET`;
+      return [
+        `${saved} p.image_id = b.old_value, p.cover_image_id = b.old_cover, p.revision = p.revision + 1 WHERE p.slug = ${q(p.slug)} AND p.image_id = ${q(p.to)} AND p.cover_image_id IS NULL;`,
+        `${saved} p.cover_image_id = b.old_cover, p.revision = p.revision + 1 WHERE p.slug = ${q(p.slug)} AND p.image_id IS NULL AND p.cover_image_id IS NULL AND b.old_value IS NULL AND b.old_cover = ${q(p.from)};`,
+      ];
+    }),
     "COMMIT;",
     `-- When the site has been checked again: DROP TABLE ${BACKUP};`,
     "",
@@ -150,9 +153,13 @@ export async function checkContent(seed, api, base, fetchImage) {
     for (const item of seed[key] ?? [])
       if (!api[key].some((found) => found.slug === item.slug))
         missing.push({ kind, slug: item.slug });
-  // An entry of the seed must keep an image: the bundled one stops being shown with the fallback.
+  // A seeded product must keep an image: the bundled one stops being shown with the fallback.
+  // A seeded post without a cover is one an editor removed it from; it is listed, not failed.
   const seeded = (key, slug, has) =>
     (seed[key] ?? []).some((item) => item.slug === slug && has(item));
+  const coverless = api.posts
+    .filter((p) => !p.cover_url && seeded("posts", p.slug, (item) => item.imageId))
+    .map((p) => ({ kind: "post", slug: p.slug }));
   const refs = [
     ...api.products.flatMap((p) =>
       p.images.length
@@ -162,9 +169,7 @@ export async function checkContent(seed, api, base, fetchImage) {
           : [],
     ),
     ...api.posts.flatMap((p) =>
-      p.cover_url || seeded("posts", p.slug, (item) => item.imageId)
-        ? [{ kind: "post", slug: p.slug, url: p.cover_url ?? null }]
-        : [],
+      p.cover_url ? [{ kind: "post", slug: p.slug, url: p.cover_url }] : [],
     ),
   ];
   // Only the site's own files are requested; an address elsewhere is listed, not visited.
@@ -180,7 +185,7 @@ export async function checkContent(seed, api, base, fetchImage) {
     const found = ref.url ? state.get(ref.url) : { ok: false, status: null };
     return found.ok ? [] : [{ ...ref, status: found.status }];
   });
-  return { missing, broken, external, checked: state.size };
+  return { missing, broken, external, coverless, checked: state.size };
 }
 
 async function readApi(base) {
@@ -210,7 +215,12 @@ async function main([command, ...rest]) {
   const api = await readApi(base);
 
   if (command === "verify") {
-    const { missing, broken, external, checked } = await checkContent(seed, api, base, head);
+    const { missing, broken, external, coverless, checked } = await checkContent(
+      seed,
+      api,
+      base,
+      head,
+    );
     console.log(
       `${api.products.length} products, ${api.posts.length} posts, ${checked} image URLs checked at ${base}`,
     );
@@ -218,6 +228,8 @@ async function main([command, ...rest]) {
     for (const line of lines(broken, (b) => `${b.url ?? "no image"} (HTTP ${b.status ?? "-"})`))
       console.log(line);
     for (const line of lines(external, (e) => `${e.url} is on another site, not checked`))
+      console.log(line);
+    for (const line of lines(coverless, () => "no cover (the seed has one; removed in the admin)"))
       console.log(line);
     if (missing.length || broken.length) {
       console.log(`NOT READY: ${missing.length} missing, ${broken.length} images do not load.`);
