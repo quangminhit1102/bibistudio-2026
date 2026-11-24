@@ -45,12 +45,6 @@ export function createProfileService({
         pool,
         async (connection) => {
           const user = await current(connection, actor);
-          if (user.is_master)
-            throw new ApiError(
-              403,
-              "PROTECTED_ACCOUNT",
-              "Không thể thay đổi tài khoản quản trị chính",
-            );
           if (user.revision !== revision)
             throw new ApiError(409, "REVISION_CONFLICT", "Dữ liệu đã thay đổi. Vui lòng tải lại");
           const fields = (

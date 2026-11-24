@@ -11,8 +11,9 @@ import { profileDto } from "./repository";
 import { normalizeAvatar } from "./avatar-codec";
 import type { AvatarStore, StoredAvatar } from "./avatar-store";
 import type { ProfileDto } from "./types";
-function mutable(user: UserRow, revision: number) {
-  if (user.is_master)
+/** The master account changes its own avatar; the accounts path never changes it. */
+function mutable(user: UserRow, revision: number, self: boolean) {
+  if (user.is_master && !self)
     throw new ApiError(403, "PROTECTED_ACCOUNT", "Không thể thay đổi tài khoản quản trị chính");
   if (user.revision !== revision)
     throw new ApiError(409, "REVISION_CONFLICT", "Dữ liệu đã thay đổi. Vui lòng tải lại");
@@ -71,7 +72,7 @@ export function createAvatarService({
     store();
     await withTransaction(pool, async (c) => {
       const { user } = await target(c, targetId, actor, "account.update");
-      mutable(user, revision);
+      mutable(user, revision, targetId === undefined);
       await quota(c, user.id);
     });
   }
@@ -108,7 +109,7 @@ export function createAvatarService({
           pool,
           async (c) => {
             const { user, principal } = await target(c, targetId, actor, "account.update");
-            mutable(user, revision);
+            mutable(user, revision, targetId === undefined);
             await quota(c, user.id, file.byteLength);
             activeRequest(options.signal);
             await c.execute(
@@ -168,7 +169,7 @@ export function createAvatarService({
         pool,
         async (c) => {
           const { user, principal } = await target(c, targetId, actor, "account.update");
-          mutable(user, revision);
+          mutable(user, revision, targetId === undefined);
           if (!user.avatar_id) return profileDto(c, user);
           await retire(c, user);
           await c.execute(

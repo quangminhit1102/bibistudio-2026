@@ -64,19 +64,57 @@ test("avatar upload/read/replace/remove authorizes self and managers, keeps old 
   assert.ok(!JSON.stringify(audit).includes("bytes"));
   assert.ok(audit.every((row) => JSON.stringify(row.metadata).includes("assetIds")));
 });
-test("upload preconditions, Master protection, origin, body limits and shared actor rate limits", async (t) => {
+test("upload preconditions, origin, body limits and shared actor rate limits", async (t) => {
   const f = await createProfileFixture(t),
     image = pngImage();
   assert.equal((await f.upload(image, undefined)).status, 428);
   assert.equal((await f.upload(image, 999)).status, 409);
-  assert.equal(
-    (await f.upload(Buffer.alloc(2097153), 1, { token: f.master.accessToken })).status,
-    403,
-  );
   assert.equal((await f.upload(image, 1, { origin: "https://invalid.example" })).status, 403);
   assert.equal((await f.upload(Buffer.alloc(2097153), 1)).status, 413);
   for (let i = 0; i < 9; i++) assert.equal((await f.upload(Buffer.from("broken"), 1)).status, 415);
   assert.equal((await f.upload(image, 1)).status, 429);
+});
+test("the master account replaces and removes its own avatar; nobody does so from the accounts path", async (t) => {
+  const f = await createProfileFixture(t),
+    masterId = f.master.profile.id,
+    own = { token: f.master.accessToken };
+  const self = async () =>
+    (await f.request("/api/profile", "GET", undefined, f.master.accessToken)).json();
+  const before = await self();
+  const uploaded = await f.upload(pngImage(), before.revision, own);
+  assert.equal(uploaded.status, 200);
+  const a = await uploaded.json();
+  assert.ok(a.avatarId);
+  assert.equal(a.revision, before.revision + 1);
+  const remove = (path, token, revision) =>
+    fetch(f.base + path, {
+      method: "DELETE",
+      headers: {
+        Origin: f.config.allowedOrigins[0],
+        "X-Bibi-Request": "1",
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + token,
+        "If-Match": '"' + revision + '"',
+      },
+      body: "{}",
+    });
+  await f.pool.execute(
+    "INSERT INTO user_roles(user_id,role_id) SELECT id,'system-admin' FROM users WHERE username='user01'",
+  );
+  const admin = await f.auth.login({ username: "user01", password: f.secrets.userPassword });
+  const managed = "/api/accounts/" + masterId + "/avatar";
+  for (const token of [admin.accessToken, f.master.accessToken]) {
+    const put = await f.upload(pngImage(), a.revision, { token, path: managed });
+    assert.equal(put.status, 403);
+    assert.equal((await put.json()).error.code, "PROTECTED_ACCOUNT");
+    const del = await remove(managed, token, a.revision);
+    assert.equal(del.status, 403);
+    assert.equal((await del.json()).error.code, "PROTECTED_ACCOUNT");
+  }
+  assert.equal((await self()).avatarId, a.avatarId);
+  const removed = await remove("/api/profile/avatar", f.master.accessToken, a.revision);
+  assert.equal(removed.status, 200);
+  assert.equal((await removed.json()).avatarId, null);
 });
 test("stale write after file creation removes only the new orphan and keeps the previous pointer", async (t) => {
   const wrote = deferred(),
@@ -365,8 +403,14 @@ test("bounded JSON image envelope works beyond global JSON limit and retains ava
     400,
   );
   assert.equal(
-    (await put({ mimeType: "image/png", data: image.toString("base64") }, f.master.accessToken))
-      .status,
+    (
+      await put(
+        { mimeType: "image/png", data: image.toString("base64") },
+        f.master.accessToken,
+        f.master.profile.revision,
+        "/api/accounts/" + f.master.profile.id + "/avatar",
+      )
+    ).status,
     403,
   );
   const other = await f.request(
