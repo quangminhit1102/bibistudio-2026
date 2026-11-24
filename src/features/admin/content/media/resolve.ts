@@ -1,6 +1,6 @@
 import type { AdminStore } from "../../services/contracts";
 import type { AdminHttpClient } from "../../../../lib/admin-http";
-function publicPath(url: string): string {
+export function publicPath(url: string): string {
   if (!/^\/(?!\/)/.test(url) || [...url].some((c) => c === "\\" || c.charCodeAt(0) <= 32))
     throw new Error("Đường dẫn ảnh không hợp lệ.");
   return url;
