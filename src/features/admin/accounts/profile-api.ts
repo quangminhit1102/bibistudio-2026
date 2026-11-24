@@ -13,6 +13,11 @@ export function createProfileApi(http: AdminHttpClient, targetId?: string) {
     get: (signal?: AbortSignal) => http.request<ProfileDto>("/api/profile", { signal }),
     update: (draft: ProfileDraft, revision: number) =>
       http.request<ProfileDto>("/api/profile", { method: "PATCH", body: { ...draft, revision } }),
+    changePassword: (currentPassword: string, newPassword: string) =>
+      http.request<ProfileDto>("/api/profile/password", {
+        method: "POST",
+        body: { currentPassword, newPassword },
+      }),
     upload: (blob: Blob, revision: number, signal?: AbortSignal) =>
       http.upload<ProfileDto>(avatar, blob, { revision, signal }),
     remove: (revision: number) =>

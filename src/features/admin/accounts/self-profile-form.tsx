@@ -36,12 +36,16 @@ export function SelfProfileForm({
     onBusyChange?.(busy);
   }, [busy, onBusyChange]);
   useEffect(() => {
-    if (!dirty && !busy && initial.revision > revision) {
+    if (busy || initial.revision <= revision) return;
+    if (!dirty) {
       setDraft(values(initial));
       setBaseline(JSON.stringify(values(initial)));
       setRevision(initial.revision);
+    } else if (JSON.stringify(values(initial)) === baseline) {
+      // Only something outside this form changed (avatar, password): the edits still apply.
+      setRevision(initial.revision);
     }
-  }, [initial, revision, dirty, busy]);
+  }, [initial, revision, dirty, busy, baseline]);
   return (
     <form
       className="a-account-form"

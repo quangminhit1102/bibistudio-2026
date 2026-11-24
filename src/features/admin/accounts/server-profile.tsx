@@ -4,6 +4,7 @@ import { useAdmin } from "../services/context";
 import { createProfileApi } from "./profile-api";
 import { SelfProfileForm } from "./self-profile-form";
 import { AvatarEditor } from "./avatar-editor";
+import { PasswordForm } from "./password-form";
 import type { ProfileDto } from "../../../../backend/src/profile/types";
 import { Card, ErrorState, PageTitle, Skeleton, useNotice } from "../shared/ui/primitives";
 import { UnsavedDialog } from "../shared/forms/preference-form";
@@ -72,6 +73,16 @@ export function ServerProfile() {
               if (result.isSuccess && result.data && runtime.applyProfile(result.data))
                 setGeneration((n) => n + 1);
             });
+          }}
+        />
+      </Card>
+      <Card>
+        <h2 className="a-profile-section-title">Đổi mật khẩu</h2>
+        <PasswordForm
+          key={id}
+          onChange={async (currentPassword, newPassword) => {
+            await saved(await api.changePassword(currentPassword, newPassword));
+            notice("Đã đổi mật khẩu. Các thiết bị khác đã được đăng xuất.");
           }}
         />
       </Card>

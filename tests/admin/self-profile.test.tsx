@@ -56,3 +56,13 @@ it("phone validates locally and reverting metadata resets the dirty state", asyn
   fireEvent.change(input, { target: { value: "" } });
   await waitFor(() => expect(dirty).toHaveBeenLastCalledWith(false));
 });
+it("a newer revision with the same saved values is adopted without touching the draft", async () => {
+  const onSave = vi.fn(async (d, r) => ({ ...initial, ...d, revision: r + 1 }));
+  const view = render(<SelfProfileForm initial={initial} onSave={onSave} />);
+  fireEvent.change(screen.getByLabelText("Tên hiển thị"), { target: { value: "Tên mới" } });
+  view.rerender(<SelfProfileForm initial={{ ...initial, revision: 2 }} onSave={onSave} />);
+  expect(screen.getByLabelText("Tên hiển thị")).toHaveValue("Tên mới");
+  fireEvent.click(screen.getByRole("button", { name: "Lưu thông tin" }));
+  await waitFor(() => expect(onSave).toHaveBeenCalledTimes(1));
+  expect(onSave.mock.calls[0][1]).toBe(2);
+});
