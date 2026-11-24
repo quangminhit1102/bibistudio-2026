@@ -7,6 +7,7 @@ import {
   moduleForAdminPath,
 } from "../../src/features/admin/modules";
 import { buildNavigation } from "../../src/features/admin/shell/navigation";
+import blankSite from "../fixtures/site-blank/site.config";
 
 const paths = (enabled: string[]) =>
   buildNavigation(new Set(enabled)).map((group) => [
@@ -103,6 +104,10 @@ describe("admin modules", () => {
         expect(site.admin.modules).toEqual(expect.arrayContaining(module.requires ?? []));
     expect(site.admin.modules.filter((id) => !every.includes(id))).toEqual([]);
     expect(new Set(site.admin.modules).size).toBe(site.admin.modules.length);
+  });
+
+  it("the blank site switches every module on, so the whole admin suite runs against it", () => {
+    expect([...blankSite.admin.modules].sort()).toEqual([...every].sort());
   });
 });
 

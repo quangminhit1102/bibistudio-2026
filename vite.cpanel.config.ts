@@ -7,18 +7,23 @@ import tsConfigPaths from "vite-tsconfig-paths";
 import { tanStackRouterCodeSplitter, tanstackRouterGenerator } from "@tanstack/router-plugin/vite";
 import { siteHtmlPlugin } from "./scripts/site-html.mjs";
 
-const emitCpanelIndex = (): Plugin => ({
-  name: "emit-cpanel-index",
-  closeBundle() {
-    const outputDir = join(process.cwd(), "dist-cpanel");
-    const source = join(outputDir, "cpanel.html");
-    const target = join(outputDir, "index.html");
+const emitCpanelIndex = (): Plugin => {
+  let outputDir = "";
+  return {
+    name: "emit-cpanel-index",
+    configResolved(config) {
+      outputDir = resolve(config.root, config.build.outDir);
+    },
+    closeBundle() {
+      const source = join(outputDir, "cpanel.html");
+      const target = join(outputDir, "index.html");
 
-    if (existsSync(source)) {
-      renameSync(source, target);
-    }
-  },
-});
+      if (existsSync(source)) {
+        renameSync(source, target);
+      }
+    },
+  };
+};
 
 export default defineConfig(({ mode }: ConfigEnv) => {
   const isTempUrl = mode === "cpanel-temp";

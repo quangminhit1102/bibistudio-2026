@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { tx, type Product } from "@/data/catalogue";
 import { getCollection, getProductType } from "@/lib/catalogue-taxonomy";
 import {
@@ -10,6 +10,32 @@ import {
 } from "@/lib/catalogue-attributes";
 import { toPublicProduct } from "@/lib/content-adapter";
 import type { PublicProductShape } from "@/lib/content-api";
+
+// A catalogue of this test's own, so the cases hold for whichever site is built.
+vi.mock("@/platform/site", async (importOriginal) => {
+  const { defineCatalogue } = await import("@/platform/site-contract");
+  const label = (vi: string) => ({ vi, en: vi });
+  return {
+    ...(await importOriginal<typeof import("@/platform/site")>()),
+    catalogue: defineCatalogue({
+      attributes: [
+        { key: "dimensions", label: label("Kích thước"), type: "text" },
+        { key: "material", label: label("Chất liệu"), type: "localized-text" },
+        {
+          key: "occasion",
+          label: label("Dịp lễ"),
+          type: "select",
+          options: [
+            { value: "birthday", label: label("Sinh nhật") },
+            { value: "new-year", label: label("Năm mới") },
+          ],
+        },
+      ],
+      groupBy: { "greeting-cards": "occasion" },
+      collectionPages: { "explore-vietnam": { layout: "feature" }, motivation: { quote: "q" } },
+    }),
+  };
+});
 
 const product = (patch: Partial<Product> = {}): Product => ({
   id: "x",
@@ -59,7 +85,7 @@ describe("site catalogue attributes", () => {
   });
 
   it("lists options of select attributes only", () => {
-    expect(selectOptions("occasion")).toHaveLength(8);
+    expect(selectOptions("occasion")).toHaveLength(2);
     expect(selectOptions("dimensions")).toEqual([]);
     expect(selectOptions("missing")).toEqual([]);
   });
