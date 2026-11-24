@@ -6,7 +6,7 @@ import {
   ANALYTICS_PREFERENCE_EVENT,
   ANALYTICS_OPT_OUT_KEY,
 } from "../lib/analytics-privacy";
-import { site } from "@/platform/site";
+import { t } from "@/lib/messages";
 export function AnalyticsPrivacyControl() {
   const [disabled, setDisabled] = useState(false);
   const [privacySignal, setPrivacySignal] = useState(false);
@@ -30,14 +30,8 @@ export function AnalyticsPrivacyControl() {
   }, []);
   return (
     <details className="max-w-md text-xs leading-relaxed tracking-normal">
-      <summary className="cursor-pointer py-2 hover:text-foreground">
-        Quyền riêng tư khi truy cập
-      </summary>
-      <p className="my-2">
-        {site.shortName} ghi nhận các trang và sản phẩm được quan tâm bằng cookie riêng trong tối đa 90 ngày.
-        Khi có nguồn phù hợp, website lưu IP công khai và ước lượng quốc gia; không thu thập vị trí
-        chính xác hoặc nội dung biểu mẫu. Không liên kết với tài khoản quản trị.
-      </p>
+      <summary className="cursor-pointer py-2 hover:text-foreground">{t("privacy.title")}</summary>
+      <p className="my-2">{t("privacy.text")}</p>
       <label className="flex min-h-11 cursor-pointer items-center gap-3">
         <input
           type="checkbox"
@@ -46,13 +40,10 @@ export function AnalyticsPrivacyControl() {
           onChange={(event) => setAnalyticsOptOut(!event.target.checked)}
           className="size-4 accent-current"
         />
-        Cho phép ghi nhận trang và sản phẩm quan tâm
+        {t("privacy.allow")}
       </label>
-      {privacySignal && <p>Đã tắt theo lựa chọn DNT/GPC của trình duyệt.</p>}
-      <p className="mt-2">
-        Tắt sẽ dừng ghi nhận mới và xóa cookie analytics của trình duyệt này. Lịch sử đã ghi nhận
-        vẫn được giữ; cookie đăng nhập không bị ảnh hưởng.
-      </p>
+      {privacySignal && <p>{t("privacy.signal")}</p>}
+      <p className="mt-2">{t("privacy.note")}</p>
     </details>
   );
 }

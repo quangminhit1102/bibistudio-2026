@@ -8,9 +8,9 @@
       "categorySlug": "cam-hung",
       "status": "published",
       "publishAt": "2026-08-25",
-      "imageId": "journal-cover-5-thoi-quen-viet-tay-de-song-cham-hon",
+      "imageId": "/journal/slow-writing.jpg",
       "readTime": "5 phút đọc",
-      "coverImageId": "/assets/blog/slow-writing.jpg",
+      "coverImageId": null,
       "seoTitle": "",
       "seoDescription": ""
     },
@@ -22,9 +22,9 @@
       "categorySlug": "huong-dan",
       "status": "published",
       "publishAt": "2026-08-20",
-      "imageId": "journal-cover-cach-chon-so-tay-phu-hop",
+      "imageId": "/journal/choosing-notebook.jpg",
       "readTime": "4 phút đọc",
-      "coverImageId": "/assets/blog/choosing-notebook.jpg",
+      "coverImageId": null,
       "seoTitle": "",
       "seoDescription": ""
     },
@@ -36,9 +36,9 @@
       "categorySlug": "huong-dan",
       "status": "published",
       "publishAt": "2026-08-15",
-      "imageId": "journal-cover-bullet-journal-la-gi-huong-dan-cho-nguoi-moi",
+      "imageId": "/journal/bullet-journal.jpg",
       "readTime": "6 phút đọc",
-      "coverImageId": "/assets/blog/bullet-journal.jpg",
+      "coverImageId": null,
       "seoTitle": "",
       "seoDescription": ""
     },
@@ -50,9 +50,9 @@
       "categorySlug": "huong-dan",
       "status": "published",
       "publishAt": "2026-08-28",
-      "imageId": "journal-cover-huong-dan-toan-tap-scrapbook-cho-nguoi-moi",
+      "imageId": "/journal/scrapbook.jpg",
       "readTime": "12 phút đọc",
-      "coverImageId": "/assets/blog/scrapbook.jpg",
+      "coverImageId": null,
       "seoTitle": "",
       "seoDescription": ""
     },
@@ -64,9 +64,9 @@
       "categorySlug": "huong-dan",
       "status": "published",
       "publishAt": "2026-08-27",
-      "imageId": "journal-cover-cam-nang-chon-but-viet-cho-tung-nhu-cau",
+      "imageId": "/journal/pen-guide.jpg",
       "readTime": "10 phút đọc",
-      "coverImageId": "/assets/blog/pen-guide.jpg",
+      "coverImageId": null,
       "seoTitle": "",
       "seoDescription": ""
     },
@@ -78,9 +78,9 @@
       "categorySlug": "cam-hung",
       "status": "published",
       "publishAt": "2026-08-26",
-      "imageId": "journal-cover-thiet-lap-goc-hoc-tap-truyen-cam-hung",
+      "imageId": "/journal/study-desk.jpg",
       "readTime": "9 phút đọc",
-      "coverImageId": "/assets/blog/study-desk.jpg",
+      "coverImageId": null,
       "seoTitle": "",
       "seoDescription": ""
     },
@@ -92,9 +92,9 @@
       "categorySlug": "cam-nang",
       "status": "published",
       "publishAt": "2026-09-02",
-      "imageId": "journal-cover-chon-so-tay-theo-muc-dich-su-dung",
+      "imageId": "/journal/notebook-purpose.jpg",
       "readTime": "4 phút đọc",
-      "coverImageId": "/assets/blog/notebook-purpose.jpg",
+      "coverImageId": null,
       "seoTitle": "",
       "seoDescription": ""
     },
@@ -106,9 +106,9 @@
       "categorySlug": "cam-nang",
       "status": "published",
       "publishAt": "2026-09-03",
-      "imageId": "journal-cover-cach-bao-quan-va-luu-tru-but-muc-lau-dai",
+      "imageId": "/journal/pen-care.jpg",
       "readTime": "3 phút đọc",
-      "coverImageId": "/assets/blog/pen-care.jpg",
+      "coverImageId": null,
       "seoTitle": "",
       "seoDescription": ""
     },
@@ -120,9 +120,9 @@
       "categorySlug": "cam-hung",
       "status": "published",
       "publishAt": "2026-09-04",
-      "imageId": "journal-cover-y-tuong-trang-tri-bullet-journal-thang-9",
+      "imageId": "/journal/september-journal.jpg",
       "readTime": "5 phút đọc",
-      "coverImageId": "/assets/blog/september-journal.jpg",
+      "coverImageId": null,
       "seoTitle": "",
       "seoDescription": ""
     },
@@ -134,9 +134,9 @@
       "categorySlug": "cam-hung",
       "status": "published",
       "publishAt": "2026-09-05",
-      "imageId": "journal-cover-goi-qua-handmade-y-nghia-ngay-khai-giang",
+      "imageId": "/journal/handmade-gift.jpg",
       "readTime": "6 phút đọc",
-      "coverImageId": "/assets/blog/handmade-gift.jpg",
+      "coverImageId": null,
       "seoTitle": "",
       "seoDescription": ""
     }
@@ -153,8 +153,8 @@
       "categorySlug": "vietnamese-food",
       "status": "published",
       "imageIds": [
-        "catalogue-image-bun-bo-hue-notebook-0",
-        "catalogue-image-bun-bo-hue-notebook-1"
+        "/catalogue/notebook-bun-bo-hue.webp",
+        "/catalogue/notebook-bun-bo-hue-detail.webp"
       ],
       "tags": [],
       "seoTitle": "",
@@ -185,8 +185,8 @@
       "categorySlug": "vietnamese-food",
       "status": "published",
       "imageIds": [
-        "catalogue-image-tra-da-via-he-notebook-0",
-        "catalogue-image-tra-da-via-he-notebook-1"
+        "/catalogue/notebook-tra-da.webp",
+        "/catalogue/notebook-tra-da-detail.webp"
       ],
       "tags": [],
       "seoTitle": "",
@@ -217,8 +217,8 @@
       "categorySlug": "vietnamese-food",
       "status": "published",
       "imageIds": [
-        "catalogue-image-bun-cha-ha-noi-notebook-0",
-        "catalogue-image-bun-cha-ha-noi-notebook-1"
+        "/catalogue/notebook-bun-cha.webp",
+        "/catalogue/notebook-bun-cha-detail.webp"
       ],
       "tags": [],
       "seoTitle": "",
@@ -249,8 +249,8 @@
       "categorySlug": "vietnamese-food",
       "status": "published",
       "imageIds": [
-        "catalogue-image-hu-tieu-go-notebook-0",
-        "catalogue-image-hu-tieu-go-notebook-1"
+        "/catalogue/notebook-hu-tieu.webp",
+        "/catalogue/notebook-hu-tieu-detail.webp"
       ],
       "tags": [],
       "seoTitle": "",
@@ -281,8 +281,8 @@
       "categorySlug": "vietnamese-food",
       "status": "published",
       "imageIds": [
-        "catalogue-image-banh-mi-notebook-0",
-        "catalogue-image-banh-mi-notebook-1"
+        "/catalogue/notebook-banh-mi.webp",
+        "/catalogue/notebook-banh-mi-detail.webp"
       ],
       "tags": [],
       "seoTitle": "",
@@ -313,8 +313,8 @@
       "categorySlug": "vietnamese-food",
       "status": "published",
       "imageIds": [
-        "catalogue-image-banh-xeo-notebook-0",
-        "catalogue-image-banh-xeo-notebook-1"
+        "/catalogue/notebook-banh-xeo.webp",
+        "/catalogue/notebook-banh-xeo-detail.webp"
       ],
       "tags": [],
       "seoTitle": "",
@@ -345,8 +345,8 @@
       "categorySlug": "vietnamese-food",
       "status": "published",
       "imageIds": [
-        "catalogue-image-ca-phe-sua-da-notebook-0",
-        "catalogue-image-ca-phe-sua-da-notebook-1"
+        "/catalogue/notebook-ca-phe.webp",
+        "/catalogue/notebook-ca-phe-detail.webp"
       ],
       "tags": [],
       "seoTitle": "",
@@ -377,8 +377,8 @@
       "categorySlug": "vietnamese-food",
       "status": "published",
       "imageIds": [
-        "catalogue-image-com-tam-notebook-0",
-        "catalogue-image-com-tam-notebook-1"
+        "/catalogue/notebook-com-tam.webp",
+        "/catalogue/notebook-com-tam-detail.webp"
       ],
       "tags": [],
       "seoTitle": "",
@@ -409,8 +409,8 @@
       "categorySlug": "vietnamese-food",
       "status": "published",
       "imageIds": [
-        "catalogue-image-goi-cuon-notebook-0",
-        "catalogue-image-goi-cuon-notebook-1"
+        "/catalogue/notebook-goi-cuon.webp",
+        "/catalogue/notebook-goi-cuon-detail.webp"
       ],
       "tags": [],
       "seoTitle": "",
@@ -441,7 +441,7 @@
       "categorySlug": "explore-vietnam",
       "status": "published",
       "imageIds": [
-        "catalogue-image-da-nang-map-notebook-0"
+        "/catalogue/notebook-map-da-nang-mockup.webp"
       ],
       "tags": [],
       "seoTitle": "",
@@ -472,7 +472,7 @@
       "categorySlug": "explore-vietnam",
       "status": "published",
       "imageIds": [
-        "catalogue-image-ha-giang-map-notebook-0"
+        "/catalogue/notebook-map-ha-giang-mockup.webp"
       ],
       "tags": [],
       "seoTitle": "",
@@ -503,7 +503,7 @@
       "categorySlug": "explore-vietnam",
       "status": "published",
       "imageIds": [
-        "catalogue-image-sai-gon-map-notebook-0"
+        "/catalogue/notebook-map-sai-gon-mockup.webp"
       ],
       "tags": [],
       "seoTitle": "",
@@ -534,7 +534,7 @@
       "categorySlug": "explore-vietnam",
       "status": "published",
       "imageIds": [
-        "catalogue-image-ca-mau-map-notebook-0"
+        "/catalogue/notebook-map-ca-mau-mockup.webp"
       ],
       "tags": [],
       "seoTitle": "",
@@ -565,7 +565,7 @@
       "categorySlug": "explore-vietnam",
       "status": "published",
       "imageIds": [
-        "catalogue-image-da-lat-map-notebook-0"
+        "/catalogue/notebook-map-da-lat-mockup.webp"
       ],
       "tags": [],
       "seoTitle": "",
@@ -596,7 +596,7 @@
       "categorySlug": "explore-vietnam",
       "status": "published",
       "imageIds": [
-        "catalogue-image-ha-noi-map-notebook-0"
+        "/catalogue/notebook-map-ha-noi-mockup.webp"
       ],
       "tags": [],
       "seoTitle": "",
@@ -627,7 +627,7 @@
       "categorySlug": "explore-vietnam",
       "status": "published",
       "imageIds": [
-        "catalogue-image-hoi-an-map-notebook-0"
+        "/catalogue/notebook-map-hoi-an-mockup.webp"
       ],
       "tags": [],
       "seoTitle": "",
@@ -658,7 +658,7 @@
       "categorySlug": "explore-vietnam",
       "status": "published",
       "imageIds": [
-        "catalogue-image-hue-map-notebook-0"
+        "/catalogue/notebook-map-hue-mockup.webp"
       ],
       "tags": [],
       "seoTitle": "",
@@ -689,7 +689,7 @@
       "categorySlug": "explore-vietnam",
       "status": "published",
       "imageIds": [
-        "catalogue-image-nha-trang-map-notebook-0"
+        "/catalogue/notebook-map-nha-trang-mockup.webp"
       ],
       "tags": [],
       "seoTitle": "",
@@ -720,7 +720,7 @@
       "categorySlug": "explore-vietnam",
       "status": "published",
       "imageIds": [
-        "catalogue-image-phu-yen-map-notebook-0"
+        "/catalogue/notebook-map-phu-yen-mockup.webp"
       ],
       "tags": [],
       "seoTitle": "",
@@ -751,7 +751,7 @@
       "categorySlug": "explore-vietnam",
       "status": "published",
       "imageIds": [
-        "catalogue-image-phu-quoc-map-notebook-0"
+        "/catalogue/notebook-map-phu-quoc-mockup.webp"
       ],
       "tags": [],
       "seoTitle": "",
@@ -782,7 +782,7 @@
       "categorySlug": "explore-vietnam",
       "status": "published",
       "imageIds": [
-        "catalogue-image-quang-ninh-map-notebook-0"
+        "/catalogue/notebook-map-quang-ninh-mockup.webp"
       ],
       "tags": [],
       "seoTitle": "",
@@ -813,7 +813,7 @@
       "categorySlug": "explore-vietnam",
       "status": "published",
       "imageIds": [
-        "catalogue-image-viet-nam-map-notebook-0"
+        "/catalogue/notebook-map-viet-nam-mockup.webp"
       ],
       "tags": [],
       "seoTitle": "",
@@ -844,7 +844,7 @@
       "categorySlug": "explore-vietnam",
       "status": "published",
       "imageIds": [
-        "catalogue-image-landmark-81-notebook-0"
+        "/catalogue/notebook-landmark-81.webp"
       ],
       "tags": [],
       "seoTitle": "",
@@ -875,7 +875,7 @@
       "categorySlug": "explore-vietnam",
       "status": "published",
       "imageIds": [
-        "catalogue-image-cho-ben-thanh-notebook-0"
+        "/catalogue/notebook-cho-ben-thanh.webp"
       ],
       "tags": [],
       "seoTitle": "",
@@ -906,7 +906,7 @@
       "categorySlug": "explore-vietnam",
       "status": "published",
       "imageIds": [
-        "catalogue-image-nha-hat-thanh-pho-notebook-0"
+        "/catalogue/notebook-nha-hat.webp"
       ],
       "tags": [],
       "seoTitle": "",
@@ -937,7 +937,7 @@
       "categorySlug": "explore-vietnam",
       "status": "published",
       "imageIds": [
-        "catalogue-image-nha-tho-duc-ba-notebook-0"
+        "/catalogue/notebook-nha-tho-duc-ba.webp"
       ],
       "tags": [],
       "seoTitle": "",
@@ -968,7 +968,7 @@
       "categorySlug": "explore-vietnam",
       "status": "published",
       "imageIds": [
-        "catalogue-image-nguyen-hue-notebook-0"
+        "/catalogue/notebook-nguyen-hue.webp"
       ],
       "tags": [],
       "seoTitle": "",
@@ -999,7 +999,7 @@
       "categorySlug": "explore-vietnam",
       "status": "published",
       "imageIds": [
-        "catalogue-image-ubnd-tphcm-notebook-0"
+        "/catalogue/notebook-ubnd.webp"
       ],
       "tags": [],
       "seoTitle": "",
@@ -1030,7 +1030,7 @@
       "categorySlug": "motivation",
       "status": "published",
       "imageIds": [
-        "catalogue-image-life-is-better-laughing-notebook-0"
+        "/catalogue/motivation-life-laughing.jpeg"
       ],
       "tags": [],
       "seoTitle": "",
@@ -1061,7 +1061,7 @@
       "categorySlug": "motivation",
       "status": "published",
       "imageIds": [
-        "catalogue-image-dream-big-work-hard-notebook-0"
+        "/catalogue/motivation-dream-big.jpeg"
       ],
       "tags": [],
       "seoTitle": "",
@@ -1092,7 +1092,7 @@
       "categorySlug": "motivation",
       "status": "published",
       "imageIds": [
-        "catalogue-image-choose-to-be-happy-notebook-0"
+        "/catalogue/motivation-choose-happy.jpeg"
       ],
       "tags": [],
       "seoTitle": "",
@@ -1123,7 +1123,7 @@
       "categorySlug": "motivation",
       "status": "published",
       "imageIds": [
-        "catalogue-image-trai-dat-tron-notebook-0"
+        "/catalogue/motivation-trai-dat-tron.jpeg"
       ],
       "tags": [],
       "seoTitle": "",
@@ -1154,7 +1154,7 @@
       "categorySlug": "motivation",
       "status": "published",
       "imageIds": [
-        "catalogue-image-enjoy-today-notebook-0"
+        "/catalogue/motivation-enjoy-today.jpeg"
       ],
       "tags": [],
       "seoTitle": "",
@@ -1185,7 +1185,7 @@
       "categorySlug": "motivation",
       "status": "published",
       "imageIds": [
-        "catalogue-image-sun-will-rise-notebook-0"
+        "/catalogue/motivation-sun-will-rise.jpeg"
       ],
       "tags": [],
       "seoTitle": "",
@@ -1216,7 +1216,7 @@
       "categorySlug": "motivation",
       "status": "published",
       "imageIds": [
-        "catalogue-image-walk-when-i-want-to-fly-notebook-0"
+        "/catalogue/motivation-walk-fly.jpeg"
       ],
       "tags": [],
       "seoTitle": "",
@@ -1247,7 +1247,7 @@
       "categorySlug": "motivation",
       "status": "published",
       "imageIds": [
-        "catalogue-image-be-happy-cactus-notebook-0"
+        "/catalogue/motivation-be-happy.jpeg"
       ],
       "tags": [],
       "seoTitle": "",
@@ -1278,7 +1278,7 @@
       "categorySlug": "motivation",
       "status": "published",
       "imageIds": [
-        "catalogue-image-do-what-you-love-notebook-0"
+        "/catalogue/motivation-do-what-you-love.jpeg"
       ],
       "tags": [],
       "seoTitle": "",
@@ -1309,7 +1309,7 @@
       "categorySlug": "motivation",
       "status": "published",
       "imageIds": [
-        "catalogue-image-youre-beautiful-notebook-0"
+        "/catalogue/motivation-youre-beautiful.jpeg"
       ],
       "tags": [],
       "seoTitle": "",
@@ -1340,7 +1340,7 @@
       "categorySlug": "motivation",
       "status": "published",
       "imageIds": [
-        "catalogue-image-do-what-you-love-colour-notebook-0"
+        "/catalogue/motivation-do-what-you-love-colour.jpeg"
       ],
       "tags": [],
       "seoTitle": "",
@@ -1371,7 +1371,7 @@
       "categorySlug": "motivation",
       "status": "published",
       "imageIds": [
-        "catalogue-image-love-yourself-notebook-0"
+        "/catalogue/motivation-love-yourself.jpeg"
       ],
       "tags": [],
       "seoTitle": "",
@@ -1402,7 +1402,7 @@
       "categorySlug": "motivation",
       "status": "published",
       "imageIds": [
-        "catalogue-image-life-is-too-short-notebook-0"
+        "/catalogue/motivation-life-is-too-short.jpeg"
       ],
       "tags": [],
       "seoTitle": "",
@@ -1433,7 +1433,7 @@
       "categorySlug": "motivation",
       "status": "published",
       "imageIds": [
-        "catalogue-image-ca-phe-voi-nguoi-thuong-notebook-0"
+        "/catalogue/motivation-ca-phe-nguoi-thuong.jpeg"
       ],
       "tags": [],
       "seoTitle": "",
@@ -1464,7 +1464,7 @@
       "categorySlug": "ao-dai",
       "status": "published",
       "imageIds": [
-        "catalogue-image-ao-dai-saigon-card-0"
+        "/catalogue/card-saigon.webp"
       ],
       "tags": [],
       "seoTitle": "",
@@ -1495,7 +1495,7 @@
       "categorySlug": "ao-dai",
       "status": "published",
       "imageIds": [
-        "catalogue-image-ao-dai-buu-dien-card-0"
+        "/catalogue/card-buu-dien.webp"
       ],
       "tags": [],
       "seoTitle": "",
@@ -1526,7 +1526,7 @@
       "categorySlug": "ao-dai",
       "status": "published",
       "imageIds": [
-        "catalogue-image-ao-dai-hoi-an-card-0"
+        "/catalogue/card-hoi-an.webp"
       ],
       "tags": [],
       "seoTitle": "",
@@ -1557,7 +1557,7 @@
       "categorySlug": "ao-dai",
       "status": "published",
       "imageIds": [
-        "catalogue-image-ao-dai-hue-card-0"
+        "/catalogue/card-hue.webp"
       ],
       "tags": [],
       "seoTitle": "",
@@ -1588,7 +1588,7 @@
       "categorySlug": "ao-dai",
       "status": "published",
       "imageIds": [
-        "catalogue-image-ao-dai-ha-noi-card-0"
+        "/catalogue/card-ha-noi.webp"
       ],
       "tags": [],
       "seoTitle": "",
@@ -1619,7 +1619,7 @@
       "categorySlug": "ao-dai",
       "status": "published",
       "imageIds": [
-        "catalogue-image-ao-dai-da-nang-card-0"
+        "/catalogue/card-da-nang.webp"
       ],
       "tags": [],
       "seoTitle": "",
@@ -1650,7 +1650,7 @@
       "categorySlug": "greeting-cards",
       "status": "published",
       "imageIds": [
-        "catalogue-image-womens-day-floral-border-card-0"
+        "/catalogue/womens-day-floral-border.jpg"
       ],
       "tags": [],
       "seoTitle": "",
@@ -1681,7 +1681,7 @@
       "categorySlug": "greeting-cards",
       "status": "published",
       "imageIds": [
-        "catalogue-image-womens-day-moon-bouquet-card-0"
+        "/catalogue/womens-day-moon-bouquet.jpg"
       ],
       "tags": [],
       "seoTitle": "",
@@ -1712,7 +1712,7 @@
       "categorySlug": "greeting-cards",
       "status": "published",
       "imageIds": [
-        "catalogue-image-womens-day-wreath-ribbon-card-0"
+        "/catalogue/womens-day-wreath-ribbon.jpg"
       ],
       "tags": [],
       "seoTitle": "",
@@ -1743,7 +1743,7 @@
       "categorySlug": "greeting-cards",
       "status": "published",
       "imageIds": [
-        "catalogue-image-womens-day-blue-floral-card-0"
+        "/catalogue/womens-day-blue-floral.jpg"
       ],
       "tags": [],
       "seoTitle": "",
@@ -1774,7 +1774,7 @@
       "categorySlug": "greeting-cards",
       "status": "published",
       "imageIds": [
-        "catalogue-image-womens-day-daisy-frame-card-0"
+        "/catalogue/womens-day-daisy-frame.jpg"
       ],
       "tags": [],
       "seoTitle": "",
@@ -1805,7 +1805,7 @@
       "categorySlug": "greeting-cards",
       "status": "published",
       "imageIds": [
-        "catalogue-image-womens-day-hearts-card-0"
+        "/catalogue/womens-day-hearts.jpg"
       ],
       "tags": [],
       "seoTitle": "",
@@ -1836,7 +1836,7 @@
       "categorySlug": "greeting-cards",
       "status": "published",
       "imageIds": [
-        "catalogue-image-womens-day-vase-sunset-card-0"
+        "/catalogue/womens-day-vase-sunset.jpg"
       ],
       "tags": [],
       "seoTitle": "",
@@ -1867,7 +1867,7 @@
       "categorySlug": "greeting-cards",
       "status": "published",
       "imageIds": [
-        "catalogue-image-womens-day-pink-garden-card-0"
+        "/catalogue/womens-day-pink-garden.jpg"
       ],
       "tags": [],
       "seoTitle": "",
@@ -1898,7 +1898,7 @@
       "categorySlug": "greeting-cards",
       "status": "published",
       "imageIds": [
-        "catalogue-image-womens-day-apron-bouquet-card-0"
+        "/catalogue/womens-day-apron-bouquet.jpg"
       ],
       "tags": [],
       "seoTitle": "",
@@ -1929,7 +1929,7 @@
       "categorySlug": "greeting-cards",
       "status": "published",
       "imageIds": [
-        "catalogue-image-womens-day-striped-vase-card-0"
+        "/catalogue/womens-day-striped-vase.jpg"
       ],
       "tags": [],
       "seoTitle": "",
@@ -1960,7 +1960,7 @@
       "categorySlug": "greeting-cards",
       "status": "published",
       "imageIds": [
-        "catalogue-image-womens-day-tulip-envelope-card-0"
+        "/catalogue/womens-day-tulip-envelope.jpg"
       ],
       "tags": [],
       "seoTitle": "",
@@ -1991,7 +1991,7 @@
       "categorySlug": "greeting-cards",
       "status": "published",
       "imageIds": [
-        "catalogue-image-womens-day-flower-envelope-card-0"
+        "/catalogue/womens-day-flower-envelope.jpg"
       ],
       "tags": [],
       "seoTitle": "",
@@ -2196,7 +2196,7 @@
       "categorySlug": "explore-vietnam",
       "status": "published",
       "imageIds": [
-        "catalogue-image-ben-bach-dang-magnet-0"
+        "/catalogue/magnet-ben-bach-dang.webp"
       ],
       "tags": [],
       "seoTitle": "",
@@ -2227,7 +2227,7 @@
       "categorySlug": "explore-vietnam",
       "status": "published",
       "imageIds": [
-        "catalogue-image-cho-ben-thanh-magnet-0"
+        "/catalogue/magnet-cho-ben-thanh.webp"
       ],
       "tags": [],
       "seoTitle": "",
@@ -2258,7 +2258,7 @@
       "categorySlug": "explore-vietnam",
       "status": "published",
       "imageIds": [
-        "catalogue-image-cau-rong-magnet-0"
+        "/catalogue/magnet-cau-rong.webp"
       ],
       "tags": [],
       "seoTitle": "",
@@ -2289,7 +2289,7 @@
       "categorySlug": "explore-vietnam",
       "status": "published",
       "imageIds": [
-        "catalogue-image-cau-vang-magnet-0"
+        "/catalogue/magnet-cau-vang.webp"
       ],
       "tags": [],
       "seoTitle": "",
@@ -2320,7 +2320,7 @@
       "categorySlug": "explore-vietnam",
       "status": "published",
       "imageIds": [
-        "catalogue-image-ho-guom-magnet-0"
+        "/catalogue/magnet-ho-guom.webp"
       ],
       "tags": [],
       "seoTitle": "",
@@ -2351,7 +2351,7 @@
       "categorySlug": "explore-vietnam",
       "status": "published",
       "imageIds": [
-        "catalogue-image-nha-tho-duc-ba-magnet-0"
+        "/catalogue/magnet-nha-tho-duc-ba.webp"
       ],
       "tags": [],
       "seoTitle": "",
@@ -2382,7 +2382,7 @@
       "categorySlug": "explore-vietnam",
       "status": "published",
       "imageIds": [
-        "catalogue-image-pho-co-ha-noi-magnet-0"
+        "/catalogue/magnet-pho-co-ha-noi.webp"
       ],
       "tags": [],
       "seoTitle": "",
@@ -2413,7 +2413,7 @@
       "categorySlug": "explore-vietnam",
       "status": "published",
       "imageIds": [
-        "catalogue-image-nha-tho-tan-dinh-magnet-0"
+        "/catalogue/magnet-tan-dinh.webp"
       ],
       "tags": [],
       "seoTitle": "",

@@ -1,10 +1,13 @@
 import { join } from "node:path";
-import { readdir } from "node:fs/promises";
+import { readdir, readFile } from "node:fs/promises";
 import { root, run, isMain } from "./runtime.mjs";
 import { ensureTestDatabase } from "./test-database.mjs";
 import { prepareCountryDataset } from "./prepare-geoip.mjs";
+import { loadSiteConfig } from "./site-html.mjs";
 
-export const STAGES = ["static", "admin", "backend", "e2e"];
+export const STAGES = ["static", "admin", "blank-site", "backend", "e2e"];
+/** The smallest site core accepts; building it proves core does not need the default site. */
+export const BLANK_SITE = "tests/fixtures/site-blank";
 export const E2E_SUITES = [
   "auth",
   "visitor-analytics",
@@ -38,6 +41,17 @@ const backendBuild = once(() =>
 );
 const testDatabase = once(ensureTestDatabase);
 
+/** A build must carry the values of the site it was built for. */
+export async function assertSiteBuild(dir, site) {
+  const html = await readFile(join(dir, "index.html"), "utf8");
+  if (!html.includes(`<title>${site.name}</title>`))
+    throw new Error(`Built index.html does not carry the site name "${site.name}"`);
+  const scripts = (await readdir(join(dir, "assets"))).filter((name) => name.endsWith(".js"));
+  for (const name of scripts)
+    if ((await readFile(join(dir, "assets", name), "utf8")).includes(site.admin.title)) return;
+  throw new Error(`No built script carries the admin title "${site.admin.title}"`);
+}
+
 const stageRunners = {
   async static() {
     await countryDataset();
@@ -64,6 +78,24 @@ const stageRunners = {
   },
   async admin() {
     await node("node_modules/vitest/vitest.mjs", ["run", "--config", "vitest.admin.config.ts"]);
+  },
+  async "blank-site"() {
+    const env = { ...process.env, SITE_DIR: BLANK_SITE };
+    const outDir = ".superpowers/site-blank";
+    await node("node_modules/typescript/bin/tsc", [
+      "--noEmit",
+      "-p",
+      `${BLANK_SITE}/tsconfig.json`,
+    ]);
+    await node("node_modules/vitest/vitest.mjs", ["run", "--config", "vitest.admin.config.ts"], {
+      env,
+    });
+    await node(
+      "node_modules/vite/bin/vite.js",
+      ["build", "--config", "vite.cpanel.config.ts", "--outDir", outDir],
+      { env },
+    );
+    await assertSiteBuild(join(root, outDir), await loadSiteConfig(join(root, BLANK_SITE)));
   },
   async backend() {
     await countryDataset();

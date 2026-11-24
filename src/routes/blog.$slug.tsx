@@ -10,6 +10,7 @@ import { renderArticle, slugifyHeading, type TocItem } from "@/lib/content-html"
 import { resolveSeo } from "@/lib/content-seo";
 import { LazyImage } from "@/components/ui/lazy-image";
 import { SITE_URL } from "@/lib/seo";
+import { t } from "@/lib/messages";
 import { site } from "@/platform/site";
 
 export const Route = createFileRoute("/blog/$slug")({
@@ -23,10 +24,7 @@ export const Route = createFileRoute("/blog/$slug")({
   head: ({ params, loaderData }) => {
     if (!loaderData) {
       return {
-        meta: [
-          { title: `Không tìm thấy bài viết${site.seo.titleSuffix}` },
-          { name: "robots", content: "noindex" },
-        ],
+        meta: [{ title: t("blog.notFoundMetaTitle") }, { name: "robots", content: "noindex" }],
       };
     }
     const { post } = loaderData;
@@ -63,9 +61,9 @@ function PostNotFound() {
     <div className="min-h-screen bg-background">
       <SiteHeader />
       <main className="mx-auto max-w-[1280px] px-4 py-24 text-center lg:px-12">
-        <h1 className="text-2xl font-bold">Không tìm thấy bài viết</h1>
+        <h1 className="text-2xl font-bold">{t("blog.notFoundTitle")}</h1>
         <Link to="/blog" className="mt-4 inline-block text-accent underline">
-          Xem tất cả bài viết
+          {t("blog.viewAll")}
         </Link>
       </main>
       <SiteFooter />
@@ -89,11 +87,11 @@ const proseClasses = "article-body";
 function Toc({ toc }: { toc: TocItem[] }) {
   return (
     <nav
-      aria-label="Mục lục"
+      aria-label={t("blog.toc")}
       className="mb-10 rounded-sm border border-border bg-secondary/40 px-5 py-5"
     >
       <h2 className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-        Mục lục
+        {t("blog.toc")}
       </h2>
       <ol className="mt-3 space-y-1.5">
         {toc.map((item) => (
@@ -163,8 +161,8 @@ function PostPage() {
         <section className="mx-auto max-w-[880px] px-4 pt-10 pb-2 md:pt-14">
           <SimpleBreadcrumb
             crumbs={[
-              { label: "Trang chủ", to: "/" },
-              { label: "Nhật ký", to: "/blog" },
+              { label: t("nav.home"), to: "/" },
+              { label: t("nav.journal"), to: "/blog" },
               { label: post.category },
             ]}
           />
@@ -259,13 +257,13 @@ function PostPage() {
           {/* Tags / share */}
           <div className="mt-12 flex flex-wrap items-center justify-between gap-4 border-t border-border pt-6">
             <div className="flex items-center gap-2 text-[13px] text-muted-foreground">
-              <span>Chủ đề:</span>
+              <span>{t("blog.topic")}</span>
               <span className="rounded-full border border-border px-3 py-1 text-foreground">
                 {post.category}
               </span>
             </div>
             <Link to="/blog" className="text-[13px] font-medium text-accent hover:underline">
-              ← Quay lại Nhật ký
+              {t("blog.back")}
             </Link>
           </div>
         </article>

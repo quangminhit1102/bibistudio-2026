@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import { defineSite, siteUrl, type SiteConfig } from "@/platform/site-contract";
-import { site } from "@/platform/site";
 
 const valid: SiteConfig = {
   name: "Example",
@@ -56,13 +55,5 @@ describe("siteUrl", () => {
   it("returns the origin when no path is given", () => {
     expect(siteUrl(config)).toBe("https://example.com");
     expect(siteUrl(config, "/")).toBe("https://example.com/");
-  });
-});
-
-describe("active site", () => {
-  it("is the BiBi Studio configuration", () => {
-    expect(site.url).toBe("https://bibistudio.vn");
-    expect(site.contact.phone).toBe("0392969000");
-    expect(site.defaultLocale).toBe("vi");
   });
 });

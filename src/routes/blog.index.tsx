@@ -11,11 +11,10 @@ import { paginate, POSTS_PER_PAGE, type Paged } from "@/data/pagination";
 import { getPublicPosts } from "@/lib/content-api";
 import { staticPostToView, toPublicPost, type PostView } from "@/lib/content-adapter";
 import { SITE_URL, appendPageParam } from "@/lib/seo";
-import { site } from "@/platform/site";
+import { t } from "@/lib/messages";
 
-const title = `Nhật ký${site.seo.titleSuffix}`;
-const description =
-  `Khám phá cảm hứng, hướng dẫn và câu chuyện xoay quanh sổ tay, scrapbook, bút và phụ kiện journaling tại ${site.name}.`;
+const title = t("blog.metaTitle");
+const description = t("blog.metaDescription");
 
 const blogSearchSchema = z.object({
   page: z.coerce.number().int().min(1).catch(1),
@@ -84,14 +83,13 @@ function BlogIndexPage() {
       <main>
         <div className="border-b border-border bg-secondary/60">
           <div className="mx-auto flex max-w-[1280px] flex-col gap-2 px-4 py-10 lg:px-12">
-            <SimpleBreadcrumb crumbs={[{ label: "Trang chủ", to: "/" }, { label: "Nhật ký" }]} />
+            <SimpleBreadcrumb
+              crumbs={[{ label: t("nav.home"), to: "/" }, { label: t("nav.journal") }]}
+            />
             <h1 className="text-2xl font-bold tracking-tight text-foreground md:text-[32px]">
-              Nhật ký {site.name}
+              {t("blog.heading")}
             </h1>
-            <p className="max-w-2xl text-[14px] text-muted-foreground">
-              Cảm hứng, mẹo viết tay và những câu chuyện nhỏ xoay quanh sổ tay, scrapbook & phụ kiện
-              journaling.
-            </p>
+            <p className="max-w-2xl text-[14px] text-muted-foreground">{t("blog.lead")}</p>
           </div>
         </div>
 

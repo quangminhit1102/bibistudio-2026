@@ -50,9 +50,11 @@ FE mặc định `http://localhost:5173`; `/api` proxy tới BE `127.0.0.1:3001`
 
 ### Cấu hình site (`site/`)
 
-Mọi thứ riêng của thương hiệu nằm trong `site/`: `site.config.ts` (tên, domain, liên hệ, SEO, font, module admin), `catalogue.config.ts` (thuộc tính sản phẩm và cách nhóm sản phẩm trong một bộ sưu tập), `theme.css` (màu và font) và `assets/` (logo). Phần lõi (`src/`) chỉ đọc qua `src/platform/site.ts`; `scripts/site-boundary.test.mjs` chạy trong `npm run check` và báo lỗi khi tên thương hiệu, domain, số điện thoại hay email của site xuất hiện lại trong các thư mục lõi đã tách.
+Mọi thứ riêng của thương hiệu nằm trong `site/`: `site.config.ts` (tên, domain, liên hệ, SEO, font, module admin), `catalogue.config.ts` (thuộc tính sản phẩm, cách nhóm sản phẩm trong một bộ sưu tập, và phần riêng của trang từng bộ sưu tập trong `collectionPages`), `theme.css` (màu và font), `messages/vi.ts` (mọi chữ của giao diện công khai), `pages/` (thân trang chủ, giới thiệu, liên hệ) và `assets/` (logo, ảnh của ba trang đó). Phần lõi (`src/`) chỉ đọc qua `src/platform/site.ts` và `src/platform/pages/`; chữ giao diện lấy bằng `t()` trong `src/lib/messages.ts`; `scripts/site-boundary.test.mjs` chạy trong `npm run check` và báo lỗi khi tên thương hiệu, domain, số điện thoại hay email của site xuất hiện lại trong các thư mục lõi đã tách.
 
-Build đọc site từ biến môi trường `SITE_DIR` (mặc định `site`), ví dụ `SITE_DIR=sites/khac npm run build:cpanel`. Thiếu `site.config.ts` hoặc `catalogue.config.ts` thì build dừng và nêu đường dẫn bị thiếu. Trang chủ, giới thiệu, liên hệ, dữ liệu mẫu và `src/data` chưa tách; tên kỹ thuật nội bộ có `bibi` (biến môi trường, cookie, header, khóa lưu trữ) giữ nguyên.
+Tạo site mới và nhận bản sửa của lõi: [new-site.md](new-site.md). Test chỉ đúng với site này nằm trong `site/tests/`; `tests/fixtures/site-blank` là bộ site trống mà job CI `blank-site` dùng để chứng minh lõi không phụ thuộc site mặc định (bản build của nó ghi vào `.superpowers/site-blank`, không đụng `dist-cpanel`).
+
+Build đọc site từ biến môi trường `SITE_DIR` (mặc định `site`), ví dụ `SITE_DIR=sites/khac npm run build:cpanel`. Thiếu `site.config.ts`, `catalogue.config.ts`, `messages/vi.ts` hoặc một trong ba file `pages/home.tsx`, `pages/about.tsx`, `pages/contact.tsx` thì build dừng và nêu đường dẫn bị thiếu; `messages/vi.ts` thiếu một khóa thì kiểm tra kiểu báo lỗi. Dữ liệu mẫu, ảnh sản phẩm và `src/data` chưa tách; tên kỹ thuật nội bộ có `bibi` (biến môi trường, cookie, header, khóa lưu trữ) giữ nguyên.
 
 ## 2. CI và artifact
 
@@ -60,13 +62,14 @@ Build đọc site từ biến môi trường `SITE_DIR` (mặc định `site`), 
 
 CI chia thành các job chạy song song, mỗi job một giai đoạn của `scripts/check.mjs`:
 
-| Job       | Lệnh                                                                     | Cần thêm               |
-| --------- | ------------------------------------------------------------------------ | ---------------------- |
-| `static`  | `node scripts/check.mjs static` (TypeScript, lint, ảnh catalogue)        | không                  |
-| `admin`   | `node scripts/check.mjs admin` (Vitest admin)                            | không                  |
-| `backend` | `node scripts/check.mjs backend` (test backend/scripts)                  | MariaDB, PHP           |
-| `e2e`     | `node scripts/check.mjs e2e <bộ>` — matrix 5 bộ trình duyệt              | MariaDB, PHP, Chromium |
-| `build`   | `npm run build`, `node scripts/visitor-context-bundle-check.mjs`, upload | MariaDB, PHP, Chromium |
+| Job          | Lệnh                                                                                     | Cần thêm               |
+| ------------ | ---------------------------------------------------------------------------------------- | ---------------------- |
+| `static`     | `node scripts/check.mjs static` (TypeScript, lint, ảnh catalogue)                        | không                  |
+| `admin`      | `node scripts/check.mjs admin` (Vitest admin)                                            | không                  |
+| `blank-site` | `node scripts/check.mjs blank-site` (kiểu, test admin và build cPanel với bộ site trống) | không                  |
+| `backend`    | `node scripts/check.mjs backend` (test backend/scripts)                                  | MariaDB, PHP           |
+| `e2e`        | `node scripts/check.mjs e2e <bộ>` — matrix 5 bộ trình duyệt                              | MariaDB, PHP, Chromium |
+| `build`      | `npm run build`, `node scripts/visitor-context-bundle-check.mjs`, upload                 | MariaDB, PHP, Chromium |
 
 `npm run check` không tham số vẫn chạy toàn bộ các giai đoạn theo thứ tự như trước; thêm tên giai đoạn để chạy riêng một phần khi debug local. Thêm bộ trình duyệt mới thì thêm vào `E2E_SUITES` trong `scripts/check.mjs` và matrix của job `e2e`; policy test sẽ báo nếu hai nơi lệch nhau. Một job lỗi làm cả CI run lỗi, nên artifact của run đó không được phát hành dù job `build` đã upload.
 

@@ -1,5 +1,6 @@
 import { ArrowUp } from "lucide-react";
 import { useEffect, useState } from "react";
+import { t } from "@/lib/messages";
 
 export function BackToTop() {
   const [show, setShow] = useState(false);
@@ -12,7 +13,7 @@ export function BackToTop() {
   return (
     <button
       onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-      aria-label="Lên đầu trang"
+      aria-label={t("backToTop")}
       tabIndex={show ? 0 : -1}
       className={`back-to-top fixed bottom-20 right-3 z-40 grid size-11 place-items-center border border-border bg-background/95 shadow-paper backdrop-blur transition duration-500 hover:bg-secondary xl:bottom-16 xl:right-4 ${show ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-4 opacity-0"}`}
     >

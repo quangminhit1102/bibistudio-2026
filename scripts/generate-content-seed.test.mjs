@@ -1,9 +1,33 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
-import { buildContentSeed } from "./generate-content-seed.mjs";
+import { access, cp, mkdtemp, readFile, rm, writeFile, mkdir } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { buildContentSeed, writeContentSeed } from "./generate-content-seed.mjs";
 
-const blog = `import coverImage from "@/assets/blog/test.jpg";
+// Generates the seed in a scratch copy, so the test never rewrites the committed files.
+async function writeContentSeedTo(catalogue, blog) {
+  const dir = await mkdtemp(join(tmpdir(), "content-seed-"));
+  try {
+    await mkdir(join(dir, "src/data"), { recursive: true });
+    await mkdir(join(dir, "backend"), { recursive: true });
+    await cp(
+      new URL("../src/assets/catalogue", import.meta.url),
+      join(dir, "src/assets/catalogue"),
+      {
+        recursive: true,
+      },
+    );
+    await writeFile(join(dir, "src/data/catalogue.ts"), catalogue);
+    await writeFile(join(dir, "src/data/blog.ts"), blog);
+    return await writeContentSeed(dir);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+}
+
+const blog = `const journalImage = (file) => "/base/journal/" + file;
+const coverImage = journalImage("test.jpg");
 throw new Error('must not execute source');
 const blogPosts=[{
   slug:'test-post',
@@ -37,7 +61,8 @@ test("buildContentSeed converts ContentBlock[] to HTML and maps categories/produ
   assert.equal(result.posts[0].status, "published");
   assert.equal(result.posts[0].publishAt, "2026-08-25");
   assert.equal(result.posts[0].readTime, "5 phút đọc");
-  assert.equal(result.posts[0].coverImageId, "/assets/blog/test.jpg");
+  assert.equal(result.posts[0].imageId, "/journal/test.jpg");
+  assert.equal(result.posts[0].coverImageId, null);
   assert.ok(result.posts[0].content.includes("<p>Xin &lt;chào&gt;</p>"));
   assert.ok(result.posts[0].content.includes("<h2>Phần 1</h2>"));
   assert.ok(result.posts[0].content.includes("<blockquote>Trích dẫn</blockquote>"));
@@ -49,10 +74,7 @@ test("buildContentSeed converts ContentBlock[] to HTML and maps categories/produ
   assert.equal(result.products.length, 1);
   assert.equal(result.products[0].productCode, "0001");
   assert.equal(result.products[0].categorySlug, "motivation");
-  assert.deepEqual(result.products[0].imageIds, [
-    "catalogue-image-test-notebook-0",
-    "catalogue-image-test-notebook-1",
-  ]);
+  assert.deepEqual(result.products[0].imageIds, ["/a.webp", "/b.webp"]);
   assert.equal(result.products[0].nameEn, "Notebook");
   assert.equal(result.products[0].descriptionEn, "Desc");
   assert.equal(result.products[0].shortDescriptionEn, "Desc");
@@ -124,7 +146,10 @@ test("current static content generates 10 posts and the full product catalogue",
     readFile(new URL("../src/data/catalogue.ts", import.meta.url), "utf8"),
     readFile(new URL("../src/data/blog.ts", import.meta.url), "utf8"),
   ]);
-  const result = buildContentSeed(catalogueSource, blogSource);
+  const result = JSON.parse(
+    await readFile(new URL("../backend/content-seed.json", import.meta.url), "utf8"),
+  );
+  assert.deepEqual(result, await writeContentSeedTo(catalogueSource, blogSource));
   assert.equal(result.posts.length, 10);
   assert.ok(result.posts.every((post) => post.content.startsWith("<")));
   assert.ok(result.products.some((product) => product.slug === "bun-bo-hue-notebook"));
@@ -154,10 +179,16 @@ test("current static content generates 10 posts and the full product catalogue",
   );
   assert.ok(
     result.posts.every(
-      (post) =>
-        typeof post.coverImageId === "string" && post.coverImageId.startsWith("/assets/blog/"),
+      (post) => post.imageId.startsWith("/journal/") && post.coverImageId === null,
     ),
   );
+  // Every image is a public file of the repository, so a fresh database shows all of them.
+  const files = [
+    ...result.posts.map((post) => post.imageId),
+    ...result.products.flatMap((product) => product.imageIds),
+  ];
+  assert.equal(files.length, 87);
+  for (const file of files) await access(new URL("../public" + file, import.meta.url));
   const bunBo = result.products.find((product) => product.slug === "bun-bo-hue-notebook");
   assert.equal(bunBo.nameEn, "Bun Bo Hue");
   assert.equal(bunBo.featured, true);
@@ -170,4 +201,18 @@ test("current static content generates 10 posts and the full product catalogue",
   assert.equal(floral.materialEn, null);
   assert.ok(result.products.every((product) => product.sortOrder >= 1));
   assert.ok(result.products.every((product) => typeof product.imageAltVi === "string"));
+});
+
+test("a product image read from an imported asset file becomes that file's public path", () => {
+  const source = catalogue
+    .replace(
+      "const productTypes",
+      'import main from "@/assets/catalogue/main.jpg.asset.json";\nconst productTypes',
+    )
+    .replace("['/a.webp','/b.webp']", "[assetUrl(main.url), '/b.webp']");
+  const result = buildContentSeed(source, blog, {
+    "@/assets/catalogue/main.jpg.asset.json": "/catalogue/main.jpg",
+  });
+  assert.deepEqual(result.products[0].imageIds, ["/catalogue/main.jpg", "/b.webp"]);
+  assert.throws(() => buildContentSeed(source, blog), /Unsupported product image source/);
 });
