@@ -115,17 +115,43 @@ async function mergeAssets(config, dir) {
   }
   await copy(src, dest);
 }
-async function install(config, dir) {
+// How a failed command ended and the last lines it printed, for the deploy log.
+function commandFailure(label, error, timeout) {
+  const ended =
+    error.code === "ERR_CHILD_PROCESS_STDIO_MAXBUFFER"
+      ? "printed more than the output limit"
+      : error.killed
+        ? `stopped at the ${timeout / 1000} s limit`
+        : typeof error.code === "number"
+          ? `exit code ${error.code}`
+          : `could not run (${error.code ?? "unknown error"})`;
+  const lines = `${error.stdout ?? ""}\n${error.stderr ?? ""}`
+    .split(/\r?\n/)
+    .map((line) => line.trimEnd().replace(/\/\/[^/@\s]+@/g, "//***@"))
+    .filter(Boolean)
+    .slice(-25)
+    .map((line) => "  " + line.slice(0, 300));
+  return (
+    `${label} failed: ${ended}` +
+    (lines.length ? `; its last lines:\n${lines.join("\n")}` : "; it printed nothing")
+  );
+}
+// --loglevel=verbose: npm prints nothing while it waits, so a stopped install would say nothing.
+async function install(config, dir, { timeout = 180000 } = {}) {
   const env = {
     ...process.env,
     PATH: config.runtimeBin + path.delimiter + process.env.PATH,
     NODE_ENV: "production",
   };
-  await execute(
-    config.npmBin,
-    ["ci", "--omit=dev", "--ignore-scripts", "--no-audit", "--no-fund"],
-    { cwd: path.join(dir, "backend"), env, maxBuffer: 1024 * 1024, timeout: 180000 },
-  );
+  try {
+    await execute(
+      config.npmBin,
+      ["ci", "--omit=dev", "--ignore-scripts", "--no-audit", "--no-fund", "--loglevel=verbose"],
+      { cwd: path.join(dir, "backend"), env, maxBuffer: 8 * 1024 * 1024, timeout },
+    );
+  } catch (error) {
+    throw new Error(commandFailure("npm ci", error, timeout));
+  }
 }
 async function restart(config) {
   await fs.mkdir(path.join(config.root, "app/tmp"), { recursive: true });
@@ -552,6 +578,8 @@ async function pruneReleases(config, { activeId }) {
   // rather than removing unknown files or breaking the 30-day minimum.
 }
 module.exports = {
+  install,
+  commandFailure,
   inside,
   inspectRelease,
   activateRelease,

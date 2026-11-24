@@ -4,7 +4,7 @@ import { readDbConfig } from "../config";
 import { createCatalogue } from "../visitors/catalogue";
 import { createDbPool } from "./pool";
 import { readPrivateEnvironment } from "./private-env";
-import { verifyReleaseProbe } from "./release-probe";
+import { ReleaseProbeError, errorKind, verifyReleaseProbe } from "./release-probe";
 async function main() {
   const env = readPrivateEnvironment(process.env.BIBI_MAINTENANCE_ENV_FILE);
   const [releaseId, sourceSha, baseUrl] = process.argv.slice(2);
@@ -32,7 +32,13 @@ async function main() {
     await pool.end();
   }
 }
-void main().catch(() => {
-  console.error(JSON.stringify({ ok: false, error: "Release DB/auth/analytics probe failed" }));
+void main().catch((error: unknown) => {
+  const detail =
+    error instanceof ReleaseProbeError
+      ? { step: error.step, reason: error.reason }
+      : { step: "setup", reason: errorKind(error) };
+  console.error(
+    JSON.stringify({ ok: false, error: "Release DB/auth/analytics probe failed", ...detail }),
+  );
   process.exitCode = 1;
 });
