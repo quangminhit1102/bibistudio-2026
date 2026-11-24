@@ -106,7 +106,11 @@ Chỉ nạp plugin cộng đồng từ package TinyMCE đã cài, không thêm d
 
 ## Hồ sơ cá nhân và ảnh đại diện (production07/11)
 
-Người dùng đang hoạt động có thể mở **Hồ sơ** từ menu tài khoản trên header hoặc cuối sidebar, kể cả chỉ có quyền Khách truy cập hoặc chưa được gán vai trò. Trang chỉ sửa tên hiển thị, email, số điện thoại và ảnh của chính mình; tên đăng nhập/vai trò không sửa tại đây. Admin+User cộng quyền theo RBAC, không bị hạ về quyền User. Master Admin vẫn chỉ đọc và được backend bảo vệ.
+Người dùng đang hoạt động có thể mở **Hồ sơ** từ menu tài khoản trên header hoặc cuối sidebar, kể cả chỉ có quyền Khách truy cập hoặc chưa được gán vai trò. Trang chỉ sửa tên hiển thị, email, số điện thoại và ảnh của chính mình; tên đăng nhập/vai trò không sửa tại đây. Admin+User cộng quyền theo RBAC, không bị hạ về quyền User. Từ 24/11, Master Admin cũng tự sửa tên hiển thị, email, số điện thoại và ảnh của mình tại đây; trang Tài khoản vẫn không sửa được tài khoản này.
+
+Thẻ **Đổi mật khẩu** trong Hồ sơ cần mật khẩu hiện tại, mật khẩu mới (ít nhất 8 ký tự) và nhập lại. Đổi xong, các thiết bị khác bị đăng xuất, thiết bị đang dùng giữ nguyên; tối đa 5 lần thử trong 15 phút. Phần thông tin đang sửa dở không bị mất khi đổi mật khẩu.
+
+Thư viện ảnh hiện kích thước, dung lượng và định dạng của ảnh có sẵn của site (ảnh sản phẩm, ảnh bài viết) bằng cách đo file thật khi hiển thị; ảnh không đọc được hiện `— · —`. Số liệu đã lưu của ảnh tải lên không đổi.
 
 Nút lưu chỉ bật khi thông tin đã thay đổi. Hoàn tác đưa form về dữ liệu đã tải; lỗi lưu/xung đột không xóa bản nháp. Khi có xung đột, **Tải lại dữ liệu** là thao tác chủ động bỏ bản nháp để lấy bản mới. Ảnh được lưu riêng: chọn ảnh chỉ xem trước, bấm **Lưu ảnh** mới upload; **Hủy chọn ảnh** bỏ ảnh chưa lưu; **Xóa ảnh** gỡ ảnh đang dùng. Lưu/hoàn tác phần thông tin trước khi đổi ảnh để tránh xung đột revision.
 

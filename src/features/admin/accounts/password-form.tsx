@@ -25,6 +25,7 @@ export function PasswordForm({
       type="password"
       value={draft[key]}
       autoComplete={autoComplete}
+      disabled={busy}
       onChange={(e) => setDraft({ ...draft, [key]: e.target.value })}
     />
   );
@@ -50,16 +51,14 @@ export function PasswordForm({
         }
       }}
     >
-      <fieldset disabled={busy} style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}>
-        <div className="a-form-grid">
-          <Field label="Mật khẩu hiện tại">{input("current", "current-password")}</Field>
-          <Field label="Mật khẩu mới">{input("next", "new-password")}</Field>
-          <Field label="Nhập lại mật khẩu mới">{input("again", "new-password")}</Field>
-        </div>
-        <p className="a-muted">
-          Mật khẩu mới cần ít nhất 8 ký tự. Sau khi đổi, các thiết bị khác sẽ bị đăng xuất.
-        </p>
-      </fieldset>
+      <div className="a-form-grid">
+        <Field label="Mật khẩu hiện tại">{input("current", "current-password")}</Field>
+        <Field label="Mật khẩu mới">{input("next", "new-password")}</Field>
+        <Field label="Nhập lại mật khẩu mới">{input("again", "new-password")}</Field>
+      </div>
+      <p className="a-muted">
+        Mật khẩu mới cần ít nhất 8 ký tự. Sau khi đổi, các thiết bị khác sẽ bị đăng xuất.
+      </p>
       <div className="a-form-footer">
         <Button variant="primary" type="submit" disabled={!filled} loading={busy}>
           Đổi mật khẩu

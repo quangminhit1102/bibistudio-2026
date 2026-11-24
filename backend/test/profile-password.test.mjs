@@ -160,14 +160,21 @@ test("the sixth attempt in 15 minutes is refused, also with the right password",
   assert.equal((await f.change(right, again.accessToken)).status, 200);
 });
 
-test("two changes at the same moment: one wins, the other is told the data changed", async (t) => {
+test("two changes at the same moment: one wins, the other is refused", async (t) => {
   const f = await fixture(t),
     current = f.secrets.userPassword,
     candidates = ["Lần thứ nhất 11", "Lần thứ hai 22"];
   const results = await Promise.all(
     candidates.map((newPassword) => f.change({ currentPassword: current, newPassword })),
   );
-  assert.deepEqual(results.map((r) => r.status).sort(), [200, 409]);
+  // The loser read the old hash before the winner saved (409) or after it (400): both leave one password.
+  const refused = results.find((r) => r.status !== 200);
+  assert.equal(results.filter((r) => r.status === 200).length, 1);
+  assert.ok(
+    ["409 REVISION_CONFLICT", "400 INVALID_CURRENT_PASSWORD"].includes(
+      `${refused.status} ${(await refused.json()).error.code}`,
+    ),
+  );
   const winner = candidates[results.findIndex((r) => r.status === 200)],
     loser = candidates.find((c) => c !== winner);
   assert.ok((await f.login("user01", winner)).accessToken);

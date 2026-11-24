@@ -1,7 +1,7 @@
 # Thiết kế: số liệu ảnh trong Thư viện ảnh, hồ sơ của quản trị viên chính, đổi mật khẩu trong Hồ sơ (đợt 1)
 
 - Ngày: 2026-11-24
-- Trạng thái: chờ duyệt
+- Trạng thái: đã duyệt (2026-11-24)
 - Nền: `main` sau khi PR #14 merge (nhánh làm việc dựng trên đỉnh PR #14, `5f095af`)
 - Phạm vi: đợt 1 trong 5 yêu cầu ngày 24/11 của chủ repo, gồm yêu cầu 3, 4, 5. Không đổi DB, không đổi `ops/`.
 - Ngoài phạm vi (đợt 2, thiết kế riêng): import khách hàng từ Excel, đơn giản hóa tồn kho. Hai việc đó cần migration nội dung thứ tư.
