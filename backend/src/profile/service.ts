@@ -1,7 +1,8 @@
-import type { Pool, PoolConnection } from "mysql2/promise";
+import type { Pool, PoolConnection, ResultSetHeader } from "mysql2/promise";
 import type { Clock } from "../config";
 import type { AuthPrincipal } from "../auth/service";
-import { resolvePrincipal, type UserRow } from "../auth/repository";
+import type { UserRow } from "../auth/repository";
+import { hashPassword, verifyPassword } from "../auth/password";
 import { withTransaction } from "../db/transaction";
 import { withRbacWrite, lockAuthorizedUsers } from "../authorization/transaction";
 import { ApiError } from "../http/errors";
@@ -74,6 +75,44 @@ export function createProfileService({
         },
         { profileAssets: true },
       ),
+    /** Keeps the session that asked and signs the account out everywhere else. */
+    async changePassword(
+      input: { currentPassword: string; newPassword: string },
+      actor: AuthPrincipal,
+    ): Promise<ProfileDto> {
+      // bcrypt runs before the write lock is taken; the hash is compared again under it.
+      const verified = (await withTransaction(pool, (connection) => current(connection, actor)))
+        .password_hash;
+      if (!(await verifyPassword(input.currentPassword, verified)))
+        throw new ApiError(400, "INVALID_CURRENT_PASSWORD", "Mật khẩu hiện tại không đúng");
+      if (await verifyPassword(input.newPassword, verified))
+        throw new ApiError(400, "PASSWORD_UNCHANGED", "Mật khẩu mới phải khác mật khẩu hiện tại");
+      const hash = await hashPassword(input.newPassword);
+      return withRbacWrite(pool, async (connection) => {
+        const user = await current(connection, actor);
+        if (user.password_hash !== verified)
+          throw new ApiError(409, "REVISION_CONFLICT", "Dữ liệu đã thay đổi. Vui lòng tải lại");
+        await connection.execute(
+          "UPDATE users SET password_hash=?,revision=revision+1,updated_at=? WHERE id=?",
+          [hash, clock.now(), user.id],
+        );
+        const [revoked] = await connection.execute<ResultSetHeader>(
+          "UPDATE refresh_token_sessions SET revoked_at=?,revoke_reason='password_changed' WHERE user_id=? AND id<>? AND revoked_at IS NULL",
+          [clock.now(), user.id, actor.sid],
+        );
+        await writeAudit(connection, {
+          actorId: user.id,
+          action: "profile.password_change",
+          targetType: "account",
+          targetId: user.id,
+          metadata: { sessionCount: revoked.affectedRows },
+        });
+        const [[updated]] = await connection.execute<UserRow[]>("SELECT * FROM users WHERE id=?", [
+          user.id,
+        ]);
+        return profileDto(connection, updated);
+      });
+    },
   };
 }
 export type ProfileService = ReturnType<typeof createProfileService>;
