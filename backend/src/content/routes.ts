@@ -1,10 +1,12 @@
-import { Router } from "express";
+import { Router, json } from "express";
 import { z } from "zod";
 import type { AuthService, AuthPrincipal } from "../auth/service";
 import { authenticate, requirePermission } from "../authorization/middleware";
 import { requireBrowserOrigin, type SecurityConfig } from "../http/security";
 import { validate } from "../http/validation";
 import type { ContentService, ListInput } from "./service";
+import { customerExtra, type ImportRow } from "./customer-import";
+import { ApiError } from "../http/errors";
 
 const uuid = z.uuid();
 const revision = z.number().int().positive();
@@ -89,6 +91,8 @@ const customerCreate = z
     vatRate: z.number().min(0).max(100).optional(),
     notes: z.string().nullable().optional(),
     active: z.boolean().optional(),
+    representative: z.string().max(255).nullable().optional(),
+    extra: customerExtra.optional(),
   })
   .strict();
 const customerUpdate = z
@@ -102,6 +106,8 @@ const customerUpdate = z
     vatRate: z.number().min(0).max(100).optional(),
     notes: z.string().nullable().optional(),
     active: z.boolean().optional(),
+    representative: z.string().max(255).nullable().optional(),
+    extra: customerExtra.optional(),
   })
   .strict()
   .refine((value) => Object.keys(value).length > 1);
@@ -306,6 +312,41 @@ export function contentRoutes(
 ): Router {
   const r = Router();
   const write = requireBrowserOrigin(config);
+  r.post(
+    "/customers/import",
+    authenticate(auth),
+    write,
+    requirePermission("customer.create"),
+    json({ limit: "2mb", strict: true }),
+    async (req, res) => {
+      if (Array.isArray(req.body?.rows) && req.body.rows.length > 1000)
+        throw new ApiError(400, "TOO_MANY_ROWS", "Tối đa 1.000 dòng mỗi lần import");
+      const body = validate(
+        z
+          .object({
+            dryRun: z.boolean(),
+            rows: z
+              .array(
+                z
+                  .object({
+                    row: z.number().int().positive(),
+                    action: z.enum(["create", "update", "skip"]).default("skip"),
+                    targetId: uuid.optional(),
+                    revision: revision.optional(),
+                    fields: z.record(z.string(), z.unknown()),
+                  })
+                  .strict(),
+              )
+              .max(1000),
+          })
+          .strict(),
+        req.body,
+      );
+      res.json(
+        await service.importCustomers(body as { dryRun: boolean; rows: ImportRow[] }, req.auth!),
+      );
+    },
+  );
   r.use(
     "/customers",
     entity(

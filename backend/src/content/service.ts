@@ -9,6 +9,13 @@ import { writeAudit } from "../audit/repository";
 import { ApiError } from "../http/errors";
 import { assertContentReady } from "./schema";
 import {
+  customerExtra,
+  duplicateKeys,
+  validateImportFields,
+  type ImportRow,
+  type ImportResult,
+} from "./customer-import";
+import {
   attributesFromLegacy,
   legacyAttributeKeys,
   legacyFromAttributes,
@@ -87,6 +94,8 @@ export interface CustomerInput {
   vatRate?: number;
   notes?: string | null;
   active?: boolean;
+  representative?: string | null;
+  extra?: Record<string, string | number | boolean | null>;
 }
 export interface CustomerDto {
   id: string;
@@ -98,6 +107,8 @@ export interface CustomerDto {
   vatRate: number;
   notes: string | null;
   active: boolean;
+  representative: string | null;
+  extra: Record<string, string | number | boolean | null> | null;
   createdAt: string;
   updatedAt: string;
   revision: number;
@@ -372,6 +383,9 @@ const customerDto = (row: RowDataPacket): CustomerDto => ({
   vatRate: Number(row.vat_rate),
   notes: row.notes == null ? null : String(row.notes),
   active: Boolean(row.active),
+  representative: row.representative == null ? null : String(row.representative),
+  extra:
+    row.extra == null ? null : typeof row.extra === "string" ? JSON.parse(row.extra) : row.extra,
   createdAt: iso(row.created_at)!,
   updatedAt: iso(row.updated_at)!,
   revision: Number(row.revision),
@@ -705,35 +719,81 @@ export function createContentService(pool: Pool, clock: Clock) {
       return customerDto(row);
     });
   }
+  async function insertCustomer(c: PoolConnection, input: CustomerInput): Promise<CustomerDto> {
+    const id = randomUUID();
+    const t = clock.now();
+    await c.execute(
+      `INSERT INTO customers (id,name,kind,address,phone,email,vat_rate,notes,active,representative,extra,created_at,updated_at,revision)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,1)`,
+      [
+        id,
+        input.name,
+        input.kind,
+        input.address ?? null,
+        input.phone ?? null,
+        input.email ?? null,
+        input.vatRate ?? 8,
+        input.notes ?? null,
+        input.active === false ? 0 : 1,
+        input.representative ?? null,
+        input.extra === undefined ? null : JSON.stringify(input.extra),
+        t,
+        t,
+      ],
+    );
+    return customerDto((await readRow(c, "customers", id))!);
+  }
   async function createCustomer(input: CustomerInput, actor: AuthPrincipal): Promise<CustomerDto> {
     return authorized(actor, "customer.create", async (c) => {
-      const id = randomUUID();
-      const t = clock.now();
-      await c.execute(
-        `INSERT INTO customers (id,name,kind,address,phone,email,vat_rate,notes,active,created_at,updated_at,revision)
-         VALUES (?,?,?,?,?,?,?,?,?,?,?,1)`,
-        [
-          id,
-          input.name,
-          input.kind,
-          input.address ?? null,
-          input.phone ?? null,
-          input.email ?? null,
-          input.vatRate ?? 8,
-          input.notes ?? null,
-          input.active === false ? 0 : 1,
-          t,
-          t,
-        ],
-      );
+      const customer = await insertCustomer(c, input);
       await writeAudit(c, {
         actorId: actor.principal.id,
         action: "customer.create",
         targetType: "customer",
-        targetId: id,
+        targetId: customer.id,
       });
-      return customerDto((await readRow(c, "customers", id))!);
+      return customer;
     });
+  }
+  async function changeCustomer(
+    c: PoolConnection,
+    id: string,
+    input: Partial<CustomerInput>,
+    revision: number,
+  ): Promise<CustomerDto> {
+    const sets: string[] = [];
+    const values: (string | number | boolean | null | Date)[] = [];
+    for (const [key, col] of [
+      ["name", "name"],
+      ["kind", "kind"],
+      ["address", "address"],
+      ["phone", "phone"],
+      ["email", "email"],
+      ["vatRate", "vat_rate"],
+      ["notes", "notes"],
+      ["representative", "representative"],
+    ] as const) {
+      if (input[key] !== undefined) {
+        sets.push(`${col}=?`);
+        values.push(input[key] ?? null);
+      }
+    }
+    if (input.extra !== undefined) {
+      sets.push("extra=?");
+      values.push(JSON.stringify(input.extra));
+    }
+    if (input.active !== undefined) {
+      sets.push("active=?");
+      values.push(input.active ? 1 : 0);
+    }
+    if (sets.length) {
+      const [result] = await c.execute<ResultSetHeader>(
+        `UPDATE customers SET ${sets.join(",")}, updated_at=?, revision=revision+1 WHERE id=? AND revision=?`,
+        [...values, clock.now(), id, revision],
+      );
+      if (result.affectedRows === 0) throw conflict();
+    }
+    return customerDto((await readRow(c, "customers", id))!);
   }
   async function updateCustomer(
     id: string,
@@ -742,33 +802,7 @@ export function createContentService(pool: Pool, clock: Clock) {
     actor: AuthPrincipal,
   ): Promise<CustomerDto> {
     return authorized(actor, "customer.update", async (c) => {
-      const sets: string[] = [];
-      const values: (string | number | boolean | null | Date)[] = [];
-      for (const [key, col] of [
-        ["name", "name"],
-        ["kind", "kind"],
-        ["address", "address"],
-        ["phone", "phone"],
-        ["email", "email"],
-        ["vatRate", "vat_rate"],
-        ["notes", "notes"],
-      ] as const) {
-        if (input[key] !== undefined) {
-          sets.push(`${col}=?`);
-          values.push(input[key] ?? null);
-        }
-      }
-      if (input.active !== undefined) {
-        sets.push("active=?");
-        values.push(input.active ? 1 : 0);
-      }
-      if (sets.length) {
-        const [result] = await c.execute<ResultSetHeader>(
-          `UPDATE customers SET ${sets.join(",")}, updated_at=?, revision=revision+1 WHERE id=? AND revision=?`,
-          [...values, clock.now(), id, revision],
-        );
-        if (result.affectedRows === 0) throw conflict();
-      }
+      const customer = await changeCustomer(c, id, input, revision);
       await writeAudit(c, {
         actorId: actor.principal.id,
         action: "customer.update",
@@ -776,7 +810,123 @@ export function createContentService(pool: Pool, clock: Clock) {
         targetId: id,
         metadata: { changedFields: Object.keys(input) },
       });
-      return customerDto((await readRow(c, "customers", id))!);
+      return customer;
+    });
+  }
+  async function importCustomers(
+    input: { dryRun: boolean; rows: ImportRow[] },
+    actor: AuthPrincipal,
+  ): Promise<ImportResult> {
+    return authorized(actor, "customer.create", async (c) => {
+      if (input.rows.length > 1000)
+        throw new ApiError(400, "TOO_MANY_ROWS", "Tối đa 1.000 dòng mỗi lần import");
+      if (input.rows.some((row) => row.action === "update")) {
+        const { principal } = await lockAuthorizedUsers(c, actor, "customer.update", clock);
+        assertPermission(principal, "customer.update");
+      }
+      const [existing] = await c.query<RowDataPacket[]>(
+        "SELECT * FROM customers ORDER BY id FOR UPDATE",
+      );
+      const customers = existing.map(customerDto);
+      const result: ImportResult = {
+        rows: [],
+        created: 0,
+        updated: 0,
+        skipped: 0,
+        committed: false,
+      };
+      const prepared: Partial<CustomerInput>[] = [];
+      const updateTargets = new Set<string>();
+      let stale = false;
+      for (const row of input.rows) {
+        const parsed = validateImportFields(row.fields, row.action === "update");
+        const fields = parsed.success ? parsed.data : row.fields;
+        prepared.push(parsed.success ? parsed.data : {});
+        const errors =
+          parsed.success || row.action === "skip"
+            ? []
+            : parsed.error.issues.map((issue) => ({
+                field: issue.path.join("."),
+                message: issue.message,
+              }));
+        const matches = customers.flatMap((customer) => {
+          const by = duplicateKeys(fields, customer);
+          return by.length
+            ? [{ id: customer.id, name: customer.name, revision: customer.revision, by }]
+            : [];
+        });
+        const earlier = input.rows
+          .slice(0, result.rows.length)
+          .find((other) => duplicateKeys(fields, other.fields).length);
+        if (row.action === "update") {
+          const target = customers.find((customer) => customer.id === row.targetId);
+          if (!row.targetId || !row.revision || !target) {
+            errors.push({
+              field: "targetId",
+              message: "Khách hàng cập nhật không tồn tại hoặc thiếu revision",
+            });
+          } else if (target.revision !== row.revision || updateTargets.has(target.id)) {
+            stale = true;
+            errors.push({ field: "revision", message: "Dữ liệu đã thay đổi, vui lòng tải lại" });
+          }
+          if (target) {
+            updateTargets.add(target.id);
+            const pending = prepared[prepared.length - 1];
+            if (pending.extra) {
+              pending.extra = { ...target.extra, ...pending.extra };
+              if (!customerExtra.safeParse(pending.extra).success)
+                errors.push({ field: "extra", message: "Tối đa 30 trường mở rộng" });
+            }
+          }
+        }
+        result.rows.push({
+          row: row.row,
+          status: errors.length ? "error" : matches.length || earlier ? "duplicate" : "ok",
+          errors,
+          matches,
+          ...(earlier ? { inFile: earlier.row } : {}),
+        });
+      }
+      if (input.dryRun) return result;
+      if (stale)
+        throw new ApiError(409, "REVISION_CONFLICT", "Dữ liệu đã thay đổi, vui lòng tải lại", {
+          rows: result.rows,
+        });
+      if (result.rows.some((row) => row.errors.length))
+        throw new ApiError(400, "INVALID_INPUT", "Dữ liệu import không hợp lệ", {
+          rows: result.rows,
+        });
+      const customerIds: string[] = [];
+      for (const [index, row] of input.rows.entries()) {
+        if (row.action === "skip") {
+          result.skipped++;
+          continue;
+        }
+        const fields = prepared[index];
+        if (row.action === "create") {
+          const customer = await insertCustomer(c, fields as CustomerInput);
+          customerIds.push(customer.id);
+          result.created++;
+        } else {
+          const target = customers.find((customer) => customer.id === row.targetId)!;
+          const customer = await changeCustomer(c, target.id, fields, row.revision!);
+          customerIds.push(customer.id);
+          result.updated++;
+        }
+      }
+      await writeAudit(c, {
+        actorId: actor.principal.id,
+        action: "customer.import",
+        targetType: "customer",
+        metadata: {
+          created: result.created,
+          updated: result.updated,
+          skipped: result.skipped,
+          customerIds,
+        },
+      });
+      result.committed = true;
+      return result;
     });
   }
   async function deleteCustomer(
@@ -1200,6 +1350,7 @@ export function createContentService(pool: Pool, clock: Clock) {
 
   return {
     listCustomers,
+    importCustomers,
     getCustomer,
     createCustomer,
     updateCustomer,
