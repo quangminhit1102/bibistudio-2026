@@ -100,6 +100,8 @@ Vì migration tự chạy khi deploy và rollback không down-migrate (mục 4),
 
 CI hoặc upload lỗi trước activation thì website không chuyển. Receiver kiểm tra hosting sau activation; nếu lỗi sẽ trả current/routing về bản trước và xác minh phục hồi. Nếu HTTP/browser/old-client smoke phía runner lỗi sau server activation, deploy client gọi rollback bản trước, kiểm tra phục hồi rồi báo job thất bại. Nếu rollback cũng lỗi, job báo rõ `ROLLBACK FAILED`; không coi đây là deploy thành công.
 
+Sau khi cả HTTP/browser/old-client smoke đạt, deploy client ghi deployment record và trạng thái `success` lên GitHub. Nếu một trong hai lệnh API này lỗi (ví dụ GitHub HTTP 500), job chỉ in `::warning::` kèm lỗi và xác nhận release đã live, vẫn kết thúc thành công; không rollback website chỉ vì thiếu bản ghi GitHub. Đối chiếu release ID trên website/API và log smoke khi lịch sử deployment trên GitHub thiếu hoặc chưa có trạng thái `success`. Lỗi upload, deploy, smoke hoặc rollback vẫn làm job thất bại như trên.
+
 ## 4. Rollback production
 
 Workflow: [Rollback production](../.github/workflows/rollback.yml). Chỉ có production, không cần chọn môi trường.
