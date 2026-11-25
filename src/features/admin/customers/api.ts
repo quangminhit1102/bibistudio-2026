@@ -3,6 +3,8 @@ import {
   duplicateKeys,
   validateImportFields,
   customerExtra,
+  CUSTOMER_IMPORT_MAX_BYTES,
+  customerImportJsonBytes,
   type ImportRow as ServerImportRow,
   type ImportResult,
 } from "../../../../backend/src/content/customer-import";
@@ -41,6 +43,12 @@ export async function importCustomers(
       }),
     ),
   };
+  if (customerImportJsonBytes(input) > CUSTOMER_IMPORT_MAX_BYTES)
+    throw new AdminHttpError(
+      413,
+      "PAYLOAD_TOO_LARGE",
+      "Dữ liệu import quá lớn so với giới hạn máy chủ. Vui lòng chia nhỏ file và thử lại.",
+    );
   if (runtime.session?.kind === "http") {
     if (!runtime.http) throw new Error("Phiên HTTP không khả dụng");
     try {

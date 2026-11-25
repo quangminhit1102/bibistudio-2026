@@ -19,15 +19,15 @@ export function customerImportErrorMessage(
     return `${extra.label} không hợp lệ (tối đa 500 ký tự)`;
   }
   const messages: Record<string, string> = {
-    address: "Địa chỉ không hợp lệ",
+    address: "Địa chỉ không hợp lệ (tối đa 1 KB dữ liệu JSON)",
     email: "Email không hợp lệ",
     phone: "Điện thoại không hợp lệ (tối đa 50 ký tự)",
     kind: "Loại khách không hợp lệ (chọn Nhà sách, Cá nhân hoặc Công ty)",
     vatRate: "VAT không hợp lệ (dùng Có, Không hoặc số 0–100)",
     representative: "Người đại diện không hợp lệ (tối đa 255 ký tự)",
-    notes: "Thông tin thêm không hợp lệ",
+    notes: "Thông tin thêm không hợp lệ (tối đa 2 KB dữ liệu JSON)",
     active: "Trạng thái hoạt động không hợp lệ",
-    extra: "Trường mở rộng không hợp lệ (tối đa 30 trường)",
+    extra: "Trường mở rộng không hợp lệ (tối đa 30 trường, tổng dữ liệu JSON 2 KB)",
     targetId: "Khách hàng cập nhật không khớp dữ liệu hoặc chưa được chọn",
     revision: "Phiên bản khách hàng không hợp lệ hoặc đã thay đổi, vui lòng tải lại",
     action: "Lựa chọn xử lý không hợp lệ",

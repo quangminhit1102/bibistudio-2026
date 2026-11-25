@@ -1,7 +1,26 @@
 import { z } from "zod/v4";
 import type { CustomerInput } from "./service";
 
-export const CUSTOMER_IMPORT_MAX_BYTES = 128 * 1024 * 1024;
+export const CUSTOMER_IMPORT_FIELD_MAX_BYTES = {
+  name: 1024,
+  kind: 16,
+  address: 1024,
+  phone: 128,
+  email: 256,
+  vatRate: 32,
+  notes: 2048,
+  active: 5,
+  representative: 1024,
+  extra: 2048,
+} as const;
+export const CUSTOMER_IMPORT_MAX_BYTES =
+  1000 *
+    (Object.values(CUSTOMER_IMPORT_FIELD_MAX_BYTES).reduce((sum, size) => sum + size, 0) + 256) +
+  64;
+export const customerImportJsonBytes = (value: unknown): number =>
+  new TextEncoder().encode(JSON.stringify(value)).byteLength;
+const withinJsonBytes = (field: keyof typeof CUSTOMER_IMPORT_FIELD_MAX_BYTES) => (value: unknown) =>
+  customerImportJsonBytes(value) <= CUSTOMER_IMPORT_FIELD_MAX_BYTES[field];
 
 export const normalizeName = (s: string): string => s.trim().replace(/\s+/g, " ").toLowerCase();
 export const phoneDigits = (s: string): string => s.replace(/\D/g, "");
@@ -42,16 +61,21 @@ export const customerExtra = z
 
 const importFields = z
   .object({
-    name: z.string().trim().min(1).max(255),
+    name: z.string().trim().min(1).max(255).refine(withinJsonBytes("name")),
     kind: z.enum(["company", "bookstore", "individual"]),
-    address: z.string().nullable().optional(),
-    phone: z.string().max(50).nullable().optional(),
-    email: z.email().max(254).nullable().optional(),
+    address: z.string().max(1024).refine(withinJsonBytes("address")).nullable().optional(),
+    phone: z.string().max(50).refine(withinJsonBytes("phone")).nullable().optional(),
+    email: z.email().max(254).refine(withinJsonBytes("email")).nullable().optional(),
     vatRate: z.number().min(0).max(100).optional(),
-    notes: z.string().nullable().optional(),
+    notes: z.string().max(2048).refine(withinJsonBytes("notes")).nullable().optional(),
     active: z.boolean().optional(),
-    representative: z.string().max(255).nullable().optional(),
-    extra: customerExtra.optional(),
+    representative: z
+      .string()
+      .max(255)
+      .refine(withinJsonBytes("representative"))
+      .nullable()
+      .optional(),
+    extra: customerExtra.refine(withinJsonBytes("extra")).optional(),
   })
   .strict();
 

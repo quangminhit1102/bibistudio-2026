@@ -12,6 +12,26 @@ afterEach(async () => {
   await f.store.destroy();
 });
 const row = (i: number, name: string) => ({ row: i, action: "create" as const, fields: { name } });
+it("rejects oversized serialized UTF-8 payloads before making an HTTP request", async () => {
+  const request = vi
+    .fn()
+    .mockResolvedValue({ rows: [], created: 0, updated: 0, skipped: 0, committed: false });
+  await expect(
+    importCustomers(
+      {
+        ...f,
+        session: { kind: "http", userId: "test", principal: {} as never },
+        http: { request } as unknown as AdminHttpClient,
+      },
+      { dryRun: true, rows: [row(2, "ế".repeat(2800000))] },
+    ),
+  ).rejects.toMatchObject({
+    status: 413,
+    code: "PAYLOAD_TOO_LARGE",
+    message: "Dữ liệu import quá lớn so với giới hạn máy chủ. Vui lòng chia nhỏ file và thử lại.",
+  });
+  expect(request).not.toHaveBeenCalled();
+});
 it("explains HTTP payload limits in Vietnamese instead of showing proxy/parser text", async () => {
   const request = vi
     .fn()

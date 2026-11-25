@@ -287,21 +287,19 @@ test("update targets must still match a name, phone or email and mismatches roll
 });
 test("import accepts 1000 maximally populated bounded fields beyond 2 MB", async (t) => {
   const f = await fixture(t);
-  const extra = Object.fromEntries(
-    Array.from({ length: 30 }, (_, i) => [String(i).padEnd(64, "k"), "\u0000".repeat(500)]),
-  );
+  const extra = { ["k".repeat(64)]: "\u0000".repeat(329) };
   const email = "a".repeat(64) + "@" + "b".repeat(63) + "." + "c".repeat(63) + "." + "d".repeat(61);
   const payload = {
     dryRun: true,
     rows: Array.from({ length: 1000 }, (_, i) =>
       row(i + 1, {
-        name: String(i).padEnd(255, "n"),
+        name: String(i).padEnd(100, "n") + "\u0000".repeat(153),
         kind: "company",
-        address: "a".repeat(1000),
-        notes: "n".repeat(1000),
+        address: "a".repeat(1022),
+        notes: "n".repeat(2046),
         phone: "1".repeat(50),
         email,
-        representative: "r".repeat(255),
+        representative: "r".repeat(100) + "\u0000".repeat(153),
         vatRate: 100,
         active: true,
         extra,
@@ -314,6 +312,15 @@ test("import accepts 1000 maximally populated bounded fields beyond 2 MB", async
   const body = await response.json();
   assert.equal(body.rows.length, 1000);
   assert.ok(body.rows.every((row) => row.errors.length === 0));
+});
+test("import rejects JSON over 8 MB before row validation", async (t) => {
+  const f = await fixture(t);
+  const response = await f.request("/customers/import", "POST", {
+    dryRun: true,
+    rows: [row(1, { name: "Too large", notes: "x".repeat(8 * 1024 * 1024) })],
+  });
+  assert.equal(response.status, 413);
+  assert.equal((await response.json()).error.code, "PAYLOAD_TOO_LARGE");
 });
 test("import enforces authentication, browser origin and fresh create/update permissions", async (t) => {
   const f = await fixture(t);

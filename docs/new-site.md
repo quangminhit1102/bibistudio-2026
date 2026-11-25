@@ -57,6 +57,8 @@ export default defineCustomers({
 
 Mỗi trường có `key` ổn định, `label`, `type` là `text`, `number` hoặc `boolean`; `importHeaders` là danh sách tiêu đề Excel thay thế, không bắt buộc. Giá trị lưu dưới khóa tương ứng trong `customers.extra`, không cần thêm cột SQL. Tối đa 30 khóa, mỗi giá trị chuỗi tối đa 500 ký tự. Form, chi tiết, file mẫu và parser import lấy các trường cố định cộng trường site qua `src/features/admin/customers/fields.ts`; không sửa lõi để thêm trường. Giữ các key đã dùng khi cập nhật site để dữ liệu cũ tiếp tục được hiển thị đúng.
 
+Riêng import, địa chỉ tối đa 1 KiB, ghi chú tối đa 2 KiB và tổng `extra` tối đa 2 KiB, tính theo JSON UTF-8 đã serialize (kể cả escape). Các trường tên, đại diện, điện thoại và email vẫn có giới hạn ký tự tương ứng cột SQL, cộng ngân sách byte riêng trong `backend/src/content/customer-import.ts`. Tổng ngân sách từng trường và phần envelope cho 1.000 dòng cho ra giới hạn request 7.861.064 byte (dưới 8 MB); client kiểm tra trước khi gửi. File Excel vẫn tối đa 2 MB. Các giới hạn import không thay đổi CRUD khách hàng hoặc dữ liệu `extra` cũ được giữ lại khi cập nhật.
+
 ## 3. Kiểm tra và build
 
 ```bash
