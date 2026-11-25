@@ -107,7 +107,7 @@ export default function CustomerImportDialog({ onClose }: { onClose: () => void 
     setChecking(true);
     setRows((items) => items.map((row) => (row.row === rowNumber ? { ...row, ...change } : row)));
   }
-  function edit(row: ImportRow, key: string, value: unknown, extraKey?: string) {
+  function edit(row: ImportRow, key: string, value: string | boolean, extraKey?: string) {
     const input = extraKey
       ? { ...row.fields, extra: { ...row.fields.extra, [extraKey]: value } }
       : { ...row.fields, [key]: value };
