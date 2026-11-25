@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
@@ -90,7 +90,11 @@ it("previews duplicates and errors, edits inline, explicitly creates duplicates,
   ]);
   fireEvent.change(screen.getByLabelText("Chọn file .xlsx"), { target: { files: [file] } });
   expect(await screen.findByLabelText("Tên dòng 2")).toHaveValue("Import Example");
-  await waitFor(() => expect(screen.getByLabelText("Xử lý dòng 3")).toHaveValue("skip"));
+  await waitFor(() =>
+    expect(
+      within(screen.getByLabelText("Xử lý dòng 3")).getByRole("option", { selected: true }),
+    ).toHaveTextContent("Bỏ qua (tự động)"),
+  );
   expect(screen.getByRole("button", { name: /Xác nhận import/ })).toBeDisabled();
   await u.selectOptions(screen.getByLabelText("Xử lý dòng 3"), "create");
   fireEvent.change(screen.getByLabelText("Tên dòng 4"), { target: { value: "Import Fixed" } });
@@ -118,7 +122,11 @@ it("defaults a newly matching edited row to skip but preserves an explicit creat
     expect(screen.getByRole("button", { name: /Xác nhận import/ })).toBeEnabled(),
   );
   fireEvent.change(screen.getByLabelText("Tên dòng 2"), { target: { value: existing.name } });
-  await waitFor(() => expect(screen.getByLabelText("Xử lý dòng 2")).toHaveValue("skip"));
+  await waitFor(() =>
+    expect(
+      within(screen.getByLabelText("Xử lý dòng 2")).getByRole("option", { selected: true }),
+    ).toHaveTextContent("Bỏ qua (tự động)"),
+  );
   fireEvent.change(screen.getByLabelText("Xử lý dòng 2"), { target: { value: "create" } });
   fireEvent.change(screen.getByLabelText("Tên dòng 2"), {
     target: { value: existing.name.toUpperCase() },
@@ -142,7 +150,11 @@ it("drops a chosen update target when edited fields no longer match it", async (
   fireEvent.change(screen.getByLabelText("Tên dòng 2"), {
     target: { value: "New unrelated name" },
   });
-  await waitFor(() => expect(screen.getByLabelText("Xử lý dòng 2")).toHaveValue("create"));
+  await waitFor(() =>
+    expect(
+      within(screen.getByLabelText("Xử lý dòng 2")).getByRole("option", { selected: true }),
+    ).toHaveTextContent("Tạo mới (tự động)"),
+  );
   expect(screen.queryByRole("option", { name: "Cập nhật khách đã chọn" })).not.toBeInTheDocument();
   await waitFor(() =>
     expect(screen.getByRole("button", { name: /Xác nhận import/ })).toBeEnabled(),
@@ -208,16 +220,24 @@ it("re-infers kind on name edits unless the user has chosen a kind", async () =>
     target: { files: [await workbook([["Tên"], ["Kind example"]])] },
   });
   await screen.findByLabelText("Tên dòng 2");
-  expect(screen.getByLabelText("Loại dòng 2")).toHaveValue("individual");
+  expect(
+    within(screen.getByLabelText("Loại dòng 2")).getByRole("option", { selected: true }),
+  ).toHaveTextContent("Cá nhân (tự động)");
   fireEvent.change(screen.getByLabelText("Tên dòng 2"), { target: { value: "NHÀ SÁCH Updated" } });
-  expect(screen.getByLabelText("Loại dòng 2")).toHaveValue("bookstore");
+  expect(
+    within(screen.getByLabelText("Loại dòng 2")).getByRole("option", { selected: true }),
+  ).toHaveTextContent("Nhà sách (tự động)");
   fireEvent.change(screen.getByLabelText("Tên dòng 2"), { target: { value: "CÔNG TY Updated" } });
-  expect(screen.getByLabelText("Loại dòng 2")).toHaveValue("company");
+  expect(
+    within(screen.getByLabelText("Loại dòng 2")).getByRole("option", { selected: true }),
+  ).toHaveTextContent("Công ty (tự động)");
   fireEvent.change(screen.getByLabelText("Loại dòng 2"), { target: { value: "individual" } });
   fireEvent.change(screen.getByLabelText("Tên dòng 2"), { target: { value: "NXB Updated" } });
   expect(screen.getByLabelText("Loại dòng 2")).toHaveValue("individual");
-  fireEvent.change(screen.getByLabelText("Loại dòng 2"), { target: { value: "" } });
-  expect(screen.getByLabelText("Loại dòng 2")).toHaveValue("bookstore");
+  await userEvent.selectOptions(screen.getByLabelText("Loại dòng 2"), "auto");
+  expect(
+    within(screen.getByLabelText("Loại dòng 2")).getByRole("option", { selected: true }),
+  ).toHaveTextContent("Nhà sách (tự động)");
   await waitFor(() =>
     expect(screen.getByRole("button", { name: /Xác nhận import/ })).toBeEnabled(),
   );
@@ -226,6 +246,85 @@ it("re-infers kind on name edits unless the user has chosen a kind", async () =>
   expect((await f.store.list("customers")).find((c) => c.name === "NXB Updated")).toMatchObject({
     kind: "bookstore",
   });
+});
+it.each(["skip", "create"] as const)(
+  "records an explicit %s even when it was already the automatic action",
+  async (action) => {
+    const existing = (await f.store.get("customers", f.customerId))!;
+    mount();
+    await userEvent.click(await screen.findByRole("button", { name: "Import Excel" }));
+    fireEvent.change(await screen.findByLabelText("Chọn file .xlsx"), {
+      target: {
+        files: [
+          await workbook([
+            ["Tên"],
+            [action === "skip" ? existing.name : "Unique explicit customer"],
+          ]),
+        ],
+      },
+    });
+    const select = await screen.findByLabelText("Xử lý dòng 2");
+    expect(select).toHaveValue("auto");
+    expect(within(select).getByRole("option", { selected: true })).toHaveTextContent(
+      action === "skip" ? "Bỏ qua (tự động)" : "Tạo mới (tự động)",
+    );
+    await userEvent.selectOptions(select, action);
+    fireEvent.change(screen.getByLabelText("Tên dòng 2"), {
+      target: { value: action === "skip" ? "Unique after edit" : existing.name },
+    });
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: /Xác nhận import/ })).toBeEnabled(),
+    );
+    expect(select).toHaveValue(action);
+    await userEvent.selectOptions(select, "auto");
+    expect(select).toHaveValue("auto");
+    expect(within(select).getByRole("option", { selected: true })).toHaveTextContent(
+      action === "skip" ? "Tạo mới (tự động)" : "Bỏ qua (tự động)",
+    );
+  },
+);
+it("records an explicit kind equal to the inferred kind", async () => {
+  mount();
+  await userEvent.click(await screen.findByRole("button", { name: "Import Excel" }));
+  fireEvent.change(await screen.findByLabelText("Chọn file .xlsx"), {
+    target: { files: [await workbook([["Tên"], ["Nhà sách Inferred"]])] },
+  });
+  const select = await screen.findByLabelText("Loại dòng 2");
+  expect(select).toHaveValue("auto");
+  expect(within(select).getByRole("option", { selected: true })).toHaveTextContent(
+    "Nhà sách (tự động)",
+  );
+  await userEvent.selectOptions(select, "bookstore");
+  fireEvent.change(screen.getByLabelText("Tên dòng 2"), { target: { value: "Công ty Changed" } });
+  expect(select).toHaveValue("bookstore");
+  await userEvent.selectOptions(select, "auto");
+  expect(within(select).getByRole("option", { selected: true })).toHaveTextContent(
+    "Công ty (tự động)",
+  );
+});
+it("keeps invalid workbook kinds distinct from the automatic select option", async () => {
+  mount();
+  await userEvent.click(await screen.findByRole("button", { name: "Import Excel" }));
+  fireEvent.change(await screen.findByLabelText("Chọn file .xlsx"), {
+    target: {
+      files: [
+        await workbook([
+          ["Tên", "Loại"],
+          ["Invalid auto kind", "auto"],
+        ]),
+      ],
+    },
+  });
+  const select = await screen.findByLabelText("Loại dòng 2");
+  expect(select).toHaveValue("invalid");
+  expect(within(select).getByRole("option", { selected: true })).toHaveTextContent("auto");
+  await userEvent.selectOptions(select, "auto");
+  expect(within(select).getByRole("option", { selected: true })).toHaveTextContent(
+    "Cá nhân (tự động)",
+  );
+  await waitFor(() =>
+    expect(screen.getByRole("button", { name: /Xác nhận import/ })).toBeEnabled(),
+  );
 });
 it("rejects invalid file selection without a writable preview and lets the user retry", async () => {
   mount();
@@ -326,13 +425,21 @@ it("reloads preview after a revision conflict and requires choosing the updated 
     },
   });
   const action = await screen.findByLabelText("Xử lý dòng 2");
-  await waitFor(() => expect(action).toHaveValue("skip"));
+  await waitFor(() =>
+    expect(within(action).getByRole("option", { selected: true })).toHaveTextContent(
+      "Bỏ qua (tự động)",
+    ),
+  );
   await u.selectOptions(action, `update:${existing.id}`);
   await waitFor(() =>
     expect(screen.getByRole("button", { name: /Xác nhận import/ })).toBeEnabled(),
   );
   await u.click(screen.getByRole("button", { name: /Xác nhận import/ }));
-  await waitFor(() => expect(action).toHaveValue("skip"));
+  await waitFor(() =>
+    expect(within(action).getByRole("option", { selected: true })).toHaveTextContent(
+      "Bỏ qua (tự động)",
+    ),
+  );
   expect((await f.store.get("customers", existing.id))?.representative).not.toBe("Updated rep");
   await waitFor(() => expect(screen.queryByRole("status")).not.toBeInTheDocument());
   await u.selectOptions(action, `update:${existing.id}`);

@@ -160,7 +160,13 @@ export default function CustomerImportDialog({ onClose }: { onClose: () => void 
           setRows((items) =>
             items.map((row) =>
               row.action === "update"
-                ? { ...row, action: "skip", targetId: undefined, revision: undefined }
+                ? {
+                    ...row,
+                    action: "skip",
+                    actionChosen: false,
+                    targetId: undefined,
+                    revision: undefined,
+                  }
                 : row,
             ),
           );
@@ -281,12 +287,29 @@ export default function CustomerImportDialog({ onClose }: { onClose: () => void 
                               <select
                                 aria-label={label}
                                 title={String(value ?? "")}
-                                value={String(value ?? "")}
+                                value={
+                                  row.kindInferred
+                                    ? "auto"
+                                    : customerKinds.some((kind) => kind.value === value)
+                                      ? String(value)
+                                      : "invalid"
+                                }
                                 disabled={saving}
-                                onChange={(e) => edit(row, field.key, e.target.value)}
+                                onChange={(e) =>
+                                  edit(
+                                    row,
+                                    field.key,
+                                    e.target.value === "auto" ? "" : e.target.value,
+                                  )
+                                }
                               >
+                                <option value="auto">
+                                  {customerKinds.find((kind) => kind.value === value)?.label ??
+                                    "Loại khách"}{" "}
+                                  (tự động)
+                                </option>
                                 {!customerKinds.some((k) => k.value === value) && (
-                                  <option value={String(value ?? "")}>
+                                  <option value="invalid" disabled>
                                     {String(value ?? "") || "Chọn loại"}
                                   </option>
                                 )}
@@ -335,9 +358,24 @@ export default function CustomerImportDialog({ onClose }: { onClose: () => void 
                         <select
                           aria-label={`Xử lý dòng ${row.row}`}
                           disabled={saving}
-                          value={row.action === "update" ? `update:${row.targetId}` : row.action}
+                          value={
+                            !row.actionChosen
+                              ? "auto"
+                              : row.action === "update"
+                                ? `update:${row.targetId}`
+                                : row.action
+                          }
                           onChange={(e) => {
                             const value = e.target.value;
+                            if (value === "auto") {
+                              patch(row.row, {
+                                actionChosen: false,
+                                action: duplicate ? "skip" : "create",
+                                targetId: undefined,
+                                revision: undefined,
+                              });
+                              return;
+                            }
                             const target = check?.matches.find((m) => `update:${m.id}` === value);
                             patch(row.row, {
                               actionChosen: true,
@@ -355,6 +393,7 @@ export default function CustomerImportDialog({ onClose }: { onClose: () => void 
                             });
                           }}
                         >
+                          <option value="auto">{duplicate ? "Bỏ qua" : "Tạo mới"} (tự động)</option>
                           <option value="skip">Bỏ qua</option>
                           <option value="create">Tạo mới</option>
                           {mayUpdate &&
