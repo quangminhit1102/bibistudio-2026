@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod/v4";
 import type { CustomerInput } from "./service";
 
 export const normalizeName = (s: string): string => s.trim().replace(/\s+/g, " ").toLowerCase();

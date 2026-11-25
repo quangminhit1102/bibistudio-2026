@@ -51,6 +51,7 @@ function FilterSelect({
 export interface EntityConfig<K extends EntityKey> {
   entity: K;
   title: string;
+  headerActions?: ReactNode;
   description: string;
   fields: FormField[];
   defaults: CreateInput<K>;
@@ -299,19 +300,22 @@ export function EntityManager<K extends EntityKey>({ config }: { config: EntityC
         title={config.title}
         description={config.description}
         actions={
-          permitted("create") && config.allowCreate !== false ? (
-            <Button
-              variant="primary"
-              onClick={() =>
-                config.createHref
-                  ? void navigate(destination(config.createHref))
-                  : setEditing("new")
-              }
-            >
-              <Plus size={15} />
-              Thêm mới
-            </Button>
-          ) : undefined
+          <>
+            {config.headerActions}
+            {permitted("create") && config.allowCreate !== false ? (
+              <Button
+                variant="primary"
+                onClick={() =>
+                  config.createHref
+                    ? void navigate(destination(config.createHref))
+                    : setEditing("new")
+                }
+              >
+                <Plus size={15} />
+                Thêm mới
+              </Button>
+            ) : undefined}
+          </>
         }
       />
       <div className="a-toolbar">
