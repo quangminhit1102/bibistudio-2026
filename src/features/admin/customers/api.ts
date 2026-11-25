@@ -50,12 +50,14 @@ export async function importCustomers(
   if (generation !== runtime.store.generation)
     throw new ServiceError("aborted", "Phiên thao tác đã thay đổi");
   const assertActive = await authorizeOperation(runtime.store, session, "bookstore", "create");
+  await authorizeOperation(runtime.store, session, "bookstore", "view");
   if (input.rows.some((r) => r.action === "update"))
     await authorizeOperation(runtime.store, session, "bookstore", "update");
   const outcome = await runtime.store.transaction(["customers", "audit", "roles"], async (tx) => {
     assertActive();
     const role = session ? await tx.get("roles", session.roleId) : undefined;
     requirePermission(session, "bookstore", "create", role);
+    requirePermission(session, "bookstore", "view", role);
     if (input.rows.some((r) => r.action === "update"))
       requirePermission(session, "bookstore", "update", role);
     const existing = await tx.list("customers");

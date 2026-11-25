@@ -61,6 +61,21 @@ function mount() {
     </QueryClientProvider>,
   );
 }
+it("hides import from a create-only account without view permission", async () => {
+  const role = (await f.store.get("roles", "super-admin"))!;
+  await f.store.transaction(["roles"], (tx) =>
+    tx.put("roles", { ...role, id: "creator", permissions: { bookstore: ["create"] } }),
+  );
+  const user = (await f.store.get("users", f.session.userId))!;
+  await f.store.transaction(["users"], (tx) => tx.put("users", { ...user, roleId: "creator" }));
+  localStorage.setItem(
+    "bibi-admin:session",
+    JSON.stringify({ version: 2, session: { userId: user.id, roleId: "creator" } }),
+  );
+  mount();
+  await screen.findByRole("button", { name: "Thêm mới" });
+  expect(screen.queryByRole("button", { name: "Import Excel" })).not.toBeInTheDocument();
+});
 it("previews duplicates and errors, edits inline, explicitly creates duplicates, shows counts and refreshes the list", async () => {
   mount();
   const u = userEvent.setup();

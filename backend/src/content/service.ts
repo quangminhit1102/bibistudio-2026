@@ -844,6 +844,8 @@ export function createContentService(pool: Pool, clock: Clock) {
     actor: AuthPrincipal,
   ): Promise<ImportResult> {
     return authorized(actor, "customer.create", async (c) => {
+      const { principal } = await lockAuthorizedUsers(c, actor, "customer.view", clock);
+      assertPermission(principal, "customer.view");
       if (input.rows.length > 1000)
         throw new ApiError(400, "TOO_MANY_ROWS", "Tối đa 1.000 dòng mỗi lần import");
       if (input.rows.some((row) => row.action === "update")) {

@@ -259,6 +259,15 @@ test("import enforces authentication, browser origin and fresh create/update per
   const creator = await f.auth.login({ username: "user01", password: f.secrets.userPassword });
   assert.equal(
     (await f.request("/customers/import", "POST", payload, creator.accessToken)).status,
+    403,
+  );
+  await f.pool.query("INSERT INTO role_permissions VALUES ('system-user','customer.view')");
+  const viewerCreator = await f.auth.login({
+    username: "user01",
+    password: f.secrets.userPassword,
+  });
+  assert.equal(
+    (await f.request("/customers/import", "POST", payload, viewerCreator.accessToken)).status,
     200,
   );
   const old = await (
@@ -269,7 +278,7 @@ test("import enforces authentication, browser origin and fresh create/update per
     rows: [row(1, { name: "Old", kind: "company" }, "update", { targetId: old.id, revision: 1 })],
   };
   assert.equal(
-    (await f.request("/customers/import", "POST", update, creator.accessToken)).status,
+    (await f.request("/customers/import", "POST", update, viewerCreator.accessToken)).status,
     403,
   );
 });

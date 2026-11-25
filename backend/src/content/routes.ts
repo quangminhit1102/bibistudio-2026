@@ -317,6 +317,7 @@ export function contentRoutes(
     authenticate(auth),
     write,
     requirePermission("customer.create"),
+    requirePermission("customer.view"),
     json({ limit: "2mb", strict: true }),
     async (req, res) => {
       if (Array.isArray(req.body?.rows) && req.body.rows.length > 1000)

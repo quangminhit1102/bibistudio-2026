@@ -9,7 +9,9 @@ export default function CustomerList() {
   const [open, setOpen] = useState(false);
   const runtime = useAdmin();
   const role = useRole();
-  const allowed = can(runtime.session, "bookstore", "create", role.data);
+  const allowed =
+    can(runtime.session, "bookstore", "create", role.data) &&
+    can(runtime.session, "bookstore", "view", role.data);
   return (
     <>
       <EntityManager

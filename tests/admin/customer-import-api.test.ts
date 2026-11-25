@@ -12,6 +12,22 @@ afterEach(async () => {
   await f.store.destroy();
 });
 const row = (i: number, name: string) => ({ row: i, action: "create" as const, fields: { name } });
+it("rejects create-only demo imports without exposing matches or writing audit", async () => {
+  const role = (await f.store.get("roles", "super-admin"))!;
+  await f.store.transaction(["roles"], (tx) =>
+    tx.put("roles", { ...role, id: "creator", permissions: { bookstore: ["create"] } }),
+  );
+  for (const dryRun of [true, false])
+    await expect(
+      importCustomers(
+        { ...f, session: { userId: "creator", roleId: "creator" } },
+        { dryRun, rows: [row(2, "Existing")] },
+      ),
+    ).rejects.toMatchObject({ code: "forbidden" });
+  expect((await f.store.list("audit")).filter((a) => a.action === "customer.import")).toHaveLength(
+    0,
+  );
+});
 it.each(["inactive", "changed-role"])("rejects demo import for a %s account", async (state) => {
   const user = (await f.store.get("users", f.session.userId))!;
   await f.store.transaction(["users"], (tx) =>
