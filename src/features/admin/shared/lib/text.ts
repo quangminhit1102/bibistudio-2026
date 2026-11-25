@@ -4,6 +4,23 @@ export const normalizeSearch = (text: string) =>
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/[đĐ]/g, "d")
     .toLowerCase();
+export function trimTrailingSlashes(value: string): string {
+  let end = value.length;
+  while (end > 0 && value[end - 1] === "/") end--;
+  return value.slice(0, end);
+}
+
+export function isRecordEmail(value: string): boolean {
+  const at = value.indexOf("@");
+  const dot = value.indexOf(".", at + 2);
+  return (
+    at > 0 &&
+    at === value.lastIndexOf("@") &&
+    dot > at + 1 &&
+    dot < value.length - 1 &&
+    !/\s/.test(value)
+  );
+}
 export function makeCsv(rows: unknown[][]): string {
   return (
     "\ufeff" +

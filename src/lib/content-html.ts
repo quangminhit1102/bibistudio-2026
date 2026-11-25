@@ -24,7 +24,8 @@ export function slugifyHeading(text: string, index: number): string {
     .replace(/đ/gi, "d")
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
+    .replace(/^-/, "")
+    .replace(/-$/, "");
   return `${base || "muc"}-${index}`;
 }
 

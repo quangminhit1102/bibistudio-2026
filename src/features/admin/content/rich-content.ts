@@ -133,7 +133,10 @@ export function sanitizeRichHtml(html: string): string {
       if (/^(#[\da-f]{3,8}|rgba?\([\d\s.,%]+\)|hsla?\([\d\s.,%]+\)|[a-z]+)$/i.test(color))
         styles.push(`${property}: ${color};`);
     }
-    if (/^(0|[1-9]\d{0,2})px$/.test(style.paddingLeft) && parseFloat(style.paddingLeft) <= 240)
+    if (
+      /^(0|[1-9]\d{0,2})px$/.test(style.paddingLeft) &&
+      Number.parseFloat(style.paddingLeft) <= 240
+    )
       styles.push(`padding-left: ${style.paddingLeft};`);
     const decoration =
       (element as HTMLElement).style.textDecorationLine ||
@@ -156,8 +159,12 @@ export function sanitizeRichHtml(html: string): string {
     const tableElement = ["TABLE", "COL", "TH", "TD"].includes(element.tagName);
     if (tableElement) {
       if (
-        (/^\d+(\.\d+)?%$/.test(width) && parseFloat(width) > 0 && parseFloat(width) <= 100) ||
-        (/^\d+(\.\d+)?px$/.test(width) && parseFloat(width) > 0 && parseFloat(width) <= 1600)
+        (/^\d+(\.\d+)?%$/.test(width) &&
+          Number.parseFloat(width) > 0 &&
+          Number.parseFloat(width) <= 100) ||
+        (/^\d+(\.\d+)?px$/.test(width) &&
+          Number.parseFloat(width) > 0 &&
+          Number.parseFloat(width) <= 1600)
       )
         styles.push(`width: ${width};`);
       if (["top", "middle", "bottom"].includes(verticalAlign))
@@ -190,7 +197,7 @@ export function sanitizeRichHtml(html: string): string {
     }
     if (element.tagName === "IMG") {
       const size = /^\d+(\.\d+)?px$/.test(width)
-        ? parseFloat(width)
+        ? Number.parseFloat(width)
         : Number(element.getAttribute("width"));
       if (Number.isFinite(size) && size >= 16 && size <= 4096)
         element.setAttribute("width", String(Math.round(size)));

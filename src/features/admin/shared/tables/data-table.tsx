@@ -232,6 +232,24 @@ export function DataTable<T extends { id: string }>({
                       {h.column.getCanResize() && (
                         <div
                           className="a-resizer"
+                          role="separator"
+                          tabIndex={0}
+                          aria-orientation="vertical"
+                          aria-valuenow={h.getSize()}
+                          onKeyDown={(event) => {
+                            if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+                            event.preventDefault();
+                            table.setColumnSizing((sizes) => ({
+                              ...sizes,
+                              [h.column.id]: Math.max(
+                                h.column.columnDef.minSize ?? 20,
+                                Math.min(
+                                  h.column.columnDef.maxSize ?? Number.MAX_SAFE_INTEGER,
+                                  h.getSize() + (event.key === "ArrowRight" ? 10 : -10),
+                                ),
+                              ),
+                            }));
+                          }}
                           onMouseDown={h.getResizeHandler()}
                           onTouchStart={h.getResizeHandler()}
                         />

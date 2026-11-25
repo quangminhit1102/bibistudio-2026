@@ -19,3 +19,15 @@ it("returns focus to the root when collapsing a tree from a child with ArrowLeft
   expect(root).toHaveAttribute("aria-expanded", "false");
   expect(root).toHaveFocus();
 });
+
+it("focuses the tree and preserves keyboard traversal and expansion", async () => {
+  render(<NavigationExample name="Tree View" />);
+  const user = userEvent.setup();
+  const tree = screen.getByRole("tree");
+  await user.tab();
+  expect(tree).toHaveFocus();
+  await user.keyboard("{ArrowDown}{ArrowRight}{End}");
+  expect(screen.getByRole("treeitem", { name: "Hà Nội" })).toHaveFocus();
+  await user.keyboard("{Home}");
+  expect(screen.getByRole("treeitem", { name: "▸ Bộ sưu tập Việt Nam" })).toHaveFocus();
+});

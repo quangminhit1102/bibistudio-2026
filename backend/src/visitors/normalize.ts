@@ -14,7 +14,7 @@ export function visitorIdentity(
 ): string | undefined {
   if (!cookie || !/^[A-Za-z0-9_-]{43}\.[a-z0-9]{1,12}\.[A-Za-z0-9_-]{43}$/.test(cookie)) return;
   const [id, expiry, signed] = cookie.split(".");
-  const expires = parseInt(expiry, 36) * 1000;
+  const expires = Number.parseInt(expiry, 36) * 1000;
   if (expires <= +now || expires > +now + VISITOR_COOKIE_TTL_MS) return;
   const expected = signature(`${id}.${expiry}`, secret);
   if (!timingSafeEqual(Buffer.from(expected), Buffer.from(signed))) return;

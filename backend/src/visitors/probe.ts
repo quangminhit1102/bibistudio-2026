@@ -28,7 +28,7 @@ export function verifyProbeMarker(
   )
     throw reject();
   const [release, expiry, nonce, signature] = marker.split(".");
-  const expiresAt = new Date(parseInt(expiry, 36) * 1000);
+  const expiresAt = new Date(Number.parseInt(expiry, 36) * 1000);
   const expected = sign(`${release}.${expiry}.${nonce}`, secret);
   if (
     release !== releaseId ||

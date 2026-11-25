@@ -8,6 +8,15 @@ import type { ImportRow } from "../api";
 import { customerFields, type CustomerField } from "../fields";
 export { inferKind };
 
+export function extractImportEmail(notes: string): string | undefined {
+  const parts = notes.split("@");
+  for (let index = 1; index < parts.length; index++) {
+    const local = parts[index - 1].split(/[^A-Z0-9._%+-]+/i).at(-1);
+    const domain = parts[index].match(/^[A-Z0-9.-]+\.[A-Z]{2,}/i)?.[0];
+    if (local && domain) return `${local}@${domain}`;
+  }
+}
+
 export type CellError = { row: number; field: string; message: string };
 const text = (value: unknown) => (value == null ? "" : String(value).trim());
 const normalize = normalizeCustomerImportHeader;
@@ -150,7 +159,7 @@ export async function parseCustomerWorkbook(
     }
     const notes = text(values.notes);
     if (!text(values.email)) {
-      const email = notes.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)?.[0];
+      const email = extractImportEmail(notes);
       if (email) values.email = email;
     }
     if (!text(values.phone)) {

@@ -52,9 +52,7 @@ export function createDbPool(config: DbConfig, { acquireTimeoutMs = 5000 } = {})
   pool.query = async <T extends QueryResult>(sql: string | QueryOptions, values?: QueryValues) => {
     const connection = await pool.getConnection();
     try {
-      return typeof sql === "string"
-        ? await connection.query<T>(sql, values)
-        : await connection.query<T>(sql, values);
+      return await connection.query<T>(typeof sql === "string" ? { sql } : sql, values);
     } finally {
       connection.release();
     }
@@ -65,9 +63,7 @@ export function createDbPool(config: DbConfig, { acquireTimeoutMs = 5000 } = {})
   ) => {
     const connection = await pool.getConnection();
     try {
-      return typeof sql === "string"
-        ? await connection.execute<T>(sql, values)
-        : await connection.execute<T>(sql, values);
+      return await connection.execute<T>(typeof sql === "string" ? { sql } : sql, values);
     } finally {
       connection.release();
     }

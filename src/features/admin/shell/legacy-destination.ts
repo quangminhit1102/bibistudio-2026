@@ -1,7 +1,9 @@
+import { trimTrailingSlashes } from "../shared/lib/text";
+
 export function legacyDestination(
   pathname: string,
 ): { to: string; search?: Record<string, string> } | null {
-  const path = pathname.replace(/\/+$/, "");
+  const path = trimTrailingSlashes(pathname);
   if (/^\/admin\/bookstore(?:\/|$)/.test(path)) return { to: "/admin/customers" };
   if (/^\/admin\/sales(?:\/(?:orders(?:\/.*)?|order-history|transactions))?$/.test(path))
     return { to: "/admin/sales/slips" };

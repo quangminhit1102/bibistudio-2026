@@ -114,7 +114,8 @@ export default function RichEditor({
     setImageIds(img?.dataset.mediaId ? [img.dataset.mediaId] : []);
     setAlt(img?.alt ?? "");
     setImageWidth(
-      img?.getAttribute("width") ?? (img?.style.width ? String(parseFloat(img.style.width)) : ""),
+      img?.getAttribute("width") ??
+        (img?.style.width ? String(Number.parseFloat(img.style.width)) : ""),
     );
     setCaption(img?.closest("figure")?.querySelector("figcaption")?.textContent ?? "");
     setImageError("");
