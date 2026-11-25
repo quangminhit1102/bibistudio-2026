@@ -248,7 +248,7 @@ export default function Dashboard() {
                         <table className="a-table" style={{ minWidth: 300 }}>
                           <tbody>
                             {r.products
-                              .filter((p) => p.stock - p.reserved < 35)
+                              .filter((p) => p.stock < 35)
                               .slice(0, 6)
                               .map((p) => (
                                 <tr key={p.id}>
@@ -258,7 +258,7 @@ export default function Dashboard() {
                                     </Link>
                                   </td>
                                   <td>
-                                    <Badge tone="warning">{p.stock - p.reserved} khả dụng</Badge>
+                                    <Badge tone="warning">{p.stock} tồn</Badge>
                                   </td>
                                 </tr>
                               ))}
