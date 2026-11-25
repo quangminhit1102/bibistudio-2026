@@ -297,6 +297,7 @@ it("records an explicit kind equal to the inferred kind", async () => {
   await userEvent.selectOptions(select, "bookstore");
   fireEvent.change(screen.getByLabelText("Tên dòng 2"), { target: { value: "Công ty Changed" } });
   expect(select).toHaveValue("bookstore");
+  expect(within(select).getByRole("option", { name: "Công ty (tự động)" })).toBeInTheDocument();
   await userEvent.selectOptions(select, "auto");
   expect(within(select).getByRole("option", { selected: true })).toHaveTextContent(
     "Công ty (tự động)",

@@ -304,8 +304,10 @@ export default function CustomerImportDialog({ onClose }: { onClose: () => void 
                                 }
                               >
                                 <option value="auto">
-                                  {customerKinds.find((kind) => kind.value === value)?.label ??
-                                    "Loại khách"}{" "}
+                                  {customerKinds.find(
+                                    (kind) =>
+                                      kind.value === inferKind(String(row.fields.name ?? "")),
+                                  )?.label ?? "Loại khách"}{" "}
                                   (tự động)
                                 </option>
                                 {!customerKinds.some((k) => k.value === value) && (
