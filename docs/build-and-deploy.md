@@ -162,6 +162,8 @@ Loại sản phẩm có hai giá trị khác nhau: `code` lưu trên `products.p
 
 Tạo/cấp quyền key mới, mở rộng truy cập hoặc chuyển production lần đầu cần xác nhận phù hợp. Không đọc/in private key để điều tra một job lỗi.
 
+Migration nội dung thứ tư (`004_customers_inventory.sql`) chỉ thêm `customers.representative`, `customers.extra` và bảng `stock_movements` với hai chỉ mục thời gian; không có khóa ngoại tới sản phẩm để giữ lịch sử khi xóa sản phẩm. Không xóa `products.reserved` hay dữ liệu khách hàng cũ. Chưa chạy trên production. Trước khi Approve release mang migration 4, bootstrap lại deploy tools từ merge commit có `ops/content-metadata.cjs` nhận đủ bốn file; nếu chưa làm, receiver từ chối với `Invalid content metadata` và production không đổi. Script bootstrap pin SHA và SHA256SUMS sẽ được tạo sau merge, không được tạo trong bước triển khai migration này. Rollback dùng release trước đó có hỗ trợ schema mới hơn một bước; rollback không gỡ các bảng/cột mới.
+
 ## 7. Staging đang tắt và cách bật lại
 
 Staging hosting cũ vẫn được giữ tại `/home/vhplasti/staging.bibistudio.vn`, release root `/home/vhplasti/bibi-deploy/staging`. Hostname tạm `bibi-staging.103-130-217-103.sslip.io` đã dùng được DNS/HTTPS; domain `staging.bibistudio.vn` chưa resolve DNS công khai khi nghiệm thu. Staging không thuộc luồng phát hành hiện tại.

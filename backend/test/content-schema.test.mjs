@@ -75,6 +75,24 @@ test("content schema reports empty before migration and complete after migrateCo
     new Set(["read_time", "cover_image_id"]),
   );
   assert.match(complete.migrationChecksums["003_content_catalogue.sql"], /^[a-f0-9]{64}$/);
+  assert.match(complete.migrationChecksums["004_customers_inventory.sql"], /^[a-f0-9]{64}$/);
+  assert.deepEqual((await columnsOf(f.pool, "customers")).slice(-2), ["representative", "extra"]);
+  assert.deepEqual(await columnsOf(f.pool, "stock_movements"), [
+    "id", "product_id", "product_name", "delta", "stock_before", "stock_after",
+    "reason", "source", "actor_id", "actor_name", "created_at",
+  ]);
+  const [[v4]] = await f.pool.query(
+    "SELECT state,completed_steps FROM content_schema_migrations WHERE version=4",
+  );
+  assert.deepEqual({ ...v4 }, { state: "complete", completed_steps: 2 });
+  const [indexes] = await f.pool.query("SHOW INDEX FROM stock_movements");
+  assert.ok(indexes.some((r) => r.Column_name === "product_id" && r.Seq_in_index === 1));
+  assert.ok(indexes.some((r) => r.Column_name === "created_at" && r.Seq_in_index === 2));
+  assert.ok(indexes.some((r) => r.Column_name === "created_at" && r.Seq_in_index === 1));
+  const [[foreignKeys]] = await f.pool.query(
+    "SELECT COUNT(*) n FROM information_schema.key_column_usage WHERE table_schema=DATABASE() AND table_name='stock_movements' AND referenced_table_name IS NOT NULL",
+  );
+  assert.equal(foreignKeys.n, 0);
   assert.deepEqual(await columnsOf(f.pool, "product_types"), [
     "id",
     "code",
@@ -174,7 +192,7 @@ async function migratedWithNewerRow(t, state) {
   const schema = await import("../dist/content/schema.js");
   await schema.migrateContent(f.pool, directory);
   await f.pool.query(
-    "INSERT INTO content_schema_migrations(version,checksum,state,completed_steps,ddl_hashes,applied_at) VALUES(4,REPEAT('a',64),?,1,'{}',UTC_TIMESTAMP(3))",
+    "INSERT INTO content_schema_migrations(version,checksum,state,completed_steps,ddl_hashes,applied_at) VALUES(5,REPEAT('a',64),?,1,'{}',UTC_TIMESTAMP(3))",
     [state],
   );
   await f.pool.query("ALTER TABLE products ADD COLUMN later_column VARCHAR(10) NULL");
@@ -191,6 +209,7 @@ test("a newer complete schema version keeps the packaged release ready", async (
     "001_content.sql",
     "002_content_v9.sql",
     "003_content_catalogue.sql",
+    "004_customers_inventory.sql",
   ]);
   await assert.rejects(f.migrateContent(f.pool, directory), /newer/i);
 });
@@ -208,7 +227,7 @@ test("a newer complete version does not hide a dirty packaged version", async (t
   assert.equal((await f.contentSchemaStatus(f.pool, directory)).state, "dirty");
 });
 
-test("a database at version 2, as production is, upgrades to version 3 and keeps its rows", async (t) => {
+test("a database at version 2 upgrades to version 4 and keeps its rows", async (t) => {
   const f = await createAuthFixture(t, { visitorHistory: false });
   const { contentSchemaStatus, migrateContent, assertContentReady } =
     await import("../dist/content/schema.js");
@@ -244,6 +263,51 @@ test("a database at version 2, as production is, upgrades to version 3 and keeps
     "SELECT name,translations,image FROM product_categories WHERE id='c1'",
   );
   assert.deepEqual({ ...category }, { name: "Áo dài", translations: null, image: null });
+});
+
+test("version 3 customers survive migration 4 and customer DDL drift is detected", async (t) => {
+  const f = await createAuthFixture(t, { visitorHistory: false });
+  const { migrateContent, contentSchemaStatus, assertContentReady } =
+    await import("../dist/content/schema.js");
+  await applyByHand(f.pool, 1, "001_content.sql", [
+    "product_categories", "content_categories", "posts", "products", "customers",
+  ]);
+  await applyByHand(f.pool, 2, "002_content_v9.sql", ["products", "posts", "media"]);
+  await applyByHand(f.pool, 3, "003_content_catalogue.sql", [
+    "product_types", "product_categories", "products",
+  ]);
+  await f.pool.query(
+    "INSERT INTO customers (id,name,kind,phone,created_at,updated_at) VALUES ('c1','Existing','company','0123456789',NOW(3),NOW(3))",
+  );
+  await migrateContent(f.pool, directory);
+  await migrateContent(f.pool, directory);
+  assert.equal((await contentSchemaStatus(f.pool, directory)).state, "complete");
+  await assert.doesNotReject(assertContentReady(f.pool));
+  const [[customer]] = await f.pool.query(
+    "SELECT name,phone,representative,extra,revision FROM customers WHERE id='c1'",
+  );
+  assert.deepEqual({ ...customer }, {
+    name: "Existing", phone: "0123456789", representative: null, extra: null, revision: 1,
+  });
+  await f.pool.query("ALTER TABLE customers DROP COLUMN representative");
+  assert.equal((await contentSchemaStatus(f.pool, directory)).state, "dirty");
+});
+
+test("version 4 stopped after its first step resumes only on request", async (t) => {
+  const f = await createAuthFixture(t, { visitorHistory: false });
+  const { migrateContent, contentSchemaStatus, assertContentReady } =
+    await import("../dist/content/schema.js");
+  await migrateContent(f.pool, directory);
+  await f.pool.query("DROP TABLE stock_movements");
+  await f.pool.query(
+    "UPDATE content_schema_migrations SET state='dirty',completed_steps=1,ddl_hashes=JSON_REMOVE(ddl_hashes,'$.stock_movements') WHERE version=4",
+  );
+  assert.equal((await contentSchemaStatus(f.pool, directory)).state, "dirty");
+  await assert.rejects(assertContentReady(f.pool), { status: 503, code: "CONTENT_NOT_READY" });
+  await assert.rejects(migrateContent(f.pool, directory), /Dirty content schema/);
+  await migrateContent(f.pool, directory, { resumeDirty: true });
+  assert.equal((await contentSchemaStatus(f.pool, directory)).state, "complete");
+  await assert.doesNotReject(assertContentReady(f.pool));
 });
 
 test("version 3 stopped after its first step is dirty and resumes only on request", async (t) => {

@@ -2,8 +2,13 @@
 const { createHash } = require("node:crypto");
 const { lstat, readFile, readdir } = require("node:fs/promises");
 const { join } = require("node:path");
-const MIGRATION_FILES = ["001_content.sql", "002_content_v9.sql", "003_content_catalogue.sql"];
-/** A release carries the first one, two or three migrations, never a gap or another name. */
+const MIGRATION_FILES = [
+  "001_content.sql",
+  "002_content_v9.sql",
+  "003_content_catalogue.sql",
+  "004_customers_inventory.sql",
+];
+/** A release carries the first one to four migrations, never a gap or another name. */
 const knownFiles = (names) =>
   names.length > 0 && names.join(",") === MIGRATION_FILES.slice(0, names.length).join(",");
 function validateContentMetadata(data) {
