@@ -5,7 +5,7 @@ import { authenticate, requirePermission } from "../authorization/middleware";
 import { requireBrowserOrigin, type SecurityConfig } from "../http/security";
 import { validate } from "../http/validation";
 import type { ContentService, ListInput } from "./service";
-import { customerExtra, type ImportRow } from "./customer-import";
+import { customerExtra, CUSTOMER_IMPORT_MAX_BYTES, type ImportRow } from "./customer-import";
 import { ApiError } from "../http/errors";
 
 const uuid = z.uuid();
@@ -318,7 +318,7 @@ export function contentRoutes(
     write,
     requirePermission("customer.create"),
     requirePermission("customer.view"),
-    json({ limit: "2mb", strict: true }),
+    json({ limit: CUSTOMER_IMPORT_MAX_BYTES, strict: true }),
     async (req, res) => {
       if (Array.isArray(req.body?.rows) && req.body.rows.length > 1000)
         throw new ApiError(400, "TOO_MANY_ROWS", "Tối đa 1.000 dòng mỗi lần import");

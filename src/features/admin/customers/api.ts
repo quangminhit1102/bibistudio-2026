@@ -43,10 +43,20 @@ export async function importCustomers(
   };
   if (runtime.session?.kind === "http") {
     if (!runtime.http) throw new Error("Phiên HTTP không khả dụng");
-    return runtime.http.request<ImportResult>("/api/customers/import", {
-      method: "POST",
-      body: input,
-    });
+    try {
+      return await runtime.http.request<ImportResult>("/api/customers/import", {
+        method: "POST",
+        body: input,
+      });
+    } catch (error) {
+      if (error instanceof AdminHttpError && error.status === 413)
+        throw new AdminHttpError(
+          413,
+          "PAYLOAD_TOO_LARGE",
+          "Dữ liệu import quá lớn so với giới hạn máy chủ. Vui lòng chia nhỏ file và thử lại.",
+        );
+      throw error;
+    }
   }
   if (input.rows.length > 1000) throw new AdminHttpError(400, "TOO_MANY_ROWS", "Tối đa 1.000 dòng");
   const generation = runtime.store.generation;

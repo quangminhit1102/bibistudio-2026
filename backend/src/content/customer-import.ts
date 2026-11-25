@@ -1,6 +1,8 @@
 import { z } from "zod/v4";
 import type { CustomerInput } from "./service";
 
+export const CUSTOMER_IMPORT_MAX_BYTES = 128 * 1024 * 1024;
+
 export const normalizeName = (s: string): string => s.trim().replace(/\s+/g, " ").toLowerCase();
 export const phoneDigits = (s: string): string => s.replace(/\D/g, "");
 export const normalizeEmail = (s: string): string => s.trim().toLowerCase();

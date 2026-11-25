@@ -3,7 +3,7 @@ import { importCustomers } from "../../src/features/admin/customers/api";
 import { businessFixture } from "./business-fixtures";
 import { parseCustomerWorkbook } from "../../src/features/admin/customers/import/parse";
 import { workbook } from "./customer-import-fixture";
-import type { AdminHttpClient } from "../../src/lib/admin-http";
+import { AdminHttpError, type AdminHttpClient } from "../../src/lib/admin-http";
 let f: Awaited<ReturnType<typeof businessFixture>>;
 beforeEach(async () => {
   f = await businessFixture("customer-import-api");
@@ -12,6 +12,25 @@ afterEach(async () => {
   await f.store.destroy();
 });
 const row = (i: number, name: string) => ({ row: i, action: "create" as const, fields: { name } });
+it("explains HTTP payload limits in Vietnamese instead of showing proxy/parser text", async () => {
+  const request = vi
+    .fn()
+    .mockRejectedValue(new AdminHttpError(413, "HTTP_ERROR", "request entity too large"));
+  await expect(
+    importCustomers(
+      {
+        ...f,
+        session: { kind: "http", userId: "test", principal: {} as never },
+        http: { request } as unknown as AdminHttpClient,
+      },
+      { dryRun: true, rows: [] },
+    ),
+  ).rejects.toMatchObject({
+    status: 413,
+    code: "PAYLOAD_TOO_LARGE",
+    message: "Dữ liệu import quá lớn so với giới hạn máy chủ. Vui lòng chia nhỏ file và thử lại.",
+  });
+});
 it("rejects create-only demo imports without exposing matches or writing audit", async () => {
   const role = (await f.store.get("roles", "super-admin"))!;
   await f.store.transaction(["roles"], (tx) =>
