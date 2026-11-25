@@ -175,7 +175,7 @@ export function NavigationExample({ name }: { name: string }) {
     return (
       <div
         role="tree"
-        tabIndex={0}
+        tabIndex={-1}
         aria-label="Cây nội dung"
         onKeyDown={(e) => {
           const items = Array.from(
