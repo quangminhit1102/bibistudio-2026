@@ -1407,6 +1407,12 @@
 .a-customer-import-table td[data-field="email"] {
   min-width: 280px;
 }
+.a-customer-import-table td[data-field="name"] input {
+  min-width: 260px;
+}
+.a-customer-import-table td[data-field="address"] input {
+  min-width: 320px;
+}
 .a-customer-import-table td[data-field="vatRate"] {
   min-width: 100px;
 }

@@ -15,6 +15,7 @@ import {
   parseCustomerWorkbook,
 } from "./parse";
 import { customerSampleWorkbook } from "./sample";
+import { customerImportErrorMessage } from "./errors";
 
 export default function CustomerImportDialog({ onClose }: { onClose: () => void }) {
   const runtime = useAdmin();
@@ -251,8 +252,11 @@ export default function CustomerImportDialog({ onClose }: { onClose: () => void 
                         ...localErrors.filter((r) => r.row === row.row),
                         ...(check?.errors ?? []),
                       ].map((error) => {
-                        const message =
-                          error.field === "email" ? "Email không hợp lệ" : error.message;
+                        const message = customerImportErrorMessage(
+                          error.field,
+                          row.fields,
+                          customers,
+                        );
                         return [`${error.field}:${message}`, { ...error, message }];
                       }),
                     ).values(),
@@ -271,6 +275,7 @@ export default function CustomerImportDialog({ onClose }: { onClose: () => void 
                             {field.key === "kind" ? (
                               <select
                                 aria-label={label}
+                                title={String(value ?? "")}
                                 value={String(value ?? "")}
                                 disabled={saving}
                                 onChange={(e) => edit(row, field.key, e.target.value)}
@@ -289,6 +294,7 @@ export default function CustomerImportDialog({ onClose }: { onClose: () => void 
                             ) : (
                               <input
                                 aria-label={label}
+                                title={String(value ?? "")}
                                 type={field.type === "checkbox" ? "checkbox" : "text"}
                                 checked={field.type === "checkbox" ? Boolean(value) : undefined}
                                 value={field.type === "checkbox" ? undefined : String(value ?? "")}
@@ -317,9 +323,7 @@ export default function CustomerImportDialog({ onClose }: { onClose: () => void 
                           </small>
                         ))}
                         {errors.map((e, i) => (
-                          <small key={i}>
-                            {e.field}: {e.message}
-                          </small>
+                          <small key={i}>{e.message}</small>
                         ))}
                       </td>
                       <td>

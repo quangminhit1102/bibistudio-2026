@@ -114,9 +114,45 @@ it("shows a single Vietnamese email error after local and server validation", as
   await screen.findByLabelText("Email dòng 2");
   await waitFor(() => expect(request).toHaveBeenCalled());
   await waitFor(() => expect(screen.queryByText("Đang kiểm tra dữ liệu…")).not.toBeInTheDocument());
-  expect(screen.getAllByText("email: Email không hợp lệ")).toHaveLength(1);
+  expect(screen.getAllByText("Email không hợp lệ")).toHaveLength(1);
   expect(screen.queryByText(/Invalid email address/)).not.toBeInTheDocument();
   expect(screen.getByRole("button", { name: /Xác nhận import/ })).toBeDisabled();
+});
+it("names every invalid core field in Vietnamese without raw Zod messages", async () => {
+  const request = vi.spyOn(customerApi, "importCustomers");
+  mount();
+  await userEvent.click(await screen.findByRole("button", { name: "Import Excel" }));
+  const file = await workbook([
+    ["Tên", "Email", "Điện thoại", "Loại", "VAT"],
+    ["", "bad", "1".repeat(51), "invalid-kind", "0x10"],
+  ]);
+  fireEvent.change(screen.getByLabelText("Chọn file .xlsx"), { target: { files: [file] } });
+  await screen.findByLabelText("Tên dòng 2");
+  await waitFor(() => expect(request).toHaveBeenCalled());
+  await waitFor(() => expect(screen.queryByText("Đang kiểm tra dữ liệu…")).not.toBeInTheDocument());
+  for (const message of [
+    "Tên khách hàng là bắt buộc",
+    "Email không hợp lệ",
+    "Điện thoại không hợp lệ (tối đa 50 ký tự)",
+    "Loại khách không hợp lệ (chọn Nhà sách, Cá nhân hoặc Công ty)",
+    "VAT không hợp lệ (dùng Có, Không hoặc số 0–100)",
+  ])
+    expect(screen.getAllByText(message)).toHaveLength(1);
+  expect(screen.queryByText(/Invalid input|Invalid email|vatRate:/)).not.toBeInTheDocument();
+});
+it("exposes the complete name, address and email on hover", async () => {
+  mount();
+  await userEvent.click(await screen.findByRole("button", { name: "Import Excel" }));
+  const name = "CÔNG TY KHÁCH HÀNG " + "ĐỐI TÁC ".repeat(15);
+  const address = "123 Đường khách hàng, phường, quận, thành phố ".repeat(8);
+  const file = await workbook([
+    ["Tên", "Địa chỉ", "Email"],
+    [name, address, "long-name@example.test"],
+  ]);
+  fireEvent.change(screen.getByLabelText("Chọn file .xlsx"), { target: { files: [file] } });
+  expect(await screen.findByLabelText("Tên dòng 2")).toHaveAttribute("title", name.trim());
+  expect(screen.getByLabelText("Địa chỉ dòng 2")).toHaveAttribute("title", address.trim());
+  expect(screen.getByLabelText("Email dòng 2")).toHaveAttribute("title", "long-name@example.test");
 });
 it("hides import for a viewer without customer.create", async () => {
   localStorage.setItem(
