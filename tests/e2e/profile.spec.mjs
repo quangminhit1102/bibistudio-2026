@@ -377,10 +377,17 @@ test(
         "Nháp qua đổi mật khẩu",
       );
       await shot("password-changed");
+      const draftSaved = page.waitForResponse(
+        (r) => r.request().method() === "PATCH" && r.url().endsWith("/api/profile"),
+      );
       await page.getByRole("button", { name: "Lưu thông tin", exact: true }).click();
-      await page.getByText("Đã lưu hồ sơ", { exact: true }).waitFor();
+      assert.equal((await draftSaved).status(), 200);
       await page.reload();
       await page.getByRole("heading", { name: "Hồ sơ", exact: true }).waitFor();
+      assert.equal(
+        await page.getByLabel("Tên hiển thị", { exact: true }).inputValue(),
+        "Nháp qua đổi mật khẩu",
+      );
       await second.reload();
       await second.getByRole("button", { name: "Đăng nhập", exact: true }).waitFor();
       await signIn(f.secrets.masterPassword);
