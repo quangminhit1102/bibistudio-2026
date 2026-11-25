@@ -1,0 +1,81 @@
+import writeXlsxFile, { type SheetData } from "write-excel-file/node";
+
+export async function workbook(data: SheetData, name = "customers.xlsx") {
+  const buffer = await writeXlsxFile(data).toBuffer();
+  return new File([new Uint8Array(buffer)], name, {
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  });
+}
+
+export const imageNames = [
+  "Nhã Nam - Sách Cũ",
+  "Nhã Nam - M4",
+  "VPP Tỷ Phước",
+  "Nhà sách Lộc - Nguyễn Đình Chiểu",
+  "CÔNG TY TNHH NHÀ SÁCH LỘC - HỌA PHẨM LỘC",
+  "CÔNG TY TNHH SÁCH ĐÀ NẴNG",
+  "CÔNG TY TNHH HI BOOKS",
+  "HỘ KINH DOANH NHÀ SÁCH MY BOOK",
+  "Nhà sách Danabook",
+  "CÔNG TY TNHH TM DV NGỌC ANH THƯ",
+  "Cô Hương - NXB chính trị sự thật",
+  "CÔNG TY TNHH OH BOOK .",
+  "CÔNG TY CỔ PHẦN TRI THỨC VĂN HÓA SÁCH VIỆT NAM",
+  "CÔNG TY TNHH NGỌC TUYẾT BƯU THIẾP",
+  "CÔNG TY TNHH MỘT THÀNH VIÊN THƯƠNG MẠI DỊCH VỤ BA SAO",
+  "CHI NHÁNH CÔNG TY TNHH MINH KHAI S.G",
+  "CÔNG TY TNHH MINH KHAI S.G",
+  "Nhã Nam - kho Tân Phú",
+  "Nhà sách Anh Quốc",
+  "Trang",
+  "Chị Vân - Thiên Vân Trang",
+  "Chị Liên - Postcard Hoàng Gia",
+  "CÔNG TY TNHH MỸ THUẬT VÀ THỦ CÔNG ĐÔNG TRÚC",
+  "NXB Đông A",
+  "CÔNG TY TNHH TM DV NGỌC ANH THƯ",
+  "CÔNG TY TNHH BÁN LẺ PHƯƠNG NAM",
+  "CÔNG TY TNHH MỘT THÀNH VIÊN THƯƠNG MẠI DỊCH VỤ BA SAO",
+  "CÔNG TY TNHH NYCHAAN HANDMADE",
+  "Nhã Nam - Kiosk",
+];
+const addresses = [
+  "Đường sách Nguyễn Văn Bình, phường Sài Gòn, TP.HCM",
+  "Đường sách Nguyễn Văn Bình, phường Sài Gòn, TP.HCM",
+  "134A Nguyễn Đình Chiểu, Phường Võ Thị Sáu, TP.HCM",
+  "138 Nguyễn Đình Chiểu, Phường Xuân Hòa, TP.HCM",
+  "Số 523H Tô Hiến Thành, Phường Diên Hồng, TP Hồ Chí Minh, Việt Nam",
+  "10 Nguyễn Gia Trí, Phường Thạnh Mỹ Tây, TP Hồ Chí Minh, Việt Nam",
+  "86 Hiệp Bình, Khu phố 8, Phường Hiệp Bình, TP Hồ Chí Minh, Việt Nam",
+  "79A-81 Đường số 2, khu phố 8, Phường Thủ Đức, TP Hồ Chí Minh, Việt Nam",
+  "542 Lê Quang Định, Phường Hạnh Thông, Hồ Chí Minh",
+  "233-235 Nguyễn Văn Tăng, Phường Long Bình, TP Hồ Chí Minh, Việt Nam",
+  "Đường sách Nguyễn Văn Bình, phường Sài Gòn, TP.HCM",
+  "809-811 Quang Trung, P.An Hội Tây, Tp.HCM, Thành phố Hồ Chí Minh",
+  "44 Xô Viết Nghệ Tĩnh, Phường Thạnh Mỹ Tây, Hồ Chí Minh, Việt Nam",
+  "Bưu điện thành phố HCM",
+  "76A Phạm Viết Chánh, Phường Thạnh Mỹ Tây, TP Hồ Chí Minh, Việt Nam",
+  "2B Nguyễn Thị Minh Khai, Phường Sài Gòn, TP Hồ Chí Minh, Việt Nam",
+  "249 Nguyễn Thị Minh Khai, Phường Bàn Cờ, Thành Phố Hồ Chí Minh, Việt Nam",
+  "99 đường D11, phường Tây Thạnh, quận Tân Phú, Thành phố Hồ Chí Minh",
+  "7-9 Nguyễn Gia Trí, Phường 25, Thạnh Mỹ, Thành phố Hồ Chí Minh",
+  "Chung Cư An Gia Star",
+  "",
+  "Bưu điện thành phố HCM",
+  "42/32 Lương Thế Vinh, Phường Phú Thạnh, Quận Tân Phú",
+  "",
+  "233-235 Nguyễn Văn Tăng, Phường Long Bình, TP.Hồ Chí Minh, Việt Nam",
+  "Nhà Sách Phương Nam -",
+  "76A Phạm Viết Chánh, Phường Thạnh Mỹ Tây, TP Hồ Chí Minh, Việt Nam",
+  "84/32 Chùa Hang, Phường Hòa Hưng, TP Hồ Chí Minh, Việt Nam",
+  "Đường sách Nguyễn Văn Bình, phường Sài Gòn, TP.HCM",
+];
+export const imageRows: SheetData = [
+  ["STT", "Tên", "Địa chỉ", "VAT", "Thông tin"],
+  ...imageNames.map((name, i) => [
+    i + 1,
+    name,
+    addresses[i],
+    i === 19 ? "không" : [2, 3, 7, 8, 9, 10, 18, 20, 24].includes(i) ? "Không" : "Có",
+    i === 12 ? "sachvietnam@yahoo.com" : i === 17 ? "Người nhận: anh Diệm - 0966993407" : "",
+  ]),
+];

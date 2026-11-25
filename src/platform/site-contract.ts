@@ -1,5 +1,6 @@
 // The contract between the reusable core and one brand's `site/` directory.
 import type { Product } from "@/data/catalogue";
+import { customerImportHeaders, normalizeCustomerImportHeader } from "./customer-import-headers.ts";
 
 export type NavItem = { to: string; label: string };
 export type SocialLink = {
@@ -122,6 +123,43 @@ export type CatalogueConfig = {
   /** Collection slug -> what its page adds to the standard layout. */
   collectionPages?: Record<string, CollectionPageConfig>;
 };
+
+export type CustomerFieldConfig = {
+  extraFields: {
+    key: string;
+    label: string;
+    type: "text" | "number" | "boolean";
+    importHeaders?: string[];
+  }[];
+};
+
+export function defineCustomers(config: CustomerFieldConfig): CustomerFieldConfig {
+  const keys = new Set<string>();
+  const headers = new Set(
+    [...Object.values(customerImportHeaders).flat(), "STT"].map(normalizeCustomerImportHeader),
+  );
+  if (config.extraFields.length > 30)
+    throw new Error("Invalid customers config: at most 30 fields");
+  for (const field of config.extraFields) {
+    if (
+      !/^[a-z][a-zA-Z0-9]{0,63}$/.test(field.key) ||
+      keys.has(field.key) ||
+      !field.label.trim() ||
+      !["text", "number", "boolean"].includes(field.type)
+    )
+      throw new Error(`Invalid customers config: ${field.key}`);
+    keys.add(field.key);
+    for (const header of [field.label, ...(field.importHeaders ?? [])]) {
+      const normalized = normalizeCustomerImportHeader(header);
+      if (!normalized || headers.has(normalized))
+        throw new Error(
+          `Invalid customers config: import header collision or empty header "${header}" (${field.key})`,
+        );
+      headers.add(normalized);
+    }
+  }
+  return deepFreeze(structuredClone(config));
+}
 
 function failCatalogue(field: string, reason: string): never {
   throw new Error(`Invalid catalogue config: ${field} ${reason}`);

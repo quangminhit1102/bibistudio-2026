@@ -1393,6 +1393,35 @@
   font-size: 11px;
   position: relative;
 }
+.a-customer-import-table td {
+  min-width: 200px;
+}
+.a-customer-import-table td:first-child {
+  min-width: 56px;
+}
+.a-customer-import-table td[data-field="name"],
+.a-customer-import-table td[data-field="address"],
+.a-customer-import-table td[data-field="notes"] {
+  min-width: 320px;
+}
+.a-customer-import-table td[data-field="email"] {
+  min-width: 280px;
+}
+.a-customer-import-table td[data-field="name"] input {
+  min-width: 260px;
+}
+.a-customer-import-table td[data-field="address"] input {
+  min-width: 320px;
+}
+.a-customer-import-table td[data-field="vatRate"] {
+  min-width: 100px;
+}
+.a-customer-import-table select {
+  min-width: 180px;
+}
+.a-customer-import-table td:last-child select {
+  min-width: 240px;
+}
 .a-table td {
   padding: 14px 15px;
   border-top: 1px solid var(--a-border);

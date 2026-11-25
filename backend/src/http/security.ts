@@ -49,7 +49,7 @@ export function installSecurity(app: Express, config: SecurityConfig): void {
     if (
       (req.method === "PUT" &&
         /^\/api\/(?:profile|accounts\/[a-f0-9-]{36})\/avatar\/?$/i.test(req.path)) ||
-      (req.method === "POST" && /^\/api\/media\/?$/i.test(req.path))
+      (req.method === "POST" && /^\/api\/(?:media|customers\/import)\/?$/i.test(req.path))
     )
       return next();
     json(req, res, next);

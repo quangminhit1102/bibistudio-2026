@@ -97,6 +97,39 @@ test("content metadata accepts the third migration only as 003_content_catalogue
   await assert.rejects(metadata.verifyContentAssets(join(f.dir, "backend"), two));
 });
 
+test("content metadata accepts four migrations but rejects a gap or a wrong fourth name", async (t) => {
+  const f = await fixture(t);
+  const three = {
+    ...f.manifest.content,
+    migrationChecksums: {
+      ...f.manifest.content.migrationChecksums,
+      "003_content_catalogue.sql": "a".repeat(64),
+    },
+  };
+  const four = {
+    ...three,
+    migrationChecksums: {
+      ...three.migrationChecksums,
+      "004_customers_inventory.sql": "b".repeat(64),
+    },
+  };
+  assert.deepEqual(metadata.validateContentMetadata(four), four);
+  for (const migrationChecksums of [
+    { ...three.migrationChecksums, "004_wrong.sql": "b".repeat(64) },
+    { ...f.manifest.content.migrationChecksums, "004_customers_inventory.sql": "b".repeat(64) },
+  ])
+    assert.throws(() => metadata.validateContentMetadata({ ...four, migrationChecksums }));
+  await writeFile(join(f.dir, "backend/content-migrations/003_content_catalogue.sql"), "SELECT 1;");
+  await writeFile(
+    join(f.dir, "backend/content-migrations/004_customers_inventory.sql"),
+    "SELECT 2;",
+  );
+  const actual = await metadata.createContentMetadata(join(f.dir, "backend"));
+  assert.equal(Object.keys(actual.migrationChecksums).length, 4);
+  await metadata.verifyContentAssets(join(f.dir, "backend"), actual);
+  await assert.rejects(metadata.verifyContentAssets(join(f.dir, "backend"), three));
+});
+
 test("content metadata pins assets and rejects altered SQL", async (t) => {
   const f = await fixture(t);
   await metadata.verifyContentAssets(join(f.dir, "backend"), f.manifest.content);

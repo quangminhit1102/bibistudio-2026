@@ -20,13 +20,17 @@ export async function writeAudit(connection: PoolConnection, event: AuditInput):
     "permissionIds",
     "sessionCount",
     "assetIds",
+    "created",
+    "updated",
+    "skipped",
+    "customerIds",
   ]) {
     const value = event.metadata?.[key];
     if (typeof value === "string" && value.length <= 100) metadata[key] = value;
     else if (typeof value === "number" && Number.isFinite(value)) metadata[key] = value;
     else if (
       Array.isArray(value) &&
-      value.length <= 200 &&
+      value.length <= (key === "customerIds" ? 1000 : 200) &&
       value.every((item) => typeof item === "string" && /^[a-zA-Z0-9_.-]{1,100}$/.test(item))
     )
       metadata[key] = value;

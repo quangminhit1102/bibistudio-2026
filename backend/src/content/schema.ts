@@ -15,6 +15,7 @@ const allTables = [
   "customers",
   "media",
   "product_types",
+  "stock_movements",
 ] as const;
 
 /** Expected completed_steps per migration version; must match the parsed SQL assets. */
@@ -22,6 +23,7 @@ const versionStepCounts = new Map<number, number>([
   [1, 5],
   [2, 3],
   [3, 3],
+  [4, 2],
 ]);
 
 export interface ContentSchemaStatus {
@@ -47,12 +49,15 @@ interface MigrationAsset {
 
 async function assets(directory: string): Promise<MigrationAsset[]> {
   const names = (await readdir(directory)).filter((n) => n.endsWith(".sql")).sort();
-  if (names.join() !== "001_content.sql,002_content_v9.sql,003_content_catalogue.sql")
+  if (
+    names.join() !==
+    "001_content.sql,002_content_v9.sql,003_content_catalogue.sql,004_customers_inventory.sql"
+  )
     throw new Error("Unknown content migration assets");
   const files = await Promise.all(
     names.map(async (name) => ({ name, sql: await readFile(join(directory, name), "utf8") })),
   );
-  const [first, second, third] = files;
+  const [first, second, third, fourth] = files;
 
   const firstStatements = first.sql
     .split(";")
@@ -89,13 +94,23 @@ async function assets(directory: string): Promise<MigrationAsset[]> {
   if (!/^ALTER TABLE products\s+ADD COLUMN /.test(thirdStatements[2]))
     throw new Error("Invalid content DDL assets");
 
+  const fourthStatements = fourth.sql
+    .split(";")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  if (fourthStatements.length !== 2) throw new Error("Invalid content DDL assets");
+  if (!/^ALTER TABLE customers\s+ADD COLUMN /.test(fourthStatements[0]))
+    throw new Error("Invalid content DDL assets");
+  if (!/^CREATE TABLE stock_movements /.test(fourthStatements[1]))
+    throw new Error("Invalid content DDL assets");
+
   return [
     {
       version: 1,
       name: first.name,
       checksum: digest(first.sql),
       steps: tables.map((t, i) => ({ sql: firstStatements[i], target: t, create: true })),
-      verifyTargets: ["content_categories", "customers"],
+      verifyTargets: ["content_categories"],
     },
     {
       version: 2,
@@ -118,6 +133,16 @@ async function assets(directory: string): Promise<MigrationAsset[]> {
         { sql: thirdStatements[2], target: "products", create: false },
       ],
       verifyTargets: ["product_types", "product_categories", "products"],
+    },
+    {
+      version: 4,
+      name: fourth.name,
+      checksum: digest(fourth.sql),
+      steps: [
+        { sql: fourthStatements[0], target: "customers", create: false },
+        { sql: fourthStatements[1], target: "stock_movements", create: true },
+      ],
+      verifyTargets: ["customers", "stock_movements"],
     },
   ];
 }

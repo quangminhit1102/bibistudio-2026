@@ -1,10 +1,12 @@
-import { Router } from "express";
+import { Router, json } from "express";
 import { z } from "zod";
 import type { AuthService, AuthPrincipal } from "../auth/service";
 import { authenticate, requirePermission } from "../authorization/middleware";
 import { requireBrowserOrigin, type SecurityConfig } from "../http/security";
 import { validate } from "../http/validation";
 import type { ContentService, ListInput } from "./service";
+import { customerExtra, CUSTOMER_IMPORT_MAX_BYTES, type ImportRow } from "./customer-import";
+import { ApiError } from "../http/errors";
 
 const uuid = z.uuid();
 const revision = z.number().int().positive();
@@ -89,6 +91,8 @@ const customerCreate = z
     vatRate: z.number().min(0).max(100).optional(),
     notes: z.string().nullable().optional(),
     active: z.boolean().optional(),
+    representative: z.string().max(255).nullable().optional(),
+    extra: customerExtra.optional(),
   })
   .strict();
 const customerUpdate = z
@@ -102,6 +106,8 @@ const customerUpdate = z
     vatRate: z.number().min(0).max(100).optional(),
     notes: z.string().nullable().optional(),
     active: z.boolean().optional(),
+    representative: z.string().max(255).nullable().optional(),
+    extra: customerExtra.optional(),
   })
   .strict()
   .refine((value) => Object.keys(value).length > 1);
@@ -306,6 +312,42 @@ export function contentRoutes(
 ): Router {
   const r = Router();
   const write = requireBrowserOrigin(config);
+  r.post(
+    "/customers/import",
+    authenticate(auth),
+    write,
+    requirePermission("customer.create"),
+    requirePermission("customer.view"),
+    json({ limit: CUSTOMER_IMPORT_MAX_BYTES, strict: true }),
+    async (req, res) => {
+      if (Array.isArray(req.body?.rows) && req.body.rows.length > 1000)
+        throw new ApiError(400, "TOO_MANY_ROWS", "Tối đa 1.000 dòng mỗi lần import");
+      const body = validate(
+        z
+          .object({
+            dryRun: z.boolean(),
+            rows: z
+              .array(
+                z
+                  .object({
+                    row: z.number().int().positive(),
+                    action: z.enum(["create", "update", "skip"]).default("skip"),
+                    targetId: uuid.optional(),
+                    revision: revision.optional(),
+                    fields: z.record(z.string(), z.unknown()),
+                  })
+                  .strict(),
+              )
+              .max(1000),
+          })
+          .strict(),
+        req.body,
+      );
+      res.json(
+        await service.importCustomers(body as { dryRun: boolean; rows: ImportRow[] }, req.auth!),
+      );
+    },
+  );
   r.use(
     "/customers",
     entity(
@@ -339,6 +381,48 @@ export function contentRoutes(
       auth,
       write,
     ),
+  );
+  r.post(
+    "/products/:id/stock-adjustments",
+    authenticate(auth),
+    write,
+    requirePermission("product.update"),
+    async (req, res) => {
+      const body = validate(
+        z
+          .object({
+            revision,
+            delta: z
+              .number()
+              .int()
+              .min(-2147483648)
+              .max(2147483647)
+              .refine((value) => value !== 0),
+            reason: z.string().trim().min(1).max(500),
+          })
+          .strict(),
+        req.body,
+      );
+      res.json(await service.adjustStock(id(req.params.id), body, req.auth!));
+    },
+  );
+  r.get(
+    "/stock-movements",
+    authenticate(auth),
+    requirePermission("product.view"),
+    async (req, res) => {
+      const query = validate(
+        z
+          .object({
+            productId: uuid.optional(),
+            page: z.coerce.number().int().min(1).max(100000).default(1),
+            pageSize: z.coerce.number().int().min(1).max(500).default(20),
+          })
+          .strict(),
+        req.query,
+      );
+      res.json(await service.listStockMovements(query, req.auth!));
+    },
   );
   r.use(
     "/products",

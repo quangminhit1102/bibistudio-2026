@@ -43,7 +43,6 @@ export const inventoryModule: AdminModule = {
   // Stock is kept per product.
   requires: ["products"],
   paths: ["/admin/products/inventory"],
-  browserOnly: true,
   items: [
     {
       group: "products",
