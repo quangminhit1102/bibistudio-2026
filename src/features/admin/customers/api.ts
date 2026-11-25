@@ -108,7 +108,9 @@ export async function importCustomers(
           : parsed.error.issues.map((e) => ({ field: e.path.join("."), message: e.message }));
       const matches = existing.flatMap((c) => {
         const by = duplicateKeys(fields, c);
-        return by.length ? [{ id: c.id, name: c.name, revision: c.revision, by }] : [];
+        return by.length
+          ? [{ id: c.id, name: c.name, kind: c.kind, revision: c.revision, by }]
+          : [];
       });
       const earlier = input.rows
         .slice(0, index)

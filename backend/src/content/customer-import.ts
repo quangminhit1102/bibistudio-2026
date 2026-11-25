@@ -91,7 +91,13 @@ export interface ImportResult {
     row: number;
     status: "ok" | "error" | "duplicate";
     errors: { field: string; message: string }[];
-    matches: { id: string; name: string; revision: number; by: ("name" | "phone" | "email")[] }[];
+    matches: {
+      id: string;
+      name: string;
+      kind: string;
+      revision: number;
+      by: ("name" | "phone" | "email")[];
+    }[];
     inFile?: number;
   }[];
   created: number;

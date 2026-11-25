@@ -30,7 +30,10 @@ it("keeps conflict resets skipped even when the target still matches", () => {
   const next = reconcileImportRows([{ ...row, resetUpdate: true }], {
     ...result,
     rows: [
-      { ...result.rows[0], matches: [{ id: "old", name: "Customer", revision: 2, by: ["name"] }] },
+      {
+        ...result.rows[0],
+        matches: [{ id: "old", name: "Customer", kind: "individual", revision: 2, by: ["name"] }],
+      },
     ],
   });
   expect(next[0]).toMatchObject({ action: "skip", actionChosen: true, updateNotice: false });

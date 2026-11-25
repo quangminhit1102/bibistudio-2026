@@ -255,6 +255,18 @@ export default function CustomerImportDialog({ onClose }: { onClose: () => void 
               <tbody>
                 {visible.map((row) => {
                   const check = preview?.rows.find((r) => r.row === row.row);
+                  const automaticKind =
+                    row.action === "update"
+                      ? check?.matches.find((match) => match.id === row.targetId)?.kind
+                      : inferKind(String(row.fields.name ?? ""));
+                  const automaticKindLabel =
+                    customerKinds.find((kind) => kind.value === automaticKind)?.label ??
+                    automaticKind ??
+                    "đang kiểm tra";
+                  const automaticKindText =
+                    row.action === "update"
+                      ? `Giữ nguyên (${automaticKindLabel})`
+                      : `(tự động: ${automaticKindLabel})`;
                   const errors = [
                     ...new Map(
                       [
@@ -284,7 +296,7 @@ export default function CustomerImportDialog({ onClose }: { onClose: () => void 
                             {field.key === "kind" ? (
                               <select
                                 aria-label={label}
-                                title={String(value ?? "")}
+                                title={row.kindInferred ? automaticKindText : String(value ?? "")}
                                 value={
                                   row.kindInferred
                                     ? "auto"
@@ -301,13 +313,7 @@ export default function CustomerImportDialog({ onClose }: { onClose: () => void 
                                   )
                                 }
                               >
-                                <option value="auto">
-                                  {customerKinds.find(
-                                    (kind) =>
-                                      kind.value === inferKind(String(row.fields.name ?? "")),
-                                  )?.label ?? "Loại khách"}{" "}
-                                  (tự động)
-                                </option>
+                                <option value="auto">{automaticKindText}</option>
                                 {!customerKinds.some((k) => k.value === value) && (
                                   <option value="invalid" disabled>
                                     {String(value ?? "") || "Chọn loại"}

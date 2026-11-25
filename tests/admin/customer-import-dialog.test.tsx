@@ -222,22 +222,22 @@ it("re-infers kind on name edits unless the user has chosen a kind", async () =>
   await screen.findByLabelText("Tên dòng 2");
   expect(
     within(screen.getByLabelText("Loại dòng 2")).getByRole("option", { selected: true }),
-  ).toHaveTextContent("Cá nhân (tự động)");
+  ).toHaveTextContent("(tự động: Cá nhân)");
   fireEvent.change(screen.getByLabelText("Tên dòng 2"), { target: { value: "NHÀ SÁCH Updated" } });
   expect(
     within(screen.getByLabelText("Loại dòng 2")).getByRole("option", { selected: true }),
-  ).toHaveTextContent("Nhà sách (tự động)");
+  ).toHaveTextContent("(tự động: Nhà sách)");
   fireEvent.change(screen.getByLabelText("Tên dòng 2"), { target: { value: "CÔNG TY Updated" } });
   expect(
     within(screen.getByLabelText("Loại dòng 2")).getByRole("option", { selected: true }),
-  ).toHaveTextContent("Công ty (tự động)");
+  ).toHaveTextContent("(tự động: Công ty)");
   fireEvent.change(screen.getByLabelText("Loại dòng 2"), { target: { value: "individual" } });
   fireEvent.change(screen.getByLabelText("Tên dòng 2"), { target: { value: "NXB Updated" } });
   expect(screen.getByLabelText("Loại dòng 2")).toHaveValue("individual");
   await userEvent.selectOptions(screen.getByLabelText("Loại dòng 2"), "auto");
   expect(
     within(screen.getByLabelText("Loại dòng 2")).getByRole("option", { selected: true }),
-  ).toHaveTextContent("Nhà sách (tự động)");
+  ).toHaveTextContent("(tự động: Nhà sách)");
   await waitFor(() =>
     expect(screen.getByRole("button", { name: /Xác nhận import/ })).toBeEnabled(),
   );
@@ -292,15 +292,15 @@ it("records an explicit kind equal to the inferred kind", async () => {
   const select = await screen.findByLabelText("Loại dòng 2");
   expect(select).toHaveValue("auto");
   expect(within(select).getByRole("option", { selected: true })).toHaveTextContent(
-    "Nhà sách (tự động)",
+    "(tự động: Nhà sách)",
   );
   await userEvent.selectOptions(select, "bookstore");
   fireEvent.change(screen.getByLabelText("Tên dòng 2"), { target: { value: "Công ty Changed" } });
   expect(select).toHaveValue("bookstore");
-  expect(within(select).getByRole("option", { name: "Công ty (tự động)" })).toBeInTheDocument();
+  expect(within(select).getByRole("option", { name: "(tự động: Công ty)" })).toBeInTheDocument();
   await userEvent.selectOptions(select, "auto");
   expect(within(select).getByRole("option", { selected: true })).toHaveTextContent(
-    "Công ty (tự động)",
+    "(tự động: Công ty)",
   );
 });
 it("keeps invalid workbook kinds distinct from the automatic select option", async () => {
@@ -321,12 +321,46 @@ it("keeps invalid workbook kinds distinct from the automatic select option", asy
   expect(within(select).getByRole("option", { selected: true })).toHaveTextContent("auto");
   await userEvent.selectOptions(select, "auto");
   expect(within(select).getByRole("option", { selected: true })).toHaveTextContent(
-    "Cá nhân (tự động)",
+    "(tự động: Cá nhân)",
   );
   await waitFor(() =>
     expect(screen.getByRole("button", { name: /Xác nhận import/ })).toBeEnabled(),
   );
 });
+it.each([false, true])(
+  "previews the retained update kind and sends named choices (explicit: %s)",
+  async (explicit) => {
+    const existing = (await f.store.get("customers", f.customerId))!;
+    await f.store.transaction(["customers"], (tx) =>
+      tx.put("customers", { ...existing, name: "Công ty Existing update", kind: "bookstore" }),
+    );
+    mount();
+    await userEvent.click(await screen.findByRole("button", { name: "Import Excel" }));
+    fireEvent.change(await screen.findByLabelText("Chọn file .xlsx"), {
+      target: { files: [await workbook([["Tên"], ["Công ty Existing update"]])] },
+    });
+    const kind = await screen.findByLabelText("Loại dòng 2");
+    expect(within(kind).getByRole("option", { selected: true })).toHaveTextContent(
+      "(tự động: Công ty)",
+    );
+    await userEvent.selectOptions(screen.getByLabelText("Xử lý dòng 2"), `update:${existing.id}`);
+    await waitFor(() =>
+      expect(within(kind).getByRole("option", { selected: true })).toHaveTextContent(
+        "Giữ nguyên (Nhà sách)",
+      ),
+    );
+    expect(kind).toHaveAttribute("title", "Giữ nguyên (Nhà sách)");
+    if (explicit) await userEvent.selectOptions(kind, "company");
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: /Xác nhận import/ })).toBeEnabled(),
+    );
+    await userEvent.click(screen.getByRole("button", { name: /Xác nhận import/ }));
+    await screen.findByText("Đã thêm 0, cập nhật 1, bỏ qua 0");
+    expect((await f.store.get("customers", existing.id))?.kind).toBe(
+      explicit ? "company" : "bookstore",
+    );
+  },
+);
 it("rejects invalid file selection without a writable preview and lets the user retry", async () => {
   mount();
   const u = userEvent.setup();

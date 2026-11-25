@@ -74,6 +74,7 @@ test("customer fields round-trip and import preview matches existing and earlier
   assert.equal(preview.status, 200);
   const data = await preview.json();
   assert.equal(data.committed, false);
+  assert.equal(data.rows[0].matches.find((match) => match.id === customer.id).kind, "company");
   assert.deepEqual(
     data.rows.slice(0, 3).map((r) => r.matches.find((m) => m.id === customer.id).by),
     [["name"], ["phone"], ["email"]],

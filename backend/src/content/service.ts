@@ -880,7 +880,15 @@ export function createContentService(pool: Pool, clock: Clock) {
         const matches = customers.flatMap((customer) => {
           const by = duplicateKeys(fields, customer);
           return by.length
-            ? [{ id: customer.id, name: customer.name, revision: customer.revision, by }]
+            ? [
+                {
+                  id: customer.id,
+                  name: customer.name,
+                  kind: customer.kind,
+                  revision: customer.revision,
+                  by,
+                },
+              ]
             : [];
         });
         const earlier = input.rows

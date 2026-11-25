@@ -89,6 +89,7 @@ it("demo dry-run finds existing and earlier-file duplicates; commit atomically w
   const preview = await importCustomers(f, { dryRun: true, rows });
   expect(preview.rows[1]).toMatchObject({ status: "duplicate", inFile: 2 });
   expect(preview.rows[2].matches[0].id).toBe(existing.id);
+  expect(preview.rows[2].matches[0].kind).toBe(existing.kind);
   expect((await f.store.list("customers")).length).toBe(before);
   const committed = await importCustomers(f, {
     dryRun: false,
