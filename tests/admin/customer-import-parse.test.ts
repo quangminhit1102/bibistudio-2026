@@ -3,6 +3,33 @@ import { parseCustomerWorkbook } from "../../src/features/admin/customers/import
 import { customerSampleWorkbook } from "../../src/features/admin/customers/import/sample";
 import { imageNames, imageRows, workbook } from "./customer-import-fixture";
 
+it("ignores sequence-only rows without consuming the row limit or changing Excel row numbers", async () => {
+  const result = await parseCustomerWorkbook(
+    await workbook([
+      ["STT", "Tên"],
+      [1, "First"],
+      ...Array.from({ length: 1000 }, (_, index) => [index + 2, index % 2 ? " " : null]),
+      [1002, "Last"],
+    ]),
+    { extraFields: [] },
+  );
+  expect(result.rows.map((row) => [row.row, row.fields.name])).toEqual([
+    [2, "First"],
+    [1003, "Last"],
+  ]);
+  expect(result.errors).toEqual([]);
+  const empty = await parseCustomerWorkbook(
+    await workbook([
+      ["STT", "Tên"],
+      [1, null],
+      [2, " "],
+    ]),
+    { extraFields: [] },
+  );
+  expect(empty.rows).toEqual([]);
+  expect(empty.errors).toEqual([]);
+});
+
 it.each(["Có", "co", "CÓ", "Không", "KHONG", "8", "8%", "10,5", "10.5%", "0", "100%"])(
   "accepts plain VAT value %s",
   async (vat) => {

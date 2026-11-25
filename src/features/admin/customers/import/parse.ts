@@ -145,7 +145,7 @@ export async function parseCustomerWorkbook(
     .map(text);
   const rows: ImportRow[] = [];
   for (let index = headerIndex + 1; index < data.length; index++) {
-    if (!data[index].some((cell) => text(cell))) continue;
+    if (!data[index].some((cell, col) => normalize(headers[col]) !== "stt" && text(cell))) continue;
     if (rows.length >= 1000) throw new Error("Tối đa 1.000 dòng mỗi lần import");
     const values: Record<string, unknown> = {};
     const extra: Record<string, unknown> = {};
