@@ -381,6 +381,48 @@ export function contentRoutes(
       write,
     ),
   );
+  r.post(
+    "/products/:id/stock-adjustments",
+    authenticate(auth),
+    write,
+    requirePermission("product.update"),
+    async (req, res) => {
+      const body = validate(
+        z
+          .object({
+            revision,
+            delta: z
+              .number()
+              .int()
+              .min(-2147483648)
+              .max(2147483647)
+              .refine((value) => value !== 0),
+            reason: z.string().trim().min(1).max(500),
+          })
+          .strict(),
+        req.body,
+      );
+      res.json(await service.adjustStock(id(req.params.id), body, req.auth!));
+    },
+  );
+  r.get(
+    "/stock-movements",
+    authenticate(auth),
+    requirePermission("product.view"),
+    async (req, res) => {
+      const query = validate(
+        z
+          .object({
+            productId: uuid.optional(),
+            page: z.coerce.number().int().min(1).max(100000).default(1),
+            pageSize: z.coerce.number().int().min(1).max(500).default(20),
+          })
+          .strict(),
+        req.query,
+      );
+      res.json(await service.listStockMovements(query, req.auth!));
+    },
+  );
   r.use(
     "/products",
     entity(

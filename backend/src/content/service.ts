@@ -182,6 +182,19 @@ export interface ProductInput {
   /** Keyed by the site's attribute key. In an update it replaces the whole set. */
   attributes?: Attributes;
 }
+export interface StockMovementDto {
+  id: string;
+  productId: string;
+  productName: string;
+  delta: number;
+  stockBefore: number;
+  stockAfter: number;
+  reason: string;
+  source: string;
+  actorId: string | null;
+  actorName: string | null;
+  createdAt: string;
+}
 export interface ProductDto {
   id: string;
   productCode: string;
@@ -372,6 +385,19 @@ const productTypeDto = (row: RowDataPacket): ProductTypeDto => ({
   createdAt: iso(row.created_at)!,
   updatedAt: iso(row.updated_at)!,
   revision: Number(row.revision),
+});
+const stockMovementDto = (row: RowDataPacket): StockMovementDto => ({
+  id: String(row.id),
+  productId: String(row.product_id),
+  productName: String(row.product_name),
+  delta: Number(row.delta),
+  stockBefore: Number(row.stock_before),
+  stockAfter: Number(row.stock_after),
+  reason: String(row.reason),
+  source: String(row.source),
+  actorId: row.actor_id == null ? null : String(row.actor_id),
+  actorName: row.actor_name == null ? null : String(row.actor_name),
+  createdAt: iso(row.created_at)!,
 });
 const customerDto = (row: RowDataPacket): CustomerDto => ({
   id: String(row.id),
@@ -1217,6 +1243,14 @@ export function createContentService(pool: Pool, clock: Clock) {
     actor: AuthPrincipal,
   ): Promise<ProductDto> {
     return authorized(actor, "product.update", async (c) => {
+      let before: RowDataPacket | undefined;
+      if (input.stock !== undefined) {
+        const [rows] = await c.execute<RowDataPacket[]>(
+          "SELECT * FROM products WHERE id=? FOR UPDATE",
+          [id],
+        );
+        before = rows[0];
+      }
       await assertTaxonomy(c, input);
       await assertPageSlugFree(c, "product_types", input.slug, { table: "products", id });
       const sets: string[] = [];
@@ -1286,6 +1320,16 @@ export function createContentService(pool: Pool, clock: Clock) {
         );
         if (result.affectedRows === 0) throw conflict();
       }
+      const product = productDto((await readRow(c, "products", id))!);
+      if (before && Number(before.stock) !== product.stock)
+        await writeStockMovement(
+          c,
+          product,
+          Number(before.stock),
+          "Cập nhật sản phẩm",
+          "product_edit",
+          actor,
+        );
       await writeAudit(c, {
         actorId: actor.principal.id,
         action: "product.update",
@@ -1293,8 +1337,95 @@ export function createContentService(pool: Pool, clock: Clock) {
         targetId: id,
         metadata: { changedFields: Object.keys(input) },
       });
-      return productDto((await readRow(c, "products", id))!);
+      return product;
     });
+  }
+  async function writeStockMovement(
+    c: PoolConnection,
+    product: ProductDto,
+    stockBefore: number,
+    reason: string,
+    source: "manual" | "product_edit",
+    actor: AuthPrincipal,
+  ): Promise<void> {
+    await c.execute(
+      `INSERT INTO stock_movements
+       (id,product_id,product_name,delta,stock_before,stock_after,reason,source,actor_id,actor_name,created_at)
+       VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
+      [
+        randomUUID(),
+        product.id,
+        product.name,
+        product.stock - stockBefore,
+        stockBefore,
+        product.stock,
+        reason,
+        source,
+        actor.principal.id,
+        actor.principal.displayName,
+        clock.now(),
+      ],
+    );
+  }
+  async function adjustStock(
+    id: string,
+    input: { revision: number; delta: number; reason: string },
+    actor: AuthPrincipal,
+  ): Promise<ProductDto> {
+    return authorized(actor, "product.update", async (c) => {
+      if (
+        !Number.isInteger(input.delta) ||
+        input.delta === 0 ||
+        input.delta < -2147483648 ||
+        input.delta > 2147483647 ||
+        !input.reason.trim() ||
+        input.reason.trim().length > 500
+      )
+        throw new ApiError(400, "INVALID_INPUT", "Điều chỉnh tồn kho không hợp lệ");
+      const [[row]] = await c.execute<RowDataPacket[]>(
+        "SELECT * FROM products WHERE id=? FOR UPDATE",
+        [id],
+      );
+      if (!row) throw notFound();
+      if (Number(row.revision) !== input.revision) throw conflict();
+      const stockAfter = Number(row.stock) + input.delta;
+      if (stockAfter < 0 || stockAfter < Number(row.reserved))
+        throw new ApiError(
+          400,
+          "STOCK_BELOW_RESERVED",
+          "Tồn kho không được âm hoặc nhỏ hơn số lượng đã giữ",
+        );
+      if (stockAfter > 2147483647)
+        throw new ApiError(400, "INVALID_INPUT", "Số lượng tồn kho quá lớn");
+      const [result] = await c.execute<ResultSetHeader>(
+        "UPDATE products SET stock=?,revision=revision+1,updated_at=? WHERE id=? AND revision=?",
+        [stockAfter, clock.now(), id, input.revision],
+      );
+      if (result.affectedRows !== 1) throw conflict();
+      const product = productDto((await readRow(c, "products", id))!);
+      await writeStockMovement(c, product, Number(row.stock), input.reason.trim(), "manual", actor);
+      await writeAudit(c, {
+        actorId: actor.principal.id,
+        action: "product.stock_adjust",
+        targetType: "product",
+        targetId: id,
+      });
+      return product;
+    });
+  }
+  async function listStockMovements(
+    input: ListInput & { productId?: string },
+    actor: AuthPrincipal,
+  ): Promise<Page<StockMovementDto>> {
+    return authorized(actor, "product.view", (c) =>
+      queryList(
+        c,
+        "stock_movements",
+        { search: [], filter: { productId: "product_id" }, sort: {} },
+        { page: input.page, pageSize: input.pageSize, filters: { productId: input.productId } },
+        stockMovementDto,
+      ),
+    );
   }
   async function deleteProduct(
     id: string,
@@ -1364,6 +1495,8 @@ export function createContentService(pool: Pool, clock: Clock) {
     getProduct,
     createProduct,
     updateProduct,
+    adjustStock,
+    listStockMovements,
     deleteProduct,
     listProductCategories: productCategories.list,
     getProductCategory: productCategories.get,
