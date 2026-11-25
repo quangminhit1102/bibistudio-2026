@@ -3,6 +3,42 @@ import { parseCustomerWorkbook } from "../../src/features/admin/customers/import
 import { customerSampleWorkbook } from "../../src/features/admin/customers/import/sample";
 import { imageNames, imageRows, workbook } from "./customer-import-fixture";
 
+it.each(["Có", "co", "CÓ", "Không", "KHONG", "8", "8%", "10,5", "10.5%", "0", "100%"])(
+  "accepts plain VAT value %s",
+  async (vat) => {
+    const result = await parseCustomerWorkbook(
+      await workbook([
+        ["Tên", "VAT"],
+        ["A", vat],
+      ]),
+      { extraFields: [] },
+    );
+    expect(result.errors).toEqual([]);
+    expect(result.rows[0].fields.vatRate).toBe(
+      /^(có|co)$/i.test(vat)
+        ? 8
+        : /^(không|khong)$/i.test(vat)
+          ? 0
+          : Number(vat.replace("%", "").replace(",", ".")),
+    );
+  },
+);
+it.each(["0x10", "1e1", "+8", "-1", "101", "100,1%", "8%%", "8.5.2", "maybe"])(
+  "reports a row error for VAT text %s",
+  async (vat) => {
+    const result = await parseCustomerWorkbook(
+      await workbook([
+        ["Tên", "VAT"],
+        ["A", vat],
+      ]),
+      { extraFields: [] },
+    );
+    expect(result.errors).toEqual(
+      expect.arrayContaining([expect.objectContaining({ row: 2, field: "vatRate" })]),
+    );
+  },
+);
+
 it("parses Minh's 29 rows, retaining duplicate names and extracting contacts without extracting a representative", async () => {
   const result = await parseCustomerWorkbook(await workbook(imageRows), { extraFields: [] });
   expect(result.rows).toHaveLength(29);

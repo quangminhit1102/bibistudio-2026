@@ -231,7 +231,7 @@ export default function CustomerImportDialog({ onClose }: { onClose: () => void 
             Chỉ hiện dòng có vấn đề
           </label>
           <div className="a-table-wrap">
-            <table className="a-table">
+            <table className="a-table a-customer-import-table">
               <thead>
                 <tr>
                   <th>Dòng</th>
@@ -246,8 +246,16 @@ export default function CustomerImportDialog({ onClose }: { onClose: () => void 
                 {visible.map((row) => {
                   const check = preview?.rows.find((r) => r.row === row.row);
                   const errors = [
-                    ...localErrors.filter((r) => r.row === row.row),
-                    ...(check?.errors ?? []),
+                    ...new Map(
+                      [
+                        ...localErrors.filter((r) => r.row === row.row),
+                        ...(check?.errors ?? []),
+                      ].map((error) => {
+                        const message =
+                          error.field === "email" ? "Email không hợp lệ" : error.message;
+                        return [`${error.field}:${message}`, { ...error, message }];
+                      }),
+                    ).values(),
                   ];
                   const duplicate = Boolean(check?.matches.length || check?.inFile);
                   return (
@@ -259,7 +267,7 @@ export default function CustomerImportDialog({ onClose }: { onClose: () => void 
                           : row.fields[field.key as keyof ImportRow["fields"]];
                         const label = `${field.key === "name" ? "Tên" : field.key === "kind" ? "Loại" : field.key === "vatRate" ? "VAT" : field.label} dòng ${row.row}`;
                         return (
-                          <td key={field.key}>
+                          <td key={field.key} data-field={field.key}>
                             {field.key === "kind" ? (
                               <select
                                 aria-label={label}

@@ -1,4 +1,5 @@
 import type { CustomerFieldConfig } from "@/platform/site-contract";
+import { normalizeCustomerImportHeader } from "@/platform/customer-import-headers";
 import {
   inferKind,
   validateImportFields,
@@ -8,7 +9,7 @@ import { customerFields, type CustomerField } from "../fields";
 
 export type CellError = { row: number; field: string; message: string };
 const text = (value: unknown) => (value == null ? "" : String(value).trim());
-const normalize = (value: unknown) => text(value).replace(/\s+/g, " ").toLocaleLowerCase("vi");
+const normalize = normalizeCustomerImportHeader;
 const plain = (value: unknown) =>
   normalize(value)
     .normalize("NFD")
@@ -50,8 +51,8 @@ export function normalizeImportCells(
       ? 8
       : vat === "khong"
         ? 0
-        : Number.isFinite(Number(vat))
-          ? Number(vat)
+        : /^\d+(?:[.,]\d+)?%?$/.test(vat)
+          ? Number(vat.replace(/%$/, "").replace(",", "."))
           : fields.vatRate;
   const kind = plain(fields.kind);
   fields.kind = !kind
@@ -89,7 +90,11 @@ export function importCellErrors(row: ImportRow, config: CustomerFieldConfig): C
       }));
   for (const field of config.extraFields) {
     const value = row.fields.extra?.[field.key];
-    if (value != null && value !== "" && typeof value !== field.type)
+    if (
+      value != null &&
+      value !== "" &&
+      typeof value !== (field.type === "text" ? "string" : field.type)
+    )
       errors.push({
         row: row.row,
         field: `extra.${field.key}`,

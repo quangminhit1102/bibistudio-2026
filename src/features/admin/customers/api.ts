@@ -7,7 +7,7 @@ import {
   type ImportResult,
 } from "../../../../backend/src/content/customer-import";
 import type { AdminStore, Customer, DemoSession } from "../services/contracts";
-import { requirePermission } from "../accounts/permissions";
+import { authorizeOperation, requirePermission } from "../accounts/permissions";
 import { customerConfig } from "./config";
 import { ServiceError } from "../services/errors";
 export type { ImportResult } from "../../../../backend/src/content/customer-import";
@@ -49,7 +49,11 @@ export async function importCustomers(
   await runtime.store.prepare?.(["customers", "audit", "roles"]);
   if (generation !== runtime.store.generation)
     throw new ServiceError("aborted", "Phiên thao tác đã thay đổi");
+  const assertActive = await authorizeOperation(runtime.store, session, "bookstore", "create");
+  if (input.rows.some((r) => r.action === "update"))
+    await authorizeOperation(runtime.store, session, "bookstore", "update");
   const outcome = await runtime.store.transaction(["customers", "audit", "roles"], async (tx) => {
+    assertActive();
     const role = session ? await tx.get("roles", session.roleId) : undefined;
     requirePermission(session, "bookstore", "create", role);
     if (input.rows.some((r) => r.action === "update"))

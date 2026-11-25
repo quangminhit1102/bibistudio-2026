@@ -12,6 +12,21 @@ afterEach(async () => {
   await f.store.destroy();
 });
 const row = (i: number, name: string) => ({ row: i, action: "create" as const, fields: { name } });
+it.each(["inactive", "changed-role"])("rejects demo import for a %s account", async (state) => {
+  const user = (await f.store.get("users", f.session.userId))!;
+  await f.store.transaction(["users"], (tx) =>
+    tx.put("users", {
+      ...user,
+      ...(state === "inactive" ? { active: false } : { roleId: "viewer" }),
+    }),
+  );
+  const count = (await f.store.list("customers")).length;
+  for (const dryRun of [true, false])
+    await expect(importCustomers(f, { dryRun, rows: [row(2, "Rejected")] })).rejects.toMatchObject({
+      code: "forbidden",
+    });
+  expect((await f.store.list("customers")).length).toBe(count);
+});
 it("demo dry-run finds existing and earlier-file duplicates; commit atomically writes counts and one audit", async () => {
   const existing = (await f.store.get("customers", f.customerId))!;
   const rows = [row(2, "New person"), row(3, "  NEW   PERSON "), row(4, existing.name)];

@@ -102,6 +102,22 @@ it("rejects invalid file selection without a writable preview and lets the user 
   expect(await screen.findByRole("alert")).toHaveTextContent(".xlsx");
   expect(screen.getByRole("button", { name: /Xác nhận import/ })).toBeDisabled();
 });
+it("shows a single Vietnamese email error after local and server validation", async () => {
+  const request = vi.spyOn(customerApi, "importCustomers");
+  mount();
+  await userEvent.click(await screen.findByRole("button", { name: "Import Excel" }));
+  const file = await workbook([
+    ["Tên", "Email"],
+    ["Invalid email customer", "bad"],
+  ]);
+  fireEvent.change(screen.getByLabelText("Chọn file .xlsx"), { target: { files: [file] } });
+  await screen.findByLabelText("Email dòng 2");
+  await waitFor(() => expect(request).toHaveBeenCalled());
+  await waitFor(() => expect(screen.queryByText("Đang kiểm tra dữ liệu…")).not.toBeInTheDocument());
+  expect(screen.getAllByText("email: Email không hợp lệ")).toHaveLength(1);
+  expect(screen.queryByText(/Invalid email address/)).not.toBeInTheDocument();
+  expect(screen.getByRole("button", { name: /Xác nhận import/ })).toBeDisabled();
+});
 it("hides import for a viewer without customer.create", async () => {
   localStorage.setItem(
     "bibi-admin:session",

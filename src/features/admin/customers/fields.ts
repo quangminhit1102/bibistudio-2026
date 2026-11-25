@@ -1,4 +1,5 @@
 import { customers } from "@/platform/site";
+import { customerImportHeaders } from "@/platform/customer-import-headers";
 import type { FormField, FormValues } from "../shared/forms/record-form";
 
 export const customerKinds = [
@@ -14,7 +15,7 @@ export const customerFields: CustomerField[] = [
     label: "Tên khách",
     type: "text",
     required: true,
-    importHeaders: ["Tên khách hàng", "Tên", "Tên khách"],
+    importHeaders: customerImportHeaders.name,
   },
   {
     key: "kind",
@@ -22,16 +23,22 @@ export const customerFields: CustomerField[] = [
     type: "select",
     required: true,
     options: customerKinds,
-    importHeaders: ["Loại", "Loại khách"],
+    importHeaders: customerImportHeaders.kind,
   },
-  { key: "address", label: "Địa chỉ", type: "textarea", full: true, importHeaders: ["Địa chỉ"] },
-  { key: "phone", label: "Điện thoại", type: "text", importHeaders: ["Điện thoại"] },
-  { key: "email", label: "Email", type: "email", importHeaders: ["Email"] },
+  {
+    key: "address",
+    label: "Địa chỉ",
+    type: "textarea",
+    full: true,
+    importHeaders: customerImportHeaders.address,
+  },
+  { key: "phone", label: "Điện thoại", type: "text", importHeaders: customerImportHeaders.phone },
+  { key: "email", label: "Email", type: "email", importHeaders: customerImportHeaders.email },
   {
     key: "representative",
     label: "Người đại diện",
     type: "text",
-    importHeaders: ["Người đại diện"],
+    importHeaders: customerImportHeaders.representative,
   },
   {
     key: "vatRate",
@@ -40,7 +47,7 @@ export const customerFields: CustomerField[] = [
     min: 0,
     max: 100,
     description: "Mức thuế VAT mặc định khi lập phiếu; không tự tính thuế.",
-    importHeaders: ["VAT"],
+    importHeaders: customerImportHeaders.vatRate,
   },
   {
     key: "active",
@@ -53,7 +60,7 @@ export const customerFields: CustomerField[] = [
     label: "Thông tin thêm",
     type: "textarea",
     full: true,
-    importHeaders: ["Thông tin", "Ghi chú"],
+    importHeaders: customerImportHeaders.notes,
   },
   ...customers.extraFields.map((field): CustomerField => ({
     key: `extra_${field.key}`,
