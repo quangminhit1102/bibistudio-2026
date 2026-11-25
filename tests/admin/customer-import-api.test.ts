@@ -67,7 +67,7 @@ it("demo update preserves blank cells and extra values, rejects stale revisions 
     action: "update" as const,
     targetId: c.id,
     revision: c.revision,
-    fields: { representative: "New rep", address: "" },
+    fields: { name: c.name, representative: "New rep", address: "" },
   };
   await importCustomers(f, { dryRun: false, rows: [update] });
   expect(await f.store.get("customers", c.id)).toMatchObject({
@@ -89,6 +89,24 @@ it("demo update preserves blank cells and extra values, rejects stale revisions 
     skipped: 0,
     committed: true,
   });
+});
+it("rejects a nonmatching demo update target without writes", async () => {
+  const existing = (await f.store.get("customers", f.customerId))!;
+  const rows = [
+    {
+      row: 2,
+      action: "update" as const,
+      targetId: existing.id,
+      revision: existing.revision,
+      fields: { name: "Unrelated different customer" },
+    },
+  ];
+  const preview = await importCustomers(f, { dryRun: true, rows });
+  expect(preview.rows[0].errors).toContainEqual(expect.objectContaining({ field: "targetId" }));
+  await expect(importCustomers(f, { dryRun: false, rows })).rejects.toMatchObject({
+    code: "INVALID_INPUT",
+  });
+  expect(await f.store.get("customers", existing.id)).toEqual(existing);
 });
 it("demo enforces create and update permissions", async () => {
   await expect(

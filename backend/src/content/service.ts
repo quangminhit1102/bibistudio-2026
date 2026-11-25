@@ -896,6 +896,11 @@ export function createContentService(pool: Pool, clock: Clock) {
           } else if (target.revision !== row.revision || updateTargets.has(target.id)) {
             stale = true;
             errors.push({ field: "revision", message: "Dữ liệu đã thay đổi, vui lòng tải lại" });
+          } else if (!matches.some((match) => match.id === target.id)) {
+            errors.push({
+              field: "targetId",
+              message: "Khách hàng cập nhật không khớp tên, điện thoại hoặc email của dòng",
+            });
           }
           if (target) {
             updateTargets.add(target.id);

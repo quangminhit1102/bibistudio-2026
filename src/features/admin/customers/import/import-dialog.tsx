@@ -355,12 +355,6 @@ export default function CustomerImportDialog({ onClose }: { onClose: () => void 
                                 Cập nhật {m.name}
                               </option>
                             ))}
-                          {row.action === "update" &&
-                            !check?.matches.some((m) => m.id === row.targetId) && (
-                              <option value={`update:${row.targetId}`}>
-                                Cập nhật khách đã chọn
-                              </option>
-                            )}
                         </select>
                       </td>
                     </tr>

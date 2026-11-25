@@ -242,6 +242,49 @@ test("blank optional cells and omitted skip action are safe, while repeated targ
   assert.equal((await (await f.request(`/customers/${old.id}`)).json()).name, "Old");
 });
 
+test("update targets must still match a name, phone or email and mismatches roll back", async (t) => {
+  const f = await fixture(t);
+  const old = await (
+    await f.request("/customers", "POST", {
+      name: "Protected",
+      kind: "company",
+      phone: "012345",
+      email: "protected@example.test",
+    })
+  ).json();
+  const before = await f.count();
+  const mismatch = row(2, { name: "Unrelated", kind: "individual" }, "update", {
+    targetId: old.id,
+    revision: 1,
+  });
+  for (const dryRun of [true, false]) {
+    const response = await f.request("/customers/import", "POST", {
+      dryRun,
+      rows: [row(1, { name: "Must not write", kind: "individual" }), mismatch],
+    });
+    assert.equal(response.status, dryRun ? 200 : 400);
+    const body = await response.json();
+    assert.ok(
+      (dryRun ? body.rows : body.error.details.rows)[1].errors.some(
+        (error) => error.field === "targetId",
+      ),
+    );
+    assert.equal(await f.count(), before);
+    assert.equal((await (await f.request(`/customers/${old.id}`)).json()).name, "Protected");
+  }
+  for (const fields of [
+    { name: "Protected" },
+    { name: "Renamed", phone: "012-345" },
+    { name: "Renamed", email: "PROTECTED@example.test" },
+  ]) {
+    const response = await f.request("/customers/import", "POST", {
+      dryRun: true,
+      rows: [row(2, fields, "update", { targetId: old.id, revision: 1 })],
+    });
+    assert.equal(response.status, 200);
+    assert.deepEqual((await response.json()).rows[0].errors, []);
+  }
+});
 test("import enforces authentication, browser origin and fresh create/update permissions", async (t) => {
   const f = await fixture(t);
   const payload = { dryRun: true, rows: [] };

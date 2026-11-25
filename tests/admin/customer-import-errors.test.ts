@@ -22,7 +22,7 @@ it.each([
   ["extra.priority", "Ưu tiên phải là Có hoặc Không"],
   ["extra", "Trường mở rộng không hợp lệ (tối đa 30 trường)"],
   ["extra.legacy", "Trường mở rộng (legacy) không hợp lệ"],
-  ["targetId", "Khách hàng cập nhật không tồn tại hoặc chưa được chọn"],
+  ["targetId", "Khách hàng cập nhật không khớp dữ liệu hoặc chưa được chọn"],
   ["revision", "Phiên bản khách hàng không hợp lệ hoặc đã thay đổi, vui lòng tải lại"],
   ["action", "Lựa chọn xử lý không hợp lệ"],
   ["row", "Số dòng không hợp lệ"],

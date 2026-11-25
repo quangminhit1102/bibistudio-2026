@@ -128,6 +128,29 @@ it("defaults a newly matching edited row to skip but preserves an explicit creat
   );
   expect(screen.getByLabelText("Xử lý dòng 2")).toHaveValue("create");
 });
+it("drops a chosen update target when edited fields no longer match it", async () => {
+  const existing = (await f.store.get("customers", f.customerId))!;
+  mount();
+  await userEvent.click(await screen.findByRole("button", { name: "Import Excel" }));
+  fireEvent.change(await screen.findByLabelText("Chọn file .xlsx"), {
+    target: { files: [await workbook([["Tên"], [existing.name]])] },
+  });
+  await screen.findByLabelText("Tên dòng 2");
+  fireEvent.change(screen.getByLabelText("Xử lý dòng 2"), {
+    target: { value: `update:${existing.id}` },
+  });
+  fireEvent.change(screen.getByLabelText("Tên dòng 2"), {
+    target: { value: "New unrelated name" },
+  });
+  await waitFor(() => expect(screen.getByLabelText("Xử lý dòng 2")).toHaveValue("create"));
+  expect(screen.queryByRole("option", { name: "Cập nhật khách đã chọn" })).not.toBeInTheDocument();
+  await waitFor(() =>
+    expect(screen.getByRole("button", { name: /Xác nhận import/ })).toBeEnabled(),
+  );
+  await userEvent.click(screen.getByRole("button", { name: /Xác nhận import/ }));
+  await screen.findByText("Đã thêm 1, cập nhật 0, bỏ qua 0");
+  expect(await f.store.get("customers", existing.id)).toEqual(existing);
+});
 it("rejects invalid file selection without a writable preview and lets the user retry", async () => {
   mount();
   const u = userEvent.setup();
