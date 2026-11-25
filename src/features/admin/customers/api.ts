@@ -17,6 +17,8 @@ export type ImportRow = ServerImportRow & {
   emptyFields?: string[];
   actionChosen?: boolean;
   kindInferred?: boolean;
+  resetUpdate?: boolean;
+  updateNotice?: boolean;
 };
 
 type ImportRuntime = {
@@ -32,7 +34,14 @@ export async function importCustomers(
   input = {
     ...input,
     rows: input.rows.map(
-      ({ emptyFields, actionChosen: _actionChosen, kindInferred: _kindInferred, ...row }) => ({
+      ({
+        emptyFields,
+        actionChosen: _actionChosen,
+        kindInferred: _kindInferred,
+        resetUpdate: _resetUpdate,
+        updateNotice: _updateNotice,
+        ...row
+      }) => ({
         ...row,
         fields:
           row.action === "update"

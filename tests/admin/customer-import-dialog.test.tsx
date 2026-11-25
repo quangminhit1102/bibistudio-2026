@@ -153,14 +153,14 @@ it("drops a chosen update target when edited fields no longer match it", async (
   await waitFor(() =>
     expect(
       within(screen.getByLabelText("Xử lý dòng 2")).getByRole("option", { selected: true }),
-    ).toHaveTextContent("Tạo mới (tự động)"),
+    ).toHaveTextContent("Bỏ qua (cần chọn lại)"),
   );
   expect(screen.queryByRole("option", { name: "Cập nhật khách đã chọn" })).not.toBeInTheDocument();
   await waitFor(() =>
     expect(screen.getByRole("button", { name: /Xác nhận import/ })).toBeEnabled(),
   );
   await userEvent.click(screen.getByRole("button", { name: /Xác nhận import/ }));
-  await screen.findByText("Đã thêm 1, cập nhật 0, bỏ qua 0");
+  await screen.findByText("Đã thêm 0, cập nhật 0, bỏ qua 1");
   expect(await f.store.get("customers", existing.id)).toEqual(existing);
 });
 it("preserves typed whitespace and normalizes only the validated/sent copy", async () => {
@@ -399,6 +399,47 @@ it("hides import for a viewer without customer.create", async () => {
   expect(screen.queryByRole("button", { name: "Import Excel" })).not.toBeInTheDocument();
 });
 
+it("keeps a conflict-invalidated update skipped when its only match disappears", async () => {
+  const existing = (await f.store.get("customers", f.customerId))!;
+  const count = (await f.store.list("customers")).length;
+  const original = customerApi.importCustomers;
+  let raced = false;
+  vi.spyOn(customerApi, "importCustomers").mockImplementation(async (runtime, input) => {
+    if (!input.dryRun && !raced) {
+      raced = true;
+      await f.store.transaction(["customers"], (tx) =>
+        tx.put("customers", {
+          ...existing,
+          name: "Concurrent renamed customer",
+          revision: existing.revision + 1,
+        }),
+      );
+    }
+    return original(runtime, input);
+  });
+  mount();
+  await userEvent.click(await screen.findByRole("button", { name: "Import Excel" }));
+  fireEvent.change(await screen.findByLabelText("Chọn file .xlsx"), {
+    target: { files: [await workbook([["Tên"], [existing.name]])] },
+  });
+  await userEvent.selectOptions(
+    await screen.findByLabelText("Xử lý dòng 2"),
+    `update:${existing.id}`,
+  );
+  await waitFor(() =>
+    expect(screen.getByRole("button", { name: /Xác nhận import/ })).toBeEnabled(),
+  );
+  await userEvent.click(screen.getByRole("button", { name: /Xác nhận import/ }));
+  expect(
+    await screen.findByText("Khách cần cập nhật không còn khớp, hãy chọn lại"),
+  ).toBeInTheDocument();
+  await waitFor(() =>
+    expect(screen.getByRole("button", { name: /Xác nhận import/ })).toBeEnabled(),
+  );
+  await userEvent.click(screen.getByRole("button", { name: /Xác nhận import/ }));
+  await screen.findByText("Đã thêm 0, cập nhật 0, bỏ qua 1");
+  expect(await f.store.list("customers")).toHaveLength(count);
+});
 it("reloads preview after a revision conflict and requires choosing the updated target again", async () => {
   const existing = (await f.store.get("customers", f.customerId))!;
   const original = customerApi.importCustomers;
@@ -436,11 +477,7 @@ it("reloads preview after a revision conflict and requires choosing the updated 
     expect(screen.getByRole("button", { name: /Xác nhận import/ })).toBeEnabled(),
   );
   await u.click(screen.getByRole("button", { name: /Xác nhận import/ }));
-  await waitFor(() =>
-    expect(within(action).getByRole("option", { selected: true })).toHaveTextContent(
-      "Bỏ qua (tự động)",
-    ),
-  );
+  await waitFor(() => expect(action).toHaveValue("skip"));
   expect((await f.store.get("customers", existing.id))?.representative).not.toBe("Updated rep");
   await waitFor(() => expect(screen.queryByRole("status")).not.toBeInTheDocument());
   await u.selectOptions(action, `update:${existing.id}`);

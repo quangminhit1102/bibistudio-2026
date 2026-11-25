@@ -189,6 +189,8 @@ it("keeps inferred/defaulted blank workbook cells out of update writes and HTTP 
   );
   const update = {
     ...parsed.rows[0],
+    resetUpdate: true,
+    updateNotice: true,
     action: "update" as const,
     targetId: stored.id,
     revision: stored.revision,

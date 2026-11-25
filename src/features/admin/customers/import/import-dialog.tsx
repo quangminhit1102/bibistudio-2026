@@ -137,6 +137,7 @@ export default function CustomerImportDialog({ onClose }: { onClose: () => void 
     localErrors.length > 0 ||
     preview.rows.some((r) => r.errors.length > 0);
   const problems = (row: ImportRow) =>
+    row.updateNotice ||
     localErrors.some((e) => e.row === row.row) ||
     preview?.rows.some((r) => r.row === row.row && r.status !== "ok");
   const filtered = onlyProblems ? rows.filter(problems) : rows;
@@ -162,10 +163,7 @@ export default function CustomerImportDialog({ onClose }: { onClose: () => void 
               row.action === "update"
                 ? {
                     ...row,
-                    action: "skip",
-                    actionChosen: false,
-                    targetId: undefined,
-                    revision: undefined,
+                    resetUpdate: true,
                   }
                 : row,
             ),
@@ -343,9 +341,26 @@ export default function CustomerImportDialog({ onClose }: { onClose: () => void 
                         );
                       })}
                       <td>
-                        <Badge tone={errors.length ? "error" : duplicate ? "warning" : "success"}>
-                          {errors.length ? "Lỗi" : duplicate ? "Trùng" : "Hợp lệ"}
+                        <Badge
+                          tone={
+                            errors.length
+                              ? "error"
+                              : duplicate || row.updateNotice
+                                ? "warning"
+                                : "success"
+                          }
+                        >
+                          {errors.length
+                            ? "Lỗi"
+                            : row.updateNotice
+                              ? "Chọn lại"
+                              : duplicate
+                                ? "Trùng"
+                                : "Hợp lệ"}
                         </Badge>
+                        {row.updateNotice && (
+                          <small>Khách cần cập nhật không còn khớp, hãy chọn lại</small>
+                        )}
                         {check?.inFile && <small>Trùng dòng {check.inFile}</small>}
                         {check?.matches.map((m) => (
                           <small key={m.id}>
@@ -361,11 +376,13 @@ export default function CustomerImportDialog({ onClose }: { onClose: () => void 
                           aria-label={`Xử lý dòng ${row.row}`}
                           disabled={saving}
                           value={
-                            !row.actionChosen
-                              ? "auto"
-                              : row.action === "update"
-                                ? `update:${row.targetId}`
-                                : row.action
+                            row.updateNotice
+                              ? "review"
+                              : !row.actionChosen
+                                ? "auto"
+                                : row.action === "update"
+                                  ? `update:${row.targetId}`
+                                  : row.action
                           }
                           onChange={(e) => {
                             const value = e.target.value;
@@ -375,12 +392,16 @@ export default function CustomerImportDialog({ onClose }: { onClose: () => void 
                                 action: duplicate ? "skip" : "create",
                                 targetId: undefined,
                                 revision: undefined,
+                                resetUpdate: undefined,
+                                updateNotice: undefined,
                               });
                               return;
                             }
                             const target = check?.matches.find((m) => `update:${m.id}` === value);
                             patch(row.row, {
                               actionChosen: true,
+                              resetUpdate: undefined,
+                              updateNotice: undefined,
                               ...(target
                                 ? {
                                     action: "update",
@@ -395,6 +416,11 @@ export default function CustomerImportDialog({ onClose }: { onClose: () => void 
                             });
                           }}
                         >
+                          {row.updateNotice && (
+                            <option value="review" disabled>
+                              Bỏ qua (cần chọn lại)
+                            </option>
+                          )}
                           <option value="auto">{duplicate ? "Bỏ qua" : "Tạo mới"} (tự động)</option>
                           <option value="skip">Bỏ qua</option>
                           <option value="create">Tạo mới</option>
