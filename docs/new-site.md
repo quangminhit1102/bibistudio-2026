@@ -25,6 +25,7 @@ node scripts/new-site.mjs               # tạo site/ từ bộ site trống
 | ---------------------------- | --------------------------------------------------------------------------------------------------------- |
 | `site/site.config.ts`        | Tên, domain (`https://`, không có đường dẫn), ngôn ngữ, liên hệ, SEO, font, tên admin và các module admin |
 | `site/catalogue.config.ts`   | Thuộc tính sản phẩm, cách nhóm sản phẩm trong một bộ sưu tập, phần riêng của trang từng bộ sưu tập        |
+| `site/customers.config.ts`   | `extraFields`: các trường mở rộng của khách hàng dùng chung cho form, chi tiết, file mẫu và import Excel  |
 | `site/messages/vi.ts`        | Mọi chữ của giao diện công khai. Thiếu một khóa thì kiểm tra kiểu và build đều báo tên khóa               |
 | `site/pages/home.tsx`        | Thân trang chủ (nhận `products`), `about.tsx` và `contact.tsx` tương tự                                   |
 | `site/theme.css`             | Màu, bo góc và font                                                                                       |
@@ -36,6 +37,25 @@ Module admin: liệt kê trong `admin.modules` những gì site cần. Các mã 
 Tên, tên ngắn, domain, số điện thoại và email của site không được trùng một từ thông dụng có trong mã lõi (ví dụ tên ngắn "Example"): test ranh giới sẽ coi mọi chỗ xuất hiện từ đó là giá trị của site bị viết cứng.
 
 Loại sản phẩm và bộ sưu tập không khai trong code: thêm trong admin (`/admin/products/types`, `/admin/products/categories`).
+
+Trường khách hàng cố định nằm trong lõi; trường riêng của site khai trong `site/customers.config.ts`, đọc qua `src/platform/site.ts`. Site trống có sẵn file này với `extraFields: []`. Ví dụ:
+
+```ts
+import { defineCustomers } from "../src/platform/site-contract";
+
+export default defineCustomers({
+  extraFields: [
+    {
+      key: "customerCode",
+      label: "Mã khách",
+      type: "text",
+      importHeaders: ["Mã KH"],
+    },
+  ],
+});
+```
+
+Mỗi trường có `key` ổn định, `label`, `type` là `text`, `number` hoặc `boolean`; `importHeaders` là danh sách tiêu đề Excel thay thế, không bắt buộc. Giá trị lưu dưới khóa tương ứng trong `customers.extra`, không cần thêm cột SQL. Tối đa 30 khóa, mỗi giá trị chuỗi tối đa 500 ký tự. Form, chi tiết, file mẫu và parser import lấy các trường cố định cộng trường site qua `src/features/admin/customers/fields.ts`; không sửa lõi để thêm trường. Giữ các key đã dùng khi cập nhật site để dữ liệu cũ tiếp tục được hiển thị đúng.
 
 ## 3. Kiểm tra và build
 
