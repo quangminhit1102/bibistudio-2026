@@ -11,7 +11,7 @@ import { authorizeOperation, requirePermission } from "../accounts/permissions";
 import { customerConfig } from "./config";
 import { ServiceError } from "../services/errors";
 export type { ImportResult } from "../../../../backend/src/content/customer-import";
-export type ImportRow = ServerImportRow & { emptyFields?: string[] };
+export type ImportRow = ServerImportRow & { emptyFields?: string[]; actionChosen?: boolean };
 
 type ImportRuntime = {
   store: AdminStore;
@@ -25,7 +25,7 @@ export async function importCustomers(
 ): Promise<ImportResult> {
   input = {
     ...input,
-    rows: input.rows.map(({ emptyFields, ...row }) => ({
+    rows: input.rows.map(({ emptyFields, actionChosen: _actionChosen, ...row }) => ({
       ...row,
       fields:
         row.action === "update"

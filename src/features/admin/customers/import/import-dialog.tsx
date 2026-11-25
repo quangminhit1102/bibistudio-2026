@@ -16,6 +16,7 @@ import {
 } from "./parse";
 import { customerSampleWorkbook } from "./sample";
 import { customerImportErrorMessage } from "./errors";
+import { reconcileImportRows } from "./preview";
 
 export default function CustomerImportDialog({ onClose }: { onClose: () => void }) {
   const runtime = useAdmin();
@@ -53,7 +54,11 @@ export default function CustomerImportDialog({ onClose }: { onClose: () => void 
       importCustomers(runtime, { dryRun: true, rows })
         .then((result) => {
           if (current) {
-            setPreview(result);
+            const next = reconcileImportRows(rows, result);
+            if (next !== rows) {
+              setRows(next);
+              setPreview(null);
+            } else setPreview(result);
             setError("");
           }
         })
@@ -85,15 +90,7 @@ export default function CustomerImportDialog({ onClose }: { onClose: () => void 
       const parsed = await parseCustomerWorkbook(file, customers);
       const result = await importCustomers(runtime, { dryRun: true, rows: parsed.rows });
       if (request !== serial.current) return;
-      setRows(
-        parsed.rows.map((row) => {
-          const check = result.rows.find((r) => r.row === row.row);
-          return {
-            ...row,
-            action: check && (check.matches.length || check.inFile) ? "skip" : "create",
-          };
-        }),
-      );
+      setRows(reconcileImportRows(parsed.rows, result));
       setUnknown(parsed.unknownColumns);
       setPreview(result);
       setChecking(parsed.rows.length > 0);
@@ -334,9 +331,9 @@ export default function CustomerImportDialog({ onClose }: { onClose: () => void 
                           onChange={(e) => {
                             const value = e.target.value;
                             const target = check?.matches.find((m) => `update:${m.id}` === value);
-                            patch(
-                              row.row,
-                              target
+                            patch(row.row, {
+                              actionChosen: true,
+                              ...(target
                                 ? {
                                     action: "update",
                                     targetId: target.id,
@@ -346,8 +343,8 @@ export default function CustomerImportDialog({ onClose }: { onClose: () => void 
                                     action: value as "create" | "skip",
                                     targetId: undefined,
                                     revision: undefined,
-                                  },
-                            );
+                                  }),
+                            });
                           }}
                         >
                           <option value="skip">Bỏ qua</option>

@@ -107,6 +107,27 @@ it("previews duplicates and errors, edits inline, explicitly creates duplicates,
     (await f.store.list("customers")).filter((c) => c.name.toLowerCase().includes("import")),
   ).toHaveLength(3);
 });
+it("defaults a newly matching edited row to skip but preserves an explicit create choice", async () => {
+  const existing = (await f.store.get("customers", f.customerId))!;
+  mount();
+  await userEvent.click(await screen.findByRole("button", { name: "Import Excel" }));
+  const file = await workbook([["Tên"], ["New distinct customer"]]);
+  fireEvent.change(await screen.findByLabelText("Chọn file .xlsx"), { target: { files: [file] } });
+  await screen.findByLabelText("Tên dòng 2");
+  await waitFor(() =>
+    expect(screen.getByRole("button", { name: /Xác nhận import/ })).toBeEnabled(),
+  );
+  fireEvent.change(screen.getByLabelText("Tên dòng 2"), { target: { value: existing.name } });
+  await waitFor(() => expect(screen.getByLabelText("Xử lý dòng 2")).toHaveValue("skip"));
+  fireEvent.change(screen.getByLabelText("Xử lý dòng 2"), { target: { value: "create" } });
+  fireEvent.change(screen.getByLabelText("Tên dòng 2"), {
+    target: { value: existing.name.toUpperCase() },
+  });
+  await waitFor(() =>
+    expect(screen.getByRole("button", { name: /Xác nhận import/ })).toBeEnabled(),
+  );
+  expect(screen.getByLabelText("Xử lý dòng 2")).toHaveValue("create");
+});
 it("rejects invalid file selection without a writable preview and lets the user retry", async () => {
   mount();
   const u = userEvent.setup();
