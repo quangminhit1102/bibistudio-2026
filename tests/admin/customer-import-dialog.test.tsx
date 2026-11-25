@@ -201,6 +201,32 @@ it("does not restore extracted contacts after clearing them or editing another c
     (await f.store.list("customers")).find((c) => c.name === "Cleared contacts"),
   ).toMatchObject({ email: "", phone: "" });
 });
+it("re-infers kind on name edits unless the user has chosen a kind", async () => {
+  mount();
+  await userEvent.click(await screen.findByRole("button", { name: "Import Excel" }));
+  fireEvent.change(await screen.findByLabelText("Chọn file .xlsx"), {
+    target: { files: [await workbook([["Tên"], ["Kind example"]])] },
+  });
+  await screen.findByLabelText("Tên dòng 2");
+  expect(screen.getByLabelText("Loại dòng 2")).toHaveValue("individual");
+  fireEvent.change(screen.getByLabelText("Tên dòng 2"), { target: { value: "NHÀ SÁCH Updated" } });
+  expect(screen.getByLabelText("Loại dòng 2")).toHaveValue("bookstore");
+  fireEvent.change(screen.getByLabelText("Tên dòng 2"), { target: { value: "CÔNG TY Updated" } });
+  expect(screen.getByLabelText("Loại dòng 2")).toHaveValue("company");
+  fireEvent.change(screen.getByLabelText("Loại dòng 2"), { target: { value: "individual" } });
+  fireEvent.change(screen.getByLabelText("Tên dòng 2"), { target: { value: "NXB Updated" } });
+  expect(screen.getByLabelText("Loại dòng 2")).toHaveValue("individual");
+  fireEvent.change(screen.getByLabelText("Loại dòng 2"), { target: { value: "" } });
+  expect(screen.getByLabelText("Loại dòng 2")).toHaveValue("bookstore");
+  await waitFor(() =>
+    expect(screen.getByRole("button", { name: /Xác nhận import/ })).toBeEnabled(),
+  );
+  await userEvent.click(screen.getByRole("button", { name: /Xác nhận import/ }));
+  await screen.findByText("Đã thêm 1, cập nhật 0, bỏ qua 0");
+  expect((await f.store.list("customers")).find((c) => c.name === "NXB Updated")).toMatchObject({
+    kind: "bookstore",
+  });
+});
 it("rejects invalid file selection without a writable preview and lets the user retry", async () => {
   mount();
   const u = userEvent.setup();

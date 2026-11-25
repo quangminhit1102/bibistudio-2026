@@ -11,7 +11,11 @@ import { authorizeOperation, requirePermission } from "../accounts/permissions";
 import { customerConfig } from "./config";
 import { ServiceError } from "../services/errors";
 export type { ImportResult } from "../../../../backend/src/content/customer-import";
-export type ImportRow = ServerImportRow & { emptyFields?: string[]; actionChosen?: boolean };
+export type ImportRow = ServerImportRow & {
+  emptyFields?: string[];
+  actionChosen?: boolean;
+  kindInferred?: boolean;
+};
 
 type ImportRuntime = {
   store: AdminStore;
@@ -25,15 +29,17 @@ export async function importCustomers(
 ): Promise<ImportResult> {
   input = {
     ...input,
-    rows: input.rows.map(({ emptyFields, actionChosen: _actionChosen, ...row }) => ({
-      ...row,
-      fields:
-        row.action === "update"
-          ? Object.fromEntries(
-              Object.entries(row.fields).filter(([key]) => !emptyFields?.includes(key)),
-            )
-          : row.fields,
-    })),
+    rows: input.rows.map(
+      ({ emptyFields, actionChosen: _actionChosen, kindInferred: _kindInferred, ...row }) => ({
+        ...row,
+        fields:
+          row.action === "update"
+            ? Object.fromEntries(
+                Object.entries(row.fields).filter(([key]) => !emptyFields?.includes(key)),
+              )
+            : row.fields,
+      }),
+    ),
   };
   if (runtime.session?.kind === "http") {
     if (!runtime.http) throw new Error("Phiên HTTP không khả dụng");

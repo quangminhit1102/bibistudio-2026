@@ -6,6 +6,7 @@ import {
 } from "../../../../../backend/src/content/customer-import";
 import type { ImportRow } from "../api";
 import { customerFields, type CustomerField } from "../fields";
+export { inferKind };
 
 export type CellError = { row: number; field: string; message: string };
 const text = (value: unknown) => (value == null ? "" : String(value).trim());
@@ -159,6 +160,7 @@ export async function parseCustomerWorkbook(
     const row: ImportRow = {
       row: index + 1,
       action: "create",
+      kindInferred: !text(values.kind),
       fields: normalizeImportCells(
         { ...values, ...(Object.keys(extra).length ? { extra } : {}) },
         fields,

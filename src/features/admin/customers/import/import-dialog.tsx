@@ -11,6 +11,7 @@ import { importCustomers, type ImportRow, type ImportResult } from "../api";
 import {
   customerImportColumns,
   importCellErrors,
+  inferKind,
   prepareImportRows,
   parseCustomerWorkbook,
 } from "./parse";
@@ -110,8 +111,12 @@ export default function CustomerImportDialog({ onClose }: { onClose: () => void 
     const input = extraKey
       ? { ...row.fields, extra: { ...row.fields.extra, [extraKey]: value } }
       : { ...row.fields, [key]: value };
+    const kindInferred = key === "kind" ? !String(value ?? "").trim() : row.kindInferred;
+    if (kindInferred && (key === "name" || key === "kind"))
+      input.kind = inferKind(String(input.name ?? ""));
     patch(row.row, {
       fields: input,
+      kindInferred,
       emptyFields:
         extraKey || !["kind", "vatRate"].includes(key)
           ? row.emptyFields
