@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { Download, FileSpreadsheet, Upload } from "lucide-react";
 import { customers } from "@/platform/site";
 import { AdminHttpError } from "@/lib/admin-http";
 import { useAdmin, useRole } from "../../services/context";
@@ -28,6 +29,8 @@ export default function CustomerImportDialog({ onClose }: { onClose: () => void 
   const [preview, setPreview] = useState<ImportResult | null>(null);
   const [unknown, setUnknown] = useState<string[]>([]);
   const [error, setError] = useState("");
+  const [fileName, setFileName] = useState("");
+  const fileInput = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -80,6 +83,7 @@ export default function CustomerImportDialog({ onClose }: { onClose: () => void 
   }, [rows, reload, runtime]);
 
   async function chooseFile(file: File) {
+    setFileName(file.name);
     const request = ++serial.current;
     setLoading(true);
     setRows([]);
@@ -184,281 +188,335 @@ export default function CustomerImportDialog({ onClose }: { onClose: () => void 
       title="Import khách hàng từ Excel"
       description="Chọn file, kiểm tra và sửa dữ liệu trước khi xác nhận. Dòng trùng mặc định được bỏ qua."
       wide
+      className={`a-customer-import-modal ${rows.length ? "a-customer-import-modal-preview" : ""}`}
     >
-      <div className="a-toolbar">
-        <Button
-          disabled={loading || saving}
-          onClick={async () => {
-            try {
-              downloadBlob(await customerSampleWorkbook(customers), "khach-hang-mau.xlsx");
-            } catch (e) {
-              setError(e instanceof Error ? e.message : "Không tải được file mẫu");
-            }
-          }}
-        >
-          Tải file mẫu
-        </Button>
-        <label>
-          Chọn file .xlsx
-          <input
-            aria-label="Chọn file .xlsx"
-            type="file"
-            accept=".xlsx"
-            disabled={loading || saving}
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) void chooseFile(file);
-              e.target.value = "";
-            }}
-          />
-        </label>
-      </div>
-      {error && <p role="alert">{error}</p>}
-      {unknown.length > 0 && <p>Cột bỏ qua: {unknown.join(", ")}</p>}
-      {(loading || checking) && <p role="status">Đang kiểm tra dữ liệu…</p>}
-      {rows.length > 0 && (
-        <>
-          <p>
-            {rows.length} dòng · {preview?.rows.filter((r) => r.status === "ok").length ?? 0} hợp lệ
-            · {preview?.rows.filter((r) => r.status === "duplicate").length ?? 0} trùng ·{" "}
-            {
-              new Set([
-                ...localErrors.map((r) => r.row),
-                ...(preview?.rows.filter((r) => r.errors.length).map((r) => r.row) ?? []),
-              ]).size
-            }{" "}
-            lỗi
-          </p>
-          <label>
-            <input
-              type="checkbox"
-              checked={onlyProblems}
-              onChange={(e) => {
-                setOnlyProblems(e.target.checked);
-                setPage(1);
+      <div className="a-dialog-body a-customer-import-body">
+        <section className="a-import-file" aria-label="File khách hàng">
+          <div className="a-import-file-heading">
+            <div>
+              <h3>
+                <FileSpreadsheet size={18} aria-hidden="true" /> File khách hàng
+              </h3>
+              <p>Dùng file mẫu để đảm bảo đúng định dạng cột.</p>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled={loading || saving}
+              onClick={async () => {
+                try {
+                  downloadBlob(await customerSampleWorkbook(customers), "khach-hang-mau.xlsx");
+                } catch (e) {
+                  setError(e instanceof Error ? e.message : "Không tải được file mẫu");
+                }
               }}
-            />{" "}
-            Chỉ hiện dòng có vấn đề
-          </label>
-          <div className="a-table-wrap">
-            <table className="a-table a-customer-import-table">
-              <thead>
-                <tr>
-                  <th>Dòng</th>
-                  {columns.map((f) => (
-                    <th key={f.key}>{f.key === "kind" ? "Loại" : f.label}</th>
-                  ))}
-                  <th>Tình trạng</th>
-                  <th>Xử lý</th>
-                </tr>
-              </thead>
-              <tbody>
-                {visible.map((row) => {
-                  const check = preview?.rows.find((r) => r.row === row.row);
-                  const automaticKind =
-                    row.action === "update"
-                      ? check?.matches.find((match) => match.id === row.targetId)?.kind
-                      : inferKind(String(row.fields.name ?? ""));
-                  const automaticKindLabel =
-                    customerKinds.find((kind) => kind.value === automaticKind)?.label ??
-                    automaticKind ??
-                    "đang kiểm tra";
-                  const automaticKindText =
-                    row.action === "update"
-                      ? `Giữ nguyên (${automaticKindLabel})`
-                      : `(tự động: ${automaticKindLabel})`;
-                  const errors = [
-                    ...new Map(
-                      [
-                        ...localErrors.filter((r) => r.row === row.row),
-                        ...(check?.errors ?? []),
-                      ].map((error) => {
-                        const message = customerImportErrorMessage(
-                          error.field,
-                          row.fields,
-                          customers,
-                        );
-                        return [`${error.field}:${message}`, { ...error, message }];
-                      }),
-                    ).values(),
-                  ];
-                  const duplicate = Boolean(check?.matches.length || check?.inFile);
-                  return (
-                    <tr key={row.row}>
-                      <td>{row.row}</td>
-                      {columns.map((field) => {
-                        const value = field.extraKey
-                          ? row.fields.extra?.[field.extraKey]
-                          : row.fields[field.key as keyof ImportRow["fields"]];
-                        const label = `${field.key === "name" ? "Tên" : field.key === "kind" ? "Loại" : field.key === "vatRate" ? "VAT" : field.label} dòng ${row.row}`;
-                        return (
-                          <td key={field.key} data-field={field.key}>
-                            {field.key === "kind" ? (
-                              <select
-                                aria-label={label}
-                                title={row.kindInferred ? automaticKindText : String(value ?? "")}
-                                value={
-                                  row.kindInferred
-                                    ? "auto"
-                                    : customerKinds.some((kind) => kind.value === value)
-                                      ? String(value)
-                                      : "invalid"
-                                }
-                                disabled={saving}
-                                onChange={(e) =>
-                                  edit(
-                                    row,
-                                    field.key,
-                                    e.target.value === "auto" ? "" : e.target.value,
-                                  )
-                                }
-                              >
-                                <option value="auto">{automaticKindText}</option>
-                                {!customerKinds.some((k) => k.value === value) && (
-                                  <option value="invalid" disabled>
-                                    {String(value ?? "") || "Chọn loại"}
-                                  </option>
-                                )}
-                                {customerKinds.map((k) => (
-                                  <option key={k.value} value={k.value}>
-                                    {k.label}
-                                  </option>
-                                ))}
-                              </select>
-                            ) : (
-                              <input
-                                aria-label={label}
-                                title={String(value ?? "")}
-                                type={field.type === "checkbox" ? "checkbox" : "text"}
-                                checked={field.type === "checkbox" ? Boolean(value) : undefined}
-                                value={field.type === "checkbox" ? undefined : String(value ?? "")}
-                                disabled={saving}
-                                onChange={(e) =>
-                                  edit(
-                                    row,
-                                    field.key,
-                                    field.type === "checkbox" ? e.target.checked : e.target.value,
-                                    field.extraKey,
-                                  )
-                                }
-                              />
-                            )}
-                          </td>
-                        );
-                      })}
-                      <td>
-                        <Badge
-                          tone={
-                            errors.length
-                              ? "error"
-                              : duplicate || row.updateNotice
-                                ? "warning"
-                                : "success"
-                          }
-                        >
-                          {errors.length
-                            ? "Lỗi"
-                            : row.updateNotice
-                              ? "Chọn lại"
-                              : duplicate
-                                ? "Trùng"
-                                : "Hợp lệ"}
-                        </Badge>
-                        {row.updateNotice && (
-                          <small>Khách cần cập nhật không còn khớp, hãy chọn lại</small>
-                        )}
-                        {check?.inFile && <small>Trùng dòng {check.inFile}</small>}
-                        {check?.matches.map((m) => (
-                          <small key={m.id}>
-                            Trùng {m.name} ({m.by.join(", ")})
-                          </small>
-                        ))}
-                        {errors.map((e, i) => (
-                          <small key={i}>{e.message}</small>
-                        ))}
-                      </td>
-                      <td>
-                        <select
-                          aria-label={`Xử lý dòng ${row.row}`}
-                          disabled={saving}
-                          value={
-                            row.updateNotice
-                              ? "review"
-                              : !row.actionChosen
-                                ? "auto"
-                                : row.action === "update"
-                                  ? `update:${row.targetId}`
-                                  : row.action
-                          }
-                          onChange={(e) => {
-                            const value = e.target.value;
-                            if (value === "auto") {
+            >
+              <Download size={15} aria-hidden="true" />
+              Tải file mẫu
+            </Button>
+          </div>
+          <div className="a-import-file-picker">
+            <Button
+              disabled={loading || saving}
+              aria-describedby="customer-import-file-hint"
+              onClick={() => fileInput.current?.click()}
+            >
+              <Upload size={15} aria-hidden="true" /> Chọn file
+            </Button>
+            <span className="a-import-file-name" title={fileName || "Chưa chọn file"}>
+              {fileName || "Chưa chọn file"}
+            </span>
+            <input
+              ref={fileInput}
+              className="a-import-file-input"
+              tabIndex={-1}
+              aria-label="Chọn file .xlsx"
+              aria-describedby="customer-import-file-hint"
+              type="file"
+              accept=".xlsx"
+              disabled={loading || saving}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) void chooseFile(file);
+                e.target.value = "";
+              }}
+            />
+          </div>
+          <p id="customer-import-file-hint" className="a-import-hint">
+            .xlsx · tối đa 2 MB, 1.000 dòng
+          </p>
+        </section>
+        {error && (
+          <p className="a-error a-import-notice" role="alert">
+            {error}
+          </p>
+        )}
+        {unknown.length > 0 && <p className="a-import-hint">Cột bỏ qua: {unknown.join(", ")}</p>}
+        {(loading || checking) && (
+          <p className="a-import-hint" role="status">
+            Đang kiểm tra dữ liệu…
+          </p>
+        )}
+        {rows.length > 0 && (
+          <section className="a-import-preview" aria-label="Kiểm tra dữ liệu">
+            <div className="a-import-preview-heading">
+              <div>
+                <h3>Kiểm tra dữ liệu</h3>
+                <p className="a-import-summary">
+                  {rows.length} dòng · {preview?.rows.filter((r) => r.status === "ok").length ?? 0}{" "}
+                  hợp lệ · {preview?.rows.filter((r) => r.status === "duplicate").length ?? 0} trùng
+                  ·{" "}
+                  {
+                    new Set([
+                      ...localErrors.map((r) => r.row),
+                      ...(preview?.rows.filter((r) => r.errors.length).map((r) => r.row) ?? []),
+                    ]).size
+                  }{" "}
+                  lỗi
+                </p>
+              </div>
+              <label className="a-import-filter">
+                <input
+                  type="checkbox"
+                  checked={onlyProblems}
+                  onChange={(e) => {
+                    setOnlyProblems(e.target.checked);
+                    setPage(1);
+                  }}
+                />{" "}
+                Chỉ hiện dòng có vấn đề
+              </label>
+            </div>
+            <p className="a-import-hint">Cuộn ngang để xem và sửa đầy đủ các cột.</p>
+            <div
+              className="a-table-wrap"
+              role="region"
+              aria-label="Bảng dữ liệu import"
+              tabIndex={0}
+            >
+              <table className="a-table a-customer-import-table">
+                <thead>
+                  <tr>
+                    <th>Dòng</th>
+                    {columns.map((f) => (
+                      <th key={f.key}>{f.key === "kind" ? "Loại" : f.label}</th>
+                    ))}
+                    <th>Tình trạng</th>
+                    <th>Xử lý</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {visible.map((row) => {
+                    const check = preview?.rows.find((r) => r.row === row.row);
+                    const automaticKind =
+                      row.action === "update"
+                        ? check?.matches.find((match) => match.id === row.targetId)?.kind
+                        : inferKind(String(row.fields.name ?? ""));
+                    const automaticKindLabel =
+                      customerKinds.find((kind) => kind.value === automaticKind)?.label ??
+                      automaticKind ??
+                      "đang kiểm tra";
+                    const automaticKindText =
+                      row.action === "update"
+                        ? `Giữ nguyên (${automaticKindLabel})`
+                        : `(tự động: ${automaticKindLabel})`;
+                    const errors = [
+                      ...new Map(
+                        [
+                          ...localErrors.filter((r) => r.row === row.row),
+                          ...(check?.errors ?? []),
+                        ].map((error) => {
+                          const message = customerImportErrorMessage(
+                            error.field,
+                            row.fields,
+                            customers,
+                          );
+                          return [`${error.field}:${message}`, { ...error, message }];
+                        }),
+                      ).values(),
+                    ];
+                    const duplicate = Boolean(check?.matches.length || check?.inFile);
+                    return (
+                      <tr key={row.row}>
+                        <td>{row.row}</td>
+                        {columns.map((field) => {
+                          const value = field.extraKey
+                            ? row.fields.extra?.[field.extraKey]
+                            : row.fields[field.key as keyof ImportRow["fields"]];
+                          const label = `${field.key === "name" ? "Tên" : field.key === "kind" ? "Loại" : field.key === "vatRate" ? "VAT" : field.label} dòng ${row.row}`;
+                          return (
+                            <td key={field.key} data-field={field.key}>
+                              {field.key === "kind" ? (
+                                <select
+                                  aria-label={label}
+                                  title={row.kindInferred ? automaticKindText : String(value ?? "")}
+                                  value={
+                                    row.kindInferred
+                                      ? "auto"
+                                      : customerKinds.some((kind) => kind.value === value)
+                                        ? String(value)
+                                        : "invalid"
+                                  }
+                                  disabled={saving}
+                                  onChange={(e) =>
+                                    edit(
+                                      row,
+                                      field.key,
+                                      e.target.value === "auto" ? "" : e.target.value,
+                                    )
+                                  }
+                                >
+                                  <option value="auto">{automaticKindText}</option>
+                                  {!customerKinds.some((k) => k.value === value) && (
+                                    <option value="invalid" disabled>
+                                      {String(value ?? "") || "Chọn loại"}
+                                    </option>
+                                  )}
+                                  {customerKinds.map((k) => (
+                                    <option key={k.value} value={k.value}>
+                                      {k.label}
+                                    </option>
+                                  ))}
+                                </select>
+                              ) : (
+                                <input
+                                  aria-label={label}
+                                  title={String(value ?? "")}
+                                  type={field.type === "checkbox" ? "checkbox" : "text"}
+                                  checked={field.type === "checkbox" ? Boolean(value) : undefined}
+                                  value={
+                                    field.type === "checkbox" ? undefined : String(value ?? "")
+                                  }
+                                  disabled={saving}
+                                  onChange={(e) =>
+                                    edit(
+                                      row,
+                                      field.key,
+                                      field.type === "checkbox" ? e.target.checked : e.target.value,
+                                      field.extraKey,
+                                    )
+                                  }
+                                />
+                              )}
+                            </td>
+                          );
+                        })}
+                        <td>
+                          <Badge
+                            tone={
+                              errors.length
+                                ? "error"
+                                : duplicate || row.updateNotice
+                                  ? "warning"
+                                  : "success"
+                            }
+                          >
+                            {errors.length
+                              ? "Lỗi"
+                              : row.updateNotice
+                                ? "Chọn lại"
+                                : duplicate
+                                  ? "Trùng"
+                                  : "Hợp lệ"}
+                          </Badge>
+                          {row.updateNotice && (
+                            <small>Khách cần cập nhật không còn khớp, hãy chọn lại</small>
+                          )}
+                          {check?.inFile && <small>Trùng dòng {check.inFile}</small>}
+                          {check?.matches.map((m) => (
+                            <small key={m.id}>
+                              Trùng {m.name} ({m.by.join(", ")})
+                            </small>
+                          ))}
+                          {errors.map((e, i) => (
+                            <small key={i}>{e.message}</small>
+                          ))}
+                        </td>
+                        <td>
+                          <select
+                            aria-label={`Xử lý dòng ${row.row}`}
+                            disabled={saving}
+                            value={
+                              row.updateNotice
+                                ? "review"
+                                : !row.actionChosen
+                                  ? "auto"
+                                  : row.action === "update"
+                                    ? `update:${row.targetId}`
+                                    : row.action
+                            }
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              if (value === "auto") {
+                                patch(row.row, {
+                                  actionChosen: false,
+                                  action: duplicate ? "skip" : "create",
+                                  targetId: undefined,
+                                  revision: undefined,
+                                  resetUpdate: undefined,
+                                  updateNotice: undefined,
+                                });
+                                return;
+                              }
+                              const target = check?.matches.find((m) => `update:${m.id}` === value);
                               patch(row.row, {
-                                actionChosen: false,
-                                action: duplicate ? "skip" : "create",
-                                targetId: undefined,
-                                revision: undefined,
+                                actionChosen: true,
                                 resetUpdate: undefined,
                                 updateNotice: undefined,
+                                ...(target
+                                  ? {
+                                      action: "update",
+                                      targetId: target.id,
+                                      revision: target.revision,
+                                    }
+                                  : {
+                                      action: value as "create" | "skip",
+                                      targetId: undefined,
+                                      revision: undefined,
+                                    }),
                               });
-                              return;
-                            }
-                            const target = check?.matches.find((m) => `update:${m.id}` === value);
-                            patch(row.row, {
-                              actionChosen: true,
-                              resetUpdate: undefined,
-                              updateNotice: undefined,
-                              ...(target
-                                ? {
-                                    action: "update",
-                                    targetId: target.id,
-                                    revision: target.revision,
-                                  }
-                                : {
-                                    action: value as "create" | "skip",
-                                    targetId: undefined,
-                                    revision: undefined,
-                                  }),
-                            });
-                          }}
-                        >
-                          {row.updateNotice && (
-                            <option value="review" disabled>
-                              Bỏ qua (cần chọn lại)
-                            </option>
-                          )}
-                          <option value="auto">{duplicate ? "Bỏ qua" : "Tạo mới"} (tự động)</option>
-                          <option value="skip">Bỏ qua</option>
-                          <option value="create">Tạo mới</option>
-                          {mayUpdate &&
-                            check?.matches.map((m) => (
-                              <option key={m.id} value={`update:${m.id}`}>
-                                Cập nhật {m.name}
+                            }}
+                          >
+                            {row.updateNotice && (
+                              <option value="review" disabled>
+                                Bỏ qua (cần chọn lại)
                               </option>
-                            ))}
-                        </select>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-          <div className="a-toolbar">
-            <Button disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
-              Trang trước
-            </Button>
-            <span>
-              Trang {page}/{Math.max(1, Math.ceil(filtered.length / 25))}
-            </span>
-            <Button disabled={page * 25 >= filtered.length} onClick={() => setPage((p) => p + 1)}>
-              Trang sau
-            </Button>
-          </div>
-        </>
-      )}
-      <div className="a-form-actions">
-        <Button disabled={saving} onClick={onClose}>
+                            )}
+                            <option value="auto">
+                              {duplicate ? "Bỏ qua" : "Tạo mới"} (tự động)
+                            </option>
+                            <option value="skip">Bỏ qua</option>
+                            <option value="create">Tạo mới</option>
+                            {mayUpdate &&
+                              check?.matches.map((m) => (
+                                <option key={m.id} value={`update:${m.id}`}>
+                                  Cập nhật {m.name}
+                                </option>
+                              ))}
+                          </select>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            <div className="a-import-pagination">
+              <Button disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
+                Trang trước
+              </Button>
+              <span>
+                Trang {page}/{Math.max(1, Math.ceil(filtered.length / 25))}
+              </span>
+              <Button disabled={page * 25 >= filtered.length} onClick={() => setPage((p) => p + 1)}>
+                Trang sau
+              </Button>
+            </div>
+          </section>
+        )}
+      </div>
+      <div className="a-form-footer">
+        <Button variant="secondary" disabled={saving} onClick={onClose}>
           Hủy
         </Button>
         <Button
