@@ -151,6 +151,28 @@ it("drops a chosen update target when edited fields no longer match it", async (
   await screen.findByText("Đã thêm 1, cập nhật 0, bỏ qua 0");
   expect(await f.store.get("customers", existing.id)).toEqual(existing);
 });
+it("preserves typed whitespace and normalizes only the validated/sent copy", async () => {
+  mount();
+  await userEvent.click(await screen.findByRole("button", { name: "Import Excel" }));
+  fireEvent.change(await screen.findByLabelText("Chọn file .xlsx"), {
+    target: { files: [await workbook([["Tên"], ["Typed"]])] },
+  });
+  const name = await screen.findByLabelText("Tên dòng 2");
+  await userEvent.type(name, " First Last ");
+  expect(name).toHaveValue("Typed First Last ");
+  expect(name).toHaveAttribute("title", "Typed First Last ");
+  const address = screen.getByLabelText("Địa chỉ dòng 2");
+  await userEvent.type(address, "12 First Street ");
+  expect(address).toHaveValue("12 First Street ");
+  await waitFor(() =>
+    expect(screen.getByRole("button", { name: /Xác nhận import/ })).toBeEnabled(),
+  );
+  await userEvent.click(screen.getByRole("button", { name: /Xác nhận import/ }));
+  await screen.findByText("Đã thêm 1, cập nhật 0, bỏ qua 0");
+  expect(
+    (await f.store.list("customers")).find((c) => c.name === "Typed First Last"),
+  ).toMatchObject({ address: "12 First Street" });
+});
 it("rejects invalid file selection without a writable preview and lets the user retry", async () => {
   mount();
   const u = userEvent.setup();

@@ -11,7 +11,7 @@ import { importCustomers, type ImportRow, type ImportResult } from "../api";
 import {
   customerImportColumns,
   importCellErrors,
-  normalizeImportCells,
+  prepareImportRows,
   parseCustomerWorkbook,
 } from "./parse";
 import { customerSampleWorkbook } from "./sample";
@@ -51,7 +51,7 @@ export default function CustomerImportDialog({ onClose }: { onClose: () => void 
     let current = true;
     setChecking(true);
     const timer = setTimeout(() => {
-      importCustomers(runtime, { dryRun: true, rows })
+      importCustomers(runtime, { dryRun: true, rows: prepareImportRows(rows, customers) })
         .then((result) => {
           if (current) {
             const next = reconcileImportRows(rows, result);
@@ -111,7 +111,7 @@ export default function CustomerImportDialog({ onClose }: { onClose: () => void 
       ? { ...row.fields, extra: { ...row.fields.extra, [extraKey]: value } }
       : { ...row.fields, [key]: value };
     patch(row.row, {
-      fields: normalizeImportCells(input, customers),
+      fields: input,
       emptyFields:
         extraKey || !["kind", "vatRate"].includes(key)
           ? row.emptyFields
@@ -141,7 +141,10 @@ export default function CustomerImportDialog({ onClose }: { onClose: () => void 
     setSaving(true);
     setError("");
     try {
-      const result = await importCustomers(runtime, { dryRun: false, rows });
+      const result = await importCustomers(runtime, {
+        dryRun: false,
+        rows: prepareImportRows(rows, customers),
+      });
       await query.invalidateQueries({ queryKey: ["bibi-admin", "customers"] });
       notice(`Đã thêm ${result.created}, cập nhật ${result.updated}, bỏ qua ${result.skipped}`);
       onClose();

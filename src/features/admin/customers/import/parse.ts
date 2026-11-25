@@ -80,7 +80,8 @@ export function normalizeImportCells(
 
 export function importCellErrors(row: ImportRow, config: CustomerFieldConfig): CellError[] {
   if (row.action === "skip") return [];
-  const parsed = validateImportFields(row.fields, row.action === "update");
+  const fields = normalizeImportCells({ ...row.fields }, config);
+  const parsed = validateImportFields(fields, row.action === "update");
   const errors: CellError[] = parsed.success
     ? []
     : parsed.error.issues.map((issue) => ({
@@ -89,7 +90,7 @@ export function importCellErrors(row: ImportRow, config: CustomerFieldConfig): C
         message: issue.message,
       }));
   for (const field of config.extraFields) {
-    const value = row.fields.extra?.[field.key];
+    const value = fields.extra?.[field.key];
     if (
       value != null &&
       value !== "" &&
@@ -102,6 +103,10 @@ export function importCellErrors(row: ImportRow, config: CustomerFieldConfig): C
       });
   }
   return errors;
+}
+
+export function prepareImportRows(rows: ImportRow[], config: CustomerFieldConfig): ImportRow[] {
+  return rows.map((row) => ({ ...row, fields: normalizeImportCells({ ...row.fields }, config) }));
 }
 
 export async function parseCustomerWorkbook(
