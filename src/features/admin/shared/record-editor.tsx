@@ -24,10 +24,14 @@ export function RecordEditor<K extends EntityKey>({
   config,
   id,
   listHref,
+  toForm,
+  fromForm,
 }: {
   config: EntityConfig<K>;
   id?: string;
   listHref: string;
+  toForm?: (record: FormValues) => FormValues;
+  fromForm?: (values: FormValues, initial: FormValues) => FormValues;
 }) {
   const runtime = useAdmin();
   const query = useQueryClient();
@@ -73,12 +77,19 @@ export function RecordEditor<K extends EntityKey>({
           }
           key={id ?? "new"}
           fields={config.fields}
-          initial={(snapshot ?? config.defaults) as unknown as FormValues}
+          initial={
+            toForm
+              ? toForm((snapshot ?? config.defaults) as unknown as FormValues)
+              : ((snapshot ?? config.defaults) as unknown as FormValues)
+          }
           onDirtyChange={setDirty}
           onCancel={() => void navigate(internalTarget(listHref))}
           onSave={async (values) => {
             const service = runtime.service(config.entity, config.resource);
-            const editable = Object.fromEntries(config.fields.map((f) => [f.key, values[f.key]]));
+            const fields = Object.fromEntries(config.fields.map((f) => [f.key, values[f.key]]));
+            const editable = fromForm
+              ? fromForm(fields, (snapshot ?? config.defaults) as unknown as FormValues)
+              : fields;
             if (id && snapshot)
               await service.update(id, editable as Partial<CreateInput<K>>, snapshot.revision);
             else await service.create({ ...config.defaults, ...editable } as CreateInput<K>);

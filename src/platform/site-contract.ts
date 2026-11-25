@@ -123,6 +123,32 @@ export type CatalogueConfig = {
   collectionPages?: Record<string, CollectionPageConfig>;
 };
 
+export type CustomerFieldConfig = {
+  extraFields: {
+    key: string;
+    label: string;
+    type: "text" | "number" | "boolean";
+    importHeaders?: string[];
+  }[];
+};
+
+export function defineCustomers(config: CustomerFieldConfig): CustomerFieldConfig {
+  const keys = new Set<string>();
+  if (config.extraFields.length > 30)
+    throw new Error("Invalid customers config: at most 30 fields");
+  for (const field of config.extraFields) {
+    if (
+      !/^[a-z][a-zA-Z0-9]{0,63}$/.test(field.key) ||
+      keys.has(field.key) ||
+      !field.label.trim() ||
+      !["text", "number", "boolean"].includes(field.type)
+    )
+      throw new Error(`Invalid customers config: ${field.key}`);
+    keys.add(field.key);
+  }
+  return deepFreeze(structuredClone(config));
+}
+
 function failCatalogue(field: string, reason: string): never {
   throw new Error(`Invalid catalogue config: ${field} ${reason}`);
 }

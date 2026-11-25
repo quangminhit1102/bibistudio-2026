@@ -2,11 +2,8 @@ import { Link } from "@tanstack/react-router";
 import type { EntityConfig } from "../shared/entity-manager";
 import { Badge } from "../shared/ui/primitives";
 import { site } from "@/platform/site";
-export const customerKinds = [
-  { value: "bookstore", label: "Nhà sách" },
-  { value: "individual", label: "Cá nhân" },
-  { value: "company", label: "Công ty" },
-];
+import { customerFields, customerKinds } from "./fields";
+export { customerKinds } from "./fields";
 export function customerReturnTo(input: unknown): string {
   if (typeof input !== "string" || !input.startsWith("/admin/customers")) return "/admin/customers";
   try {
@@ -36,29 +33,10 @@ export const customerConfig: EntityConfig<"customers"> = {
     active: true,
     email: "",
     phone: "",
+    representative: "",
+    extra: {},
   },
-  fields: [
-    { key: "name", label: "Tên khách", type: "text", required: true },
-    { key: "kind", label: "Loại khách", type: "select", required: true, options: customerKinds },
-    { key: "address", label: "Địa chỉ", type: "textarea", full: true },
-    { key: "phone", label: "Điện thoại", type: "text" },
-    { key: "email", label: "Email", type: "email" },
-    {
-      key: "vatRate",
-      label: "VAT (%)",
-      type: "number",
-      min: 0,
-      max: 100,
-      description: "Mức thuế VAT mặc định khi lập phiếu; không tự tính thuế.",
-    },
-    {
-      key: "active",
-      label: "Hoạt động",
-      type: "checkbox",
-      description: "Tắt để ngừng chọn khách này khi lập phiếu mới. Phiếu cũ vẫn được giữ.",
-    },
-    { key: "notes", label: "Thông tin thêm", type: "textarea", full: true },
-  ],
+  fields: customerFields,
   filters: [
     { field: "kind", label: "Loại khách", options: customerKinds },
     {

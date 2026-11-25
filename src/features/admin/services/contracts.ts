@@ -16,6 +16,8 @@ export interface Customer extends NamedRecord {
   active: boolean;
   phone?: string;
   email?: string;
+  representative?: string;
+  extra?: Record<string, string | number | boolean | null>;
 }
 export interface SlipItem {
   lineId: string;

@@ -6,6 +6,8 @@ import { PageTitle, Card, Badge, ErrorState, Skeleton } from "../../shared/ui/pr
 import { internalTarget } from "../../shared/lib/navigation";
 import { date, money } from "../../shared/lib/text";
 import { customerKinds, customerReturnTo } from "../config";
+import { customerFields } from "../fields";
+import type { Customer } from "../../services/contracts";
 function CustomerSlips({ id }: { id: string }) {
   const result = useEntity("purchaseSlips", {
     page: 1,
@@ -73,10 +75,23 @@ export default function CustomerDetail() {
           {[
             ["Mã khách", c.id],
             ["Loại khách", customerKinds.find((k) => k.value === c.kind)?.label],
-            ["Địa chỉ", c.address || "—"],
-            ["Điện thoại", c.phone || "—"],
-            ["Email", c.email || "—"],
-            ["Thông tin thêm", c.notes || "—"],
+            ...customerFields
+              .filter((field) => !["name", "kind", "vatRate", "active"].includes(field.key))
+              .map((field) => {
+                const value = field.extraKey
+                  ? c.extra?.[field.extraKey]
+                  : c[field.key as keyof Customer];
+                return [
+                  field.label,
+                  value == null || value === ""
+                    ? "—"
+                    : typeof value === "boolean"
+                      ? value
+                        ? "Có"
+                        : "Không"
+                      : String(value),
+                ];
+              }),
           ].map(([label, value]) => (
             <div key={label}>
               <dt>{label}</dt>
