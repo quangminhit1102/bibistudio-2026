@@ -35,15 +35,6 @@ export function normalizeImportCells(
   const fields = { ...input };
   for (const key of ["name", "address", "phone", "email", "representative", "notes"])
     if (fields[key] != null) fields[key] = text(fields[key]);
-  const notes = text(fields.notes);
-  if (!fields.email) {
-    const email = notes.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)?.[0];
-    if (email) fields.email = email;
-  }
-  if (!fields.phone) {
-    const phone = notes.match(/(?:\+?84|0)[\d .()-]{8,18}\d/)?.[0];
-    if (phone) fields.phone = phone.replace(/[ .()-]/g, "");
-  }
   if (/^[35789]\d{8}$/.test(text(fields.phone))) fields.phone = "0" + text(fields.phone);
   const vat = plain(fields.vatRate);
   fields.vatRate =
@@ -155,6 +146,15 @@ export async function parseCustomerWorkbook(
       const value = data[index][col];
       if (field.extraKey) extra[field.extraKey] = value == null ? null : value;
       else if (value != null) values[field.key] = value;
+    }
+    const notes = text(values.notes);
+    if (!text(values.email)) {
+      const email = notes.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)?.[0];
+      if (email) values.email = email;
+    }
+    if (!text(values.phone)) {
+      const phone = notes.match(/(?:\+?84|0)[\d .()-]{8,18}\d/)?.[0];
+      if (phone) values.phone = phone.replace(/[ .()-]/g, "");
     }
     const row: ImportRow = {
       row: index + 1,

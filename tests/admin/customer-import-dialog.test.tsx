@@ -173,6 +173,34 @@ it("preserves typed whitespace and normalizes only the validated/sent copy", asy
     (await f.store.list("customers")).find((c) => c.name === "Typed First Last"),
   ).toMatchObject({ address: "12 First Street" });
 });
+it("does not restore extracted contacts after clearing them or editing another cell", async () => {
+  mount();
+  await userEvent.click(await screen.findByRole("button", { name: "Import Excel" }));
+  fireEvent.change(await screen.findByLabelText("Chọn file .xlsx"), {
+    target: {
+      files: [
+        await workbook([
+          ["Tên", "Thông tin"],
+          ["Cleared contacts", "contact@example.test 0901234567"],
+        ]),
+      ],
+    },
+  });
+  expect(await screen.findByLabelText("Email dòng 2")).toHaveValue("contact@example.test");
+  await userEvent.clear(screen.getByLabelText("Email dòng 2"));
+  await userEvent.clear(screen.getByLabelText("Điện thoại dòng 2"));
+  await userEvent.type(screen.getByLabelText("Địa chỉ dòng 2"), "New address");
+  await waitFor(() =>
+    expect(screen.getByRole("button", { name: /Xác nhận import/ })).toBeEnabled(),
+  );
+  expect(screen.getByLabelText("Email dòng 2")).toHaveValue("");
+  expect(screen.getByLabelText("Điện thoại dòng 2")).toHaveValue("");
+  await userEvent.click(screen.getByRole("button", { name: /Xác nhận import/ }));
+  await screen.findByText("Đã thêm 1, cập nhật 0, bỏ qua 0");
+  expect(
+    (await f.store.list("customers")).find((c) => c.name === "Cleared contacts"),
+  ).toMatchObject({ email: "", phone: "" });
+});
 it("rejects invalid file selection without a writable preview and lets the user retry", async () => {
   mount();
   const u = userEvent.setup();

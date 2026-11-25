@@ -1,7 +1,29 @@
 import { expect, it } from "vitest";
-import { parseCustomerWorkbook } from "../../src/features/admin/customers/import/parse";
+import {
+  parseCustomerWorkbook,
+  prepareImportRows,
+} from "../../src/features/admin/customers/import/parse";
 import { customerSampleWorkbook } from "../../src/features/admin/customers/import/sample";
 import { imageNames, imageRows, workbook } from "./customer-import-fixture";
+
+it("extracts contacts once from workbook notes but never restores cleared preview contacts", async () => {
+  const result = await parseCustomerWorkbook(
+    await workbook([
+      ["Tên", "Thông tin"],
+      ["New customer", "Liên hệ: contact@example.test, 0901234567"],
+    ]),
+    { extraFields: [] },
+  );
+  expect(result.rows[0].fields).toMatchObject({
+    email: "contact@example.test",
+    phone: "0901234567",
+  });
+  const edited = { ...result.rows[0], fields: { ...result.rows[0].fields, email: "", phone: "" } };
+  expect(prepareImportRows([edited], { extraFields: [] })[0].fields).toMatchObject({
+    email: "",
+    phone: "",
+  });
+});
 
 it("ignores sequence-only rows without consuming the row limit or changing Excel row numbers", async () => {
   const result = await parseCustomerWorkbook(
