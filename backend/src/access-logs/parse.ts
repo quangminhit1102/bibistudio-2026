@@ -56,7 +56,7 @@ function quoted(input: string, start: number): [string, number] {
     const escape = input[++i];
     if (escape === '"' || escape === "\\") result += escape;
     else if (escape === "x" && /^[a-f0-9]{2}$/i.test(input.slice(i + 1, i + 3))) {
-      result += String.fromCharCode(parseInt(input.slice(i + 1, i + 3), 16));
+      result += String.fromCharCode(Number.parseInt(input.slice(i + 1, i + 3), 16));
       i += 2;
     } else if (["n", "r", "t"].includes(escape))
       result += ({ n: "\n", r: "\r", t: "\t" } as Record<string, string>)[escape];

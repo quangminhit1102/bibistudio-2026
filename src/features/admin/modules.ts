@@ -1,3 +1,4 @@
+import { trimTrailingSlashes } from "./shared/lib/text";
 import type { LucideIcon } from "lucide-react";
 import type { AdminModuleId } from "@/platform/site-contract";
 import { site } from "@/platform/site";
@@ -82,7 +83,7 @@ export function resourceEnabled(
 export function moduleForAdminPath(pathname: string): AdminModuleId | null {
   const match = pathname.match(/\/admin(?:\/|$)/);
   if (!match) return null;
-  const path = pathname.slice(match.index).replace(/\/+$/, "");
+  const path = trimTrailingSlashes(pathname.slice(match.index));
   let owner: { id: AdminModule["id"]; length: number } | undefined;
   for (const module of adminModules)
     for (const prefix of module.paths)

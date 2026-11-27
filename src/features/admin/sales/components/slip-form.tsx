@@ -111,7 +111,7 @@ export function SlipForm({
     change({
       ...draft,
       items: draft.items.map((line, i) =>
-        i === index ? { ...line, [field]: raw === "" ? NaN : Number(raw) } : line,
+        i === index ? { ...line, [field]: raw === "" ? Number.NaN : Number(raw) } : line,
       ),
     });
   }

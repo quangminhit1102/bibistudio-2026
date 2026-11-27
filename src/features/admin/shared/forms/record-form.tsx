@@ -2,7 +2,7 @@ import { lazy, Suspense, useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import type { EntityKey } from "../../services/contracts";
 import { Button, Field, Skeleton } from "../ui/primitives";
-import { calendarDate } from "../lib/text";
+import { calendarDate, isRecordEmail } from "../lib/text";
 import { useRelationOptions, withStored } from "./relation-options";
 const RichEditor = lazy(() => import("../../content/components/rich-editor"));
 const MediaPicker = lazy(() => import("../../content/components/media-picker"));
@@ -135,9 +135,9 @@ export function RecordForm({
               field.max !== undefined
                 ? { value: field.max, message: `Tối đa ${field.max}` }
                 : undefined,
-            pattern:
+            validate:
               field.type === "email"
-                ? { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: "Email không hợp lệ" }
+                ? (value: unknown) => !value || isRecordEmail(String(value)) || "Email không hợp lệ"
                 : undefined,
           };
           const err = errors[field.key]?.message;
