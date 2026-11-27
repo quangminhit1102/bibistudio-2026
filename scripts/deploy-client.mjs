@@ -123,25 +123,31 @@ export async function deployClient() {
       }
       throw new Error(`Smoke failed: ${error.message}; previous release restored and verified`);
     }
-    const deployment = await github("deployments", {
-      ref: id.split("-")[0],
-      environment,
-      auto_merge: false,
-      required_contexts: [],
-      production_environment: environment === "production",
-      payload: {
-        releaseId: id,
-        checksum,
-        ciRunId: id.split("-")[1],
-        artifactId: Number(process.env.ARTIFACT_ID),
-      },
-    });
-    await github(`deployments/${deployment.id}/statuses`, {
-      state: "success",
-      environment_url: baseUrl,
-      auto_inactive: false,
-      log_url: `https://github.com/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`,
-    });
+    try {
+      const deployment = await github("deployments", {
+        ref: id.split("-")[0],
+        environment,
+        auto_merge: false,
+        required_contexts: [],
+        production_environment: environment === "production",
+        payload: {
+          releaseId: id,
+          checksum,
+          ciRunId: id.split("-")[1],
+          artifactId: Number(process.env.ARTIFACT_ID),
+        },
+      });
+      await github(`deployments/${deployment.id}/statuses`, {
+        state: "success",
+        environment_url: baseUrl,
+        auto_inactive: false,
+        log_url: `https://github.com/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`,
+      });
+    } catch (error) {
+      console.warn(
+        `::warning::Release ${id} is live and HTTP/browser/old-client smoke passed; GitHub deployment record could not be published: ${error.message}`,
+      );
+    }
   } finally {
     await oldClient?.close();
     await rm(directory, { recursive: true, force: true });
